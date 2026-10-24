@@ -1,0 +1,86 @@
+{
+  "kind": "independent-configuration-record-vectors-freeze-v1",
+  "contract_sha256": "69e182574806c78a8bbc0fd4da1e4713bb0b83ceb2b9d86f2ce8bb12c6309e0f",
+  "finite_design_review_sha256": "d0f69410e3bd0f3d589d0f16abd9504f93562c34b8a0ad3125e02b7f0287aed1",
+  "status": "source_ready_for_independent_review_not_target_sql_acceptance",
+  "files": {
+    "README.md": {
+      "sha256": "44d8667527ff94babea31a767f7a3212669aa6854fcdf3b6f09bc0af7f38b748",
+      "bytes": 12009
+    },
+    "anchors.json": {
+      "sha256": "418cc5489fe151328800953c19a71bb3ec68d9ef7bce4578822083eedcad8c5b",
+      "bytes": 2272
+    },
+    "build_corpus.py": {
+      "sha256": "ff0c31eece06e4fed23a7632ea907a995e87ca9dd86ceeba11f0635696446488",
+      "bytes": 33805
+    },
+    "build_supplement.py": {
+      "sha256": "9dde47440eccbf13e17f2f40a23df476cc7a74b98838cba0fa9e6df20fe17df6",
+      "bytes": 9020
+    },
+    "cases.json": {
+      "sha256": "2927ddcfe71858db2f4a99bdcf6b05ccbe7f2c5247f2794e9920d448d9751dad",
+      "bytes": 16103567
+    },
+    "check_corpus.py": {
+      "sha256": "c1cd53c708928df86c7cc74b42718610ba81f31aaf41f5e3dfeaa7258c34ee39",
+      "bytes": 9607
+    },
+    "families.json": {
+      "sha256": "02cf2efb2413a2d528984847a293a0d9b991ae01fa81dd2edb9aefea2e7ee6ae",
+      "bytes": 1365357
+    },
+    "inventory.json": {
+      "sha256": "21da1b49532d6d49485c8b160cda3d953d4abd363bd5458d75e66132e99b0c0d",
+      "bytes": 831
+    },
+    "offline-build-check.log": {
+      "sha256": "8cbf37c82afdff4b0dc090dc630a810b730927571eae1639459f9864dec07f0f",
+      "bytes": 781
+    },
+    "offline-consistency-check.log": {
+      "sha256": "360ed2ff01b981f0d714f8deb706e1e83db88d88ec0f2b86bfe4cfaf65d963d6",
+      "bytes": 373
+    },
+    "offline-supplement-check.log": {
+      "sha256": "b9dbb185adadd24ebe7769136dba7389f6cdc5b272b9b773bfe325f542cc4463",
+      "bytes": 80
+    },
+    "supplement-cases.json": {
+      "sha256": "f7a6a411af58fbc090346d26541b87ad82a78de9c4de3d4fb63cc3a2b4caabc5",
+      "bytes": 1531699
+    }
+  },
+  "positive_families": 34,
+  "total_cases": 1509,
+  "success_cases": 136,
+  "refusal_cases": 1373,
+  "cases_by_function": {
+    "validate_stored_configuration": 151,
+    "validate_configuration_record": 191,
+    "configuration_record": 117,
+    "validate_configuration_pair": 1050
+  },
+  "sql_null_cases": 4,
+  "case_ids_sha256": "e4209e235d5add914033389adf389a23b2c895e826b28afea49fd2662d96fa9c",
+  "offline_checks": {
+    "build_corpus": "exit0",
+    "build_supplement": "exit0",
+    "check_corpus": "exit0"
+  },
+  "database_runs": 0,
+  "postgres_renderer_confirmed": false,
+  "target_helper_bodies_written": false,
+  "full_contract_section8_coverage": false,
+  "remaining_coverage_gaps": [
+    "legal maximum clean-text/roster boundary families",
+    "complete selected inheritance matrix for22rules/roles/scopes/calendars",
+    "timestamp field cross-product, lower2026 valid positive, fractional-hour offset",
+    "every nested primitive null/type cross-product",
+    "isolated byte-guard branch/near-legal-limit proof",
+    "SQL renderer/target/runtime/ACL/preservation/stub verification"
+  ],
+  "scope": "Only private pure-value expected examples; no origin, owner authority, saved replay, timezone exhaustiveness or publication/runtime claim."
+}

@@ -1,0 +1,14 @@
+test_busy_job_timeout_restores_enabled_state (portable_worker_target.OwnedSchedulerTests.test_busy_job_timeout_restores_enabled_state) ... ok
+test_existing_off_state_is_preserved_without_admin_write (portable_worker_target.OwnedSchedulerTests.test_existing_off_state_is_preserved_without_admin_write) ... ok
+test_failed_pause_attempt_still_restores_prior_state (portable_worker_target.OwnedSchedulerTests.test_failed_pause_attempt_still_restores_prior_state) ... ok
+test_live_job_must_drain_before_entering (portable_worker_target.OwnedSchedulerTests.test_live_job_must_drain_before_entering) ... ok
+test_non_synthetic_identity_never_writes (portable_worker_target.OwnedSchedulerTests.test_non_synthetic_identity_never_writes) ... ok
+test_replaced_container_is_not_mutated_during_restore (portable_worker_target.OwnedSchedulerTests.test_replaced_container_is_not_mutated_during_restore) ... ok
+test_source_failure_restores_prior_enabled_state (portable_worker_target.OwnedSchedulerTests.test_source_failure_restores_prior_enabled_state) ... ok
+test_wrong_config_never_writes (portable_worker_target.OwnedSchedulerTests.test_wrong_config_never_writes) ... ok
+test_wrong_container_never_writes (portable_worker_target.OwnedSchedulerTests.test_wrong_container_never_writes) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.013s
+
+OK

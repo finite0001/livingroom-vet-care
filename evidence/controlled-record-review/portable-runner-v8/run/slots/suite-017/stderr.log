@@ -1,0 +1,22 @@
+test_batch_exact_keys_and_kind_required (portable_worker_target.CorrectionProducerTests.test_batch_exact_keys_and_kind_required) ... ok
+test_batch_gap_replay_or_reordering_cannot_be_accepted (portable_worker_target.CorrectionProducerTests.test_batch_gap_replay_or_reordering_cannot_be_accepted) ... ok
+test_complete_proof_has_actual1001_writes_and66_previews (portable_worker_target.CorrectionProducerTests.test_complete_proof_has_actual1001_writes_and66_previews) ... ok
+test_contract_has_exact_rollback_and_negative_case_counts (portable_worker_target.CorrectionProducerTests.test_contract_has_exact_rollback_and_negative_case_counts) ... ok
+test_contract_missing_extra_and_multiple_records_are_rejected (portable_worker_target.CorrectionProducerTests.test_contract_missing_extra_and_multiple_records_are_rejected) ... ok
+test_counts_reject_boolean_float_string_nonfinite_and_wrong_values (portable_worker_target.CorrectionProducerTests.test_counts_reject_boolean_float_string_nonfinite_and_wrong_values) ... ok
+test_duplicate_json_keys_are_rejected (portable_worker_target.CorrectionProducerTests.test_duplicate_json_keys_are_rejected) ... ok
+test_every_batch_guarantee_requires_true (portable_worker_target.CorrectionProducerTests.test_every_batch_guarantee_requires_true) ... ok
+test_exact_batch_and_optional_checkpoint_are_separated (portable_worker_target.CorrectionProducerTests.test_exact_batch_and_optional_checkpoint_are_separated) ... ok
+test_final_partial_and_single_overflow_write_are_valid (portable_worker_target.CorrectionProducerTests.test_final_partial_and_single_overflow_write_are_valid) ... ok
+test_invalid_target_range_or_checkpoint_flag_is_refused (portable_worker_target.CorrectionProducerTests.test_invalid_target_range_or_checkpoint_flag_is_refused) ... ok
+test_missing1001_or_contract_rollback_cannot_pass (portable_worker_target.CorrectionProducerTests.test_missing1001_or_contract_rollback_cannot_pass) ... ok
+test_missing_extra_or_reordered_observations_are_refused (portable_worker_target.CorrectionProducerTests.test_missing_extra_or_reordered_observations_are_refused) ... ok
+test_nonobject_json_or_unknown_text_is_refused (portable_worker_target.CorrectionProducerTests.test_nonobject_json_or_unknown_text_is_refused) ... ok
+test_only_known_psql_tags_and_blank_lines_are_ignored (portable_worker_target.CorrectionProducerTests.test_only_known_psql_tags_and_blank_lines_are_ignored) ... ok
+test_proof_fields_and_typed_totals_are_strict (portable_worker_target.CorrectionProducerTests.test_proof_fields_and_typed_totals_are_strict) ... ok
+test_proof_revalidates_contract_and_each_batch (portable_worker_target.CorrectionProducerTests.test_proof_revalidates_contract_and_each_batch) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.006s
+
+OK

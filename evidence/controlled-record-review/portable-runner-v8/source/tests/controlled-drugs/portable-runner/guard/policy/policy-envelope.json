@@ -1,0 +1,48 @@
+{
+  "contract_source_ready_v3_sha256": "27ffe06d39e6c70051ad62fa33855d2220af94a83f26032b2d5d08fd8c65c847",
+  "counts": {
+    "child_routes": 22,
+    "code_literals": 14,
+    "original_tests": 867
+  },
+  "excluded_runtime_dependencies": [
+    "private source-ready receipts",
+    "preserved-v1 and preserved-v2",
+    "collection stdout/stderr logs",
+    "review reports"
+  ],
+  "files": {
+    "child-routes.json": {
+      "bytes": 35723,
+      "sha256": "b2ca616f2154db2fce6a8533d934e70a8eb350fcdfc71d7fde180f92a37abf9d"
+    },
+    "corrected-routing.json": {
+      "bytes": 898148,
+      "sha256": "7de2c469e9a897b3669a173096e6064226f0e1626199f05b06cce65d8c8532a3"
+    },
+    "node-input-declaration.json": {
+      "bytes": 46137,
+      "sha256": "24cf14abbd13f6e91ad88b9285329b661347f55535d3e5381fb181819dea2da0"
+    }
+  },
+  "historical638_route": "separately admitted fixed declaration, not included among original22",
+  "kind": "portable-worker-compact-policy-envelope-v1",
+  "mapping": [
+    {
+      "byte_identical": true,
+      "original_contract_relative": "child-routes.json",
+      "portable_policy_relative": "child-routes.json"
+    },
+    {
+      "byte_identical": true,
+      "original_contract_relative": "corrected-routing.json",
+      "portable_policy_relative": "corrected-routing.json"
+    },
+    {
+      "byte_identical": true,
+      "original_contract_relative": "node-input-declaration.json",
+      "portable_policy_relative": "node-input-declaration.json"
+    }
+  ],
+  "scope": "Finite trusted-source worker policy; no universal descendant containment. No private logs, historical receipts or collection output are runtime dependencies."
+}

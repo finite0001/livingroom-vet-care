@@ -1,0 +1,15 @@
+test_authored_transaction_controls_are_refused (portable_worker_target.ControlledCliBodyTests.test_authored_transaction_controls_are_refused) ... ok
+test_checked_body_tamper_cannot_pass (portable_worker_target.ControlledCliBodyTests.test_checked_body_tamper_cannot_pass) ... ok
+test_cli_check_is_pure_and_binds_checked_in_output (portable_worker_target.ControlledCliBodyTests.test_cli_check_is_pure_and_binds_checked_in_output) ... ok
+test_fixed_ledger_array_rejects_wrong_order_body_and_comment_tail (portable_worker_target.ControlledCliBodyTests.test_fixed_ledger_array_rejects_wrong_order_body_and_comment_tail) ... ok
+test_literals_function_bodies_and_nested_comments_do_not_hide_boundaries (portable_worker_target.ControlledCliBodyTests.test_literals_function_bodies_and_nested_comments_do_not_hide_boundaries) ... ok
+test_malformed_quoted_or_unterminated_input_is_refused (portable_worker_target.ControlledCliBodyTests.test_malformed_quoted_or_unterminated_input_is_refused) ... ok
+test_parent_artifact_mutations_fail_without_resealing (portable_worker_target.ControlledCliBodyTests.test_parent_artifact_mutations_fail_without_resealing) ... ok
+test_parent_pin_and_source_mutations_are_rejected (portable_worker_target.ControlledCliBodyTests.test_parent_pin_and_source_mutations_are_rejected) ... ok
+test_pipeline_incompatible_and_nontransactional_directives_are_refused (portable_worker_target.ControlledCliBodyTests.test_pipeline_incompatible_and_nontransactional_directives_are_refused) ... ok
+test_repeat_identity_and_reversible_outer_strip (portable_worker_target.ControlledCliBodyTests.test_repeat_identity_and_reversible_outer_strip) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 1.368s
+
+OK

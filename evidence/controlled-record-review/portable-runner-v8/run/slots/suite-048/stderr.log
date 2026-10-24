@@ -1,0 +1,15 @@
+test_body_attribute_parent_and_catalog_expansion_refuse (portable_worker_target.ProfileTests.test_body_attribute_parent_and_catalog_expansion_refuse) ... ok
+test_exact_additive_254_canonical_paths (portable_worker_target.ProfileTests.test_exact_additive_254_canonical_paths) ... ok
+test_exact_fresh206_ledger_and_full_original_preservation (portable_worker_target.ProfileTests.test_exact_fresh206_ledger_and_full_original_preservation) ... ok
+test_exact_independent_32_function_delta (portable_worker_target.ProfileTests.test_exact_independent_32_function_delta) ... ok
+test_full_generated_sql_and_plpgsql_parse (portable_worker_target.ProfileTests.test_full_generated_sql_and_plpgsql_parse) ... ok
+test_function_inventory_missing_extra_and_shared_drift_refuse (portable_worker_target.ProfileTests.test_function_inventory_missing_extra_and_shared_drift_refuse) ... ok
+test_integrated_profile_matches_frozen_private_definition (portable_worker_target.ProfileTests.test_integrated_profile_matches_frozen_private_definition) ... ok
+test_no_a1_or_gate_a_global_mutation (portable_worker_target.ProfileTests.test_no_a1_or_gate_a_global_mutation) ... ok
+test_old_a1_wrapper_and_metadata_neutral_source_drift_refuse (portable_worker_target.ProfileTests.test_old_a1_wrapper_and_metadata_neutral_source_drift_refuse) ... ok
+test_reviewed_four_source_bytes_and_executed_profile_bytes_bound (portable_worker_target.ProfileTests.test_reviewed_four_source_bytes_and_executed_profile_bytes_bound) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 12.177s
+
+OK

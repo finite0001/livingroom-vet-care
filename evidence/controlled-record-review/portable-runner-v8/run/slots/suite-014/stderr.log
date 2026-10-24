@@ -1,0 +1,18 @@
+test_all_old_migration_bytes_remain_bound (portable_worker_target.SecondaryReviewReleaseTests.test_all_old_migration_bytes_remain_bound) ... ok
+test_auth_profile_cannot_replace_private_expectation (portable_worker_target.SecondaryReviewReleaseTests.test_auth_profile_cannot_replace_private_expectation) ... ok
+test_cli_check_requires_no_database_or_typescript_runtime (portable_worker_target.SecondaryReviewReleaseTests.test_cli_check_requires_no_database_or_typescript_runtime) ... ok
+test_deterministic_body_and_exact_wrapping (portable_worker_target.SecondaryReviewReleaseTests.test_deterministic_body_and_exact_wrapping) ... ok
+test_every_ledger_row_is_complete_and_filename_bound (portable_worker_target.SecondaryReviewReleaseTests.test_every_ledger_row_is_complete_and_filename_bound) ... ok
+test_exact_new_body_cannot_be_substituted (portable_worker_target.SecondaryReviewReleaseTests.test_exact_new_body_cannot_be_substituted) ... ok
+test_expected_metadata_sources_and_wrapper_refuse_drift (portable_worker_target.SecondaryReviewReleaseTests.test_expected_metadata_sources_and_wrapper_refuse_drift) ... ok
+test_frozen_ledger_refuses_statement_name_order_and_encoding_mutation (portable_worker_target.SecondaryReviewReleaseTests.test_frozen_ledger_refuses_statement_name_order_and_encoding_mutation) ... ok
+test_missing_extra_and_noncanonical_names_refused (portable_worker_target.SecondaryReviewReleaseTests.test_missing_extra_and_noncanonical_names_refused) ... ok
+test_official_export_regenerates_frozen_source_expectations (portable_worker_target.SecondaryReviewReleaseTests.test_official_export_regenerates_frozen_source_expectations) ... ok
+test_official_provenance_and_statement_artifact_refuse_drift (portable_worker_target.SecondaryReviewReleaseTests.test_official_provenance_and_statement_artifact_refuse_drift) ... ok
+test_released_artifact_and_boundary_mutation_refused (portable_worker_target.SecondaryReviewReleaseTests.test_released_artifact_and_boundary_mutation_refused) ... ok
+test_transaction_safety_audit_rejects_escaping_commands (portable_worker_target.SecondaryReviewReleaseTests.test_transaction_safety_audit_rejects_escaping_commands) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 4.281s
+
+OK

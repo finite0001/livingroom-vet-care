@@ -1,0 +1,45 @@
+{
+  "kind": "prospective-regression-worker-order-v2-source-ready",
+  "old_worker": {
+    "path": "tmp/secondary-review-20261021/portable-runner-draft/regression-stage-integration/regression_worker.py",
+    "bytes": 14083,
+    "sha256": "80cf759cdd0aec7b2bbb0876d8b7a7baff4d85bd67f0f4c908f76fee6690cb30"
+  },
+  "files": {
+    "regression_worker.py": {
+      "bytes": 15070,
+      "sha256": "27ef22377188c682c977de317c6d6a53a7bd1a5c29a58d262a0bc3fc3f3cca8d"
+    },
+    "test_order_author_controls.py": {
+      "bytes": 5923,
+      "sha256": "3ad71b2c5c675d03f531828ad02af2ec05e1f42ae6b61c221d7d2ba15347a516"
+    },
+    "README.md": {
+      "bytes": 1742,
+      "sha256": "05e26b11075b2287096a575fa46b144c01251359db11b9ad7d975c422a7b8499"
+    }
+  },
+  "unchanged_ast_roots": [
+    "LaunchAudit",
+    "bootstrap",
+    "load"
+  ],
+  "new_helper": "declaration_ids",
+  "changed_only": [
+    "collect",
+    "run declaration validation block"
+  ],
+  "author_controls": {
+    "passed": 6,
+    "skipped": 0,
+    "children": 0,
+    "database": 0,
+    "network": 0,
+    "formal_inventory_additions": 0
+  },
+  "formal_regression_jobs": 22,
+  "formal_regression_ids": 467,
+  "actual_full_regression_stage_passed": false,
+  "actual_full_runner_passed": false,
+  "failed_diagnostic_preserved": "/private/tmp/lrv-whole-regression-diagnostic-o7_ved3o"
+}

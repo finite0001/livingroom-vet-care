@@ -1,0 +1,13 @@
+test_complete_predecessor_map_and_new_six_inputs (portable_worker_target.ProfileTests.test_complete_predecessor_map_and_new_six_inputs) ... ok
+test_delta_rejects_old_body_grant_attribute_table_or_parent_drift (portable_worker_target.ProfileTests.test_delta_rejects_old_body_grant_attribute_table_or_parent_drift) ... ok
+test_exact_shape_and_all29_prior_function_bodies (portable_worker_target.ProfileTests.test_exact_shape_and_all29_prior_function_bodies) ... ok
+test_full_sql_and_plpgsql_parse_and_determinism (portable_worker_target.ProfileTests.test_full_sql_and_plpgsql_parse_and_determinism) ... ok
+test_install_is_fresh206_private_atomic_and_fails_closed (portable_worker_target.ProfileTests.test_install_is_fresh206_private_atomic_and_fails_closed) ... ok
+test_lineage_rejects_added_deleted_drifted_keys_and_expected (portable_worker_target.ProfileTests.test_lineage_rejects_added_deleted_drifted_keys_and_expected) ... ok
+test_manifest_and_validator_bytes_are_independently_pinned (portable_worker_target.ProfileTests.test_manifest_and_validator_bytes_are_independently_pinned) ... ok
+test_new_function_exact_declared_attributes_and_source (portable_worker_target.ProfileTests.test_new_function_exact_declared_attributes_and_source) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 2.841s
+
+OK

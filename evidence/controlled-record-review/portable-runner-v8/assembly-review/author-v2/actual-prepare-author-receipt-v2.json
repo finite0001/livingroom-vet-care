@@ -1,0 +1,52 @@
+{
+  "actual_rerun_pending": true,
+  "assemble": {
+    "bytes": 14454,
+    "sha256": "eba97b3b401aa7d28f799324a18ce427185cb68c0f3a6845f7eb3e6eddd916de"
+  },
+  "author_directory": "/private/tmp/lrv-v8-assemble-author-v2-dqxbk1tk",
+  "formal_runner_acceptance": false,
+  "kind": "actual-v8-checkout-prepare-author-controls-v2",
+  "negatives": [
+    {
+      "case": "inside-source",
+      "elapsed_seconds": 0.10880087500845548,
+      "no_created_output_or_receipt": true,
+      "output_parent": "/Users/davidedler/Developer/lrv-controlled-runner-proof-20261024/evidence/controlled-record-review/portable-runner-v8/source",
+      "protected_package_tool_keys_and_identities_unchanged": true,
+      "returncode": 1
+    },
+    {
+      "case": "inside-package",
+      "elapsed_seconds": 0.1007206249923911,
+      "no_created_output_or_receipt": true,
+      "output_parent": "/Users/davidedler/Developer/lrv-controlled-runner-proof-20261024/evidence/controlled-record-review/portable-runner-v8",
+      "protected_package_tool_keys_and_identities_unchanged": true,
+      "returncode": 1
+    },
+    {
+      "case": "inside-bound-tools",
+      "elapsed_seconds": 0.09874512499663979,
+      "no_created_output_or_receipt": true,
+      "output_parent": "/private/tmp/lrvt-fdjazqmt/local-portable-tools",
+      "protected_package_tool_keys_and_identities_unchanged": true,
+      "returncode": 1
+    }
+  ],
+  "prepare": {
+    "bytes": 163795442,
+    "elapsed_seconds": 1.7760468750057044,
+    "exact_profile_match": true,
+    "files": 908,
+    "modes": {
+      "directories": "0700",
+      "files": "0600"
+    },
+    "protected_package_and_tool_keys_and_identities_unchanged": true,
+    "publication": "/private/tmp/lrv-v8-prepared-parent-v2-774fzq0f/prepared-v8-760915447e4b44eaa9f352814c29589c/publication-77d2a2dd5fe343a590404d3b9adafb6f",
+    "receipt": "/private/tmp/lrv-v8-prepared-parent-v2-774fzq0f/prepared-v8-760915447e4b44eaa9f352814c29589c/preparation-receipt.json",
+    "returncode": 0
+  },
+  "reviewed_read_ast_unchanged": true,
+  "target_tool_setup_network_auth_database_executed": false
+}

@@ -6,7 +6,8 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "test-results", "playwright-report", "tmp/__tests__/scanner-*/**", "tmp/scanner-????????-?/**"] },
+  // Historical proof inputs are byte-pinned fixtures, not current application code.
+  { ignores: ["dist", "test-results", "playwright-report", "tmp/__tests__/scanner-*/**", "tmp/scanner-????????-?/**", "evidence/controlled-record-review/portable-runner-v8/source/**"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended, jsxA11y.flatConfigs.recommended],
     files: ["**/*.{ts,tsx}"],

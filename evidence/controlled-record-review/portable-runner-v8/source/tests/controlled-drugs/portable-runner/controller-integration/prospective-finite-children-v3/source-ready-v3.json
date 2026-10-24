@@ -1,0 +1,39 @@
+{
+  "actual_stage_or_full_acceptance": false,
+  "author_controls": {
+    "all_declared_routes_observed_or_checked": 34,
+    "children": 0,
+    "database": 0,
+    "network": 0,
+    "outside_formal_inventory": true,
+    "passed": 13,
+    "skipped": 0
+  },
+  "diagnostic_failure_root": "/private/tmp/lrv-whole-regression-diagnostic-e_2k8l1_",
+  "files": {
+    "README.md": {
+      "bytes": 2846,
+      "sha256": "382bd04069d684d6a58ef9eceaf3485d63cc8bc8e1e4c29b2eba2b29798bbd81"
+    },
+    "finite_children_v3.py": {
+      "bytes": 18243,
+      "sha256": "05e6ebe6fb7c96d48edcf52e3d7b467c6db97a184f18cfaa76992b29b1d92c70"
+    },
+    "test_remaining_profiles_author_controls.py": {
+      "bytes": 10913,
+      "sha256": "fd8d4f28ec99f3dac5d1e4bba3aa5f6d4802b9ad678d5d177f8005579d3baa66"
+    },
+    "test_transport_author_controls.py": {
+      "bytes": 8187,
+      "sha256": "06b7473ee02cfd0cb8b960f9626191cb94e190ba239cb54d595d1575330777d5"
+    }
+  },
+  "formal_regression_ids_unchanged": 467,
+  "formal_regression_jobs_unchanged": 22,
+  "kind": "prospective-finite-policy-source-ready-v3",
+  "prior_policy": {
+    "bytes": 18219,
+    "path": "tmp/secondary-review-20261021/portable-runner-draft/controller-integration/prospective-finite-children/finite_children_v2.py",
+    "sha256": "5903008c2325fdf3aea1a05cad45f942a7dbca5f81709a79eb1f4f9bf8d43bef"
+  }
+}

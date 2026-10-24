@@ -1,0 +1,598 @@
+{
+  "kind": "finite-source-derived-child-routes-v2",
+  "source_only": true,
+  "implemented": false,
+  "routes": [
+    {
+      "id": "session:test_record_review_v3_phased_session_harness",
+      "source": "supabase/tests/test_record_review_v3_phased_session_harness.py",
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-B",
+        "-u",
+        "-c",
+        "CODE:efd8b2930fb7995a0ee969ac8783a34adfd5a9f509550180a2717daca4df4ed5",
+        "MODE",
+        "OWNED_CHILD_RECEIVED_LOG"
+      ],
+      "allowed_modes": [
+        "backendpid",
+        "backendstart",
+        "booleanpid",
+        "chatter",
+        "duplicate",
+        "duplicatekey",
+        "earlynonzero",
+        "earlyzero",
+        "extra",
+        "finalhang",
+        "finalnonzero",
+        "fragment",
+        "invalidutf8",
+        "killhang",
+        "lateextra",
+        "malformed",
+        "missing",
+        "nonreading",
+        "normal",
+        "partialcap",
+        "provenancefail",
+        "provenancehang",
+        "slow",
+        "stderrcap",
+        "stdoutcap",
+        "wrongindex",
+        "wrongname",
+        "wrongnonce"
+      ],
+      "cwd": "same owned temporary parent as child-received.log",
+      "extra_suffixes": [
+        []
+      ],
+      "max_calls_per_test": 64,
+      "claim": "exact source-declared finite mode set, no live child output used"
+    },
+    {
+      "id": "session:test_record_review_v3_configuration_session_harness",
+      "source": "supabase/tests/test_record_review_v3_configuration_session_harness.py",
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-B",
+        "-u",
+        "-c",
+        "CODE:d548e5efa9d96be620a1819765a84771918913a9d3d8bb7e59b3164ebfb94b55",
+        "MODE",
+        "OWNED_CHILD_RECEIVED_LOG"
+      ],
+      "allowed_modes": [
+        "backendpid",
+        "backendstart",
+        "booleanindex",
+        "booleanpid",
+        "chatter",
+        "duplicate",
+        "duplicatekey",
+        "earlynonzero",
+        "earlyzero",
+        "extra",
+        "finalhang",
+        "finalnonzero",
+        "fragment",
+        "invalidutf8",
+        "killhang",
+        "lateextra",
+        "malformed",
+        "missing",
+        "nonreading",
+        "normal",
+        "partialcap",
+        "provenancefail",
+        "provenancehang",
+        "slow",
+        "stderrcap",
+        "stdoutcap",
+        "wrongindex",
+        "wrongname",
+        "wrongnonce"
+      ],
+      "cwd": "same owned temporary parent as child-received.log",
+      "extra_suffixes": [
+        []
+      ],
+      "max_calls_per_test": 64,
+      "claim": "exact source-declared finite mode set, no live child output used"
+    },
+    {
+      "id": "session:test_record_review_v3_configuration_record_session_harness",
+      "source": "supabase/tests/test_record_review_v3_configuration_record_session_harness.py",
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-B",
+        "-u",
+        "-c",
+        "CODE:fe1a810393b66b4fbd0f7364621eed80e1c62c215b3be04e42700a4d317ac9bd",
+        "MODE",
+        "OWNED_CHILD_RECEIVED_LOG"
+      ],
+      "allowed_modes": [
+        "backendpid",
+        "backendstart",
+        "booleanindex",
+        "booleanpid",
+        "chatter",
+        "duplicate",
+        "duplicatekey",
+        "earlynonzero",
+        "earlyzero",
+        "extra",
+        "finalhang",
+        "finalnonzero",
+        "fragment",
+        "invalidutf8",
+        "killhang",
+        "lateextra",
+        "malformed",
+        "missing",
+        "nonreading",
+        "normal",
+        "partialcap",
+        "provenancefail",
+        "provenancehang",
+        "slow",
+        "stderrcap",
+        "stdoutcap",
+        "wrongindex",
+        "wrongname",
+        "wrongnonce"
+      ],
+      "cwd": "same owned temporary parent as child-received.log",
+      "extra_suffixes": [
+        []
+      ],
+      "max_calls_per_test": 64,
+      "claim": "exact source-declared finite mode set, no live child output used"
+    },
+    {
+      "id": "session:test_session",
+      "source": "tests/controlled-drugs/engine/candidate/record_review_v3_a2_positive/test_session.py",
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-B",
+        "-u",
+        "-c",
+        "CODE:dcb72adb8a40059ed45dfa4841de1ec265e3ce1f77d63515ce57b9c788fa2119",
+        "MODE",
+        "OWNED_CHILD_RECEIVED_LOG",
+        "PROFILE_LAST",
+        "PROFILE_PENULTIMATE",
+        "PROFILE_SECOND"
+      ],
+      "allowed_modes": [
+        "backendpid",
+        "backendstart",
+        "booleanindex",
+        "booleanpid",
+        "chatter",
+        "duplicate",
+        "duplicatekey",
+        "earlynonzero",
+        "earlyzero",
+        "extra",
+        "finalhang",
+        "finalnonzero",
+        "fragment",
+        "invalidutf8",
+        "killhang",
+        "lateextra",
+        "malformed",
+        "missing",
+        "nonreading",
+        "normal",
+        "partialcap",
+        "provenancefail",
+        "provenancehang",
+        "slow",
+        "stderrcap",
+        "stdoutcap",
+        "wrongindex",
+        "wrongname",
+        "wrongnonce"
+      ],
+      "cwd": "same owned temporary parent as child-received.log",
+      "extra_suffixes": [
+        [
+          "seed_pickup",
+          "seed_split",
+          "seed_plain"
+        ],
+        [
+          "verify_after",
+          "later_append",
+          "opening_plain"
+        ]
+      ],
+      "max_calls_per_test": 64,
+      "claim": "exact source-declared finite mode set, no live child output used",
+      "class_profiles": {
+        "PositiveSessionTests": {
+          "profile": "positive206",
+          "suffix": [
+            "verify_after",
+            "later_append",
+            "opening_plain"
+          ]
+        },
+        "SeedSessionTests": {
+          "profile": "seed188",
+          "suffix": [
+            "seed_pickup",
+            "seed_split",
+            "seed_plain"
+          ]
+        }
+      },
+      "profile_source": "tests/controlled-drugs/engine/candidate/record_review_v3_a2_positive/session.py",
+      "profile_source_sha256": "e1e42c4091231e62b38c89d021990f9d8c54f6deca15ee9930447bb7053ec700"
+    },
+    {
+      "id": "evidence:success",
+      "source": "supabase/tests/test_record_review_v3_evidence_io_harness.py",
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-c",
+        "CODE:8e0f6bf5f9a9a6efa8cf7d27de006f2951f26487ffcd55dbf6dcc40a261b3b78"
+      ],
+      "cwd": "inherited fixed worker cwd",
+      "max_calls_per_test": 1
+    },
+    {
+      "id": "evidence:failure",
+      "source": "supabase/tests/test_record_review_v3_evidence_io_harness.py",
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-c",
+        "CODE:d5264aad26ce0bdd6445c8c35e1fb0cdc244486734692b38e9d00e322bd2341e"
+      ],
+      "cwd": "inherited fixed worker cwd",
+      "max_calls_per_test": 1
+    },
+    {
+      "id": "evidence:timeout",
+      "source": "supabase/tests/test_record_review_v3_evidence_io_harness.py",
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-c",
+        "CODE:32971add27dfd526d7ca6be2aec5a2ec7391a7c9ab0e5d9cbf7b3a9dda2981b2"
+      ],
+      "cwd": "inherited fixed worker cwd",
+      "max_calls_per_test": 1
+    },
+    {
+      "id": "test_record_review_v3_evidence_io_harness:inline:64",
+      "source": "supabase/tests/test_record_review_v3_evidence_io_harness.py",
+      "line": 64,
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-c",
+        "CODE:bb189ec35a873026a8bde5e6cc0b6ddcc13eb849191808bde93d9bb0301291bd"
+      ],
+      "cwd": "GateA runtime ROOT for gate-a session, otherwise inherited worker cwd",
+      "max_calls_per_test": 1
+    },
+    {
+      "id": "test_record_review_v3_evidence_io_harness:inline:79",
+      "source": "supabase/tests/test_record_review_v3_evidence_io_harness.py",
+      "line": 79,
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-c",
+        "CODE:c2e8abce5bb9b50a4816c8c5a713d853f25e5a6e44be8de6246c5923be13546c"
+      ],
+      "cwd": "GateA runtime ROOT for gate-a session, otherwise inherited worker cwd",
+      "max_calls_per_test": 1
+    },
+    {
+      "id": "test_record_review_v3_evidence_io_harness:inline:88",
+      "source": "supabase/tests/test_record_review_v3_evidence_io_harness.py",
+      "line": 88,
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-c",
+        "CODE:ced5e8a3cf1ddd2d267035efc74d623a43ab5d38277cb655e662e406e75ffcf6"
+      ],
+      "cwd": "GateA runtime ROOT for gate-a session, otherwise inherited worker cwd",
+      "max_calls_per_test": 1
+    },
+    {
+      "id": "test_record_review_v3_evidence_io_harness:inline:75",
+      "source": "supabase/tests/test_record_review_v3_evidence_io_harness.py",
+      "line": 75,
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-c",
+        "CODE:71ebd70adffff4543b39a6dace69eb454468a606e8add6496ad4805a55339c23"
+      ],
+      "cwd": "GateA runtime ROOT for gate-a session, otherwise inherited worker cwd",
+      "max_calls_per_test": 1
+    },
+    {
+      "id": "test_record_review_v3_gate_a_runtime_harness:inline:139",
+      "source": "supabase/tests/test_record_review_v3_gate_a_runtime_harness.py",
+      "line": 139,
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-c",
+        "CODE:bcb06f0c037d2dff01d63d16389bc791017f76e66d0a015d2479072ea4f28a11"
+      ],
+      "cwd": "GateA runtime ROOT for gate-a session, otherwise inherited worker cwd",
+      "max_calls_per_test": 1
+    },
+    {
+      "id": "test_record_review_v3_gate_a_runtime_harness:inline:154",
+      "source": "supabase/tests/test_record_review_v3_gate_a_runtime_harness.py",
+      "line": 154,
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-c",
+        "CODE:71ebd70adffff4543b39a6dace69eb454468a606e8add6496ad4805a55339c23"
+      ],
+      "cwd": "GateA runtime ROOT for gate-a session, otherwise inherited worker cwd",
+      "max_calls_per_test": 1
+    },
+    {
+      "id": "historical-materializer:worker",
+      "source": "tests/controlled-drugs/harness/test_historical_tree.py",
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-I",
+        "-B",
+        "-c",
+        "CODE:d95d1f56682d1669b83aef0f54c409fee91c9cd18e5295a12d45507c23f3f138",
+        "OWNED_VERIFIED_TREE",
+        "PROFILE"
+      ],
+      "profiles": [
+        "stored638",
+        "a2_669"
+      ],
+      "cwd": "inherited worker cwd",
+      "max_calls_per_test": 2,
+      "network_limitation": "-I ignores PYTHONPATH; exact inline code forbids process/socket around imports; no automatic audit inheritance"
+    },
+    {
+      "id": "script:cli_migration_body.py:14",
+      "source": "supabase/tests/test_controlled_cli_body_harness.py",
+      "script": "tests/controlled-drugs/engine/candidate/cli_migration_body.py",
+      "script_sha256": "c8cd378b0b9b3b755a891dc44d3951bb6db8cb920071f342f4f55222345696ef",
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-B",
+        "EXACT_TREE_SCRIPT:tests/controlled-drugs/engine/candidate/cli_migration_body.py",
+        "--check"
+      ],
+      "max_calls_per_test": 1,
+      "cwd": "inherited worker cwd",
+      "mode": "pure --check or exact argument refusal only"
+    },
+    {
+      "id": "script:secondary_review_cli_body.py:15",
+      "source": "supabase/tests/test_controlled_secondary_review_release_harness.py",
+      "script": "tests/controlled-drugs/engine/candidate/secondary_review_cli_body.py",
+      "script_sha256": "61e1d514e67b30e8e807567eb51f398a7702c4e01ab476b0d3c98d002e1f867f",
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-B",
+        "EXACT_TREE_SCRIPT:tests/controlled-drugs/engine/candidate/secondary_review_cli_body.py",
+        "--check"
+      ],
+      "max_calls_per_test": 1,
+      "cwd": "inherited worker cwd",
+      "mode": "pure --check or exact argument refusal only"
+    },
+    {
+      "id": "script:probe-secondary-review-protocol.py:16",
+      "source": "supabase/tests/test_controlled_secondary_review_harness.py",
+      "script": "tests/controlled-drugs/engine/candidate/probe-secondary-review-protocol.py",
+      "script_sha256": "3f491f4045f342bf821721111430cab95e3da412da0b1cffa2f2147c7b5342a4",
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-B",
+        "EXACT_TREE_SCRIPT:tests/controlled-drugs/engine/candidate/probe-secondary-review-protocol.py",
+        "--run-synthetic-local",
+        "--acceptance",
+        "--restore-exercise"
+      ],
+      "max_calls_per_test": 1,
+      "cwd": "inherited worker cwd",
+      "mode": "pure --check or exact argument refusal only"
+    },
+    {
+      "id": "script:run-secondary-review-cli-atomicity.py:17",
+      "source": "supabase/tests/test_controlled_secondary_review_cli_harness.py",
+      "script": "tests/controlled-drugs/engine/candidate/run-secondary-review-cli-atomicity.py",
+      "script_sha256": "6fe8fcae6be21f72087b9c3046cb8644e2fbffabe33bba915457aa9752729c7c",
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-B",
+        "EXACT_TREE_SCRIPT:tests/controlled-drugs/engine/candidate/run-secondary-review-cli-atomicity.py",
+        "--run-synthetic-local",
+        "--acceptance",
+        "--reference-evidence",
+        "/nonexistent-private-receipt"
+      ],
+      "max_calls_per_test": 1,
+      "cwd": "inherited worker cwd",
+      "mode": "pure --check or exact argument refusal only"
+    },
+    {
+      "id": "script:run-secondary-review-cli-atomicity.py:18",
+      "source": "supabase/tests/test_controlled_secondary_review_cli_harness.py",
+      "script": "tests/controlled-drugs/engine/candidate/run-secondary-review-cli-atomicity.py",
+      "script_sha256": "6fe8fcae6be21f72087b9c3046cb8644e2fbffabe33bba915457aa9752729c7c",
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-B",
+        "EXACT_TREE_SCRIPT:tests/controlled-drugs/engine/candidate/run-secondary-review-cli-atomicity.py"
+      ],
+      "max_calls_per_test": 1,
+      "cwd": "inherited worker cwd",
+      "mode": "pure --check or exact argument refusal only"
+    },
+    {
+      "id": "script:run-secondary-review-cli-atomicity.py:19",
+      "source": "supabase/tests/test_controlled_secondary_review_cli_harness.py",
+      "script": "tests/controlled-drugs/engine/candidate/run-secondary-review-cli-atomicity.py",
+      "script_sha256": "6fe8fcae6be21f72087b9c3046cb8644e2fbffabe33bba915457aa9752729c7c",
+      "executable": "PINNED_PYTHON",
+      "argv": [
+        "PINNED_PYTHON",
+        "-B",
+        "EXACT_TREE_SCRIPT:tests/controlled-drugs/engine/candidate/run-secondary-review-cli-atomicity.py",
+        "--run-synthetic-local",
+        "--reference",
+        "--measurement"
+      ],
+      "max_calls_per_test": 1,
+      "cwd": "inherited worker cwd",
+      "mode": "pure --check or exact argument refusal only"
+    },
+    {
+      "id": "official-cli-statement-parser",
+      "source": "tests/controlled-drugs/engine/candidate/secondary_review_ledger.py",
+      "caller": "supabase/tests/test_controlled_secondary_review_release_harness.py::SecondaryReviewReleaseTests.test_official_export_regenerates_frozen_source_expectations",
+      "executable": "PINNED_NODE22_PHYSICAL_EXECUTABLE",
+      "argv": [
+        "node",
+        "-e",
+        "CODE:ed3f7c4e533dda7922f076b3f3b5ad878600f452d29b3e62b8934961f212ceb0"
+      ],
+      "max_calls_per_test": 3,
+      "cwd": "inherited worker cwd",
+      "stdin": "three exact source-declared requests: admitted canonical205, byte-exact206 body, literal unicode one-statement fixture; existing split_sources rechecks official vendor provenance and TypeScript before launch",
+      "typescript_version": "5.8.3",
+      "typescript_sha256": "dd17428736a07e1db1a138d8a14295ddb2699ba780ee15038acdd2c6da5373a0",
+      "audit_limitation": "subprocess.Popen audit tuple does not expose stdin; existing pinned split_sources constrains request construction, not the audit hook"
+    },
+    {
+      "id": "owned-inert-docker-name-script",
+      "source": "supabase/tests/test_record_review_v3_owned_network_harness.py",
+      "caller": "supabase/tests/test_record_review_v3_owned_network_harness.py::OwnedNetworkTests.test_real_inert_subprocess_keeps_private_outputs_without_daemon",
+      "executable": "docker resolved only through exactly one owned temp PATH component",
+      "argv": [
+        "docker",
+        "--host",
+        "unix:///local/docker.sock",
+        "network",
+        "ls"
+      ],
+      "template": "#!${PINNED_PYTHON}\nimport sys\nprint(\"inert network observation\")\nprint(\"private sentinel\",file=sys.stderr)\n",
+      "template_sha256": "0ca7a1b98c5d843473bffab4880cfca0dc2735fce4a365043606d864d3e584ae",
+      "max_calls_per_test": 1,
+      "cwd": "same physical owned temp directory as generated executable",
+      "env_delta": {
+        "PATH": "exact owned temp directory only",
+        "DOCKER_HOST": "unix:///local/docker.sock",
+        "DOCKER_CONTEXT": "absent"
+      },
+      "constraint": "fixed inert Python script; real Docker binary forbidden even with identical argv"
+    }
+  ],
+  "code_literals": {
+    "efd8b2930fb7995a0ee969ac8783a34adfd5a9f509550180a2717daca4df4ed5": {
+      "utf8_bytes": 2493,
+      "code": "\nimport json,os,re,signal,sys,time\nmode=sys.argv[1]\nreceived=open(sys.argv[2],'ab',buffering=0)\nif mode=='nonreading':time.sleep(10)\nif mode=='killhang':signal.signal(signal.SIGTERM,signal.SIG_IGN)\nfor line in sys.stdin.buffer:\n received.write(line)\n if not line.startswith(b'select jsonb_build_object('):continue\n match=re.search(rb\"'nonce','([0-9a-f]+)','index',(-?\\d+),'name','([a-z_]+)'\",line)\n if not match:sys.exit(91)\n nonce,index,name=match.groups();index=int(index)\n marker={'nonce':nonce.decode(),'index':index,'name':name.decode(),\n         'backend_pid':123,'backend_start':'2026-10-22T00:00:00.000001Z'}\n if name==b'provenance_negatives' and mode=='provenancefail':sys.stderr.write('PROVENANCE_PRIMARY_FAILURE_PRIVATE\\n');sys.stderr.flush();sys.exit(7)\n if name==b'provenance_negatives' and mode=='provenancehang':time.sleep(10)\n if index==0:\n  if mode=='earlyzero':sys.exit(0)\n  if mode=='earlynonzero':sys.stderr.write('PRIMARY_SQL_FAILURE_PRIVATE\\n');sys.stderr.flush();sys.exit(3)\n  if mode=='missing':time.sleep(10)\n  if mode=='killhang':time.sleep(10)\n  if mode=='chatter':\n   while True:sys.stdout.write('not a marker\\n');sys.stdout.flush();time.sleep(.005)\n  if mode=='stdoutcap':os.write(1,b'x'*16384);time.sleep(10)\n  if mode=='stderrcap':os.write(2,b'x'*16384);time.sleep(10)\n  if mode=='partialcap':os.write(1,b'x'*2048);time.sleep(10)\n  if mode=='wrongnonce':marker['nonce']='0'*32\n  if mode=='wrongindex':marker['index']=1\n  if mode=='wrongname':marker['name']='managed_fixture'\n  if mode=='backendpid':marker['backend_pid']=124\n  if mode=='backendstart':marker['backend_start']='2026-10-22T00:00:00.000002Z'\n  if mode=='booleanpid':marker['backend_pid']=True\n  if mode=='extra':marker['extra']=1\n  if mode=='malformed':os.write(1,b'{\"lrv_gate_b_phase_marker\":broken}\\n');time.sleep(10)\n  if mode=='invalidutf8':os.write(1,b'\\xff\\n')\n payload=json.dumps({'lrv_gate_b_phase_marker':marker}).encode()+b'\\n'\n if mode=='duplicate' and index==0:payload+=payload\n if mode=='duplicatekey' and index==0:payload=payload.replace(b'\"index\": 0',b'\"index\": 0, \"index\": 0')\n if mode=='fragment':\n  for start in range(0,len(payload),17):os.write(1,payload[start:start+17]);time.sleep(.001)\n else:os.write(1,payload)\n if mode=='slow' and index>=0:time.sleep(.035)\n if mode=='lateextra' and name==b'internal_boundaries':os.write(1,payload)\nif mode=='finalhang':time.sleep(10)\nif mode=='finalnonzero':sys.stderr.write('FINAL_PRIMARY_FAILURE_PRIVATE\\n');sys.stderr.flush();sys.exit(4)\n"
+    },
+    "d548e5efa9d96be620a1819765a84771918913a9d3d8bb7e59b3164ebfb94b55": {
+      "utf8_bytes": 2557,
+      "code": "\nimport json,os,re,signal,sys,time\nmode=sys.argv[1]\nreceived=open(sys.argv[2],'ab',buffering=0)\nif mode=='nonreading':time.sleep(10)\nif mode=='killhang':signal.signal(signal.SIGTERM,signal.SIG_IGN)\nfor line in sys.stdin.buffer:\n received.write(line)\n if not line.startswith(b'select jsonb_build_object('):continue\n match=re.search(rb\"'nonce','([0-9a-f]+)','index',(-?\\d+),'name','([a-z_0-9]+)'\",line)\n if not match:sys.exit(91)\n nonce,index,name=match.groups();index=int(index)\n marker={'nonce':nonce.decode(),'index':index,'name':name.decode(),\n         'backend_pid':123,'backend_start':'2026-10-22T00:00:00.000001Z'}\n if name==b'stubs_guard_acl' and mode=='provenancefail':sys.stderr.write('PROVENANCE_PRIMARY_FAILURE_PRIVATE\\n');sys.stderr.flush();sys.exit(7)\n if name==b'stubs_guard_acl' and mode=='provenancehang':time.sleep(10)\n if index==0:\n  if mode=='earlyzero':sys.exit(0)\n  if mode=='earlynonzero':sys.stderr.write('PRIMARY_SQL_FAILURE_PRIVATE\\n');sys.stderr.flush();sys.exit(3)\n  if mode=='missing':time.sleep(10)\n  if mode=='killhang':time.sleep(10)\n  if mode=='chatter':\n   while True:sys.stdout.write('not a marker\\n');sys.stdout.flush();time.sleep(.005)\n  if mode=='stdoutcap':os.write(1,b'x'*16384);time.sleep(10)\n  if mode=='stderrcap':os.write(2,b'x'*16384);time.sleep(10)\n  if mode=='partialcap':os.write(1,b'x'*2048);time.sleep(10)\n  if mode=='wrongnonce':marker['nonce']='0'*32\n  if mode=='wrongindex':marker['index']=1\n  if mode=='wrongname':marker['name']='capture_baseline'\n  if mode=='backendpid':marker['backend_pid']=124\n  if mode=='backendstart':marker['backend_start']='2026-10-22T00:00:00.000002Z'\n  if mode=='booleanpid':marker['backend_pid']=True\n  if mode=='booleanindex':marker['index']=False\n  if mode=='extra':marker['extra']=1\n  if mode=='malformed':os.write(1,b'{\"lrv_configuration_input_phase_marker\":broken}\\n');time.sleep(10)\n  if mode=='invalidutf8':os.write(1,b'\\xff\\n')\n payload=json.dumps({'lrv_configuration_input_phase_marker':marker}).encode()+b'\\n'\n if mode=='duplicate' and index==0:payload+=payload\n if mode=='duplicatekey' and index==0:payload=payload.replace(b'\"index\": 0',b'\"index\": 0, \"index\": 0')\n if mode=='fragment':\n  for start in range(0,len(payload),17):os.write(1,payload[start:start+17]);time.sleep(.001)\n else:os.write(1,payload)\n if mode=='slow' and index>=0:time.sleep(.035)\n if mode=='lateextra' and name==b'final_inventory':os.write(1,payload)\nif mode=='finalhang':time.sleep(10)\nif mode=='finalnonzero':sys.stderr.write('FINAL_PRIMARY_FAILURE_PRIVATE\\n');sys.stderr.flush();sys.exit(4)\n"
+    },
+    "fe1a810393b66b4fbd0f7364621eed80e1c62c215b3be04e42700a4d317ac9bd": {
+      "utf8_bytes": 2561,
+      "code": "\nimport json,os,re,signal,sys,time\nmode=sys.argv[1]\nreceived=open(sys.argv[2],'ab',buffering=0)\nif mode=='nonreading':time.sleep(10)\nif mode=='killhang':signal.signal(signal.SIGTERM,signal.SIG_IGN)\nfor line in sys.stdin.buffer:\n received.write(line)\n if not line.startswith(b'select jsonb_build_object('):continue\n match=re.search(rb\"'nonce','([0-9a-f]+)','index',(-?\\d+),'name','([a-z_0-9]+)'\",line)\n if not match:sys.exit(91)\n nonce,index,name=match.groups();index=int(index)\n marker={'nonce':nonce.decode(),'index':index,'name':name.decode(),\n         'backend_pid':123,'backend_start':'2026-10-22T00:00:00.000001Z'}\n if name==b'stubs_and_guards' and mode=='provenancefail':sys.stderr.write('PROVENANCE_PRIMARY_FAILURE_PRIVATE\\n');sys.stderr.flush();sys.exit(7)\n if name==b'stubs_and_guards' and mode=='provenancehang':time.sleep(10)\n if index==0:\n  if mode=='earlyzero':sys.exit(0)\n  if mode=='earlynonzero':sys.stderr.write('PRIMARY_SQL_FAILURE_PRIVATE\\n');sys.stderr.flush();sys.exit(3)\n  if mode=='missing':time.sleep(10)\n  if mode=='killhang':time.sleep(10)\n  if mode=='chatter':\n   while True:sys.stdout.write('not a marker\\n');sys.stdout.flush();time.sleep(.005)\n  if mode=='stdoutcap':os.write(1,b'x'*16384);time.sleep(10)\n  if mode=='stderrcap':os.write(2,b'x'*16384);time.sleep(10)\n  if mode=='partialcap':os.write(1,b'x'*2048);time.sleep(10)\n  if mode=='wrongnonce':marker['nonce']='0'*32\n  if mode=='wrongindex':marker['index']=1\n  if mode=='wrongname':marker['name']='capture_baseline'\n  if mode=='backendpid':marker['backend_pid']=124\n  if mode=='backendstart':marker['backend_start']='2026-10-22T00:00:00.000002Z'\n  if mode=='booleanpid':marker['backend_pid']=True\n  if mode=='booleanindex':marker['index']=False\n  if mode=='extra':marker['extra']=1\n  if mode=='malformed':os.write(1,b'{\"lrv_configuration_record_phase_marker\":broken}\\n');time.sleep(10)\n  if mode=='invalidutf8':os.write(1,b'\\xff\\n')\n payload=json.dumps({'lrv_configuration_record_phase_marker':marker}).encode()+b'\\n'\n if mode=='duplicate' and index==0:payload+=payload\n if mode=='duplicatekey' and index==0:payload=payload.replace(b'\"index\": 0',b'\"index\": 0, \"index\": 0')\n if mode=='fragment':\n  for start in range(0,len(payload),17):os.write(1,payload[start:start+17]);time.sleep(.001)\n else:os.write(1,payload)\n if mode=='slow' and index>=0:time.sleep(.035)\n if mode=='lateextra' and name==b'final_inventory':os.write(1,payload)\nif mode=='finalhang':time.sleep(10)\nif mode=='finalnonzero':sys.stderr.write('FINAL_PRIMARY_FAILURE_PRIVATE\\n');sys.stderr.flush();sys.exit(4)\n"
+    },
+    "dcb72adb8a40059ed45dfa4841de1ec265e3ce1f77d63515ce57b9c788fa2119": {
+      "utf8_bytes": 2564,
+      "code": "\nimport json,os,re,signal,sys,time\nmode=sys.argv[1]\nlast=sys.argv[3].encode();fault=sys.argv[4].encode();second=sys.argv[5]\nreceived=open(sys.argv[2],'ab',buffering=0)\nif mode=='nonreading':time.sleep(10)\nif mode=='killhang':signal.signal(signal.SIGTERM,signal.SIG_IGN)\nfor line in sys.stdin.buffer:\n received.write(line)\n if not line.startswith(b'select jsonb_build_object('):continue\n match=re.search(rb\"'nonce','([0-9a-f]+)','index',(-?\\d+),'name','([A-Za-z_0-9]+)'\",line)\n if not match:sys.exit(91)\n nonce,index,name=match.groups();index=int(index)\n marker={'nonce':nonce.decode(),'index':index,'name':name.decode(),\n         'backend_pid':123,'backend_start':'2026-10-22T00:00:00.000001Z'}\n if name==fault and mode=='provenancefail':sys.stderr.write('PROVENANCE_PRIMARY_FAILURE_PRIVATE\\n');sys.stderr.flush();sys.exit(7)\n if name==fault and mode=='provenancehang':time.sleep(10)\n if index==0:\n  if mode=='earlyzero':sys.exit(0)\n  if mode=='earlynonzero':sys.stderr.write('PRIMARY_SQL_FAILURE_PRIVATE\\n');sys.stderr.flush();sys.exit(3)\n  if mode=='missing':time.sleep(10)\n  if mode=='killhang':time.sleep(10)\n  if mode=='chatter':\n   while True:sys.stdout.write('not a marker\\n');sys.stdout.flush();time.sleep(.005)\n  if mode=='stdoutcap':os.write(1,b'x'*16384);time.sleep(10)\n  if mode=='stderrcap':os.write(2,b'x'*16384);time.sleep(10)\n  if mode=='partialcap':os.write(1,b'x'*2048);time.sleep(10)\n  if mode=='wrongnonce':marker['nonce']='0'*32\n  if mode=='wrongindex':marker['index']=1\n  if mode=='wrongname':marker['name']=second\n  if mode=='backendpid':marker['backend_pid']=124\n  if mode=='backendstart':marker['backend_start']='2026-10-22T00:00:00.000002Z'\n  if mode=='booleanpid':marker['backend_pid']=True\n  if mode=='booleanindex':marker['index']=False\n  if mode=='extra':marker['extra']=1\n  if mode=='malformed':os.write(1,b'{\"lrv_a2_positive_phase_marker\":broken}\\n');time.sleep(10)\n  if mode=='invalidutf8':os.write(1,b'\\xff\\n')\n payload=json.dumps({'lrv_a2_positive_phase_marker':marker}).encode()+b'\\n'\n if mode=='duplicate' and index==0:payload+=payload\n if mode=='duplicatekey' and index==0:payload=payload.replace(b'\"index\": 0',b'\"index\": 0, \"index\": 0')\n if mode=='fragment':\n  for start in range(0,len(payload),17):os.write(1,payload[start:start+17]);time.sleep(.001)\n else:os.write(1,payload)\n if mode=='slow' and index>=0:time.sleep(.035)\n if mode=='lateextra' and name==last:os.write(1,payload)\nif mode=='finalhang':time.sleep(10)\nif mode=='finalnonzero':sys.stderr.write('FINAL_PRIMARY_FAILURE_PRIVATE\\n');sys.stderr.flush();sys.exit(4)\n"
+    },
+    "8e0f6bf5f9a9a6efa8cf7d27de006f2951f26487ffcd55dbf6dcc40a261b3b78": {
+      "utf8_bytes": 155,
+      "code": "import sys,time;d=sys.stdin.buffer.read();sys.stdout.buffer.write(d);sys.stdout.flush();sys.stderr.write('specific error\\n');sys.stderr.flush();sys.exit(0)"
+    },
+    "d5264aad26ce0bdd6445c8c35e1fb0cdc244486734692b38e9d00e322bd2341e": {
+      "utf8_bytes": 155,
+      "code": "import sys,time;d=sys.stdin.buffer.read();sys.stdout.buffer.write(d);sys.stdout.flush();sys.stderr.write('specific error\\n');sys.stderr.flush();sys.exit(7)"
+    },
+    "32971add27dfd526d7ca6be2aec5a2ec7391a7c9ab0e5d9cbf7b3a9dda2981b2": {
+      "utf8_bytes": 158,
+      "code": "import sys,time;d=sys.stdin.buffer.read();sys.stdout.buffer.write(d);sys.stdout.flush();sys.stderr.write('specific error\\n');sys.stderr.flush();time.sleep(10)"
+    },
+    "bb189ec35a873026a8bde5e6cc0b6ddcc13eb849191808bde93d9bb0301291bd": {
+      "utf8_bytes": 61,
+      "code": "import sys;print('raw proof');sys.stderr.write('raw failure')"
+    },
+    "c2e8abce5bb9b50a4816c8c5a713d853f25e5a6e44be8de6246c5923be13546c": {
+      "utf8_bytes": 40,
+      "code": "print('owned cleanup remains available')"
+    },
+    "ced5e8a3cf1ddd2d267035efc74d623a43ab5d38277cb655e662e406e75ffcf6": {
+      "utf8_bytes": 16,
+      "code": "print('cleanup')"
+    },
+    "71ebd70adffff4543b39a6dace69eb454468a606e8add6496ad4805a55339c23": {
+      "utf8_bytes": 105,
+      "code": "import os,signal;signal.signal(signal.SIGXFSZ,signal.SIG_DFL);os.write(1,b'x'*8192);os.write(1,b'y'*8192)"
+    },
+    "bcb06f0c037d2dff01d63d16389bc791017f76e66d0a015d2479072ea4f28a11": {
+      "utf8_bytes": 139,
+      "code": "import sys,time;print('{\"pid\":42,\"backend_start\":\"fixed\"}',flush=True);sys.stderr.write('partial stream');sys.stderr.flush();time.sleep(30)"
+    },
+    "d95d1f56682d1669b83aef0f54c409fee91c9cd18e5295a12d45507c23f3f138": {
+      "utf8_bytes": 1280,
+      "code": "\nimport importlib.util,json,pathlib,socket,subprocess,sys,time\nfrom unittest.mock import patch\nassert __debug__ and sys.flags.optimize == 0\nroot=pathlib.Path(sys.argv[1]);profile=sys.argv[2]\nsource=root/'tests/controlled-drugs/engine/candidate'\nsys.path.insert(0,str(source))\nwith patch.object(subprocess,'Popen',side_effect=AssertionError('No database/process in historical worker')),patch.object(socket,'socket',side_effect=AssertionError('No socket in historical worker')):\n if profile=='stored638':\n  import record_review_v3_gate_a_runtime as owned\n  import record_review_v3_configuration_record_runtime as runtime\n  values=runtime.integration_gate(owned,time.monotonic()+60)\n  assert len(values)==638\n  assert not (root/'tmp/secondary-review-20261021/configuration-record-fixture-draft').exists()\n else:\n  path=source/'record_review_v3_a2_positive/runtime.py'\n  spec=importlib.util.spec_from_file_location('fixed_a2_runtime',path)\n  runtime=importlib.util.module_from_spec(spec);sys.modules[spec.name]=runtime;spec.loader.exec_module(runtime)\n  values=runtime.input_map(lambda:None)\n  assert len(values)==669 and len(runtime.dep.owned.source_inputs())==645\n print(json.dumps({'profile':profile,'source_count':len(values),'unchanged_gate_passed':True,'database_commands':0}))\n"
+    },
+    "ed3f7c4e533dda7922f076b3f3b5ad878600f452d29b3e62b8934961f212ceb0": {
+      "utf8_bytes": 1288,
+      "code": "\nconst fs = require('fs');\nconst vm = require('vm');\nconst input = JSON.parse(fs.readFileSync(0, 'utf8'));\nconst ts = require(input.typescript);\nif (ts.version !== '5.8.3') throw Error('Exact TypeScript version required');\nfunction load(name, dependency) {\n  const raw = fs.readFileSync(input.vendor + '/' + name + '.ts', 'utf8');\n  const compiled = ts.transpileModule(raw, {compilerOptions: {\n    module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022\n  }, reportDiagnostics: true});\n  if ((compiled.diagnostics || []).some(d => d.category === ts.DiagnosticCategory.Error))\n    throw Error('Official parser transpilation failed');\n  const module = {exports: {}};\n  const requireExact = name => {\n    if (name !== './sql-split.ts' || !dependency) throw Error('Unreviewed parser dependency');\n    return dependency;\n  };\n  vm.runInNewContext(compiled.outputText, {exports: module.exports, module, require: requireExact});\n  return module.exports;\n}\nconst splitter = load('sql-split');\nconst parser = load('migration-file', splitter);\nprocess.stdout.write(JSON.stringify(input.sources.map(source => {\n  const parsed = parser.parseMigrationContent(source.body);\n  return {name: source.name, statements: Array.from(parsed.statements), transaction_mode: parsed.transactionMode};\n})));\n"
+    }
+  },
+  "source_pins": {
+    "supabase/tests/test_record_review_v3_phased_session_harness.py": "7b404aa523d68bfd658dc2e2594d3d72b238ec1641aa40cad98b880845a2a0d3",
+    "supabase/tests/test_record_review_v3_configuration_session_harness.py": "23d1759420bbce5dab7bc5e0d52e26984853091983af0601f07b257722ba40c4",
+    "supabase/tests/test_record_review_v3_configuration_record_session_harness.py": "a18699e952d0b4896829ea8d0afed23851160635beca8e9f16c93e67bf6f3970",
+    "tests/controlled-drugs/engine/candidate/record_review_v3_a2_positive/test_session.py": "54e00749de077f7eef0cf4c4568593ceb066918cc1a68326db174474b28b2da5",
+    "supabase/tests/test_record_review_v3_evidence_io_harness.py": "e4b6c81def654ceebd05230848b27ecb8f83dd1659f81e2c6155ad3a7dfa5e92",
+    "supabase/tests/test_record_review_v3_gate_a_runtime_harness.py": "09e9646b5b1499974db7811aff64fa23867cf3d4eb9de8d8e27c8a56bdcdc8a4",
+    "tests/controlled-drugs/harness/test_historical_tree.py": "448af76541a0fc4c217a597b48e7e161bdf492070c84e1355a3322ef5c6cc004",
+    "tests/controlled-drugs/engine/candidate/cli_migration_body.py": "c8cd378b0b9b3b755a891dc44d3951bb6db8cb920071f342f4f55222345696ef",
+    "supabase/tests/test_controlled_cli_body_harness.py": "05808aa5bab7e5ee2a93ea17ce3841bf00b71ca8231707b6d98b87a12e2188f1",
+    "tests/controlled-drugs/engine/candidate/secondary_review_cli_body.py": "61e1d514e67b30e8e807567eb51f398a7702c4e01ab476b0d3c98d002e1f867f",
+    "supabase/tests/test_controlled_secondary_review_release_harness.py": "5e6d763af03a017ae33d95d8c20967ae823be550280746eccecbd914db9a1b3f",
+    "tests/controlled-drugs/engine/candidate/probe-secondary-review-protocol.py": "3f491f4045f342bf821721111430cab95e3da412da0b1cffa2f2147c7b5342a4",
+    "supabase/tests/test_controlled_secondary_review_harness.py": "bebb9355793436a86ff008f3adf6bff32ea3fb8157c30b100242d63139291eaa",
+    "tests/controlled-drugs/engine/candidate/run-secondary-review-cli-atomicity.py": "6fe8fcae6be21f72087b9c3046cb8644e2fbffabe33bba915457aa9752729c7c",
+    "supabase/tests/test_controlled_secondary_review_cli_harness.py": "e289ecc1862dfa0cd85a9025b63c5cf18cd69a20540e65012581c09d1eceb25e",
+    "tests/controlled-drugs/engine/candidate/secondary_review_ledger.py": "0f8a791b1bd7dc8cc2a3e60018e2ea9aacb5451ff5465136b7e75675c3e5f63d",
+    "supabase/tests/test_record_review_v3_owned_network_harness.py": "0b8511dbc7d453307ad7355d8825ad412e6322afac8c44beb35751ea890eaf8e",
+    "tests/controlled-drugs/engine/candidate/record_review_v3_a2_positive/session.py": "e1e42c4091231e62b38c89d021990f9d8c54f6deca15ee9930447bb7053ec700"
+  },
+  "no_live_child_expectation_derivation": true
+}

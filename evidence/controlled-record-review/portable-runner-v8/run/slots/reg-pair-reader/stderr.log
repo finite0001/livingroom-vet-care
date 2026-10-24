@@ -1,0 +1,20 @@
+test_ancestor_close_error_after_valid_pair_revokes_success (portable_regression_target_reg_pair_reader.PairReaderTests.test_ancestor_close_error_after_valid_pair_revokes_success) ... ok
+test_context_is_copied_to_immutable_bytes_before_caller_mutation (portable_regression_target_reg_pair_reader.PairReaderTests.test_context_is_copied_to_immutable_bytes_before_caller_mutation) ... ok
+test_deadline_during_bounded_read_and_chunks (portable_regression_target_reg_pair_reader.PairReaderTests.test_deadline_during_bounded_read_and_chunks) ... ok
+test_exact_pair_closes_every_held_descriptor_before_success (portable_regression_target_reg_pair_reader.PairReaderTests.test_exact_pair_closes_every_held_descriptor_before_success) ... ok
+test_existing_guard_and_symlink_ancestor_refuse_before_launch (portable_regression_target_reg_pair_reader.PairReaderTests.test_existing_guard_and_symlink_ancestor_refuse_before_launch) ... ok
+test_expected_ids_mismatch_fails_and_closes (portable_regression_target_reg_pair_reader.PairReaderTests.test_expected_ids_mismatch_fails_and_closes) ... ok
+test_fifo_symlink_hardlink_and_size_refuse (portable_regression_target_reg_pair_reader.PairReaderTests.test_fifo_symlink_hardlink_and_size_refuse) ... ok
+test_final_close_deadline_cannot_return_valid_pair (portable_regression_target_reg_pair_reader.PairReaderTests.test_final_close_deadline_cannot_return_valid_pair) ... ok
+test_invalid_deadline_paths_names_refuse (portable_regression_target_reg_pair_reader.PairReaderTests.test_invalid_deadline_paths_names_refuse) ... ok
+test_leaf_close_error_is_failure_and_all_ancestor_fds_close (portable_regression_target_reg_pair_reader.PairReaderTests.test_leaf_close_error_is_failure_and_all_ancestor_fds_close) ... ok
+test_leaf_replacement_between_read_and_stat_refuses (portable_regression_target_reg_pair_reader.PairReaderTests.test_leaf_replacement_between_read_and_stat_refuses) ... ok
+test_missing_file_and_nonzero_exit_no_terminal_fallback (portable_regression_target_reg_pair_reader.PairReaderTests.test_missing_file_and_nonzero_exit_no_terminal_fallback) ... ok
+test_pair_failure_poison_via_actual_frozen_transport_no_child (portable_regression_target_reg_pair_reader.PairReaderTests.test_pair_failure_poison_via_actual_frozen_transport_no_child) ... ok
+test_partial_read_refuses_without_zero_length_success (portable_regression_target_reg_pair_reader.PairReaderTests.test_partial_read_refuses_without_zero_length_success) ... ok
+test_root_replacement_refuses_held_old_tree (portable_regression_target_reg_pair_reader.PairReaderTests.test_root_replacement_refuses_held_old_tree) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.016s
+
+OK

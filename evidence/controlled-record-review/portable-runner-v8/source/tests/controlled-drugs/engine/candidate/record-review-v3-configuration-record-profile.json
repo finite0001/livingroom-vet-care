@@ -1,0 +1,26 @@
+{
+  "auth_acceptance": false,
+  "base_admission_inputs": 256,
+  "body_sources": {
+    "record-review-v3-calendar-observation.sql": "fd96822c2b2b65477055144324f801a0614d626b5ad224b92518aaa8979f1c64",
+    "record-review-v3-configuration-pair.sql": "d65816c5619e43549e3951f4c3eda9d6a0b5a72f51f88622d121ba064172fcdd",
+    "record-review-v3-configuration-record-projection.sql": "d32a06ab6197d5ad24b19eb0ebd6867b6cb8a442f197ae7b7a1e5a00329cd556",
+    "record-review-v3-configuration-record-value.sql": "2161acca2cba0325a2cae398dc5f1157fae78f522fd6ef2a470497634a255697",
+    "record-review-v3-stored-configuration.sql": "8699b3930274124a9e45f226d2bfbe6eac313b852f7019319f6c6736e24a24f3"
+  },
+  "candidate_not_admitted": true,
+  "derivation_inputs": 267,
+  "descriptor_kind": "controlled-review-v3-private-configuration-record-v1",
+  "foreign_key_triggers": 60,
+  "foreign_keys": 15,
+  "functions": 37,
+  "kind": "configuration-record-profile-declaration-v1",
+  "metadata_sha256": "c1651682e89a7c0e158b454e3451821f9b26cc74aea27b6cf0dc202643acfa51",
+  "new_derivation_inputs": 11,
+  "publication": false,
+  "runtime_executed": false,
+  "schema_sha256": "cc275597b0e96de6c4a92c5e3be8000f498fb0af793281c7c40191121e003726",
+  "source_metadata_location": "Private source declarations identify immutable body bytes; this profile resolves the five fixed basenames only within its admitted canonical source root. No private path is executed.",
+  "stage": "private_configuration_record_v1",
+  "tables": 13
+}

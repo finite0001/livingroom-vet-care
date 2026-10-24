@@ -1,0 +1,12 @@
+test_actual_old_missing_path_failure_then_all25_new_assertions_pass_offline (portable_regression_target_reg_stored_adapter_v2.StoredAdapterV2Tests.test_actual_old_missing_path_failure_then_all25_new_assertions_pass_offline) ... ok
+test_changed_missing_symlink_and_fifo_support_refuse_before_target_import (portable_regression_target_reg_stored_adapter_v2.StoredAdapterV2Tests.test_changed_missing_symlink_and_fifo_support_refuse_before_target_import) ... ok
+test_explicit_support_path_and_legacy_hash_are_exact_no_private_fallback (portable_regression_target_reg_stored_adapter_v2.StoredAdapterV2Tests.test_explicit_support_path_and_legacy_hash_are_exact_no_private_fallback) ... ok
+test_factory_changes_no_target_global_and_class_cleanup_restores_even_failed_setup (portable_regression_target_reg_stored_adapter_v2.StoredAdapterV2Tests.test_factory_changes_no_target_global_and_class_cleanup_restores_even_failed_setup) ... ok
+test_four_replacement_asts_and_twentyone_inherited_method_identities_unchanged (portable_regression_target_reg_stored_adapter_v2.StoredAdapterV2Tests.test_four_replacement_asts_and_twentyone_inherited_method_identities_unchanged) ... ok
+test_original_deadline_and_external_failure_are_not_reset_or_swallowed (portable_regression_target_reg_stored_adapter_v2.StoredAdapterV2Tests.test_original_deadline_and_external_failure_are_not_reset_or_swallowed) ... ok
+test_prospective_worker_has_only_explicit_source_placement_role_delta (portable_regression_target_reg_stored_adapter_v2.StoredAdapterV2Tests.test_prospective_worker_has_only_explicit_source_placement_role_delta) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 6.954s
+
+OK

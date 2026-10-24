@@ -1,0 +1,22 @@
+test_create_timeout_or_nonzero_is_not_adopted_or_removed (portable_worker_target.OwnedNetworkTests.test_create_timeout_or_nonzero_is_not_adopted_or_removed) ... ok
+test_docker_overlap_and_name_nonce_collisions_never_create (portable_worker_target.OwnedNetworkTests.test_docker_overlap_and_name_nonce_collisions_never_create) ... ok
+test_empty_subnet_inventory_only_allowed_for_exact_host_none_builtins (portable_worker_target.OwnedNetworkTests.test_empty_subnet_inventory_only_allowed_for_exact_host_none_builtins) ... ok
+test_explicit_create_exact_immutable_removal_without_cli_labels (portable_worker_target.OwnedNetworkTests.test_explicit_create_exact_immutable_removal_without_cli_labels) ... ok
+test_failed_network_removal_is_not_retried (portable_worker_target.OwnedNetworkTests.test_failed_network_removal_is_not_retried) ... ok
+test_file_backed_runner_pins_endpoint_and_same_bounded_deadline (portable_worker_target.OwnedNetworkTests.test_file_backed_runner_pins_endpoint_and_same_bounded_deadline) ... ok
+test_file_backed_timeout_retains_partial_output_and_fixed_exception_type (portable_worker_target.OwnedNetworkTests.test_file_backed_timeout_retains_partial_output_and_fixed_exception_type) ... ok
+test_foreign_attached_project_workdir_or_network_refuses_before_stop (portable_worker_target.OwnedNetworkTests.test_foreign_attached_project_workdir_or_network_refuses_before_stop) ... ok
+test_host_overlap_including_split_default_refused (portable_worker_target.OwnedNetworkTests.test_host_overlap_including_split_default_refused) ... ok
+test_inspection_duplicate_keys_refused (portable_worker_target.OwnedNetworkTests.test_inspection_duplicate_keys_refused) ... ok
+test_inspection_owner_id_ipam_and_flag_drift_never_removed (portable_worker_target.OwnedNetworkTests.test_inspection_owner_id_ipam_and_flag_drift_never_removed) ... ok
+test_network_inventory_drift_or_incomplete_inspection_refused (portable_worker_target.OwnedNetworkTests.test_network_inventory_drift_or_incomplete_inspection_refused) ... ok
+test_no_create_path_cleanup_is_explicit_and_no_mutation (portable_worker_target.OwnedNetworkTests.test_no_create_path_cleanup_is_explicit_and_no_mutation) ... ok
+test_nonlocal_endpoint_refused (portable_worker_target.OwnedNetworkTests.test_nonlocal_endpoint_refused) ... ok
+test_owned_attachment_can_stop_but_must_be_gone_before_remove (portable_worker_target.OwnedNetworkTests.test_owned_attachment_can_stop_but_must_be_gone_before_remove) ... ok
+test_real_inert_subprocess_keeps_private_outputs_without_daemon (portable_worker_target.OwnedNetworkTests.test_real_inert_subprocess_keeps_private_outputs_without_daemon) ... ok
+test_route_parser_rejects_ambiguity_and_keeps_nonoverlapping_abbreviations (portable_worker_target.OwnedNetworkTests.test_route_parser_rejects_ambiguity_and_keeps_nonoverlapping_abbreviations) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.486s
+
+OK

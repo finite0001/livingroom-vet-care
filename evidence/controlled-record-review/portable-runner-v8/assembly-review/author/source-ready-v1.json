@@ -1,0 +1,43 @@
+{
+  "actual_rerun_pending": true,
+  "exact_publication": {
+    "bytes": 163795442,
+    "files": 908
+  },
+  "files": {
+    "/Users/davidedler/Developer/lrv-controlled-runner-proof-20261024/evidence/controlled-record-review/portable-runner-v8/assemble.py": {
+      "bytes": 13637,
+      "sha256": "8b6b6c3215b61a2b2df9d1623c1c058932c828d15594a4d6361bf3dd1e870a49"
+    },
+    "/private/tmp/lrv-v8-assemble-author-kg4ti85l/actual-prepare-author-receipt.json": {
+      "bytes": 1023,
+      "sha256": "c0ccd39e548dbc94b8f7a6758c994339736fac7e473b96bdbf1bee6ecd67ac83"
+    },
+    "/private/tmp/lrv-v8-assemble-author-kg4ti85l/actual-prepare.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/private/tmp/lrv-v8-assemble-author-kg4ti85l/actual-prepare.stdout": {
+      "bytes": 3642,
+      "sha256": "a965961d2f6b5d081d9a15bc7fde92f311bac19db00e0648aecb7bf63dc0b39e"
+    },
+    "/private/tmp/lrv-v8-assemble-author-kg4ti85l/inside-source.stderr": {
+      "bytes": 842,
+      "sha256": "56b040b6f2dcdfc91c5ff36e3a434d84874876cad86854e44ed32db0711e65c0"
+    },
+    "/private/tmp/lrv-v8-assemble-author-kg4ti85l/inside-source.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/private/tmp/lrv-v8-assemble-author-kg4ti85l/source-controls.json": {
+      "bytes": 952,
+      "sha256": "2e697b2df0cc03e0dc495b81be17d478b46a8d29369e9794b704b30be07ff54a"
+    }
+  },
+  "inside_source_negative_no_writes": true,
+  "kind": "v8-preparation-wrapper-source-ready-v1",
+  "runtime_admission": false,
+  "scope": "prepare-only, no runner/targets/toolsetup/network/Auth/DB",
+  "source_controls_passed": 5,
+  "source_implementation_frozen": true
+}

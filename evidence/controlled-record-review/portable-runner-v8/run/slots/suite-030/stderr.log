@@ -1,0 +1,12 @@
+test_actual_source_enumerates_every_integer_offset_with_exact_roundtrip (portable_worker_target.CalendarContractTests.test_actual_source_enumerates_every_integer_offset_with_exact_roundtrip) ... ok
+test_consecutive31_dates_produce_exact63_local_values (portable_worker_target.CalendarContractTests.test_consecutive31_dates_produce_exact63_local_values) ... ok
+test_earliest_midnight_and_explicit_close_fold_fixture_contract (portable_worker_target.CalendarContractTests.test_earliest_midnight_and_explicit_close_fold_fixture_contract) ... ok
+test_exact_observation_and_supplied_utc_are_preserved (portable_worker_target.CalendarContractTests.test_exact_observation_and_supplied_utc_are_preserved) ... ok
+test_exact_unused_private_function_inventory (portable_worker_target.CalendarContractTests.test_exact_unused_private_function_inventory) ... ok
+test_independent_gap_fold_nonhour_leap_and_rollover_vectors (portable_worker_target.CalendarContractTests.test_independent_gap_fold_nonhour_leap_and_rollover_vectors) ... ok
+test_integral_second_and_inclusive_offset_edges (portable_worker_target.CalendarContractTests.test_integral_second_and_inclusive_offset_edges) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 2.091s
+
+OK

@@ -1,0 +1,66 @@
+{
+  "kind": "prospective-stored-adapter-v2-source-ready",
+  "actual_runner_or_db_acceptance": false,
+  "operational_source_selection": false,
+  "frozen_v1_unchanged": true,
+  "controls": {
+    "source_controls": 7,
+    "canonical_regression_controls": 15,
+    "skips": 0,
+    "children": 0,
+    "network": 0,
+    "database": 0,
+    "nested_25_assertions": "pass with explicitly shape-only historical callback; not credited as actual historical638 or full runner acceptance"
+  },
+  "files": {
+    "portable_runtime_adapter_v2.py": {
+      "bytes": 16232,
+      "sha256": "22c0253e01b86409f86d10b7eea1fe8d66acc18fba736b4b0374c52a77e6536c"
+    },
+    "source-pins-v2.json": {
+      "bytes": 1642,
+      "sha256": "e7538fd6fa32abcd2e9064ab37c68e2a140098b4c6c3dbdb848d2785a3352306"
+    },
+    "worker.py": {
+      "bytes": 27228,
+      "sha256": "63cbfa02435a084c26c1bad45b1928013a40b538b79cd717d96aa097de5195e9"
+    },
+    "test_stored_adapter_v2.py": {
+      "bytes": 8928,
+      "sha256": "e7b785e0d8ccc727c9964dd3f07d62045c71f5c11538f046cf6ba9d69695fd54"
+    },
+    "test_stored_adapter_v2_canonical.py": {
+      "bytes": 8939,
+      "sha256": "56fa226ca553bb09ae1f336086154d722bfe0f75c68620fe53e28a6ae18d966f"
+    },
+    "test_portable_runtime_adapter_v2_regression.py": {
+      "bytes": 8032,
+      "sha256": "cf4d345b35144fcdda1a7375d341a9406d030ce69c818b4a39b0510497aa7c1e"
+    },
+    "lineage.json": {
+      "bytes": 2690,
+      "sha256": "e837d135705fdb780c7bdf779379995ddb565684445ab0a644fadf0dcdda0415"
+    }
+  },
+  "public_baseline": {
+    "path": "tests/controlled-drugs/fixtures/record-review-v3/history/maps/stored634.json",
+    "bytes": 84980,
+    "sha256": "9138f6415099ebab1081ebfe8f169b0f13aca8d06cb4c375cf1fffa737044b54"
+  },
+  "proposed_roles": {
+    "production_worker": "worker.py",
+    "stored_adapter": "portable_runtime_adapter_v2.py",
+    "adapter_pins": "source-pins-v2.json",
+    "replacement_old8_regression": "test_portable_runtime_adapter_v2_regression.py",
+    "additional_new7_regression": "test_stored_adapter_v2_canonical.py"
+  },
+  "resource_declaration": {
+    "additional_regression_jobs": 1,
+    "additional_pooled_evidence_reservation_bytes": 16777216,
+    "largest_new_negative_fixture_regular_bytes": 306999,
+    "new_90MiB_fixture_tree_copies": 0,
+    "fixture_generation": "same unchanged inherited25 offline assertions, serial; source-only SQL strings in memory",
+    "fixture_deadline_seconds": 120,
+    "formal_deadline": "unchanged original worker job cutoff; passed directly only production adapter path"
+  }
+}

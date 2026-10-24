@@ -1,0 +1,14 @@
+{
+  "controller_executed": false,
+  "elapsed": 3.616865208008676,
+  "kind": "actual-complete-publication-assembly-v1",
+  "result": {
+    "authority": "independently_reviewed_recipe_not_observed_reseal",
+    "bytes": 163795442,
+    "controller_execution": false,
+    "expected_manifest_sha256": "82f91a8765b078778615c9314af37a0a1a895f2bede4ff2f843c0e00b1a54186",
+    "files": 908,
+    "kind": "prospective-canonical-publication-v1",
+    "root": "/private/tmp/lrvpub-9ysr1z4j/publication-822fafdb60d440aba970338fbdc7e300"
+  }
+}

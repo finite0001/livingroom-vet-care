@@ -1,0 +1,15 @@
+test_changed_frozen_parent_and_writer_are_refused (portable_worker_target.OwnedAttachmentReviewCloneTests.test_changed_frozen_parent_and_writer_are_refused) ... ok
+test_clone_rows_and_auth_owner_raw_acl_null_state_must_match (portable_worker_target.OwnedAttachmentReviewCloneTests.test_clone_rows_and_auth_owner_raw_acl_null_state_must_match) ... ok
+test_cross_database_oid_changes_are_allowed_after_independent_checks (portable_worker_target.OwnedAttachmentReviewCloneTests.test_cross_database_oid_changes_are_allowed_after_independent_checks) ... ok
+test_entrypoint_profile_is_passed_to_all_checks_and_conditional_dump (portable_worker_target.OwnedAttachmentReviewCloneTests.test_entrypoint_profile_is_passed_to_all_checks_and_conditional_dump) ... ok
+test_explicit_wrong_profile_never_falls_back (portable_worker_target.OwnedAttachmentReviewCloneTests.test_explicit_wrong_profile_never_falls_back) ... ok
+test_formal_booleans_and_private_metadata_refusal (portable_worker_target.OwnedAttachmentReviewCloneTests.test_formal_booleans_and_private_metadata_refusal) ... ok
+test_missing_extension_or_seeded_review_data_is_refused (portable_worker_target.OwnedAttachmentReviewCloneTests.test_missing_extension_or_seeded_review_data_is_refused) ... ok
+test_missing_extra_changed_old_or_new_ledger_cannot_admit (portable_worker_target.OwnedAttachmentReviewCloneTests.test_missing_extra_changed_old_or_new_ledger_cannot_admit) ... ok
+test_source_changed_during_admission_or_after_clone_refused_with_safe_diagnostics (portable_worker_target.OwnedAttachmentReviewCloneTests.test_source_changed_during_admission_or_after_clone_refused_with_safe_diagnostics) ... ok
+test_source_clone_and_source_recheck_are_explicit_private206 (portable_worker_target.OwnedAttachmentReviewCloneTests.test_source_clone_and_source_recheck_are_explicit_private206) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 62.451s
+
+OK

@@ -1,0 +1,6 @@
+test_a2_own_digest_guard_after_collector_snapshot (portable_worker_target.build_case.<locals>.HistoricalBoundaryTests.test_a2_own_digest_guard_after_collector_snapshot) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.408s
+
+OK

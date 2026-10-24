@@ -1,0 +1,13 @@
+test_actual_bodies_under_forbidden_process_and_socket (portable_worker_target.SourceAnalysisTests.test_actual_bodies_under_forbidden_process_and_socket) ... ok
+test_comments_cannot_restore_removed_live_invariant (portable_worker_target.SourceAnalysisTests.test_comments_cannot_restore_removed_live_invariant) ... ok
+test_comments_whitespace_and_keyword_case_do_not_fake_semantics (portable_worker_target.SourceAnalysisTests.test_comments_whitespace_and_keyword_case_do_not_fake_semantics) ... ok
+test_default_zone_and_wrong_zone_roundtrip_refuse (portable_worker_target.SourceAnalysisTests.test_default_zone_and_wrong_zone_roundtrip_refuse) ... ok
+test_endpoints_and_sampling_steps_refuse (portable_worker_target.SourceAnalysisTests.test_endpoints_and_sampling_steps_refuse) ... ok
+test_keep_only_candidate_zero_variants_refuse (portable_worker_target.SourceAnalysisTests.test_keep_only_candidate_zero_variants_refuse) ... ok
+test_second_resolution_or_timezone_pass_refuse (portable_worker_target.SourceAnalysisTests.test_second_resolution_or_timezone_pass_refuse) ... ok
+test_two_candidate_guards_removed_weakened_or_dead_refuse (portable_worker_target.SourceAnalysisTests.test_two_candidate_guards_removed_weakened_or_dead_refuse) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.155s
+
+OK

@@ -1,0 +1,11 @@
+test_changed_parent_bytes_cannot_be_adopted_as_new_trust (portable_worker_target.ColumnAclPinDerivationTests.test_changed_parent_bytes_cannot_be_adopted_as_new_trust) ... ok
+test_exact_derivation_matches_reviewed_active_pin_without_mutating_parent (portable_worker_target.ColumnAclPinDerivationTests.test_exact_derivation_matches_reviewed_active_pin_without_mutating_parent) ... ok
+test_missing_old_column_or_changed_writer_cannot_satisfy_provenance (portable_worker_target.ColumnAclPinDerivationTests.test_missing_old_column_or_changed_writer_cannot_satisfy_provenance) ... ok
+test_old_actual_function_definition_must_match_pinned_renderer (portable_worker_target.ColumnAclPinDerivationTests.test_old_actual_function_definition_must_match_pinned_renderer) ... ok
+test_unallowlisted_new_seal_sql_is_rejected (portable_worker_target.ColumnAclPinDerivationTests.test_unallowlisted_new_seal_sql_is_rejected) ... ok
+test_unexpected_old_column_grant_is_refused_not_captured (portable_worker_target.ColumnAclPinDerivationTests.test_unexpected_old_column_grant_is_refused_not_captured) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.043s
+
+OK

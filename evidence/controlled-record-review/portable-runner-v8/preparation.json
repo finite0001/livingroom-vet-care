@@ -1,0 +1,19 @@
+{
+  "checkout_recipe_sha256": "b778be5e1c2d0d596e36a421749d26916989d9e62d709b9e6b4d56526a41b289",
+  "elapsed_seconds": 2.593981124999118,
+  "kind": "tracked-frozen-input-preparation-v1",
+  "original_publication_unchanged": "/private/tmp/lrvpub-9ysr1z4j/publication-822fafdb60d440aba970338fbdc7e300",
+  "preparation_assembly": {
+    "authority": "independently_reviewed_recipe_not_observed_reseal",
+    "bytes": 163795442,
+    "controller_execution": false,
+    "expected_manifest_sha256": "82f91a8765b078778615c9314af37a0a1a895f2bede4ff2f843c0e00b1a54186",
+    "files": 908,
+    "kind": "prospective-canonical-publication-v1",
+    "root": "/Users/davidedler/Developer/lrv-controlled-runner-proof-20261024/evidence/controlled-record-review/portable-runner-v8/publication-a33e5db54ae14b21bbddd1bdfb8d9d72"
+  },
+  "relocated_after_preparation": true,
+  "runtime_admission": false,
+  "source_profile_sha256": "bc7c134b9521697664bc5b18c7784b1d967d531289712672f3b2a1d49124ecb1",
+  "tracked_source_relative": "evidence/controlled-record-review/portable-runner-v8/source"
+}

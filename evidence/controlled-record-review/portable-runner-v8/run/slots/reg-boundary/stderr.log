@@ -1,0 +1,24 @@
+test_bootstrap_rejects_missing_symlink_fifo_hardlink_and_digest (portable_regression_target_reg_boundary.CaseBoundaryTests.test_bootstrap_rejects_missing_symlink_fifo_hardlink_and_digest) ... ok
+test_callback_failure_never_satisfies_target (portable_regression_target_reg_boundary.CaseBoundaryTests.test_callback_failure_never_satisfies_target) ... ok
+test_context_deadline_expired (portable_regression_target_reg_boundary.CaseBoundaryTests.test_context_deadline_expired) ... ok
+test_context_exact_maps_and_profile (portable_regression_target_reg_boundary.CaseBoundaryTests.test_context_exact_maps_and_profile) ... ok
+test_declaration_matches_published_authorities_without_target_import (portable_regression_target_reg_boundary.CaseBoundaryTests.test_declaration_matches_published_authorities_without_target_import) ... ok
+test_exact_eight_methods_collected_without_execution (portable_regression_target_reg_boundary.CaseBoundaryTests.test_exact_eight_methods_collected_without_execution) ... ok
+test_exact_target_assertion_accepted (portable_regression_target_reg_boundary.CaseBoundaryTests.test_exact_target_assertion_accepted) ... ok
+test_expansion_metadata_totals_and_exact_keys (portable_regression_target_reg_boundary.CaseBoundaryTests.test_expansion_metadata_totals_and_exact_keys) ... ok
+test_frame_local_predicate_and_deadline_required (portable_regression_target_reg_boundary.CaseBoundaryTests.test_frame_local_predicate_and_deadline_required) ... ok
+test_no_target_global_patch_or_module_removal (portable_regression_target_reg_boundary.CaseBoundaryTests.test_no_target_global_patch_or_module_removal) ... ok
+test_non_assertion_and_missing_refusal_propagate (portable_regression_target_reg_boundary.CaseBoundaryTests.test_non_assertion_and_missing_refusal_propagate) ... ok
+test_pinned_locus_sources_declared_in_baseline (portable_regression_target_reg_boundary.CaseBoundaryTests.test_pinned_locus_sources_declared_in_baseline) ... ok
+test_read_observer_filters_write_and_foreign_paths (portable_regression_target_reg_boundary.CaseBoundaryTests.test_read_observer_filters_write_and_foreign_paths) ... ok
+test_read_observer_sticky_caps (portable_regression_target_reg_boundary.CaseBoundaryTests.test_read_observer_sticky_caps) ... ok
+test_same_message_other_function_refused (portable_regression_target_reg_boundary.CaseBoundaryTests.test_same_message_other_function_refused) ... ok
+test_tiny_helper_refusal_and_restoration_composition (portable_regression_target_reg_boundary.CaseBoundaryTests.test_tiny_helper_refusal_and_restoration_composition) ... ok
+test_tiny_helper_setup_error_cannot_satisfy_expected_target (portable_regression_target_reg_boundary.CaseBoundaryTests.test_tiny_helper_setup_error_cannot_satisfy_expected_target) ... ok
+test_wrong_message_line_or_subclass_refused (portable_regression_target_reg_boundary.CaseBoundaryTests.test_wrong_message_line_or_subclass_refused) ... ok
+test_wrong_selected_method_and_reuse_refuse_before_imports (portable_regression_target_reg_boundary.CaseBoundaryTests.test_wrong_selected_method_and_reuse_refuse_before_imports) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.117s
+
+OK

@@ -1,0 +1,39 @@
+# Fixed genuine A2 positive proof: runtime composition
+
+Prospective source-only plan, 2026-10-22. Builds on the independently reviewed fixed188→206 prerequisite and A2 definition integration. No launch authority, observed reseal, canonical migration edit, hosted write or clinical acceptance. The corrected fixture receipt evidence-v2/source-ready.json (541b98c3f6743f329b93b649e3b96fab783a53f7e009ab5aab6c83f1d0da0367) remains independently review-pending when this plan is written.
+
+## Fixed artifacts and lifecycle
+
+Use a fresh owned namespace/network with the retained pinned Docker/official CLI/paused builtins/resource identity controls. Reuse the reviewed nine fixed188 modules unchanged, including full independent188 statement array, guarded migration-copy journal and conflict-preserving restoration. The new runtime is separately named; it does not replace the old minimal prerequisite or claim its result for the five-product fixture. Bind every executed source and SQL template plus all current canonical source/test inputs before launch. Reject new/missing/changed inputs and retain exact executed copies.
+
+Derive the A2 package only from the integrated A2 source profile: expected997955a567db36449969e22859744ce0b28a0d8e37d0bdccecfb8b38ee441aa7, installer40ccec2d13e5bfe46e0bfb1054f9c115410abe2e8b9d48b85c1dea367cce6efd,254-input derivation078b8a5c45befa7c8478da9c28a0134c34011f5d15dd89755a2e67206dc3a3d5. No mixing the separate37-function stored-record package into the32-function A2 namespace. An actual observed catalog may only be compared with this independently derived package.
+
+Fixed outer stages: source admission/freeze and builtin_prefix188; persistent_seed188; historical_capture188; suffix206; historical_preservation206; reference_a2; persistent_positive206; final_proof; normal_cleanup. Every command/SQL phase at most120 seconds; total600 from before admission, with setup/measurement ending at original outer deadline−60. Final60 is only final preservation/source proof and normal cleanup. One shared180-second emergency cleanup budget includes child termination and journal recovery. No adaptive retries, new phase splits, increased limits or skipped cases after a failure. Source-only private CLI refuses launch arguments; reviewed canonical runtime integration and full source map precede actual execution.
+
+## Two separate persistent sessions
+
+The six seed phases returned by seed_stages() are fixed in advance. Use one direct ordinary postgres backend through all six committed phases; only declared writer calls temporarily assume authenticated. The final exact seed receipt must bind that backend PID/start and the complete fixed/returned ID inventory. Nonblocking phase markers bind nonce/index/name/PID/start; no prefeed, replay or missing phase; bounded128MiB streams/readers, EOF and exit0 within the final phase deadline. Close the seed backend before either historical observation or upgrade, then prove it is absent. The old minimal single-query seed path must not be used for this fixture.
+
+On a fresh connection, capture the independent31-relation original-column history and fixed membership expectations. Apply suffix189–206 only through the unchanged official CLI lifecycle, then repeat the same history observer and require exact preserved originals, exact full206 ledger, and no fabricated/backfilled new membership. The seed backend admission row must match the actual closed seed PID, not a guessed fixture PID.
+
+Install the independent A2 package into the wholly absent namespace in its declared transaction/barrier. Capture full before/after permanent metadata and rows, exact parent RI deltas and expected new metadata using the existing reviewed install proof. A profile-reference failure stops before any opening fixture. Save the actual metadata only as observations; do not manufacture an admitted wrapper from it.
+
+A second fresh persistent direct postgres session performs the finite206 fixture. Its fixed phases are post_setup; five opening phases; seven initial action phases; oracle_setup; verify_before; later_append; verify_after. Source declaration fixes these names/order before launch. Dynamic UUIDs from genuine writer results may substitute only in the strict admitted ID map; retain every fully rendered phase and its hash before sending it. No free-form runtime SQL/profile/role/timeout options.
+
+The opening and action stages retain all existing guards and constraint checks, real writers, fixed synthetic policy/site/Auth setup, zero/split cells and declared predecessor choices. Explicitly preserve ordinary postgres/role none/origin and all four JWT GUCs between phases. The fake practice setup is confined to this disposable local proof.
+
+## Measurement and preservation
+
+The two verification phases compare full packets, role/row memberships, effects, managed-source classification and first-seven append stability against the independent fixture oracle. Require exactly seven before and eight after labels, no duplicates/extras; retain complete raw observations. Check the eighth amendment and separate later clinical witness explicitly. No unsupported/refusal or production performance claim arises from these positives.
+
+Preservation around the tested adapter calls is separate from intentional fixture writes. Declare TEMP observer functions/tables before the first measurement. Immediately before each verification phase capture the complete permanent row/catalog/ledger/parent/new-metadata state, finite session GUC/Auth identity contract and backend advisory locks; immediately after require equality. The oracle's declared TEMP saved-output rows are the only permitted measurement writes and are excluded by explicit enumeration. The real later-append transaction occurs between those measurement boundaries; do not incorrectly require all permanent state to stay equal across intentional writer calls. Final proof repeats exact206 ledger, unchanged parent seals, complete A2 metadata/private grants and source bytes, while retaining the final full snapshot. Do not use observed row state to derive expected adapter membership or effects.
+
+All post-setup/opening/action SQL and positive target calls must remain inside the original setup cutoff. The last60 cannot be used to finish a missing target. Capture the persistent command evidence folder before verification callbacks increment command counters. Every read/write/wait, inherited bootstrap dispatch/drain and source-admission loop must obey the applicable fixed deadline. Failure must preserve partial output, source bytes and exact cleanup ownership results before diagnosis.
+
+## Gates and evidence
+
+Before launch: fixture source CLEAR including A2-FIXTURE-001, independent runtime design/source review, mandatory SQL/PLpgSQL parsing, fixed phase/ID/source drift negatives, one-backend/EOF/marker/stream/callback-folder/deadline/cleanup adversaries, complete executed-source map and at least3GiB free. No process/socket in pure generator/oracle tests. Prove both persistent sessions use fixed bounded source, never arbitrary user SQL.
+
+After one actual run: retain raw logs and exact source copies; prove owned container/volume/network/work removal read-only; retain a distinct-inode full verified copy; obtain independent actual-result/evidence review before sanitized public evidence or future offline A2 admission. A failed run is not retried until its cause and finite correction are reviewed. Existing raw evidence, private files, pins and all foreign resources remain untouched.
+
+Remaining separate work: unsupported/conflict/corruption/overflow/query-cost/populated-restore lanes, A3 obligations, configuration publication/Auth/calendar performance, review protocol and UI. Hosted installation, practice facts, providers and clinical/register activation remain pending.

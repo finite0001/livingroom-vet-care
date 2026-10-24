@@ -1,0 +1,31 @@
+test_actual_admission_counter_folder_binding (portable_worker_target.RuntimeTests.test_actual_admission_counter_folder_binding) ... ok
+test_actual_lazy_bootstrap_image_without_candidate_search_path (portable_worker_target.RuntimeTests.test_actual_lazy_bootstrap_image_without_candidate_search_path) ... ok
+test_actual_runtime_import_refuses_wrong_sibling_aliases (portable_worker_target.RuntimeTests.test_actual_runtime_import_refuses_wrong_sibling_aliases) ... ok
+test_bootstrap_dependency_preload_refuses_foreign_origin (portable_worker_target.RuntimeTests.test_bootstrap_dependency_preload_refuses_foreign_origin) ... ok
+test_callback_cutoff_and_dependency_drift (portable_worker_target.RuntimeTests.test_callback_cutoff_and_dependency_drift) ... ok
+test_canonical645_full669_exact_integration (portable_worker_target.RuntimeTests.test_canonical645_full669_exact_integration) ... ok
+test_complete_source_saved_keyset_and_tamper (portable_worker_target.RuntimeTests.test_complete_source_saved_keyset_and_tamper) ... ok
+test_deadlines_and_single_cleanup (portable_worker_target.RuntimeTests.test_deadlines_and_single_cleanup) ... ok
+test_exact_loader_ignores_foreign_search_path_and_cleans_failure (portable_worker_target.RuntimeTests.test_exact_loader_ignores_foreign_search_path_and_cleans_failure) ... ok
+test_exact_loader_reuse_missing_origin_and_harness_alias_collision (portable_worker_target.RuntimeTests.test_exact_loader_reuse_missing_origin_and_harness_alias_collision) ... ok
+test_explicit_reviewed638_baseline_and_four_file_transition (portable_worker_target.RuntimeTests.test_explicit_reviewed638_baseline_and_four_file_transition) ... ok
+test_fixed_package_new_bundle_and_exact_ledger (portable_worker_target.RuntimeTests.test_fixed_package_new_bundle_and_exact_ledger) ... ok
+test_initial_context_exception_and_later_exactness (portable_worker_target.RuntimeTests.test_initial_context_exception_and_later_exactness) ... ok
+test_mandatory_all_sql_plpgsql (portable_worker_target.RuntimeTests.test_mandatory_all_sql_plpgsql) ... ok
+test_measurement_complete_state_and_exclusions (portable_worker_target.RuntimeTests.test_measurement_complete_state_and_exclusions) ... ok
+test_own_collector_digest_cannot_be_silently_replaced (portable_worker_target.RuntimeTests.test_own_collector_digest_cannot_be_silently_replaced) ... ok
+test_own_phases_not_aggregate_sessions (portable_worker_target.RuntimeTests.test_own_phases_not_aggregate_sessions) ... ok
+test_positive_exact_outcomes_and_stability (portable_worker_target.RuntimeTests.test_positive_exact_outcomes_and_stability) ... ok
+test_private_cli (portable_worker_target.RuntimeTests.test_private_cli) ... ok
+test_private_execution_refuses_before_any_resource (portable_worker_target.RuntimeTests.test_private_execution_refuses_before_any_resource) ... ok
+test_seed_backend_identity (portable_worker_target.RuntimeTests.test_seed_backend_identity) ... ok
+test_unique_module_origins (portable_worker_target.RuntimeTests.test_unique_module_origins) ... ok
+test_unreviewed_baseline_changes_refuse_before_dependencies (portable_worker_target.RuntimeTests.test_unreviewed_baseline_changes_refuse_before_dependencies) ... ok
+test_actual_driver_complete_write_then_error_revokes_pass (portable_worker_target.TerminalPersistenceTests.test_actual_driver_complete_write_then_error_revokes_pass) ... ok
+test_actual_driver_late_write_fails (portable_worker_target.TerminalPersistenceTests.test_actual_driver_late_write_fails) ... ok
+test_unreviewed_extra_canonical_source_refuses (portable_worker_target.TerminalPersistenceTests.test_unreviewed_extra_canonical_source_refuses) ... ok
+
+----------------------------------------------------------------------
+Ran 26 tests in 5.122s
+
+OK

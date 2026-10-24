@@ -1,0 +1,10 @@
+test_exact_unused_single_private_function_and_readonly_body (portable_worker_target.RetainedCalendarTests.test_exact_unused_single_private_function_and_readonly_body) ... ok
+test_fixed_retained_fold_body_is_exact_and_does_not_require_present_zone (portable_worker_target.RetainedCalendarTests.test_fixed_retained_fold_body_is_exact_and_does_not_require_present_zone) ... ok
+test_independent_mutation_fixtures_require_refusal_later_in_sql (portable_worker_target.RetainedCalendarTests.test_independent_mutation_fixtures_require_refusal_later_in_sql) ... ok
+test_no_current_timezone_or_version_resolution (portable_worker_target.RetainedCalendarTests.test_no_current_timezone_or_version_resolution) ... ok
+test_source_exact_keys_bounds_and_error_normalization (portable_worker_target.RetainedCalendarTests.test_source_exact_keys_bounds_and_error_normalization) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 1.023s
+
+OK

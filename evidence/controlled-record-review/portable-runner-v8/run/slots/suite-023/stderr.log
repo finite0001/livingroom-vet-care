@@ -1,0 +1,17 @@
+test_failed_diagnostic_collection_never_replaces_original_error (portable_worker_target.OpeningCapacityDiagnosticTests.test_failed_diagnostic_collection_never_replaces_original_error) ... ok
+test_new_cleanup_failure_is_not_reported_as_success (portable_worker_target.OpeningCapacityDiagnosticTests.test_new_cleanup_failure_is_not_reported_as_success) ... ok
+test_owned_container_logs_are_written_privately_without_stdout (portable_worker_target.OpeningCapacityDiagnosticTests.test_owned_container_logs_are_written_privately_without_stdout) ... ok
+test_recovery_cleanup_errors_preserve_pending_execution_error (portable_worker_target.OpeningCapacityDiagnosticTests.test_recovery_cleanup_errors_preserve_pending_execution_error) ... ok
+test_wrong_container_ownership_refuses_log_collection (portable_worker_target.OpeningCapacityDiagnosticTests.test_wrong_container_ownership_refuses_log_collection) ... ok
+test_invalid_marker_cannot_authorize_drop (portable_worker_target.OpeningCapacityOwnershipTests.test_invalid_marker_cannot_authorize_drop) ... ok
+test_matching_marker_drops_only_exact_clone_and_verifies_absence (portable_worker_target.OpeningCapacityOwnershipTests.test_matching_marker_drops_only_exact_clone_and_verifies_absence) ... ok
+test_sql_rejects_unregistered_database_before_ownership_checks (portable_worker_target.OpeningCapacityOwnershipTests.test_sql_rejects_unregistered_database_before_ownership_checks) ... ok
+test_surviving_clone_cannot_report_cleanup_success (portable_worker_target.OpeningCapacityOwnershipTests.test_surviving_clone_cannot_report_cleanup_success) ... ok
+test_unsafe_database_names_are_rejected_before_commands (portable_worker_target.OpeningCapacityOwnershipTests.test_unsafe_database_names_are_rejected_before_commands) ... ok
+test_wrong_container_labels_refuse_every_database_query (portable_worker_target.OpeningCapacityOwnershipTests.test_wrong_container_labels_refuse_every_database_query) ... ok
+test_wrong_database_comment_refuses_drop (portable_worker_target.OpeningCapacityOwnershipTests.test_wrong_database_comment_refuses_drop) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.007s
+
+OK

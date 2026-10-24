@@ -1,0 +1,16 @@
+test_admitted_guard_root_file_keysets_and_pin_identity_are_required (portable_regression_target_reg_partition.HistoricalPartitionTests.test_admitted_guard_root_file_keysets_and_pin_identity_are_required) ... ok
+test_checks_propagate_through_large_admitted_inventory (portable_regression_target_reg_partition.HistoricalPartitionTests.test_checks_propagate_through_large_admitted_inventory) ... ok
+test_complete_baseline_refuses_missing_extra_hash_size (portable_regression_target_reg_partition.HistoricalPartitionTests.test_complete_baseline_refuses_missing_extra_hash_size) ... ok
+test_current_metadata_checked_before_projecting_hashes (portable_regression_target_reg_partition.HistoricalPartitionTests.test_current_metadata_checked_before_projecting_hashes) ... ok
+test_eight_exact_ordinals_return_singletons_and_complete_context (portable_regression_target_reg_partition.HistoricalPartitionTests.test_eight_exact_ordinals_return_singletons_and_complete_context) ... ok
+test_every_ordinary_kind_requires_null_and_keeps_full_ids (portable_regression_target_reg_partition.HistoricalPartitionTests.test_every_ordinary_kind_requires_null_and_keeps_full_ids) ... ok
+test_fixed_profile_unique_tree_and_source_metadata_required (portable_regression_target_reg_partition.HistoricalPartitionTests.test_fixed_profile_unique_tree_and_source_metadata_required) ... ok
+test_full_suite_class_map_and_order_cannot_shrink_or_alias (portable_regression_target_reg_partition.HistoricalPartitionTests.test_full_suite_class_map_and_order_cannot_shrink_or_alias) ... ok
+test_independent_literals_match_reviewed_cases_and_spec_bytes (portable_regression_target_reg_partition.HistoricalPartitionTests.test_independent_literals_match_reviewed_cases_and_spec_bytes) ... ok
+test_partition_exact_fields_types_hash_order_duplicates_and_selection (portable_regression_target_reg_partition.HistoricalPartitionTests.test_partition_exact_fields_types_hash_order_duplicates_and_selection) ... ok
+test_pinned_spec_evidence_location_and_deadline (portable_regression_target_reg_partition.HistoricalPartitionTests.test_pinned_spec_evidence_location_and_deadline) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.231s
+
+OK

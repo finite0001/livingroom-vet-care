@@ -1,0 +1,19 @@
+test_definition_forgery_and_forged_hash (portable_worker_target.ConfigurationAdmissionTests.test_definition_forgery_and_forged_hash) ... ok
+test_direct_inventory_add_delete_rename_and_drift (portable_worker_target.ConfigurationAdmissionTests.test_direct_inventory_add_delete_rename_and_drift) ... ok
+test_frozen_a1_and_gate_a_still_admit_without_mutation (portable_worker_target.ConfigurationAdmissionTests.test_frozen_a1_and_gate_a_still_admit_without_mutation) ... ok
+test_full_inventory_add_delete_rename_and_drift (portable_worker_target.ConfigurationAdmissionTests.test_full_inventory_add_delete_rename_and_drift) ... ok
+test_kind_version_and_exact_wrapper_fields (portable_worker_target.ConfigurationAdmissionTests.test_kind_version_and_exact_wrapper_fields) ... ok
+test_matching_poisoned_source_map_cannot_replace_pin (portable_worker_target.ConfigurationAdmissionTests.test_matching_poisoned_source_map_cannot_replace_pin) ... ok
+test_metadata_neutral_actual_source_drift_and_missing_file (portable_worker_target.ConfigurationAdmissionTests.test_metadata_neutral_actual_source_drift_and_missing_file) ... ok
+test_no_hash_cycle_or_private_path (portable_worker_target.ConfigurationAdmissionTests.test_no_hash_cycle_or_private_path) ... ok
+test_only_offline_artifact_admission_is_true (portable_worker_target.ConfigurationAdmissionTests.test_only_offline_artifact_admission_is_true) ... ok
+test_poisoned_builder_definition_and_install (portable_worker_target.ConfigurationAdmissionTests.test_poisoned_builder_definition_and_install) ... ok
+test_pure_regeneration_and_exact_254_plus_two_closure (portable_worker_target.ConfigurationAdmissionTests.test_pure_regeneration_and_exact_254_plus_two_closure) ... ok
+test_reference_provenance_and_json_types_are_exact (portable_worker_target.ConfigurationAdmissionTests.test_reference_provenance_and_json_types_are_exact) ... ok
+test_symlink_and_noncanonical_path_refusals (portable_worker_target.ConfigurationAdmissionTests.test_symlink_and_noncanonical_path_refusals) ... ok
+test_wrapper_byte_pin_and_duplicate_safe_decoder (portable_worker_target.ConfigurationAdmissionTests.test_wrapper_byte_pin_and_duplicate_safe_decoder) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 4.011s
+
+OK

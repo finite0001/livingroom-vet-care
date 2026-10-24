@@ -1,0 +1,10 @@
+test_205_or_207_inventory_cannot_be_mistaken_for_current (portable_worker_target.CurrentCanonicalInventoryTests.test_205_or_207_inventory_cannot_be_mistaken_for_current) ... ok
+test_all_current_python_inventory_guards_accept_exact_206 (portable_worker_target.CurrentCanonicalInventoryTests.test_all_current_python_inventory_guards_accept_exact_206) ... ok
+test_call_notes_still_preserves_201_seed_and_source_migration (portable_worker_target.CurrentCanonicalInventoryTests.test_call_notes_still_preserves_201_seed_and_source_migration) ... ok
+test_equal_count_wrong_latest_filename_or_version_is_rejected (portable_worker_target.CurrentCanonicalInventoryTests.test_equal_count_wrong_latest_filename_or_version_is_rejected) ... ok
+test_restore_suffix_exactly_covers_current_new_versions (portable_worker_target.CurrentCanonicalInventoryTests.test_restore_suffix_exactly_covers_current_new_versions) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.331s
+
+OK

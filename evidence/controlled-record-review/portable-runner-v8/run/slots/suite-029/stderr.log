@@ -1,0 +1,19 @@
+test_a2_site_fallback_is_not_enabled (portable_worker_target.AdapterDeclarationTests.test_a2_site_fallback_is_not_enabled) ... ok
+test_alias_audit_handles_nested_join_function_and_quoted_forms (portable_worker_target.AdapterDeclarationTests.test_alias_audit_handles_nested_join_function_and_quoted_forms) ... ok
+test_all_twelve_bodies_have_no_local_sql_alias_collision (portable_worker_target.AdapterDeclarationTests.test_all_twelve_bodies_have_no_local_sql_alias_collision) ... ok
+test_composite_fields_match_independently_frozen_catalog (portable_worker_target.AdapterDeclarationTests.test_composite_fields_match_independently_frozen_catalog) ... ok
+test_declared_helper_calls_are_closed (portable_worker_target.AdapterDeclarationTests.test_declared_helper_calls_are_closed) ... ok
+test_declared_parent_edges_are_the_only_parent_roles (portable_worker_target.AdapterDeclarationTests.test_declared_parent_edges_are_the_only_parent_roles) ... ok
+test_exact_twelve_private_functions_and_four_modules (portable_worker_target.AdapterDeclarationTests.test_exact_twelve_private_functions_and_four_modules) ... ok
+test_extra_duplicate_missing_and_unframed_bodies_refuse (portable_worker_target.AdapterDeclarationTests.test_extra_duplicate_missing_and_unframed_bodies_refuse) ... ok
+test_full_literal_kind_dispatch_matches_independent_declaration (portable_worker_target.AdapterDeclarationTests.test_full_literal_kind_dispatch_matches_independent_declaration) ... ok
+test_locals_do_not_collide_with_read_relation_columns (portable_worker_target.AdapterDeclarationTests.test_locals_do_not_collide_with_read_relation_columns) ... ok
+test_packet_reads_only_finite_immutable_declared_relations (portable_worker_target.AdapterDeclarationTests.test_packet_reads_only_finite_immutable_declared_relations) ... ok
+test_plpgsql_syntax_without_database (portable_worker_target.AdapterDeclarationTests.test_plpgsql_syntax_without_database) ... ok
+test_precedence_is_complete_unique_and_declared (portable_worker_target.AdapterDeclarationTests.test_precedence_is_complete_unique_and_declared) ... ok
+test_standalone_classifier_owns_native_provenance_validation (portable_worker_target.AdapterDeclarationTests.test_standalone_classifier_owns_native_provenance_validation) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.073s
+
+OK

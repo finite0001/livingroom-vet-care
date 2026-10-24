@@ -1,0 +1,20 @@
+test_bool_nonfinite_negative_and_overlimit_numbers_are_unavailable (portable_worker_target.ControlledProbeFailureTests.test_bool_nonfinite_negative_and_overlimit_numbers_are_unavailable) ... ok
+test_boolean_flags_require_actual_boolean (portable_worker_target.ControlledProbeFailureTests.test_boolean_flags_require_actual_boolean) ... ok
+test_bounded_progress_and_cleanup_are_copied_without_private_fields (portable_worker_target.ControlledProbeFailureTests.test_bounded_progress_and_cleanup_are_copied_without_private_fields) ... ok
+test_contradictory_admission_does_not_describe_completed_work (portable_worker_target.ControlledProbeFailureTests.test_contradictory_admission_does_not_describe_completed_work) ... ok
+test_duplicate_json_keys_are_not_silently_overwritten (portable_worker_target.ControlledProbeFailureTests.test_duplicate_json_keys_are_not_silently_overwritten) ... ok
+test_exact_terminal_guard_has_fixed_code (portable_worker_target.ControlledProbeFailureTests.test_exact_terminal_guard_has_fixed_code) ... ok
+test_missing_corrupt_or_wrong_kind_receipt_is_unavailable (portable_worker_target.ControlledProbeFailureTests.test_missing_corrupt_or_wrong_kind_receipt_is_unavailable) ... ok
+test_near_match_or_prior_guard_does_not_infer_cause (portable_worker_target.ControlledProbeFailureTests.test_near_match_or_prior_guard_does_not_infer_cause) ... ok
+test_noncontiguous_or_oversized_batches_are_unavailable (portable_worker_target.ControlledProbeFailureTests.test_noncontiguous_or_oversized_batches_are_unavailable) ... ok
+test_other_known_probes_do_not_inherit_correction_cause_or_receipt (portable_worker_target.ControlledProbeFailureTests.test_other_known_probes_do_not_inherit_correction_cause_or_receipt) ... ok
+test_output_is_fixed_schema_and_always_nonacceptance (portable_worker_target.ControlledProbeFailureTests.test_output_is_fixed_schema_and_always_nonacceptance) ... ok
+test_raw_logs_claims_paths_ids_and_json_are_never_published (portable_worker_target.ControlledProbeFailureTests.test_raw_logs_claims_paths_ids_and_json_are_never_published) ... ok
+test_read_failure_does_not_replace_original_failure (portable_worker_target.ControlledProbeFailureTests.test_read_failure_does_not_replace_original_failure) ... ok
+test_symlink_and_oversized_receipts_are_not_read (portable_worker_target.ControlledProbeFailureTests.test_symlink_and_oversized_receipts_are_not_read) ... ok
+test_unknown_probe_does_not_echo_name_or_read_private_receipt (portable_worker_target.ControlledProbeFailureTests.test_unknown_probe_does_not_echo_name_or_read_private_receipt) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.016s
+
+OK

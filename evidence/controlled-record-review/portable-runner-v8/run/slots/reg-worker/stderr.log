@@ -1,0 +1,172 @@
+test_a2_runtime_requires_both_classes_and_session48_inherited_slots (portable_regression_target_reg_worker.WorkerTests.test_a2_runtime_requires_both_classes_and_session48_inherited_slots) ... ok
+test_current_source_drift_refuses_terminal_success (portable_regression_target_reg_worker.WorkerTests.test_current_source_drift_refuses_terminal_success) ... test_one (portable_worker_target.ToyTests.test_one) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+Portable worker failed at source-preservation: ValueError
+ok
+test_duplicate_ids_mapping_aliases_unknown_routes_and_omitted_class_refuse (portable_regression_target_reg_worker.WorkerTests.test_duplicate_ids_mapping_aliases_unknown_routes_and_omitted_class_refuse) ... ok
+test_exact_collection_success_guard_precedes_import_and_terminal_validates (portable_regression_target_reg_worker.WorkerTests.test_exact_collection_success_guard_precedes_import_and_terminal_validates) ... test_one (portable_worker_target.ToyTests.test_one) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+ok
+test_extra_collected_method_refuses_before_any_test (portable_regression_target_reg_worker.WorkerTests.test_extra_collected_method_refuses_before_any_test) ... Portable worker failed at collection: ValueError
+ok
+test_final_snapshot_change_after_terminal_forces_nonzero (portable_regression_target_reg_worker.WorkerTests.test_final_snapshot_change_after_terminal_forces_nonzero) ... test_one (portable_worker_target.ToyTests.test_one) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+Portable worker failed at terminal: ValueError
+ok
+test_final_snapshot_deadline_check_follows_comparison (portable_regression_target_reg_worker.WorkerTests.test_final_snapshot_deadline_check_follows_comparison) ... test_one (portable_worker_target.ToyTests.test_one) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+Portable worker failed at terminal: TimeoutError
+ok
+test_guard_full_write_then_error_never_publishes_success_terminal (portable_regression_target_reg_worker.WorkerTests.test_guard_full_write_then_error_never_publishes_success_terminal) ... test_one (portable_worker_target.ToyTests.test_one) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+Portable worker failed at guard-report: OSError
+ok
+test_guard_write_before_terminal_and_snapshot_bytes_exact (portable_regression_target_reg_worker.WorkerTests.test_guard_write_before_terminal_and_snapshot_bytes_exact) ... test_one (portable_worker_target.ToyTests.test_one) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+ok
+test_historical_receipt_exact_type_keys_and_value (portable_regression_target_reg_worker.WorkerTests.test_historical_receipt_exact_type_keys_and_value) ... ok
+test_implementation_wrong_origin_refuses_before_import (portable_regression_target_reg_worker.WorkerTests.test_implementation_wrong_origin_refuses_before_import) ... ok
+test_job_keys_deadline_and_identity_fail_closed (portable_regression_target_reg_worker.WorkerTests.test_job_keys_deadline_and_identity_fail_closed) ... ok
+test_job_subset_cannot_hide_guard_inventory (portable_regression_target_reg_worker.WorkerTests.test_job_subset_cannot_hide_guard_inventory) ... Portable worker failed at guard-admission: ValueError
+ok
+test_late_guard_write_retains_file_without_terminal_success (portable_regression_target_reg_worker.WorkerTests.test_late_guard_write_retains_file_without_terminal_success) ... test_one (portable_worker_target.ToyTests.test_one) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+Portable worker failed at guard-report: TimeoutError
+ok
+test_late_terminal_write_forces_nonzero_without_deadline_reset (portable_regression_target_reg_worker.WorkerTests.test_late_terminal_write_forces_nonzero_without_deadline_reset) ... test_one (portable_worker_target.ToyTests.test_one) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+Portable worker failed at terminal: TimeoutError
+ok
+test_main_exact_job_hash_and_cli_before_dispatch (portable_regression_target_reg_worker.WorkerTests.test_main_exact_job_hash_and_cli_before_dispatch) ... ok
+test_missing_guard_object_has_no_fabricated_diagnostic (portable_regression_target_reg_worker.WorkerTests.test_missing_guard_object_has_no_fabricated_diagnostic) ... Portable worker failed at guard-admission: ValueError
+ok
+test_owned_mkdtemp_registers_suite_and_test_roots (portable_regression_target_reg_worker.WorkerTests.test_owned_mkdtemp_registers_suite_and_test_roots) ... test_one (portable_worker_target.ToyTests.test_one) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+OK
+ok
+test_partial_guard_write_is_retained_and_nonzero (portable_regression_target_reg_worker.WorkerTests.test_partial_guard_write_is_retained_and_nonzero) ... test_one (portable_worker_target.ToyTests.test_one) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+Portable worker failed at guard-report: OSError
+ok
+test_partial_terminal_write_is_retained_and_nonzero (portable_regression_target_reg_worker.WorkerTests.test_partial_terminal_write_is_retained_and_nonzero) ... test_one (portable_worker_target.ToyTests.test_one) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+Portable worker failed at terminal: OSError
+ok
+test_physical_job_reader_refuses_source_change_symlink_fifo (portable_regression_target_reg_worker.WorkerTests.test_physical_job_reader_refuses_source_change_symlink_fifo) ... ok
+test_skip_and_class_setup_error_never_pass (portable_regression_target_reg_worker.WorkerTests.test_skip_and_class_setup_error_never_pass) ... test_one (portable_worker_target.ToyTests.test_one) ... skipped 'not allowed'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (skipped=1)
+setUpClass (portable_worker_target.ToyTests) ... ERROR
+
+======================================================================
+ERROR: setUpClass (portable_worker_target.ToyTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/lrv-full-run-attempt-jfyo292w/output/portable-run-106fd8b17752490a85431f94f117bbb6/reg-worker/tmp/portable-worker-v2-unit-8veqptqz/test_toy.py", line 4, in setUpClass
+    def setUpClass(cls): raise ValueError("setup failure")
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: setup failure
+
+----------------------------------------------------------------------
+Ran 0 tests in 0.000s
+
+FAILED (errors=1)
+ok
+test_strict_job_json_rejects_duplicate_nonfinite_type_and_size (portable_regression_target_reg_worker.WorkerTests.test_strict_job_json_rejects_duplicate_nonfinite_type_and_size) ... ok
+test_strict_v2_nine_keys_partition_null_and_output_collision (portable_regression_target_reg_worker.WorkerTests.test_strict_v2_nine_keys_partition_null_and_output_collision) ... ok
+test_swallowed_late_guard_denial_after_report_forces_nonzero (portable_regression_target_reg_worker.WorkerTests.test_swallowed_late_guard_denial_after_report_forces_nonzero) ... test_one (portable_worker_target.ToyTests.test_one) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+Portable worker failed at terminal: PermissionError
+ok
+test_terminal_write_then_raise_forces_nonzero_even_if_file_says_pass (portable_regression_target_reg_worker.WorkerTests.test_terminal_write_then_raise_forces_nonzero_even_if_file_says_pass) ... test_one (portable_worker_target.ToyTests.test_one) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+Portable worker failed at terminal: OSError
+ok
+test_uninstalled_clean_guard_never_passes (portable_regression_target_reg_worker.WorkerTests.test_uninstalled_clean_guard_never_passes) ... test_one (portable_worker_target.ToyTests.test_one) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+Portable worker failed at guard-report: ValueError
+ok
+test_bad_partition_refuses_before_guard_install_or_factory (portable_regression_target_reg_worker.HistoricalWorkerTests.test_bad_partition_refuses_before_guard_install_or_factory) ... Portable worker failed at guard-admission: ValueError
+ok
+test_current_map_mutation_refuses_context_before_factory_import (portable_regression_target_reg_worker.HistoricalWorkerTests.test_current_map_mutation_refuses_context_before_factory_import) ... Portable worker failed at collection: ValueError
+ok
+test_evidence_physical_ancestor_collision_refuses_before_factory (portable_regression_target_reg_worker.HistoricalWorkerTests.test_evidence_physical_ancestor_collision_refuses_before_factory) ... ok
+test_extra_method_refuses_full_collection (portable_regression_target_reg_worker.HistoricalWorkerTests.test_extra_method_refuses_full_collection) ... Portable worker failed at collection: ValueError
+ok
+test_fixed_job_admits_exact_shape_but_non_null_ordinary_refuses (portable_regression_target_reg_worker.HistoricalWorkerTests.test_fixed_job_admits_exact_shape_but_non_null_ordinary_refuses) ... ok
+test_full8_collected_before_exact_single_execution_and_pair_one (portable_regression_target_reg_worker.HistoricalWorkerTests.test_full8_collected_before_exact_single_execution_and_pair_one) ... test_a2_own_digest_guard_after_collector_snapshot (portable_regression_target_reg_worker.HistoricalBoundaryTests.test_a2_own_digest_guard_after_collector_snapshot) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+ok
+test_guard_inventory_all8_required_even_when_selected_present (portable_regression_target_reg_worker.HistoricalWorkerTests.test_guard_inventory_all8_required_even_when_selected_present) ... Portable worker failed at guard-admission: ValueError
+ok
+test_helper_role_missing_or_bad_digest_refuses_before_any_import (portable_regression_target_reg_worker.HistoricalWorkerTests.test_helper_role_missing_or_bad_digest_refuses_before_any_import) ... ok
+test_missing_admitted_helper_or_context_refuses_before_factory_import (portable_regression_target_reg_worker.HistoricalWorkerTests.test_missing_admitted_helper_or_context_refuses_before_factory_import) ... ok
+test_missing_unselected_method_still_refuses_before_any_execution (portable_regression_target_reg_worker.HistoricalWorkerTests.test_missing_unselected_method_still_refuses_before_any_execution) ... Portable worker failed at collection: ValueError
+ok
+
+----------------------------------------------------------------------
+Ran 37 tests in 0.296s
+
+OK

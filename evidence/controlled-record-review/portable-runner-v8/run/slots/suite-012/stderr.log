@@ -1,0 +1,15 @@
+test_acceptance_cannot_borrow_unused_phase_time_or_cleanup_reserve (portable_worker_target.CanonicalReviewCliTests.test_acceptance_cannot_borrow_unused_phase_time_or_cleanup_reserve) ... ok
+test_acceptance_requires_reference_and_both_complete_matrix_cases (portable_worker_target.CanonicalReviewCliTests.test_acceptance_requires_reference_and_both_complete_matrix_cases) ... ok
+test_complete_source_ledger_rejects_historical_statement_change (portable_worker_target.CanonicalReviewCliTests.test_complete_source_ledger_rejects_historical_statement_change) ... ok
+test_error_in_echoed_sql_cannot_impersonate_primary_failure (portable_worker_target.CanonicalReviewCliTests.test_error_in_echoed_sql_cannot_impersonate_primary_failure) ... ok
+test_facade_identity_mapping_is_finite_and_source_derived (portable_worker_target.CanonicalReviewCliTests.test_facade_identity_mapping_is_finite_and_source_derived) ... ok
+test_forged_or_incomplete_observer_fails (portable_worker_target.CanonicalReviewCliTests.test_forged_or_incomplete_observer_fails) ... ok
+test_new_runner_is_import_safe_and_modes_are_separate (portable_worker_target.CanonicalReviewCliTests.test_new_runner_is_import_safe_and_modes_are_separate) ... ok
+test_observer_json_accepts_arrays_and_rejects_ambiguous_output (portable_worker_target.CanonicalReviewCliTests.test_observer_json_accepts_arrays_and_rejects_ambiguous_output) ... ok
+test_reference_cannot_adopt_observed_ledger (portable_worker_target.CanonicalReviewCliTests.test_reference_cannot_adopt_observed_ledger) ... ok
+test_snapshot_retains_extension_raw_acl_and_internal_triggers (portable_worker_target.CanonicalReviewCliTests.test_snapshot_retains_extension_raw_acl_and_internal_triggers) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.778s
+
+OK

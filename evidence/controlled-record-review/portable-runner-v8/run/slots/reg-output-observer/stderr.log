@@ -1,0 +1,29 @@
+test_close_attempts_all_descriptors_once (portable_regression_target_reg_output_observer.OutputObserverTests.test_close_attempts_all_descriptors_once) ... ok
+test_close_deadline_refuses_after_all_descriptors_closed (portable_regression_target_reg_output_observer.OutputObserverTests.test_close_deadline_refuses_after_all_descriptors_closed) ... ok
+test_dangling_slot_refuses_before_launch (portable_regression_target_reg_output_observer.OutputObserverTests.test_dangling_slot_refuses_before_launch) ... ok
+test_deadline_expires_inside_parent_check (portable_regression_target_reg_output_observer.OutputObserverTests.test_deadline_expires_inside_parent_check) ... ok
+test_duplicate_names_refuse (portable_regression_target_reg_output_observer.OutputObserverTests.test_duplicate_names_refuse) ... ok
+test_empty_terminal_refuses (portable_regression_target_reg_output_observer.OutputObserverTests.test_empty_terminal_refuses) ... ok
+test_exact_five_records_and_empty_streams (portable_regression_target_reg_output_observer.OutputObserverTests.test_exact_five_records_and_empty_streams) ... ok
+test_existing_slot_refuses_before_launch (portable_regression_target_reg_output_observer.OutputObserverTests.test_existing_slot_refuses_before_launch) ... ok
+test_extra_slot_refuses (portable_regression_target_reg_output_observer.OutputObserverTests.test_extra_slot_refuses) ... ok
+test_fifo_refuses_without_blocking (portable_regression_target_reg_output_observer.OutputObserverTests.test_fifo_refuses_without_blocking) ... ok
+test_hardlink_refuses (portable_regression_target_reg_output_observer.OutputObserverTests.test_hardlink_refuses) ... ok
+test_invalid_deadlines_refuse (portable_regression_target_reg_output_observer.OutputObserverTests.test_invalid_deadlines_refuse) ... ok
+test_leaf_close_error_poison_is_sticky (portable_regression_target_reg_output_observer.OutputObserverTests.test_leaf_close_error_poison_is_sticky) ... ok
+test_missing_file_poison_is_sticky (portable_regression_target_reg_output_observer.OutputObserverTests.test_missing_file_poison_is_sticky) ... ok
+test_mutation_during_read_refuses (portable_regression_target_reg_output_observer.OutputObserverTests.test_mutation_during_read_refuses) ... ok
+test_mutation_of_earlier_slot_refuses (portable_regression_target_reg_output_observer.OutputObserverTests.test_mutation_of_earlier_slot_refuses) ... ok
+test_names_are_detached_from_input (portable_regression_target_reg_output_observer.OutputObserverTests.test_names_are_detached_from_input) ... ok
+test_nonphysical_ancestor_refuses (portable_regression_target_reg_output_observer.OutputObserverTests.test_nonphysical_ancestor_refuses) ... ok
+test_nonprivate_directory_refuses (portable_regression_target_reg_output_observer.OutputObserverTests.test_nonprivate_directory_refuses) ... ok
+test_nonprivate_file_refuses (portable_regression_target_reg_output_observer.OutputObserverTests.test_nonprivate_file_refuses) ... ok
+test_oversized_sparse_file_refuses (portable_regression_target_reg_output_observer.OutputObserverTests.test_oversized_sparse_file_refuses) ... ok
+test_parent_check_failure_is_sticky (portable_regression_target_reg_output_observer.OutputObserverTests.test_parent_check_failure_is_sticky) ... ok
+test_root_replacement_refuses (portable_regression_target_reg_output_observer.OutputObserverTests.test_root_replacement_refuses) ... ok
+test_symlink_refuses (portable_regression_target_reg_output_observer.OutputObserverTests.test_symlink_refuses) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 0.023s
+
+OK

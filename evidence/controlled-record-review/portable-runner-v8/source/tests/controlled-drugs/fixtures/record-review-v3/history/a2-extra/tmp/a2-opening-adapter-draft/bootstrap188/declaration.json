@@ -1,0 +1,78 @@
+{
+  "acceptance": false,
+  "allowed_scope": "one isolated genuine188 product; exact historical ledger and original-column preservation through official suffix206; no A2 installation or opening",
+  "baseline_candidate_inputs": 617,
+  "candidate_changes": 0,
+  "copy_states": {
+    "all_complete": "active exact206; stage exact206; no pending",
+    "copying_prefix": "active exactly ordered first k admitted filenames,0<=k<=188, plus at most one journaled pending file which is a byte prefix of admitted next file and retains its created inode",
+    "copying_suffix": "active first188 plus ordered first k suffix files,0<=k<=18, plus at most one same bounded pending file",
+    "deferred": "stage exact206 with bound directory inode; active empty with bound directory inode",
+    "initial": "active exact206; stage absent; quarantine absent",
+    "prefix_complete": "active exact188; stage exact206; no pending",
+    "promotion_interruption": "next complete admitted filename may exist with pending journal only if its bytes are exact and pending file absent; no overwrite",
+    "recovery": "verify complete stage and finite active state; atomically retain active as owned quarantine; rename stage to active; exact206 check. Unknown bytes/names/symlink/inode => work retained and no PASS",
+    "recovery_retention": "Before quarantine preserve exact active/stage inventory SHA256, partial size and directory identities in private evidence. Later proved owned teardown may remove these redundant copied bytes. Ambiguous/unproved state retains whole work."
+  },
+  "database_executed": false,
+  "deadlines": {
+    "outer_seconds": 600,
+    "phase_seconds": 120,
+    "setup_cutoff_before_outer_seconds": 60,
+    "single_failure_cleanup_seconds": 180
+  },
+  "fixture": {
+    "allocation_quantity_per_lot": "1.000",
+    "amount_cents": 200,
+    "business_calls": 4,
+    "clinical_annotations": 1,
+    "dispense_quantity": "2.000",
+    "invoice_items": 1,
+    "lots": 2,
+    "movement_sources": 4,
+    "movements": 4,
+    "native_dispenses": 1,
+    "no_refill_or_pickup_return_discrepancy": true,
+    "old_correction_provenance": "relation absent at188; zero rows at206, never backfilled",
+    "products": 1,
+    "receipt_quantity_per_lot": "3.000",
+    "stock_writer_admissions": "one retained stale record from final era188 stock writer (dispense), exact full row preserved; closed original backend required, not falsely claimed empty",
+    "supporting_calls": [
+      "save_client",
+      "save_patient",
+      "save_catalog_product",
+      "configure_native_prescriber",
+      "save_native_prescription_draft",
+      "sign_native_prescription",
+      "create_billing_invoice"
+    ]
+  },
+  "kind": "private-fixed188-to206-lifecycle-source-declaration-v1",
+  "ledger188_artifact_sha256": "bb8ae5a11d9caa5610e349c8a0b06310fa5e4e26ac743d896befc55bcfa86f73",
+  "ledger188_canonical_sha256": "42f3609d0b2efe00b70f01427ea0a1b7dd414148b5e0e9427509d4782946bc8d",
+  "prefix_end": "20261015020722_stock_writer_provenance.sql",
+  "session_contract": {
+    "admin": "supabase_admin only for fixed cron pause/reload command; no role fallback or arbitrary-role CLI",
+    "auth_acceptance": false,
+    "business": "SET LOCAL ROLE authenticated; session_user=postgres/current_user=authenticated; fixed exact sub+role JWT JSON; legacy JWT sub/role/email empty; auth.uid fixed actor/auth.role authenticated/auth.email null",
+    "initial_and_committed": "session_user=current_user=postgres; role=none; replication=origin; all four JWT GUCs empty/null; auth.uid/role/email null",
+    "login": "postgres",
+    "oracle": "postgres login/session/current and role none; empty/null four JWT GUCs; closed original fixture backend PID bound from seed receipt to stock_writer_admissions membership; full row preserved",
+    "reset": "RESET ROLE inside same transaction preserves JWT/auth claims, then commit restores empty/null claims; assertions at each boundary",
+    "setup": "only synthetic auth user/profile/roles and TEMP IDs/data as postgres"
+  },
+  "status": "unreviewed_private_source_draft",
+  "suffix_end": "20261022010000_controlled_secondary_review_private.sql",
+  "suffix_first": "20261015055007_native_custody_provenance.sql",
+  "unproved": [
+    "actual188 bootstrap",
+    "actual genuine fixture",
+    "suffix preservation",
+    "resource cleanup",
+    "A2 behavior",
+    "restore",
+    "performance",
+    "configuration publication",
+    "clinical activation"
+  ]
+}

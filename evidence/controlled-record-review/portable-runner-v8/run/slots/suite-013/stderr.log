@@ -1,0 +1,14 @@
+test_actual_primary_error_and_armed_notice_required (portable_worker_target.SecondaryReviewHarness.test_actual_primary_error_and_armed_notice_required) ... ok
+test_frozen_descriptor_accepts_only_independent_exact_bytes (portable_worker_target.SecondaryReviewHarness.test_frozen_descriptor_accepts_only_independent_exact_bytes) ... ok
+test_missing_or_multiple_observation_not_adopted (portable_worker_target.SecondaryReviewHarness.test_missing_or_multiple_observation_not_adopted) ... ok
+test_deferred_trigger_is_private_definer_without_helper_grants (portable_worker_target.SecondaryReviewProtocolHarness.test_deferred_trigger_is_private_definer_without_helper_grants) ... ok
+test_final_profiles_independent_and_private_default (portable_worker_target.SecondaryReviewProtocolHarness.test_final_profiles_independent_and_private_default) ... ok
+test_final_wrapper_bytes_cannot_be_reformatted_or_mutated (portable_worker_target.SecondaryReviewProtocolHarness.test_final_wrapper_bytes_cannot_be_reformatted_or_mutated) ... ok
+test_restore_diagnostic_cannot_select_acceptance (portable_worker_target.SecondaryReviewProtocolHarness.test_restore_diagnostic_cannot_select_acceptance) ... ok
+test_restore_owner_map_cannot_truncate_full_function_identity (portable_worker_target.SecondaryReviewProtocolHarness.test_restore_owner_map_cannot_truncate_full_function_identity) ... ok
+test_restore_source_admission_rejects_unknown_authority_and_object_kinds (portable_worker_target.SecondaryReviewProtocolHarness.test_restore_source_admission_rejects_unknown_authority_and_object_kinds) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.128s
+
+OK

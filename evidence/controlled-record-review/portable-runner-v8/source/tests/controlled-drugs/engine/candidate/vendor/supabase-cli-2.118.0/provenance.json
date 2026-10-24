@@ -1,0 +1,32 @@
+{
+  "files": {
+    "LICENSE": {
+      "sha256": "81f7d60afa4316010b1c0df8eb8f0c80b27586a86b72f1bde85e129bfd10d52a",
+      "url": "https://raw.githubusercontent.com/supabase/cli/v2.118.0/apps/cli-go/LICENSE"
+    },
+    "migration-apply.ts": {
+      "sha256": "17c3bea8046bb26f1fdd7f0234d34b30d6258a4bfcd8959813152528270ec208",
+      "url": "https://raw.githubusercontent.com/supabase/cli/v2.118.0/apps/cli/src/command-internal/migration-apply.ts"
+    },
+    "migration-file.ts": {
+      "sha256": "ec8018d9c9ec4a3a60637ff2f386d7edb7b683d85dcbf56551b67e138c1a4cfe",
+      "url": "https://raw.githubusercontent.com/supabase/cli/v2.118.0/apps/cli/src/command-internal/migration-file.ts"
+    },
+    "migration-history.ts": {
+      "sha256": "693f2333c9c2697696fd8e3067448916ea32064456ccae5a57df515f5ac69fc8",
+      "url": "https://raw.githubusercontent.com/supabase/cli/v2.118.0/apps/cli/src/command-internal/migration-history.ts"
+    },
+    "package.json": {
+      "sha256": "17bdbc9d711339955618ae9e94d8d7504c5bd3e6f3155eec7d6500d4a681ba61",
+      "url": "https://raw.githubusercontent.com/supabase/cli/v2.118.0/apps/cli/package.json"
+    },
+    "sql-split.ts": {
+      "sha256": "2d2e707f9463081e3806726a161d424ed90f9c1025f7acfc0bed2e1f69e1bda7",
+      "url": "https://raw.githubusercontent.com/supabase/cli/v2.118.0/apps/cli/src/command-internal/sql-split.ts"
+    }
+  },
+  "kind": "supabase-cli-statement-source-v2.118.0",
+  "license_provenance": "apps/cli/package.json declares MIT; LICENSE retains the upstream Supabase MIT copyright/permission text from apps/cli-go/LICENSE at the same tag.",
+  "typescript_version": "5.8.3",
+  "use": "Unmodified official parser for offline source-only migration statement derivation; other upstream files document application and ledger semantics."
+}

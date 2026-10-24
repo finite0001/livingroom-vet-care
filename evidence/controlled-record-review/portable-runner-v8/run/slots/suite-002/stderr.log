@@ -1,0 +1,11 @@
+test_candidate_sequence_wraps_inside_synthetic_range (portable_worker_target.ClientInboundFixtureTest.test_candidate_sequence_wraps_inside_synthetic_range) ... ok
+test_exhaustion_refuses_without_cleanup_or_write (portable_worker_target.ClientInboundFixtureTest.test_exhaustion_refuses_without_cleanup_or_write) ... ok
+test_phone_claimed_after_selection_still_refuses_before_race (portable_worker_target.ClientInboundFixtureTest.test_phone_claimed_after_selection_still_refuses_before_race) ... ok
+test_read_failure_does_not_retry_or_start_race (portable_worker_target.ClientInboundFixtureTest.test_read_failure_does_not_retry_or_start_race) ... ok
+test_retained_preceding_household_is_preserved_and_skipped (portable_worker_target.ClientInboundFixtureTest.test_retained_preceding_household_is_preserved_and_skipped) ... ok
+test_unused_candidate_is_still_checked_before_race (portable_worker_target.ClientInboundFixtureTest.test_unused_candidate_is_still_checked_before_race) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.004s
+
+OK
