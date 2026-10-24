@@ -3,6 +3,7 @@ import { ExactJsonNumber, protocolInteger } from "./exact-json.ts";
 import { reviewDigestSchema, reviewUuidSchema, type RecordReviewRequest } from "./request.ts";
 import { reviewMeaning, reviewProtocolInstantSchema, reviewTargetSchema, type PreparedReviewPacket } from "./prepared-packet.ts";
 import { prospectiveSourceShapes } from "./prospective-source-shapes.ts";
+import { reviewInstantMicroseconds, reviewQuantityThousandths } from "./exact-values.ts";
 
 /** Structural checks against the explicitly prospective backend DTO. This is
  * NOT ReviewEvidenceAdmission and must never be wired as its complete validator.
@@ -16,7 +17,9 @@ const integer = (min: bigint, max: bigint) => z.instanceof(ExactJsonNumber).refi
 const one = z.instanceof(ExactJsonNumber).refine(value => { try { return protocolInteger(value, 1, 1) === 1; } catch { return false; } });
 // Raw retained source timestamps keep their original offset/precision. Derived
 // historical DTOs use exact UTC6-Z, including anchors before v3's config window.
-const sourceInstant = z.string().datetime({ offset: true }).refine(value => Number.isFinite(Date.parse(value)));
+const sourceInstant = z.string().datetime({ offset: true }).refine(value => {
+  try { reviewInstantMicroseconds(value); return true; } catch { return false; }
+});
 const historicalInstant = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/)
   .refine(value => {
     const parsed = new Date(value);
@@ -58,7 +61,9 @@ const sourceRoles = new Set(["reviewed_target", "correction_target", "case_repor
   "amendment_predecessor", "original_dispense", "resolution_correction", "opening_basis", "retained_context"]);
 const sourceTypes = {
   uuid: reviewUuidSchema, text: z.string(), boolean: z.boolean(), integer: integer(-2147483648n, 2147483647n),
-  bigint: integer(-9223372036854775808n, 9223372036854775807n), "numeric(14,3)": z.instanceof(ExactJsonNumber),
+  bigint: integer(-9223372036854775808n, 9223372036854775807n), "numeric(14,3)": z.instanceof(ExactJsonNumber).refine(value => {
+    try { reviewQuantityThousandths(value); return true; } catch { return false; }
+  }),
   "timestamp with time zone": sourceInstant, date, jsonb: z.unknown(),
 };
 function invalid(): never { throw new Error("Prospective packet structure differs from its declared DTO"); }

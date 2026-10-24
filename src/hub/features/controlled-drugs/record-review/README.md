@@ -66,6 +66,22 @@ transfers, disposal, reports and commissioning remain separate workflows.
 
 ## Verification
 
+The prospective component checks remain separate from the mandatory complete
+evidence admission. `component-hashes.ts` has six explicit component APIs and no
+whole-packet hash API. Its formatter fixtures compare 120 component results with
+PostgreSQL 17.11; comparison with the selected Supabase PostgreSQL 17.6 runtime
+remains pending. These fixtures confer no database membership or Auth authority.
+
+`exact-values.ts` compares stored numeric(14,3) quantities as integer thousandths
+and source instants as integer microseconds. The prospective structure checker
+uses those domains without rounding. `prospective-component-consistency.ts`
+checks supplied row commitments, target/obligation commitments, duplicated
+parent rows, original context/result/receipt relationships and literal adapter
+dispatch. It remains incomplete: source-specific nested document grammars,
+complete direct-graph relationships, historical/configuration selection and
+independently accepted backend/transport authority are still required. Do not
+wire any prospective checker as the production `ReviewEvidenceAdmission`.
+
 - `npm run check`: includes 18 protocol/queue unit tests.
 - `node node_modules/@playwright/test/cli.js test --config tests/controlled-drugs/record-review.playwright.ts`:
   two test-only browser cases for 375/1280px presentation, keyboard activation,

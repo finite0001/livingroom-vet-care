@@ -1,7 +1,8 @@
 /** Prospective DTO declarations only; not a packet-integrity validator or
  * production admission. Derived from the backend draft wire-contract.json
  * SHA-256 e48f2343299de3db831727a48a21699dfb1e2e43a1e8bbe423262da39daee6a4.
- * Do not select live rows or rehash evidence from this client metadata. */
+ * This metadata alone supplies no source authority. Do not select live rows or
+ * hash whole packets; separately reviewed component checks remain prospective. */
 export const prospectiveSourceShapes = {
   "public.anesthesia_drug_administrations": { key: ["id"], columns: [["id","uuid",true],["record_id","uuid",true],["pet_id","uuid",true],["request","jsonb",true],["created_by","uuid",true],["created_at","timestamp with time zone",true]] },
   "public.billing_invoice_items": { key: ["id"], columns: [["id","uuid",true],["invoice_id","uuid",true],["pet_id","uuid",false],["product_id","uuid",true],["description","text",true],["quantity","numeric(14,3)",true],["unit_price_cents","bigint",true],["amount_cents","bigint",false],["created_by","uuid",true],["created_at","timestamp with time zone",true]] },
