@@ -1,0 +1,65 @@
+{
+  "artifact_sha256": {
+    "cross-session-retained-private-binding.json": "6619551c4cadb714ba18023e0896dc8ec9dd07dc9878b6d8fd58d29fcb1a9dc7",
+    "result.json": "b697c363ece9ecc4b8f815141acd8ee1a0bb3f091ad19524930ee06e3f1720c1",
+    "scalar-read-after-rejection.json": "ceea7efe61b88b311fedac12d646fa4deed2cf2fec35123af39fa22d32feacae",
+    "scalar-read-before-signing.json": "86a0a6adda2fcb1f19b0dbdfd348b8b8e8812d6d18bb6a22e734d8a44c5a090f"
+  },
+  "backend": {
+    "browser_acceptance": false,
+    "canonical_writer_http": true,
+    "cleanup_failed": false,
+    "clinical_activation": false,
+    "controlled_real_password_sessions": true,
+    "cross_session_auth_query_compiled": true,
+    "elapsed_seconds": 101.73309358401457,
+    "exact_audit_payloads": true,
+    "exact_auth_side_effects": true,
+    "exact_rejection_atomic_pair": true,
+    "exact_static_metadata": true,
+    "full_auth_acceptance": false,
+    "full_protocol_acceptance": false,
+    "genuine_cross_session_execute": true,
+    "global_closure_security_certification": false,
+    "guarded_owner_publication": true,
+    "hosted_writes": 0,
+    "http_requests": 46,
+    "kind": "closed-known-path-scalar-read-engineering-prototype-v6",
+    "known_path_lifecycle_http": true,
+    "known_path_rejection_http": true,
+    "manifest_sha256": "ddd423b8485878ef051a84da34b475a4267eff59fa5778649264d2e359989c9b",
+    "native_origin_security_certification": false,
+    "natural_expiry_contention_acceptance": false,
+    "normal_owned_cleanup": true,
+    "original_c0_http_stays_private": true,
+    "passed": true,
+    "preexisting_parent_rows_preserved": true,
+    "primary_failed": false,
+    "profile_sha256": "0b57e4244b7f8ff0fe84c4a336b202e51a25d5ff7d692b71fbf345808be2064d",
+    "provider_requests": 0,
+    "readonly_exact_row_preservation": true,
+    "rejection_pure_typed_controls": true,
+    "restore_acceptance": false,
+    "scalar_read_after_rejection": true,
+    "scalar_read_before_signing": true,
+    "server_detail_selection_used": true,
+    "source_clinical_actor_and_shape_refusals": true
+  },
+  "credentials_included": false,
+  "independent_actual_review": {
+    "report_sha256": "731e47d73e65e7cff2b0178cff69d11f41b8c05109f0624df14830727ef5c1b7",
+    "services_rerun": false
+  },
+  "outer_exit": {
+    "attribution": "Root tool observation; no independent saved outer-process receipt",
+    "code": 0
+  },
+  "preceding_failed_attempts": {
+    "backend_changed_for_these_failures": false,
+    "v4": "Wrong expected HTTP status for the selected PostgREST SQLSTATE mapping; failed attempt preserved",
+    "v5": "Wrong expectation of private fields in the minimal public receipt; failed attempt preserved"
+  },
+  "raw_evidence_included": false,
+  "scope": "closed_local_synthetic_adjustment_reads_and_cross_session_rejection",
+  "version": 1
+}
