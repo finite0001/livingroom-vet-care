@@ -4,7 +4,7 @@ import { movementAdjustArgumentsSchema, movementContextSchema, movementFrozenSch
 import { verifyProspectiveComponentConsistency } from "./prospective-component-consistency.ts";
 import { sameReviewJsonb as same } from "./jsonb-equality.ts";
 import { reviewJsonbTextBytes, type PreparedReviewPacket } from "./prepared-packet.ts";
-import type { RecordReviewRequest } from "./request.ts";
+import type { ReviewEvidenceTarget } from "./request.ts";
 
 interface EvidenceObject { readonly [key: string]: ExactJson }
 function invalid(): never { throw new Error("Prospective stock movement evidence is inconsistent or outside the supported local scope"); }
@@ -38,7 +38,7 @@ function trimmedText(value: ExactJson, max: number): boolean {
  * original/current authorization or accepted backend/transport authority. Never
  * mount this as a permissive fallback for complete ReviewEvidenceAdmission.
  */
-export async function verifyProspectiveStockMovement(packet: PreparedReviewPacket, request: Readonly<RecordReviewRequest>): Promise<void> {
+export async function verifyProspectiveStockMovement(packet: PreparedReviewPacket, request: Readonly<ReviewEvidenceTarget>): Promise<void> {
   await verifyProspectiveComponentConsistency(packet, request);
   const event = packet.event, preparation = packet.parent_preparation, receive = event.writer === "receive_inventory";
   if (!receive && event.writer !== "adjust_inventory") invalid();

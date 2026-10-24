@@ -3,6 +3,38 @@ const url = "/tests/controlled-drugs/record-review-workflow-fixture.html";
 test.beforeEach(async ({ context, baseURL }) => {
   await context.route("**/*", route => new URL(route.request().url()).origin === baseURL ? route.continue() : route.abort());
 });
+test("new preparation needs a selection and selection changes do not carry a draft", async ({ page }) => {
+  await page.goto(url);
+  await page.getByLabel("Review reason", { exact: true }).fill("Draft for the first synthetic record");
+  await expect(page.getByTestId("draft-dirty")).toHaveText("dirty");
+  await page.getByRole("button", { name: "Select another synthetic record" }).click();
+  await expect(page.getByLabel("Review reason", { exact: true })).toHaveValue("");
+  await expect(page.getByTestId("draft-dirty")).toHaveText("clean");
+  await page.getByLabel("Review reason", { exact: true }).fill("Draft for the second synthetic record");
+  await expect(page.getByTestId("draft-dirty")).toHaveText("dirty");
+  await page.getByRole("button", { name: "Toggle record selection" }).click();
+  await expect(page.getByTestId("draft-dirty")).toHaveText("clean");
+  await expect(page.getByRole("button", { name: "Prepare record review", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("status")).toHaveText("Open a record to prepare its review.");
+  await expect(page.getByTestId("rpc-count")).toHaveText("0");
+});
+test("an existing operation can recover and finish without a fresh record selection", async ({ page }) => {
+  await page.goto(url); await page.getByRole("button", { name: "Lose next response" }).click();
+  await page.getByLabel("Review reason", { exact: true }).fill("Synthetic recovery without detail selection");
+  await page.getByRole("button", { name: "Prepare record review", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Outcome unconfirmed");
+  await page.getByRole("button", { name: "Toggle record selection" }).click();
+  await page.getByRole("button", { name: "Recover original review" }).click();
+  await expect(page.getByRole("button", { name: "I have reviewed this preparation" })).toBeVisible();
+  await expect(page.getByTestId("rpc-count")).toHaveText("2");
+  await page.getByRole("button", { name: "I have reviewed this preparation" }).click();
+  await page.getByRole("button", { name: "Confirm and sign record review" }).click();
+  await expect(page.getByRole("status")).toHaveText("Record review saved.");
+  await expect(page.getByTestId("rpc-count")).toHaveText("3");
+  await page.getByRole("button", { name: "Start another review" }).click();
+  await expect(page.getByRole("status")).toHaveText("Open a record to prepare its review.");
+  await expect(page.getByRole("button", { name: "Prepare record review", exact: true })).toHaveCount(0);
+});
 test("synthetic staff workflow requires later keyboard confirmation, preserves exact evidence, and fits mobile/desktop", async ({ page }, testInfo) => {
   await page.goto(url); await expect(page.getByText(/Synthetic staff workflow/)).toBeVisible();
   await page.getByLabel("Review reason", { exact: true }).fill("Reviewed synthetic evidence 🐕");

@@ -17,8 +17,8 @@ export interface RecordReviewSelection {
 }
 export interface RecordReviewWorkflowProps {
   model: ReturnType<typeof createReviewLifecycle>;
-  /** Accepted server-issued detail selection. Not arbitrary client permissions. */
-  selection: Readonly<RecordReviewSelection>;
+  /** Required for new preparation; owned recovery needs no fresh selection. */
+  selection: Readonly<RecordReviewSelection> | null;
   /** Presentation only: permits the host to warn before discarding local edits. */
   onDraftDirtyChange?(dirty: boolean): void;
 }
@@ -43,16 +43,20 @@ interface ReviewDraftFormProps {
 }
 function ReviewDraftForm({ prepare, onDirtyChange }: ReviewDraftFormProps) {
   const id = useId(), [decision, setDecision] = useState<"approve" | "reject">("approve"), [reason, setReason] = useState("");
-  return <form className="space-y-4" onSubmit={event => { event.preventDefault(); if (prepare(decision, reason)) { setReason(""); setDecision("approve"); onDirtyChange?.(false); } }}>
+  const dirty = useRef(false), notify = useRef(onDirtyChange); notify.current = onDirtyChange;
+  const report = (value: boolean) => { dirty.current = value; notify.current?.(value); };
+  // Presentation lifetime only: mounting/cleanup cannot read, prepare or sign.
+  useEffect(() => { notify.current?.(dirty.current); return () => { notify.current?.(false); }; }, []);
+  return <form className="space-y-4" onSubmit={event => { event.preventDefault(); if (prepare(decision, reason)) { setReason(""); setDecision("approve"); report(false); } }}>
       <fieldset className="space-y-2"><legend className="font-medium">Your decision</legend>
         <div className="flex flex-wrap gap-3">{(["approve", "reject"] as const).map(value => <label key={value}
           className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border bg-card px-3">
-          <input type="radio" name={`${id}-decision`} value={value} checked={decision === value} onChange={() => { setDecision(value); onDirtyChange?.(value !== "approve" || reason !== ""); }} />
+          <input type="radio" name={`${id}-decision`} value={value} checked={decision === value} onChange={() => { setDecision(value); report(value !== "approve" || reason !== ""); }} />
           {value === "approve" ? "Approve the record" : "Reject the record"}
         </label>)}</div>
       </fieldset>
       <div className="space-y-2"><Label htmlFor={`${id}-reason`}>Review reason</Label>
-        <Textarea id={`${id}-reason`} value={reason} onChange={event => { setReason(event.target.value); onDirtyChange?.(decision !== "approve" || event.target.value !== ""); }} rows={4} required
+        <Textarea id={`${id}-reason`} value={reason} onChange={event => { setReason(event.target.value); report(decision !== "approve" || event.target.value !== ""); }} rows={4} required
           aria-describedby={`${id}-reason-help`} className="min-h-28" />
         <p id={`${id}-reason-help`} className="text-sm text-muted-foreground">Explain your decision. Preparation preserves this exact text; signing happens after review.</p>
       </div>
@@ -70,6 +74,13 @@ export function RecordReviewWorkflow({ model, selection, onDraftDirtyChange }: R
   latestModel.current = model;
   const [errorState, setErrorState] = useState<{ model: typeof model; revision: number; message: string } | null>(null);
   const revision = model.getIdentityRevision();
+  const draftKey = state.phase === "idle" && selection ? [formModelKey(model), selection.actor_id, selection.event_id,
+    selection.policy_id, selection.read_eligibility_id, selection.review_eligibility_id].join(":") : null;
+  const currentDraft = useRef(draftKey), notifyDraft = useRef(onDraftDirtyChange);
+  currentDraft.current = draftKey; notifyDraft.current = onDraftDirtyChange;
+  const reportDraft = (value: boolean) => {
+    if (currentDraft.current === draftKey || (!value && currentDraft.current === null)) notifyDraft.current?.(value);
+  };
   const error = errorState?.model === model && errorState.revision === revision ? errorState.message : "";
   const setError = (message: string) => setErrorState({ model, revision: model.getIdentityRevision(), message });
   // Lifecycle registration only. No request, retry or signing is effect-driven.
@@ -89,6 +100,7 @@ export function RecordReviewWorkflow({ model, selection, onDraftDirtyChange }: R
     catch { report(); }
   };
   function prepare(decision: "approve" | "reject", reason: string): boolean {
+    if (!selection) { setError("Open a record before preparing its review."); return false; }
     const request: RecordReviewRequest = { ...selection, operation_id: crypto.randomUUID(), decision, reason };
     if (!recordReviewRequestSchema.safeParse(request).success) { setError("Enter a review reason of 1–4,000 characters without leading or trailing spaces."); return false; }
     action(() => model.prepare(request));
@@ -104,10 +116,10 @@ export function RecordReviewWorkflow({ model, selection, onDraftDirtyChange }: R
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     <div role="status" aria-live="polite" className="text-sm">
       {state.phase === "signed_out" ? "Sign in to prepare or recover a review." : state.phase === "resolved" ? state.outcome?.state === "saved" ? "Record review saved." : "Review preparation cancelled." : busy ? "Checking the original review operation…" :
-        state.phase === "idle" ? "Choose a decision and prepare the record for review." : state.phase === "review" ? "Preparation ready. Review the evidence before signing." :
+        state.phase === "idle" ? selection ? "Choose a decision and prepare the record for review." : "Open a record to prepare its review." : state.phase === "review" ? "Preparation ready. Review the evidence before signing." :
           state.phase === "recoverable" ? "An earlier review operation needs recovery." : state.message}
     </div>
-    {state.phase === "idle" && <ReviewDraftForm key={formModelKey(model)} prepare={prepare} onDirtyChange={onDraftDirtyChange} />}
+    {draftKey && <ReviewDraftForm key={draftKey} prepare={prepare} onDirtyChange={reportDraft} />}
     {state.phase === "review" && packet && state.prepared && <div className="min-w-0 space-y-5 rounded-xl border bg-card p-4 shadow-warm md:p-6">
       <div className="space-y-3"><h3 className="font-display text-xl">Record {String(packet.target.sequence)}</h3>
         <dl className="grid min-w-0 gap-3 text-sm md:grid-cols-2">
