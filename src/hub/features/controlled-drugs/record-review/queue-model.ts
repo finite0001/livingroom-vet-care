@@ -31,7 +31,7 @@ export interface ReviewQueueRequest extends z.infer<typeof reviewQueueRequestSch
 export const reviewSummarySchema = z.object({
   event_id: reviewUuidSchema, event_sequence: positiveSequence, event_kind: reviewEventKindSchema,
   site_basis: z.enum(["event_transitions", "managed_dispense", "managed_pickup", "managed_return", "opening_custody_site", "unproven"]), site_id: reviewUuidSchema.nullable(),
-  observed_at: instant, recorded_at: instant,
+  observed_at: instant.nullable(), recorded_at: instant,
   review_state: z.enum(["not_required", "awaiting_review", "approved", "rejected"]),
   deadline_state: z.enum(["not_required", "not_configured", "not_assigned", "historical_policy_unavailable", "calendar_unavailable", "not_due", "overdue", "completed_on_time", "completed_late", "completed_time_unassessable"]),
   deadline_basis: z.enum(["not_required", "configured", "not_configured", "not_assigned", "historical_policy_unavailable", "calendar_unavailable"]), due_at: instant.nullable(),
@@ -71,7 +71,9 @@ function sameScope(a: ReviewQueueScope, b: ReviewQueueScope) {
 export function verifyReviewQueuePage(input: unknown, response: unknown): ReviewQueuePage {
   const request = reviewQueueRequestSchema.parse(input), page = pageSchema.parse(response), data = page.data;
   const previous = request.cursor?.after_sequence ?? "0";
+  const remaining = BigInt(data.high_water) - BigInt(previous);
   if (data.items.length > request.page_size || data.examined < data.items.length ||
+    remaining < 0n || BigInt(data.examined) > remaining || (remaining > 0n && data.examined === 0) ||
     (request.cursor && data.high_water !== request.cursor.high_water)) throw new Error("Queue page bounds changed; restart the queue");
   const ids = new Set<string>(); let last = BigInt(previous);
   for (const item of data.items) {
@@ -82,7 +84,15 @@ export function verifyReviewQueuePage(input: unknown, response: unknown): Review
   }
   const next = data.next_cursor;
   if (next && (!sameScope(request, next) || next.high_water !== data.high_water || BigInt(next.after_sequence) <= BigInt(previous) ||
-    BigInt(next.after_sequence) < last || data.examined === 0 || (request.cursor && (next.read_eligibility_id !== request.cursor.read_eligibility_id ||
+    BigInt(next.after_sequence) >= BigInt(data.high_water) || BigInt(next.after_sequence) < last ||
+    BigInt(data.examined) > BigInt(next.after_sequence) - BigInt(previous) ||
+    (data.items.length < request.page_size && data.examined < 100) || data.examined === 0 || (request.cursor && (next.read_eligibility_id !== request.cursor.read_eligibility_id ||
       next.read_authorization_hash !== request.cursor.read_authorization_hash)))) throw new Error("Queue continuation changed; restart the queue");
+  if (data.items.length === request.page_size &&
+    (next ? BigInt(next.after_sequence) !== last : last !== BigInt(data.high_water)))
+    throw new Error("Queue did not stop at its filled page; restart the queue");
+  const endpoint = BigInt(next?.after_sequence ?? data.high_water);
+  if (endpoint > last && data.examined <= data.items.length)
+    throw new Error("Queue omitted its examined endpoint; restart the queue");
   return page;
 }

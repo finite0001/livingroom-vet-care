@@ -1,5 +1,16 @@
 import { test, expect } from "@playwright/test";
 
+test("nonphysical records show absent observation separately from their recorded time", async ({ page, baseURL }) => {
+  await page.route("**/*", route => new URL(route.request().url()).origin === baseURL ? route.continue() : route.abort());
+  await page.goto("/tests/controlled-drugs/record-review-fixture.html?nonphysical");
+  await page.getByRole("button", { name: "Continue to next page" }).click();
+  const observation = page.locator("dl > div").filter({ has: page.locator("dt", { hasText: "Physical observation time" }) });
+  await expect(observation.locator("dd")).toHaveText("No physical observation recorded");
+  await expect(observation.locator("time")).toHaveCount(0);
+  await expect(page.locator("time")).toHaveCount(1);
+  await expect(page.locator("time")).toHaveAttribute("datetime", "2026-10-23T01:02:03.000002Z");
+});
+
 test("record review queue presents independent states and bounded empty-page continuation", async ({ page, baseURL }, testInfo) => {
   const errors: string[] = [], external: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
