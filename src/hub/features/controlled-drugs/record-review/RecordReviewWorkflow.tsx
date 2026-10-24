@@ -15,10 +15,12 @@ export interface RecordReviewSelection {
   read_eligibility_id: string;
   review_eligibility_id: string;
 }
-interface RecordReviewWorkflowProps {
+export interface RecordReviewWorkflowProps {
   model: ReturnType<typeof createReviewLifecycle>;
   /** Accepted server-issued detail selection. Not arbitrary client permissions. */
   selection: Readonly<RecordReviewSelection>;
+  /** Presentation only: permits the host to warn before discarding local edits. */
+  onDraftDirtyChange?(dirty: boolean): void;
 }
 const sections = {
   target: "Original record identity", adapter: "Source provenance", event: "Original event",
@@ -26,20 +28,31 @@ const sections = {
   source_rows: "Retained source records", event_lines: "Event lines", cells: "Stock cells", transitions: "Container transitions",
   containers: "Identified containers", obligation: "Review requirement and deadline evidence", current_authorization: "Current review permissions",
 };
+// Presentation identities only. Equal Auth revisions on different model objects
+// must never preserve one model's unsubmitted reason in another model's form.
+const formModels = new WeakMap<RecordReviewWorkflowProps["model"], number>();
+let nextFormModel = 0;
+function formModelKey(model: RecordReviewWorkflowProps["model"]) {
+  if (!formModels.has(model)) formModels.set(model, ++nextFormModel);
+  return `${formModels.get(model)}:${model.getIdentityRevision()}`;
+}
 
-interface ReviewDraftFormProps { prepare(decision: "approve" | "reject", reason: string): boolean }
-function ReviewDraftForm({ prepare }: ReviewDraftFormProps) {
+interface ReviewDraftFormProps {
+  prepare(decision: "approve" | "reject", reason: string): boolean;
+  onDirtyChange?(dirty: boolean): void;
+}
+function ReviewDraftForm({ prepare, onDirtyChange }: ReviewDraftFormProps) {
   const id = useId(), [decision, setDecision] = useState<"approve" | "reject">("approve"), [reason, setReason] = useState("");
-  return <form className="space-y-4" onSubmit={event => { event.preventDefault(); if (prepare(decision, reason)) { setReason(""); setDecision("approve"); } }}>
+  return <form className="space-y-4" onSubmit={event => { event.preventDefault(); if (prepare(decision, reason)) { setReason(""); setDecision("approve"); onDirtyChange?.(false); } }}>
       <fieldset className="space-y-2"><legend className="font-medium">Your decision</legend>
         <div className="flex flex-wrap gap-3">{(["approve", "reject"] as const).map(value => <label key={value}
           className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border bg-card px-3">
-          <input type="radio" name={`${id}-decision`} value={value} checked={decision === value} onChange={() => setDecision(value)} />
+          <input type="radio" name={`${id}-decision`} value={value} checked={decision === value} onChange={() => { setDecision(value); onDirtyChange?.(value !== "approve" || reason !== ""); }} />
           {value === "approve" ? "Approve the record" : "Reject the record"}
         </label>)}</div>
       </fieldset>
       <div className="space-y-2"><Label htmlFor={`${id}-reason`}>Review reason</Label>
-        <Textarea id={`${id}-reason`} value={reason} onChange={event => setReason(event.target.value)} rows={4} required
+        <Textarea id={`${id}-reason`} value={reason} onChange={event => { setReason(event.target.value); onDirtyChange?.(decision !== "approve" || event.target.value !== ""); }} rows={4} required
           aria-describedby={`${id}-reason-help`} className="min-h-28" />
         <p id={`${id}-reason-help`} className="text-sm text-muted-foreground">Explain your decision. Preparation preserves this exact text; signing happens after review.</p>
       </div>
@@ -51,7 +64,7 @@ function ReviewDraftForm({ prepare }: ReviewDraftFormProps) {
 /** Unmounted. No Auth client, effect, route, automatic request or live adapter.
  * The owning accepted Auth boundary synchronously invalidates model identity.
  */
-export function RecordReviewWorkflow({ model, selection }: RecordReviewWorkflowProps) {
+export function RecordReviewWorkflow({ model, selection, onDraftDirtyChange }: RecordReviewWorkflowProps) {
   const state = useSyncExternalStore(model.subscribe, model.getSnapshot, model.getSnapshot);
   const latestModel = useRef(model), uiLifetime = useRef({ active: false });
   latestModel.current = model;
@@ -94,7 +107,7 @@ export function RecordReviewWorkflow({ model, selection }: RecordReviewWorkflowP
         state.phase === "idle" ? "Choose a decision and prepare the record for review." : state.phase === "review" ? "Preparation ready. Review the evidence before signing." :
           state.phase === "recoverable" ? "An earlier review operation needs recovery." : state.message}
     </div>
-    {state.phase === "idle" && <ReviewDraftForm key={model.getIdentityRevision()} prepare={prepare} />}
+    {state.phase === "idle" && <ReviewDraftForm key={formModelKey(model)} prepare={prepare} onDirtyChange={onDraftDirtyChange} />}
     {state.phase === "review" && packet && state.prepared && <div className="min-w-0 space-y-5 rounded-xl border bg-card p-4 shadow-warm md:p-6">
       <div className="space-y-3"><h3 className="font-display text-xl">Record {String(packet.target.sequence)}</h3>
         <dl className="grid min-w-0 gap-3 text-sm md:grid-cols-2">

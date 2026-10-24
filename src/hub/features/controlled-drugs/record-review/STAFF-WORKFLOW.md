@@ -65,12 +65,21 @@ transport and fixture admission. It uses actual browser Web Locks/localStorage f
 the four-field pointer. No real Auth, RPC grant, backend persistence, clinical
 signature or staff acceptance is claimed by those tests.
 
-Before mounting, finish the independent backend/reference-vector admission and
-real two-user Auth acceptance, then integrate the accepted host shell’s leave/
-navigation warning, dialog focus containment/return and permission-loss behavior.
-The present sheet is an inline unmounted component, not a standalone navigation
-guard or production dialog. Counts, physical witnesses, transfers, disposal and
-register commissioning remain separate work.
+`RecordReviewDialog` adds an unmounted data-router host around the inline sheet.
+It distinguishes discarded local edits from durable unresolved operations, warns
+on close, pathname/search/hash navigation and unload, and never turns leaving into
+a cancellation or signature. A confirmed outcome with pending storage cleanup has
+its own wording. Native browser unload wording remains browser-controlled. Radix
+contains focus; opening focuses the title, Stay restores the prior control, and
+closing returns to the trigger. Model identity plus session revision remounts the
+local form before old text can appear in a replacement model at the same revision.
+The presentation-only dirty callback persists no draft text.
+
+Before mounting, finish independent backend/reference-vector admission, real
+two-user Auth acceptance and the actual host's Auth/permission boundary. The new
+dialog is a tested prospective host, not a production route or an authorization
+source. Counts, physical witnesses, transfers, disposal and register commissioning
+remain separate work.
 
 Official references checked for this slice:
 
@@ -95,9 +104,11 @@ timestamps keep their original offset/precision and can predate configuration.
 Historical selection anchors can also predate configuration, while calendar-derived
 due times retain the2026–2101 protocol window.
 
-Verification of this prospective slice: 29 new unit controls and six synthetic
-browser cases pass. Full `npm run check` passed 1,743 tests (zero skipped), all
+Verification of this prospective slice: 29 new unit controls and 11 synthetic
+browser cases pass (six workflow and five dialog cases). Full `npm run check` passed 1,743 tests (zero skipped), all
 three TypeScript projects and the production build. The repository retains four
 pre-existing Fast Refresh warnings and its existing bundle-size warning; the
-new files have no focused lint warnings. Browser screenshots at 375/1280 pixels
-were inspected. Final Auth, backend and host-shell acceptance remain separate.
+new files have no focused lint warnings. Prepared-sheet/dialog screenshots at
+375/1280 pixels were inspected; independent editable-dialog/warning geometry and
+focus checks also passed. Final Auth, backend and actual mounted-host acceptance
+remain separate.
