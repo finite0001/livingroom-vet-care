@@ -1,0 +1,73 @@
+{
+  "artifact_sha256": {
+    "browser-proof/result.json": "5f4338597e2ff2c5fdda0dad9a54c2eb21f7b73746bcbb8869c3abca104453d7",
+    "browser-server-commitment.json": "0146071d0b3de9394e39d7b1583696dfb66bfaf0f36033c4431ab9b7fac83edb",
+    "browser-supervisor.json": "90cfb48c910d41ea66d8e4580f621bfbc5a648fc2bb13f181c3f44879c7d1310",
+    "committed-invariants.json": "56cd154d4a09e869dac05582cf9b47527e131ab84a02173f8b62e498b0fbc662",
+    "result.json": "d2e5f720c703f554816a4ff2599a616a428f545891261076ce1bdf1dd5a57dd7"
+  },
+  "backend": {
+    "browser_acceptance": false,
+    "browser_rpc_posts": 3,
+    "canonical_writer_http": true,
+    "cleanup_failed": false,
+    "clinical_activation": false,
+    "controlled_real_password_sessions": true,
+    "elapsed_seconds": 133.34307416601223,
+    "exact_audit_payloads": true,
+    "exact_auth_side_effects": true,
+    "exact_static_metadata": true,
+    "full_auth_acceptance": false,
+    "full_protocol_acceptance": false,
+    "global_closure_security_certification": false,
+    "guarded_owner_publication": true,
+    "hosted_writes": 0,
+    "kind": "closed-local-authenticated-staff-browser-prototype-v1",
+    "known_path_lifecycle_http": true,
+    "manifest_sha256": "052f165e80571cd9705be6873590f6491cc5fdcf9a3ac381743a2da9f74ea8d2",
+    "native_origin_security_certification": false,
+    "natural_expiry_contention_acceptance": false,
+    "normal_owned_cleanup": true,
+    "original_c0_http_stays_private": true,
+    "passed": true,
+    "preexisting_parent_rows_preserved": true,
+    "primary_failed": false,
+    "profile_sha256": "986436df48f71df61b017efe28105f614193ed39fbec352433143f15079ff7f0",
+    "provider_requests": 0,
+    "python_http_requests": 28,
+    "restore_acceptance": false,
+    "scoped_staff_browser_http": true,
+    "source_clinical_actor_and_shape_refusals": true
+  },
+  "browser": {
+    "clinical_activation": false,
+    "elapsed_seconds": 15.505093292000002,
+    "explicit_test_origin_and_public_key_translation": true,
+    "full_auth_acceptance": false,
+    "full_protocol_acceptance": false,
+    "hosted_writes": 0,
+    "kind": "closed-local-staff-browser-v1",
+    "native_origin_security_certification": false,
+    "normal_browser_cleanup": true,
+    "normal_vite_cleanup": true,
+    "passed": true
+  },
+  "credentials_included": false,
+  "independent_actual_review": {
+    "composite_checks": 14,
+    "inspection_sha256": "be3371c56bf431bd64816cd0191498f99207601de028f0f43ff6de813c07c335",
+    "intermediate_transition_trace_retained": false,
+    "report_sha256": "610a95a54516d9f348ec21b4e6404aadc04112f73c5ac2bcb4902726b183eeea",
+    "services_rerun": false
+  },
+  "outer_exit_code": 0,
+  "raw_evidence_included": false,
+  "scope": "closed_local_synthetic_staff_approve_and_recovery",
+  "source": {
+    "frontend_binding_sha256": "14612ecf1907e2cade50dca571842b41efc7d2a4d844336103e91ed82029a19a",
+    "joint_source_review_sha256": "d2bf5ab262fe6e58da49024f5624619a0ceb30b12d83700a24a87a19491b33be",
+    "supervisor_sha256": "e8a17683d77e498c9e18e67f73975cdff6194dfc50a72b855c658a35dc9c2e01",
+    "wrapper_sha256": "e673b17eeeb199f98dcc695ab9b0cea2436c751ea1d75a254af8a7a03d53d5ad"
+  },
+  "version": 1
+}
