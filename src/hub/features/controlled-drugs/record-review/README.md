@@ -67,7 +67,7 @@ transfers, disposal, reports and commissioning remain separate workflows.
 ## Verification
 
 The prospective component checks remain separate from the mandatory complete
-evidence admission. `component-hashes.ts` has six explicit component APIs and no
+evidence admission. `component-hashes.ts` has seven explicit component APIs and no
 whole-packet hash API. Its formatter fixtures compare 120 component results with
 PostgreSQL 17.11; comparison with the selected Supabase PostgreSQL 17.6 runtime
 remains pending. These fixtures confer no database membership or Auth authority.
@@ -90,6 +90,24 @@ container descriptors. General C0 can legitimately include an empty prepared
 container descriptor; its refusal here is an explicit unsupported-scope boundary.
 Frozen aggregate balances have a separate 1,024-character exact-decimal resource
 ceiling, because a sum can exceed one stored numeric(14,3) value's range.
+
+`verifyProspectiveClinicalMovement` separately checks treatment and anesthesia
+entries against that same available-stock graph. It additionally connects the
+canonical treatment, stock debit, billing item and retained alert review; the
+anesthesia link must contain the server-derived patient/source request. Prices
+and generated invoice amounts compare with integer arithmetic. Dose text remains
+separate from stock quantity. Alert snapshot hashing validates the historical
+snapshot shape and its explicit legacy-allergy provenance; it never substitutes
+the patient's current chart. Both source snapshot hashes match verbatim synthetic
+PostgreSQL 17.6 HTTP responses (fixture provenance in `CLINICAL-EVIDENCE.md`).
+
+This clinical client slice accepts canonical UUIDs, JSON-number spellings (as
+strings or exact numeric tokens), four-digit finite dates and explicit-offset
+instants. SQL accepts some additional input spellings and text casts; these
+refuse here. Redundant numeric scale is retained, while C0 container split
+strings keep their original narrower grammar. Historical transcriptions, native
+prepared containers and nullable-obligation/read-only packet admission remain
+outside this checker. It introduces no production evidence adapter or route.
 
 `sameReviewJsonb` uses exact numeric semantic equality while keeping strings exact
 and preserving original numeric tokens for every component hash. The stock test
