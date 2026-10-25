@@ -1,0 +1,25 @@
+import { z } from "zod";
+import { reviewUuidSchema } from "../../src/hub/features/controlled-drugs/record-review/request.ts";
+
+const token = z.string().max(16384).regex(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+export const localAuthenticatedStaffInputSchema = z.object({
+  origin: z.literal("http://127.0.0.1:64661"), anonKey: token, actorId: reviewUuidSchema,
+  login: z.object({ email: z.string().regex(/^lrv-closed-[a-f0-9]{16}-1@example\.invalid$/),
+    password: z.string().min(32).max(128).regex(/^[A-Za-z0-9_-]+$/) }).strict(),
+  scope: z.object({ product_id: reviewUuidSchema, site_id: reviewUuidSchema, event_kind: z.literal("adjust_inventory") }).strict(),
+  expectedEventId: reviewUuidSchema,
+}).strict().superRefine((value, ctx) => {
+  try {
+    const segment = value.anonKey.split(".")[1];
+    const bytes = Uint8Array.from(atob(segment.replace(/-/g, "+").replace(/_/g, "/")), char => char.charCodeAt(0));
+    z.object({ role: z.literal("anon") }).passthrough().parse(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
+  } catch { ctx.addIssue({ code: "custom", message: "Only the disposable local anonymous gateway key is supported" }); }
+});
+export interface LocalAuthenticatedStaffInput {
+  origin: "http://127.0.0.1:64661";
+  anonKey: string;
+  actorId: string;
+  login: { email: string; password: string };
+  scope: { product_id: string; site_id: string; event_kind: "adjust_inventory" };
+  expectedEventId: string;
+}

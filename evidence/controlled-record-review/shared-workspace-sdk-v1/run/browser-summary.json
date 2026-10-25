@@ -1,0 +1,31 @@
+{
+  "kind": "safe-browser-result-projection-v1",
+  "source_sha256": "b60aa2e0049f7115472e2091f59c466a855f670a960503006aa70de848cfdecf",
+  "projection_only": true,
+  "fields": {
+    "kind": "closed-local-staff-workspace-sdk-browser-v1",
+    "passed": true,
+    "queue_detail_admitted": true,
+    "server_selection_used": true,
+    "reload_selection_absent": true,
+    "sdk_identity_verified": true,
+    "dialog_explicit_open_no_rpc": true,
+    "recovery_dialog_explicit_open_no_rpc": true,
+    "beforeunload_warning_accepted": true,
+    "auth_phase_released": true,
+    "auth_calls": 1,
+    "options_count": 0,
+    "recovery_explicitly_released": true,
+    "decoded_json_proxy": true,
+    "blocked_external_origins": [],
+    "normal_browser_cleanup": true,
+    "normal_vite_cleanup": true,
+    "elapsed_seconds": 37.738875583,
+    "full_auth_acceptance": false,
+    "full_protocol_acceptance": false,
+    "native_origin_security_certification": false,
+    "clinical_activation": false,
+    "hosted_writes": 0,
+    "failure_type": null
+  }
+}
