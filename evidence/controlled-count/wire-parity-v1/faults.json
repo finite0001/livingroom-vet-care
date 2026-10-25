@@ -1,0 +1,50 @@
+{
+  "bad_raw_cast": {
+    "failed_as_required": true,
+    "primary_code": "22P02",
+    "primary_message": "invalid input syntax for type json",
+    "target_reached": true
+  },
+  "data_error": {
+    "failed_as_required": true,
+    "primary_code": "22000",
+    "primary_message": "count_wire_fault_data",
+    "target_reached": true
+  },
+  "extra_detail": {
+    "failed_as_required": true,
+    "primary_code": "P0001",
+    "primary_message": "Invalid count component",
+    "target_reached": true
+  },
+  "extra_hint": {
+    "failed_as_required": true,
+    "primary_code": "P0001",
+    "primary_message": "Invalid count component",
+    "target_reached": true
+  },
+  "internal_error": {
+    "failed_as_required": true,
+    "primary_code": "XX000",
+    "primary_message": "count_wire_fault_internal",
+    "target_reached": true
+  },
+  "undefined_column": {
+    "failed_as_required": true,
+    "primary_code": "42703",
+    "primary_message": "column \"count_wire_intentionally_missing\" does not exist",
+    "target_reached": true
+  },
+  "undefined_function": {
+    "failed_as_required": true,
+    "primary_code": "42883",
+    "primary_message": "function pg_temp.count_wire_intentionally_missing(jsonb) does not exist",
+    "target_reached": true
+  },
+  "wrong_message": {
+    "failed_as_required": true,
+    "primary_code": "P0001",
+    "primary_message": "count_wire_fault_wrong_message",
+    "target_reached": true
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "actual_review_sha256": "0bc470e66d25ba456b03ed9e285d55d2886c1d34d56a54e1655ed2de232a50b3",
+  "actual_review_status": "scoped-clear",
+  "complete_outer_receipts_sha256": "cc6517ff2b2f75b2fe9e2e090f2c539e4cd9e87bd23d8650577d5dc8b281e653",
+  "component_source_manifest_sha256": "f373bc082c9a26cc3c515240c098aead97ad20a53c9918048250c312e6921429",
+  "component_source_review_sha256": "304b1dcdba98992ac8ef03529167b734d15a7e8c2e986ce902f45bc8557f52cc",
+  "files": {
+    "src/hub/features/controlled-drugs/count/count-request-schema.ts": "4157eedbcfa9f87608a623bdda8b22f6e1795b0295f77795bcaf3b497b1f20dc",
+    "src/hub/features/controlled-drugs/count/count-wire.ts": "615f52a43d420c0fe12549b6b8e5cb7f8e95124be6f8bb3080a9eb222ecde9f9",
+    "tests/controlled-drugs/count-wire-components.sql": "48a98f94a734172cc3f837f4669e3e655c25a0f13b64a69c57a96906fc7d07da",
+    "tests/controlled-drugs/count-wire-fixtures/v2-independent-vectors.json": "a4bd8149ce04cf7b9d6f3c16c9905df9395e9054992789e940d3341608982d4b",
+    "tests/controlled-drugs/count-wire-fixtures/validation-vectors.json": "ac1621e61e7375aaa7d7a21b9291a5b43bbd7b8fa712a8467b576941ec8baf3d",
+    "tests/controlled-drugs/count-wire.test.ts": "867afe588f041c02a393dc726b95a80102e4c0615ae762a526f52e6e87b33227"
+  },
+  "kind": "count-wire-parity-source-pins-v1",
+  "runtime_manifest_sha256": "5c20ec6cce4a9191aeda483eb59d4d3c585b3ba4f5e5bda693389756ab1fbccc",
+  "runtime_source_review_sha256": "4573d80400ce51eb89294b7f57c8e543bb69e5d78ca6884ba24156aa39bfdcd0"
+}

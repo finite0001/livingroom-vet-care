@@ -1,0 +1,104 @@
+{
+  "authority_contract_sha256": "e239722e82cc7e6ab6ff8a4587593084f79fbf2863aec04825d5760b971dbdbf",
+  "blank_codepoints": [
+    "U+0009",
+    "U+000A",
+    "U+000B",
+    "U+000C",
+    "U+000D",
+    "U+0020",
+    "U+0085",
+    "U+00A0",
+    "U+1680",
+    "U+2000",
+    "U+2001",
+    "U+2002",
+    "U+2003",
+    "U+2004",
+    "U+2005",
+    "U+2006",
+    "U+2007",
+    "U+2008",
+    "U+2009",
+    "U+200A",
+    "U+200B",
+    "U+2028",
+    "U+2029",
+    "U+202F",
+    "U+205F",
+    "U+3000",
+    "U+FEFF"
+  ],
+  "kind": "independent-wire-v2-unit-vectors-not-Auth-or-count-observation",
+  "public_receipts": [
+    {
+      "action": "start",
+      "actor_id": "00000000-0000-4000-8000-000000000007",
+      "count_id": "00000000-0000-4000-8000-000000000006",
+      "operation_id": "00000000-0000-4000-8000-000000000005",
+      "receipt_digest": "9c4de24f2c184f497ddf0a6e8aee927a0bd9d2d5931d9f86e70e8809d3bb51e4",
+      "request_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "result_ref": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "kind": "cycle",
+        "opaque_commitment": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "schema_version": 1
+    },
+    {
+      "action": "statement",
+      "actor_id": "00000000-0000-4000-8000-000000000007",
+      "count_id": "00000000-0000-4000-8000-000000000006",
+      "operation_id": "00000000-0000-4000-8000-000000000005",
+      "receipt_digest": "dece6c6cc66e21d48790e6a326c182151bbc7060840926012a87bbe302280673",
+      "request_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "result_ref": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "kind": "statement",
+        "opaque_commitment": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "schema_version": 1
+    },
+    {
+      "action": "finalize",
+      "actor_id": "00000000-0000-4000-8000-000000000007",
+      "count_id": "00000000-0000-4000-8000-000000000006",
+      "operation_id": "00000000-0000-4000-8000-000000000005",
+      "receipt_digest": "3f68896fcd2931536bfb077a4f6f8ab893f876a67d0bdc316b5eb5cfd8dd615f",
+      "request_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "result_ref": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "kind": "outcome",
+        "opaque_commitment": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "schema_version": 1
+    },
+    {
+      "action": "cancel",
+      "actor_id": "00000000-0000-4000-8000-000000000007",
+      "count_id": "00000000-0000-4000-8000-000000000006",
+      "operation_id": "00000000-0000-4000-8000-000000000005",
+      "receipt_digest": "30ae7286c32f41f1bbc4c403a7cdba3fde4a793e573d2d55b1c4122cff986425",
+      "request_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "result_ref": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "kind": "cancellation",
+        "opaque_commitment": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "schema_version": 1
+    }
+  ],
+  "request": {
+    "action": "cancel",
+    "request": {
+      "actor_id": "00000000-0000-4000-8000-000000000002",
+      "cancellation_id": "00000000-0000-4000-8000-000000000004",
+      "count_id": "00000000-0000-4000-8000-000000000003",
+      "operation_id": "00000000-0000-4000-8000-000000000001",
+      "reason": "\u00e9\ud83d\ude42\n",
+      "schema_version": 1
+    }
+  },
+  "request_digest": "9d57d04316ae53c8ecfecc089a73928307863d624e58fe7b23379f7ae9de45d2",
+  "request_frame_hex": "6f323a73363a616374696f6e73363a63616e63656c73373a726571756573746f363a73383a6163746f725f69647333363a30303030303030302d303030302d343030302d383030302d3030303030303030303030327331353a63616e63656c6c6174696f6e5f69647333363a30303030303030302d303030302d343030302d383030302d30303030303030303030303473383a636f756e745f69647333363a30303030303030302d303030302d343030302d383030302d3030303030303030303030337331323a6f7065726174696f6e5f69647333363a30303030303030302d303030302d343030302d383030302d30303030303030303030303173363a726561736f6e73373ac3a9f09f99820a7331343a736368656d615f76657273696f6e69313b"
+}

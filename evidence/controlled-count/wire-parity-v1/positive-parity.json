@@ -1,0 +1,6 @@
+{
+  "Auth_or_physical": false,
+  "app_grants": false,
+  "kind": "count-wire-pure-component-only",
+  "validation_vectors": 111
+}
