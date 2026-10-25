@@ -1,0 +1,61 @@
+{
+  "command": "python3 -I -B - <<'PY'\nfrom pathlib import Path\nimport hashlib,importlib.util\nbase=Path('/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021')\ngate=base/'record-review-v3-locktail-independent-review/natural-late-runtime-v1-review/REVIEW.md'\nif hashlib.sha256(gate.read_bytes()).hexdigest()!='35e42d2b887adc3a38f3ec2c6a16351eb6bd33640da1a5735841aa24dee98efc':raise ValueError('Independent gate changed')\np=base/'record-review-v3-protocol-draft/completion-next/operations-natural-late-prototype-v1/natural_late_runtime_v1.py'\nif hashlib.sha256(p.read_bytes()).hexdigest()!='0f759f89f8b71e9ea26ab00ff9094b71dcf17789b95449009e993f7434a487ca':raise ValueError('Exact runtime changed')\nspec=importlib.util.spec_from_file_location('root_natural_late_v1',p);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)\nfolder,result=m.run('3137a45a385bd7953d6fa181ce8ba2c1d35a8a1dc207c821efc9994ccc72e4fa')\nprint('ROOT_NORMAL_RETURN',str(folder),result['passed'],flush=True)\nPY",
+  "returns": [
+    {
+      "chunk_id": "4843fe",
+      "wall_time_seconds": 1.003673125,
+      "session_id": 86333,
+      "original_token_count": 18,
+      "output": "Protected closed prototype: /private/tmp/lrv-closed-clinical-wamd75t7\n"
+    },
+    {
+      "chunk_id": "b6c95f",
+      "wall_time_seconds": 5.002101,
+      "session_id": 86333,
+      "original_token_count": 0,
+      "output": ""
+    },
+    {
+      "chunk_id": "fbcf99",
+      "wall_time_seconds": 10.001682625,
+      "session_id": 86333,
+      "original_token_count": 0,
+      "output": ""
+    },
+    {
+      "chunk_id": "db572f",
+      "wall_time_seconds": 10.0018475,
+      "session_id": 86333,
+      "original_token_count": 0,
+      "output": ""
+    },
+    {
+      "chunk_id": "5851f1",
+      "wall_time_seconds": 10.000651917,
+      "session_id": 86333,
+      "original_token_count": 0,
+      "output": ""
+    },
+    {
+      "chunk_id": "94468f",
+      "wall_time_seconds": 10.003120959,
+      "session_id": 86333,
+      "original_token_count": 0,
+      "output": ""
+    },
+    {
+      "chunk_id": "106f48",
+      "wall_time_seconds": 20.002484333,
+      "session_id": 86333,
+      "original_token_count": 0,
+      "output": ""
+    },
+    {
+      "chunk_id": "69b134",
+      "wall_time_seconds": 0.000018458,
+      "exit_code": 0,
+      "original_token_count": 448,
+      "output": "{\"actual_declared_timezone_calendar\": true, \"actual_natural_wait_completed\": true, \"all10_relation_tail_lock_preflight\": true, \"browser_acceptance\": false, \"canonical_two_clinical_writers\": true, \"canonical_writer_http\": true, \"cleanup_failed\": false, \"clinical_activation\": false, \"clinical_policy_fixture_checks\": true, \"clinical_two_writer_http\": true, \"clinical_typed_dependency_checks\": true, \"complete_generated_select_typechecks\": true, \"complete_original_reference_equal\": true, \"controlled_real_password_sessions\": true, \"elapsed_seconds\": 902.8805593749858, \"exact_audit_payloads\": true, \"exact_auth_side_effects\": true, \"exact_clinical_callback_effects\": true, \"exact_committed_invariants\": true, \"exact_static_metadata\": true, \"full_auth_acceptance\": false, \"full_protocol_acceptance\": false, \"global_closure_security_certification\": false, \"guarded_owner_publication\": true, \"hosted_writes\": 0, \"kind\": \"closed-local-natural-late3-hot230-prototype-v1\", \"known_path_lifecycle_http\": true, \"manifest_sha256\": \"3137a45a385bd7953d6fa181ce8ba2c1d35a8a1dc207c821efc9994ccc72e4fa\", \"native_origin_security_certification\": false, \"natural_expiry_contention_acceptance\": false, \"natural_generated_typechecks\": true, \"natural_three_atomic_channels\": true, \"normal_owned_cleanup\": true, \"owned_saved_recovery\": true, \"passed\": true, \"postwait_genuine_fresh_reviewer_B\": true, \"preexisting_parent_rows_preserved\": true, \"prepare_reuse_typed_checks\": true, \"primary_failed\": false, \"profile_sha256\": \"66fde901adbf632acde35a81322cbb5a8d8d9ba7f530fed76ac3b3d92a625b1d\", \"provider_requests\": 0, \"python_http_requests\": 40, \"readonly_exact_rows_preserved\": true, \"restore_acceptance\": false, \"server_detail_selection_used\": true}\nROOT_NORMAL_RETURN /private/tmp/lrv-closed-clinical-wamd75t7 True\n"
+    }
+  ]
+}

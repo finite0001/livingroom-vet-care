@@ -1,0 +1,33 @@
+{
+  "command": "python3 -I -B - <<'PY'\nfrom pathlib import Path\nimport hashlib,importlib.util\nbase=Path('/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021')\ngate=base/'record-review-v3-locktail-independent-review/fresh-restore-api-v10-whole-review/REVIEW.md'\nif hashlib.sha256(gate.read_bytes()).hexdigest()!='28e8a0bd7f9ee9e5411cb7f36dc92d92c4cd97bf53838cd219f7e78efa75ec03':raise ValueError('Independent gate changed')\np=base/'record-review-v3-protocol-draft/completion-next/populated-review-restore-fresh-runtime-v10/fresh_restore_runtime_v10.py'\nif hashlib.sha256(p.read_bytes()).hexdigest()!='0c7ef78e828ff6f49cd378a5c708640828fbf663f5fa4f02e6a18959dd7f706b':raise ValueError('Exact runtime changed')\nspec=importlib.util.spec_from_file_location('root_fresh_restore_v10',p);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)\nfolder,result=m.run('7bf6e28150d7413d0f4b53efb25a79a45b07f471bd2da29434c5aa5b8b804f5d')\nprint('ROOT_NORMAL_RETURN',str(folder),result['passed'],flush=True)\nPY",
+  "returns": [
+    {
+      "chunk_id": "40c312",
+      "wall_time_seconds": 1.003179875,
+      "session_id": 19697,
+      "original_token_count": 18,
+      "output": "Protected closed prototype: /private/tmp/lrv-closed-rejection-lac6xyg1\n"
+    },
+    {
+      "chunk_id": "774390",
+      "wall_time_seconds": 5.003313458,
+      "session_id": 19697,
+      "original_token_count": 0,
+      "output": ""
+    },
+    {
+      "chunk_id": "4eeaff",
+      "wall_time_seconds": 5.002793583,
+      "session_id": 19697,
+      "original_token_count": 0,
+      "output": ""
+    },
+    {
+      "chunk_id": "1fc235",
+      "wall_time_seconds": 0.000011916,
+      "exit_code": 0,
+      "original_token_count": 424,
+      "output": "{\"browser_acceptance\": false, \"canonical_writer_http\": true, \"cleanup_failed\": false, \"clinical_activation\": false, \"controlled_real_password_sessions\": true, \"cross_session_auth_query_compiled\": true, \"elapsed_seconds\": 404.2355286249949, \"exact_audit_payloads\": true, \"exact_auth_side_effects\": true, \"exact_rejection_atomic_pair\": true, \"exact_static_metadata\": true, \"fresh_all_factory_typechecks\": true, \"full_auth_acceptance\": false, \"full_protocol_acceptance\": false, \"genuine_cross_session_execute\": true, \"genuine_second_canonical_and_pending_approve\": true, \"global_closure_security_certification\": false, \"guarded_owner_publication\": true, \"hosted_writes\": 0, \"http_requests\": 50, \"kind\": \"closed-populated-scalar176-fresh-restore-prototype-v10\", \"known_path_lifecycle_http\": true, \"known_path_rejection_http\": true, \"manifest_sha256\": \"7bf6e28150d7413d0f4b53efb25a79a45b07f471bd2da29434c5aa5b8b804f5d\", \"native_origin_security_certification\": false, \"natural_expiry_contention_acceptance\": false, \"normal_owned_cleanup\": true, \"original_after_restore_unchanged\": true, \"original_c0_http_stays_private\": true, \"passed\": true, \"preexisting_parent_rows_preserved\": true, \"primary_failed\": false, \"profile_sha256\": \"0b57e4244b7f8ff0fe84c4a336b202e51a25d5ff7d692b71fbf345808be2064d\", \"provider_requests\": 0, \"readonly_exact_row_preservation\": true, \"rejection_pure_typed_controls\": true, \"restore_acceptance\": false, \"scalar_read_after_rejection\": true, \"scalar_read_before_signing\": true, \"selected_populated_history_restore\": true, \"server_detail_selection_used\": true, \"source_clinical_actor_and_shape_refusals\": true}\nROOT_NORMAL_RETURN /private/tmp/lrv-closed-rejection-lac6xyg1 True\n"
+    }
+  ]
+}

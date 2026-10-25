@@ -1,0 +1,20 @@
+{
+  "actual_grant_matches": 0,
+  "actual_grant_token_refresh_values_checked": 20,
+  "actual_status_files": 3,
+  "credentials_disclosed": 0,
+  "distinct_status_values": 7,
+  "services_started": 0,
+  "source_ZIPs_read_only_scanned": 4,
+  "status_secret_named_fields": {
+    "ANON_KEY": 1,
+    "JWT_SECRET": 1,
+    "PUBLISHABLE_KEY": 1,
+    "S3_PROTOCOL_ACCESS_KEY_ID": 1,
+    "S3_PROTOCOL_ACCESS_KEY_SECRET": 1,
+    "SECRET_KEY": 1,
+    "SERVICE_ROLE_KEY": 1
+  },
+  "status_value_hit_files": 0,
+  "status_value_hit_locations": []
+}

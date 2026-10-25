@@ -1,0 +1,68 @@
+{
+  "kong-2.8.1-COPYRIGHT": {
+    "bytes": 126712,
+    "full_tagged_blob_verified": true,
+    "sha256": "6d81ea08e13dc56793f921c4dc99fa339874e57930bf71422a99bc98e3c6236c",
+    "upstream_git_blob_sha1": "93d0ec803d85706c2a3ba562679a791459e0b6b1",
+    "url": "https://raw.githubusercontent.com/Kong/kong/2.8.1/COPYRIGHT"
+  },
+  "kong-2.8.1-LICENSE": {
+    "bytes": 11345,
+    "sha256": "104aed7ff96eb6263412957ff4aef10666cfc8182ea314206ca9a4eb1f9d4792",
+    "url": "https://raw.githubusercontent.com/Kong/kong/2.8.1/LICENSE"
+  },
+  "moby-v27.4.0-LICENSE": {
+    "bytes": 10765,
+    "sha256": "7c87873291f289713ac5df48b1f2010eb6963752bbd6b530416ab99fc37914a8",
+    "url": "https://raw.githubusercontent.com/moby/moby/v27.4.0/LICENSE"
+  },
+  "moby-v27.4.0-NOTICE": {
+    "bytes": 642,
+    "sha256": "b40ec5b16182103ef1cd69d42a21c98369e35bd483b3973902da4807c0755446",
+    "url": "https://raw.githubusercontent.com/moby/moby/v27.4.0/NOTICE"
+  },
+  "pgtype-LICENSE": {
+    "sha256": "467f95e074fe23079a5623ed652619682692041b8551da27e3c2ddb9659a1507",
+    "source_member": "source/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/scalar-login-timestamp-source-v1/pgtype-module.zip",
+    "zip_member": "github.com/jackc/pgtype@v1.14.0/LICENSE"
+  },
+  "pgx-LICENSE": {
+    "sha256": "467f95e074fe23079a5623ed652619682692041b8551da27e3c2ddb9659a1507",
+    "source_member": "source/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/scalar-login-timestamp-source-v1/pgx-module.zip",
+    "zip_member": "github.com/jackc/pgx/v4@v4.18.2/LICENSE"
+  },
+  "pop-LICENSE.txt": {
+    "sha256": "692e24554548f7b323c6ecdc05fdbd30a7de1c9865cb478626c32183794fea4b",
+    "source_member": "source/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/scalar-login-timestamp-source-v1/pop-module.zip",
+    "zip_member": "github.com/gobuffalo/pop/v6@v6.1.1/LICENSE.txt"
+  },
+  "postgres-REL_17_6-COPYRIGHT": {
+    "bytes": 1198,
+    "sha256": "5ed3ce5c9373dff7f98b1fae7a6c7ccd98df7d734d46d24c1bcebf1240be8307",
+    "url": "https://raw.githubusercontent.com/postgres/postgres/REL_17_6/COPYRIGHT"
+  },
+  "postgrest-v16.3-LICENSE": {
+    "bytes": 1075,
+    "sha256": "1729d66741c5844f47962f91838bae897aa23d7e08272f5f012fca576288fafb",
+    "url": "https://raw.githubusercontent.com/PostgREST/postgrest/v16.3/LICENSE"
+  },
+  "sqlx-LICENSE": {
+    "sha256": "a0cc6c18255c47fad558e3a40ab10df927dd914156b267a819e073f8755991b3",
+    "source_member": "source/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/scalar-login-timestamp-source-v1/sqlx-module.zip",
+    "zip_member": "github.com/jmoiron/sqlx@v1.3.5/LICENSE"
+  },
+  "supabase-auth-v2.197.0-LICENSE": {
+    "bytes": 1093,
+    "sha256": "68c80ef00664ea62a2c6f38c0ef044497caacc6648a8bd92eec7fdb81e01f904",
+    "url": "https://raw.githubusercontent.com/supabase/auth/v2.197.0/LICENSE"
+  },
+  "supabase-cli-2.118.0-LICENSE": {
+    "sha256": "81f7d60afa4316010b1c0df8eb8f0c80b27586a86b72f1bde85e129bfd10d52a",
+    "source_member": "source/tests/controlled-drugs/engine/candidate/vendor/supabase-cli-2.118.0/LICENSE"
+  },
+  "supabase-postgres-17.6.1.171-LICENSE": {
+    "bytes": 932,
+    "sha256": "fd313c784c2e3c964fe043fdb7bcffa8f84627d53d2cf3a61c61586ff6c3f4c1",
+    "url": "https://raw.githubusercontent.com/supabase/postgres/17.6.1.171/LICENSE"
+  }
+}
