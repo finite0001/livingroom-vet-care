@@ -1,0 +1,98 @@
+{
+  "excludes_only": "package-inventory.json",
+  "files": {
+    "README.md": {
+      "bytes": 3497,
+      "sha256": "b469b647ee88b359c8013c61fd9f766ce563e26a009074f02f7f47824449ccf3"
+    },
+    "archive-index.json": {
+      "bytes": 629064,
+      "sha256": "c17a42f13b9fd572f22b5370668936d7b6cf0aa6c251329f9d26052ace6440d4"
+    },
+    "authority/backend-manifest.json": {
+      "bytes": 194769,
+      "sha256": "eaa01b0a8f89587ad4e41355283a77290af4ba0b6c5f6b0f986a3660d5c96902"
+    },
+    "authority/backend-profile.json": {
+      "bytes": 246318,
+      "sha256": "554d25c9532ca54f054a884d4a39b1ffa08cf045bf729d1fa1dcd76ed6b833c7"
+    },
+    "authority/frontend-binding.json": {
+      "bytes": 6449278,
+      "sha256": "6f74ebfd216a4a906fc9b15ad2f5de631d4cbe02b69f206433dc5a887a733050"
+    },
+    "harness/CLINICAL-WORKSPACE-PROOF.md.txt": {
+      "bytes": 2469,
+      "sha256": "21bfc086e8d74385896e026bbcd938f2f4bbc6f5017e48706583064a9d9e8379"
+    },
+    "harness/clinical-driver-deadline.test.ts.txt": {
+      "bytes": 2258,
+      "sha256": "fda371e8405dea945dcd64dfac22412a408bdb24f89c144f90a07109eacdf41f"
+    },
+    "harness/local-authenticated-clinical-input.test.ts.txt": {
+      "bytes": 2765,
+      "sha256": "09628aa8c0a627ee917d1da0996fb3c48052d249c9052eff59b74015d938f7cd"
+    },
+    "harness/local-authenticated-clinical-input.ts.txt": {
+      "bytes": 1571,
+      "sha256": "6d8665c0ac7fab4f17c7fa07cc28fa1c31d71ec602957d180873c0a3dc733f09"
+    },
+    "harness/record-review-authenticated-clinical-app.tsx.txt": {
+      "bytes": 6851,
+      "sha256": "de5571cfced868e060252bd5f47668a7a4f42490191b3da341040cb63783febe"
+    },
+    "harness/record-review-authenticated-clinical-fixture.html.txt": {
+      "bytes": 323,
+      "sha256": "c0b2ebe357e8df6f1a0b1444028485db6f1f50cda9ef6a357ced3426c109a220"
+    },
+    "harness/record-review-authenticated-clinical-fixture.tsx.txt": {
+      "bytes": 1258,
+      "sha256": "738a8d217e0c3955dcb218caca5dd830d1b863b4c107fe24ef3a0a2158572609"
+    },
+    "harness/run-local-authenticated-clinical-workspace-review.mjs.txt": {
+      "bytes": 27220,
+      "sha256": "80a64835b4eee3b5f45351645497dc91b7d2971f2fdce87939eb92537952aab1"
+    },
+    "reviews/actual-REVIEW.md": {
+      "bytes": 6500,
+      "sha256": "d685c41185cb473ee20d6ca5365a9ea230ec2922d696fc61c2d9ba4ba0584693"
+    },
+    "reviews/actual-extra-inspection.json": {
+      "bytes": 391,
+      "sha256": "08b80f1583e37744223c6d4fdef3859c4e3492a9f51eae5d4affdd9cdec39784"
+    },
+    "reviews/actual-inspection.json": {
+      "bytes": 6114,
+      "sha256": "79b208c724b51aef50529e3b82c3b2dd8b58ea04ec3bc025e5ab08a12f9efe2d"
+    },
+    "reviews/backend-REVIEW.md": {
+      "bytes": 2199,
+      "sha256": "4d3f516fc650ef6da2a08a5e9b426fa392a12b720ccb030d3994e9d542b0a351"
+    },
+    "reviews/frontend-REVIEW.md": {
+      "bytes": 4348,
+      "sha256": "10aff704cd8463103e2747c2f4aa5b7b6f8b5720d86441e42e603c83b4b7d7c5"
+    },
+    "run/browser-summary.json": {
+      "bytes": 9108,
+      "sha256": "9541cbdc7b8bc1a14042d83e704e908952d56f8593df33f8711a797d038dcb99"
+    },
+    "run/result.json": {
+      "bytes": 1709,
+      "sha256": "300f57b4ea55def1ef1a3ed83e239bd01d0511e142451bd5dad5d5af4b70d514"
+    },
+    "run/root-direct-tool-return.json": {
+      "bytes": 3001,
+      "sha256": "ef5cdae4fe68e30af571082fe792a1b616ae07ebcf1e8b64bbe3058f5674d048"
+    },
+    "source.tar.gz": {
+      "bytes": 31459782,
+      "sha256": "e9eed2671e9b127985374c4d62372f11a51fe81e9254072fafb0a88d92d72e66"
+    },
+    "verify.py": {
+      "bytes": 10596,
+      "sha256": "03bb9725f95075e7e14bee730d6379e5b171d912eb1c50c9db0942dd290c720b"
+    }
+  },
+  "kind": "historical-clinical-proof-package-inventory-v1"
+}

@@ -1,0 +1,315 @@
+/** Closed local engineering driver; no generic URL, user or production mode.
+ * The independently admitted backend wrapper owns services and the original
+ * deadline and child/process watchdog. The 120s here is a success cutoff, not
+ * autonomous hard termination. This driver uses a fresh browser/Vite instance,
+ * closes both, and does not admit production origin/key behavior.
+ */
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { existsSync, lstatSync, realpathSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createServer } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import { chromium, expect } from "@playwright/test";
+import { localAuthenticatedClinicalInputSchema } from "./local-authenticated-clinical-input.ts";
+import { recordReviewRequestSchema, reviewTransportDigest } from "../../src/hub/features/controlled-drugs/record-review/request.ts";
+
+const root = fileURLToPath(new URL("../../", import.meta.url));
+const pageOrigin = "http://127.0.0.1:64901";
+const reason = "Synthetic independent record review only; no claim of physical observation";
+const start = performance.now(), deadline = start + 120000;
+const remaining = (maximum = 15000) => {
+  if (failure) throw failure;
+  const left = deadline - performance.now() - 30000;
+  if (left <= 0) throw new Error("Original local browser phase deadline exhausted");
+  return Math.min(maximum, left);
+};
+if (process.argv.length !== 3) throw new Error("Exactly one owned proof folder is required");
+const folder = realpathSync(resolve(process.argv[2]));
+const parent = dirname(folder), inputFile = resolve(folder, "input.json");
+assert(["browser-treatment-proof", "browser-anesthesia-proof"].includes(basename(folder)));
+assert.match(parent, /^\/private\/tmp\/lrv-closed-clinical-workspace-[^/]+$/);
+for (const directory of [folder, parent]) {
+  const stat = lstatSync(directory);
+  assert(stat.isDirectory() && stat.uid === process.getuid() && (stat.mode & 0o077) === 0);
+}
+assert.deepEqual(readdirSync(folder).sort(), ["input.json"]);
+const inputStat = lstatSync(inputFile);
+assert(inputStat.isFile() && !inputStat.isSymbolicLink() && inputStat.uid === process.getuid() && (inputStat.mode & 0o077) === 0 && inputStat.size <= 65536);
+const parsedInput = (() => {
+  try { return localAuthenticatedClinicalInputSchema.safeParse(JSON.parse(readFileSync(inputFile, "utf8"))); }
+  catch { throw new Error("Fixed disposable local reviewer input is invalid"); }
+})();
+if (!parsedInput.success) throw new Error("Fixed disposable local reviewer input is invalid");
+const input = parsedInput.data;
+assert.equal(basename(folder), input.scope.event_kind === "record_patient_treatment" ? "browser-treatment-proof" : "browser-anesthesia-proof");
+let vite, browserServer, browser, context, page, operationId, request, receiptHash, selected;
+let queueDetailAdmitted = false, reloadSelectionAbsent = false, readPhaseReleased = false, authPhaseReleased = false, loginReleased = false, recoveryReleased = false;
+let authSession, authEvidence, sdkIdentityVerified = false;
+let dialogExplicitOpenNoRpc = false, recoveryDialogExplicitOpenNoRpc = false, beforeUnloadAccepted = 0, expectBeforeUnload = false, unloadTask;
+let clinicalPresentation, clinicalPresentationVerified = false;
+const profileCalls = []; const profileStages = [{ profiles: 0, user_roles: 0 }, { profiles: 0, user_roles: 0 }]; let profileStage = 0;
+const readEvidence = {}; let optionsCount = 0, authCalls = 0;
+let viteClosed = false, browserClosed = false, failure;
+const latchFailure = () => { failure ??= new Error("Local browser phase failed"); };
+const calls = [], responses = [], blockedOrigins = new Set();
+const output = (name, value) => writeFileSync(resolve(folder, name), JSON.stringify(value, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+async function snapshot() { return page.evaluate(() => window.__LRV_LOCAL_CLINICAL_REVIEW__?.snapshot()); }
+async function untilPhase(phase) {
+  await expect.poll(async () => (await snapshot())?.phase, { timeout: remaining() }).toBe(phase);
+}
+async function closeWithin(work, milliseconds, label) {
+  let timer;
+  try { return await Promise.race([work(), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(label)), milliseconds); })]); }
+  finally { clearTimeout(timer); }
+}
+try {
+  vite = await createServer({ root, configFile: false, envFile: false, logLevel: "silent", plugins: [react()],
+    cacheDir: resolve(folder, "vite-cache"), define: { "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(input.origin), "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(input.anonKey) }, resolve: { alias: { "@": resolve(root, "src") } },
+    server: { host: "127.0.0.1", port: 64901, strictPort: true, hmr: false, open: false } });
+  await vite.listen(); remaining();
+  assert.equal(vite.httpServer.address().address, "127.0.0.1");
+  browserServer = await chromium.launchServer({ headless: true, host: "127.0.0.1", executablePath: chromium.executablePath(), timeout: remaining(20000) });
+  output("browser-owner.json", { node_pid: process.pid, browser_pid: browserServer.process().pid,
+    executable: chromium.executablePath(), spawnargs: browserServer.process().spawnargs });
+  const endpoint = new URL(browserServer.wsEndpoint());
+  assert.equal(endpoint.hostname, "127.0.0.1");
+  browser = await chromium.connect(browserServer.wsEndpoint(), { timeout: remaining(15000) });
+  context = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: "block" });
+  const evidence = (slot, file, bytes) => {
+    assert(bytes.length <= (slot === "prepare" ? 131072 : 2097152));
+    writeFileSync(resolve(folder, file), bytes, { flag: "wx", mode: 0o600 });
+    return { file, sha256: createHash("sha256").update(bytes).digest("hex") };
+  };
+  // Playwright returns decoded entity bytes. Preserve JSON and semantic headers;
+  // transport encodings/lengths cannot describe the decoded fulfilled body.
+  const decodedHeaders = headers => Object.fromEntries(Object.entries(headers).filter(([key]) =>
+    !["content-encoding", "content-length", "transfer-encoding", "connection"].includes(key.toLowerCase())));
+  const forward = async route => {
+    remaining();
+    const response = await route.fetch({ maxRedirects: 0, maxRetries: 0, timeout: remaining(15000) });
+    const bytes = await response.body(); remaining(); assert(bytes.length <= 2097152);
+    if(route.request().method()!=="OPTIONS") assert.match(response.headers()["content-type"]??"",/^application\/(json|vnd\.pgrst\.object\+json)(?:;|$)/i);
+    return { response, bytes, headers: decodedHeaders(response.headers()) };
+  };
+  await context.route("**/*", async route => {
+    try {
+      const networkRequest = route.request(), url = new URL(networkRequest.url());
+      if (url.origin === pageOrigin) { await route.continue(); return; }
+      if (url.origin !== input.origin) { blockedOrigins.add(url.origin); latchFailure(); await route.abort(); return; }
+      remaining(); assert.equal(url.hash, "");
+      const method = networkRequest.method(), headers = networkRequest.headers();
+      const isToken = url.pathname === "/auth/v1/token";
+      const relation = url.pathname === "/rest/v1/profiles" ? "profiles" : url.pathname === "/rest/v1/user_roles" ? "user_roles" : null;
+      const business = /^\/rest\/v1\/rpc\/((prepare|execute|read)_controlled_record_review_v3|get_controlled_record_review_event_v3|list_controlled_record_reviews_v3)$/.test(url.pathname);
+      assert(isToken || relation || business);
+      if (method === "OPTIONS") {
+        assert(++optionsCount <= 16); const forwarded = await forward(route); assert([200,204].includes(forwarded.response.status()));
+        await route.fulfill({ status: forwarded.response.status(), headers: forwarded.headers, body: forwarded.bytes }); return;
+      }
+      if (isToken) {
+        assert.equal(method,"POST"); assert.equal(url.search,"?grant_type=password"); assert(loginReleased && !authSession && calls.length === 0 && profileStage === 0); assert.equal(++authCalls,1);
+        assert.equal(headers.apikey,input.anonKey); const body=networkRequest.postData(); assert(body && Buffer.byteLength(body)<=65536);
+        const payload=JSON.parse(body); assert.equal(payload.email,input.login.email); assert.equal(payload.password,input.login.password);
+        assert(Object.keys(payload).every(key => ["email","password","gotrue_meta_security"].includes(key)));
+        if (payload.gotrue_meta_security !== undefined) assert.deepEqual(payload.gotrue_meta_security,{});
+        const forwarded=await forward(route); assert.equal(forwarded.response.status(),200);
+        authEvidence=evidence("auth","auth-response.json",forwarded.bytes);
+        const signed=JSON.parse(forwarded.bytes.toString("utf8"));
+        assert.equal(signed.user.id,input.actorId); assert.equal(signed.user.email,input.login.email); assert.equal(signed.token_type,"bearer");
+        assert.equal(typeof signed.access_token,"string"); assert.equal(typeof signed.refresh_token,"string");
+        const claims=JSON.parse(Buffer.from(signed.access_token.split(".")[1],"base64url").toString("utf8"));
+        assert.equal(claims.sub,input.actorId); assert.equal(claims.role,"authenticated"); assert.match(claims.session_id,/^[a-f0-9-]{36}$/);
+        assert(Number.isSafeInteger(claims.exp) && claims.exp*1000>Date.now()+180000);
+        authSession={...signed, sessionId:claims.session_id};
+        await route.fulfill({status:200,headers:forwarded.headers,body:forwarded.bytes}); return;
+      }
+      assert(authSession); assert.equal(headers.authorization,`Bearer ${authSession.access_token}`); assert.equal(headers.apikey,input.anonKey);
+      if (relation) {
+        assert.equal(method,"GET"); const params=[...url.searchParams];
+        const expected=relation === "profiles" ? [["select","id,first_name,last_name,full_name,role,is_active"],["id",`eq.${input.actorId}`]] : [["select","role"],["user_id",`eq.${input.actorId}`]];
+        const dispatchedStage=profileStage; assert.deepEqual(params,expected); assert(++profileStages[dispatchedStage][relation]<=2);
+        const forwarded=await forward(route); assert.equal(forwarded.response.status(),200);
+        profileCalls.push({relation,stage:dispatchedStage,status:200,response_sha256:createHash("sha256").update(forwarded.bytes).digest("hex")});
+        await route.fulfill({status:200,headers:forwarded.headers,body:forwarded.bytes}); return;
+      }
+      assert.equal(method,"POST"); assert.equal(url.search,""); assert(authPhaseReleased);
+      const body=networkRequest.postData(); assert(body && Buffer.byteLength(body)<=131072); const payload=JSON.parse(body), rpc=url.pathname.split("/").pop();
+      assert.deepEqual(Object.keys(payload),["p_request"]);
+      assert.equal(rpc,["list_controlled_record_reviews_v3","get_controlled_record_review_event_v3","prepare_controlled_record_review_v3","execute_controlled_record_review_v3","read_controlled_record_review_v3"][calls.length]);
+      if(calls.length>=2) assert(readPhaseReleased); if(calls.length===4) assert(recoveryReleased);
+      if(rpc==="list_controlled_record_reviews_v3")assert.deepEqual(payload.p_request,{actor_id:input.actorId,...input.scope,view:"site",page_size:1,cursor:null});
+      else if(rpc==="get_controlled_record_review_event_v3")assert.deepEqual(payload.p_request,{actor_id:input.actorId,event_id:input.expectedEventId});
+      else if(rpc==="prepare_controlled_record_review_v3"){
+        request=recordReviewRequestSchema.parse(payload.p_request);for(const[key,value]of Object.entries(selected))assert.equal(request[key],value);
+        assert.equal(request.decision,"approve");assert.equal(request.reason,reason);readEvidence.prepare=evidence("prepare","prepare-request.json",Buffer.from(body));
+      }else{assert.deepEqual(Object.keys(payload.p_request).sort(),["actor_id","operation_id"]);assert.equal(payload.p_request.actor_id,input.actorId);assert.equal(payload.p_request.operation_id,request.operation_id);}
+      calls.push({method:rpc,request_sha256:createHash("sha256").update(body).digest("hex")});
+      const forwarded=await forward(route);assert.equal(forwarded.response.status(),200);
+      if (rpc === "prepare_controlled_record_review_v3") {
+        const prepared = JSON.parse(forwarded.bytes.toString("utf8"));
+        assert.equal(prepared.state, "prepared");
+        const packet = prepared.data.packet;
+        assert.equal(packet.target.event_id, input.expectedEventId);
+        assert.equal(packet.adapter.event_kind, input.scope.event_kind);
+        const treatments = packet.source_rows.filter(source => source.relation === "public.patient_treatments" && source.row.id === input.expectedEventId);
+        assert.equal(treatments.length, 1);
+        assert.equal(typeof treatments[0].row.dose, "string");
+        assert.equal(typeof treatments[0].row.route, "string");
+        assert(treatments[0].row.dose.length > 0 && treatments[0].row.route.length > 0);
+        clinicalPresentation = { dose: treatments[0].row.dose, route: treatments[0].row.route };
+      }
+      const slot={list_controlled_record_reviews_v3:"list",get_controlled_record_review_event_v3:"detail",prepare_controlled_record_review_v3:"prepared",execute_controlled_record_review_v3:"execute",read_controlled_record_review_v3:"read"}[rpc];
+      readEvidence[slot]=evidence(slot,`${slot}-response.json`,forwarded.bytes);
+      responses.push({method:rpc,status:200});
+      await route.fulfill({status:200,headers:forwarded.headers,body:forwarded.bytes});
+    }catch{latchFailure();await route.abort().catch(()=>{});}
+  });
+  // Only this isolated context receives disposable login/public-key input; no JWT is preloaded.
+  // It is not served in a source file, URL, screenshot or emitted receipt.
+  await context.addInitScript(value => Object.defineProperty(window, "__LRV_LOCAL_CLINICAL_INPUT__", { value }), input);
+  page = await context.newPage(); page.setDefaultTimeout(remaining(15000));
+  page.on("dialog", nativeDialog => {
+    unloadTask=(async()=>{
+      assert(expectBeforeUnload);assert.equal(nativeDialog.type(),"beforeunload");expectBeforeUnload=false;
+      await nativeDialog.accept();beforeUnloadAccepted++;
+    })().catch(async()=>{latchFailure();await nativeDialog.dismiss().catch(()=>{});});
+  });
+  await page.goto(pageOrigin + "/tests/controlled-drugs/record-review-authenticated-clinical-fixture.html", { waitUntil: "networkidle", timeout: remaining(30000) });
+  await expect(page.getByLabel("Email", { exact:true })).toBeVisible();
+  assert.equal(calls.length,0); assert.equal(authSession,undefined);
+  await page.getByLabel("Email", { exact:true }).fill(input.login.email);
+  await page.getByLabel("Password", { exact:true }).fill(input.login.password);
+  loginReleased=true; await page.getByRole("button",{name:"Sign in",exact:true}).click();
+  await untilPhase("idle");
+  const authenticated=await snapshot();assert.equal(authenticated.actorId,input.actorId);assert.equal(authenticated.sessionId,authSession.sessionId);
+  assert.equal(await page.locator('input[type="password"]').count(),0);sdkIdentityVerified=true;
+  for(const relation of ["profiles","user_roles"])assert(profileStages[0][relation]>=1);
+  output("auth-phase-ready.json",{kind:"closed-sdk-auth-phase-v1",actor_id:input.actorId,session_id:authSession.sessionId,auth_evidence:authEvidence,profile_calls:profileCalls.map(call=>({...call})),calls:[]});
+  const authContinue=resolve(folder,"auth-phase-continue.json");
+  while(!existsSync(authContinue))await new Promise(resolve=>setTimeout(resolve,remaining(100)));
+  remaining();const authContinueStat=lstatSync(authContinue);assert(authContinueStat.isFile()&&!authContinueStat.isSymbolicLink()&&authContinueStat.uid===process.getuid()&&(authContinueStat.mode&0o077)===0&&authContinueStat.size<=1024);
+  assert.deepEqual(JSON.parse(readFileSync(authContinue,"utf8")),{kind:"closed-sdk-auth-phase-v1",passed:true});authPhaseReleased=true;
+  assert.equal(calls.length, 0); assert.equal((await snapshot()).selection, null);
+  await expect(page.getByRole("button", { name: "Prepare record review", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Load review records", exact: true }).click();
+  await expect.poll(async () => (await snapshot())?.queuePhase, { timeout: remaining() }).toBe("ready");
+  assert.equal(calls.length, 1);
+  await page.getByRole("button", { name: /^Open record [0-9]+$/ }).click();
+  await expect.poll(async () => !!(await snapshot())?.selection, { timeout: remaining() }).toBe(true);
+  selected = (await snapshot()).selection;
+  assert.deepEqual(Object.keys(selected).sort(), ["actor_id", "event_id", "policy_id", "read_eligibility_id", "review_eligibility_id"]);
+  assert.equal(selected.actor_id, input.actorId); assert.equal(selected.event_id, input.expectedEventId);
+  assert.equal(calls.length, 2); queueDetailAdmitted = true;
+  remaining();
+  assert.deepEqual(Object.keys(readEvidence).sort(), ["detail", "list"]);
+  // The owning parent compares permanent row hashes before allowing writes.
+  // This local test barrier is separate from evidence admission in the app.
+  output("read-phase-ready.json", { kind: "closed-browser-read-phase-v1", event_id: selected.event_id, calls: calls.map(call => ({ ...call })) });
+  const continuation = resolve(folder, "read-phase-continue.json");
+  while (!existsSync(continuation)) { await new Promise(resolve => setTimeout(resolve, remaining(100))); }
+  remaining();
+  const continuationStat = lstatSync(continuation);
+  assert(continuationStat.isFile() && !continuationStat.isSymbolicLink() && continuationStat.uid === process.getuid() &&
+    (continuationStat.mode & 0o077) === 0 && continuationStat.size <= 1024);
+  assert.deepEqual(JSON.parse(readFileSync(continuation, "utf8")), { kind: "closed-browser-read-phase-v1", passed: true });
+  readPhaseReleased = true;
+  assert.equal(calls.length,2);
+  await page.getByRole("button", { name:"Open record review", exact:true }).click();
+  const reviewDialog=page.getByRole("dialog", { name:"Record review workspace", exact:true });
+  await expect(reviewDialog).toBeVisible();assert.equal(calls.length,2);dialogExplicitOpenNoRpc=true;
+  await reviewDialog.getByRole("textbox", { name: "Review reason" }).fill(reason);
+  await reviewDialog.getByRole("button", { name: "Prepare record review", exact: true }).click();
+  await untilPhase("review"); operationId = (await snapshot()).operationId;
+  assert.equal(request.operation_id, operationId);
+  assert.deepEqual(calls.map(call => call.method), ["list_controlled_record_reviews_v3", "get_controlled_record_review_event_v3", "prepare_controlled_record_review_v3"]);
+  await expect(reviewDialog.getByText("LRV synthetic original", { exact: true })).toBeVisible();
+  assert(clinicalPresentation);
+  await expect(reviewDialog.locator("dt").filter({ hasText: /^Descriptive clinical dose$/ }).locator("xpath=following-sibling::dd")).toHaveText(clinicalPresentation.dose);
+  await expect(reviewDialog.locator("dt").filter({ hasText: /^Recorded clinical route$/ }).locator("xpath=following-sibling::dd")).toHaveText(clinicalPresentation.route);
+  clinicalPresentationVerified = true;
+  await expect(page.getByRole("button", { name: "Confirm and sign record review", exact: true })).toHaveCount(0);
+  await reviewDialog.locator("summary").filter({ hasText: /^Event lines$/ }).click();
+  await expect(page.locator('input[type="password"]')).toHaveCount(0);
+  await expect(page.getByLabel("Email", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
+  await page.screenshot({ path: resolve(folder, "prepared.png"), fullPage: true });
+  await reviewDialog.getByRole("button", { name: "I have reviewed this preparation", exact: true }).click();
+  assert.equal(calls.length, 3); // Acknowledgment alone cannot sign.
+  await reviewDialog.getByRole("button", { name: "Confirm and sign record review", exact: true }).click();
+  await untilPhase("unknown");
+  assert.equal((await snapshot()).operationId, operationId);
+  assert.deepEqual(calls.map(call => call.method), ["list_controlled_record_reviews_v3", "get_controlled_record_review_event_v3", "prepare_controlled_record_review_v3", "execute_controlled_record_review_v3"]);
+  profileStage=1; expectBeforeUnload=true; await page.reload({ waitUntil: "networkidle", timeout: remaining(20000) });
+  if(unloadTask)await unloadTask;assert.equal(beforeUnloadAccepted,1);assert.equal(expectBeforeUnload,false);
+  await untilPhase("recoverable");
+  assert.equal((await snapshot()).operationId, operationId);
+  assert.equal(calls.length, 4); // Reload reads local storage only.
+  assert.equal((await snapshot()).selection, null); assert.equal((await snapshot()).queuePhase, "idle"); reloadSelectionAbsent = true;
+  assert.equal((await snapshot()).actorId,input.actorId);assert.equal((await snapshot()).sessionId,authSession.sessionId);
+  await expect(page.getByRole("dialog", { name:"Record review workspace", exact:true })).toHaveCount(0);
+  await page.getByRole("button", { name:"Open record review", exact:true }).click();
+  const recoveryDialog=page.getByRole("dialog", { name:"Record review workspace", exact:true });
+  await expect(recoveryDialog).toBeVisible();assert.equal(calls.length,4);recoveryDialogExplicitOpenNoRpc=true;
+  recoveryReleased=true;await recoveryDialog.getByRole("button", { name: "Recover original review", exact: true }).click();
+  await untilPhase("resolved");
+  await expect.poll(async () => (await snapshot()).cleanupPending, { timeout: remaining() }).toBe(false);
+  await expect(recoveryDialog.getByText("Record review saved.", { exact: true })).toBeVisible();
+  const resolved = await snapshot(); receiptHash = resolved.receiptHash;
+  assert.equal(resolved.operationId, null); assert.match(receiptHash, /^[a-f0-9]{64}$/);
+  assert.deepEqual(calls.map(call => call.method), ["list_controlled_record_reviews_v3", "get_controlled_record_review_event_v3", "prepare_controlled_record_review_v3", "execute_controlled_record_review_v3", "read_controlled_record_review_v3"]);
+  await expect.poll(() => responses.length, { timeout: remaining() }).toBe(5);
+  assert(responses.every(response => response.status === 200));
+  remaining(); assert.deepEqual(Object.keys(readEvidence).sort(), ["detail", "execute", "list", "prepare", "prepared", "read"]);
+  await expect(page.locator('input[type="password"]')).toHaveCount(0);
+  await expect(page.getByLabel("Email", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
+  await page.screenshot({ path: resolve(folder, "saved-after-recovery.png"), fullPage: true });
+  remaining();
+} catch {
+  latchFailure();
+  // No failure screenshot: credentials may still be visible on the login form.
+} finally {
+  let browserCleanupFailed = false;
+  try { if (context) await closeWithin(() => context.close(), 4000, "Local browser context did not close"); }
+  catch { browserCleanupFailed = true; latchFailure(); }
+  try { if (browser) await closeWithin(() => browser.close(), 4000, "Local browser connection did not close"); }
+  catch { browserCleanupFailed = true; latchFailure(); }
+  try {
+    if (browserServer) {
+      try { await closeWithin(() => browserServer.close(), 3000, "Owned browser did not close"); }
+      catch { await closeWithin(() => browserServer.kill(), 3000, "Owned browser did not terminate"); throw new Error("Normal browser cleanup failed"); }
+      assert(browserServer.process().exitCode !== null || browserServer.process().signalCode !== null);
+    }
+    browserClosed = !browserCleanupFailed;
+  } catch { latchFailure(); }
+  try { if (vite) { await closeWithin(() => vite.close(), 5000, "Owned Vite did not close"); assert.equal(vite.httpServer.listening, false); } viteClosed = true; }
+  catch { latchFailure(); }
+  let digest = null;
+  try { if (request) digest = await closeWithin(() => reviewTransportDigest(request), 3000, "Browser request commitment did not finish"); }
+  catch { latchFailure(); }
+  if (performance.now() >= deadline) failure ??= new Error("Original browser deadline exceeded including cleanup");
+  if (!clinicalPresentationVerified || !dialogExplicitOpenNoRpc || !recoveryDialogExplicitOpenNoRpc || beforeUnloadAccepted !== 1 || expectBeforeUnload || authCalls !== 1 || profileStages.some(stage => stage.profiles < 1 || stage.profiles > 2 || stage.user_roles < 1 || stage.user_roles > 2) || !sdkIdentityVerified || !authPhaseReleased || !queueDetailAdmitted || !readPhaseReleased || !reloadSelectionAbsent || !recoveryReleased || !request || !receiptHash ||
+    calls.length !== 5 || responses.length !== 5 || responses.some(response => response.status !== 200) || blockedOrigins.size !== 0)
+    failure ??= new Error("The fixed browser phases did not complete");
+  output("result.json", { kind: "closed-local-clinical-workspace-sdk-browser-v1", passed: !failure && browserClosed && viteClosed,
+    event_id: input.expectedEventId, event_kind: input.scope.event_kind, clinical_presentation_verified: clinicalPresentationVerified, queue_detail_admitted: queueDetailAdmitted, server_selection_used: queueDetailAdmitted && !!request,
+    reload_selection_absent: reloadSelectionAbsent, selection: selected ?? null, read_evidence: readEvidence,
+    actor_id: input.actorId, session_id: authSession?.sessionId ?? null, sdk_identity_verified: sdkIdentityVerified, dialog_explicit_open_no_rpc: dialogExplicitOpenNoRpc, recovery_dialog_explicit_open_no_rpc: recoveryDialogExplicitOpenNoRpc, beforeunload_warning_accepted: beforeUnloadAccepted === 1, auth_phase_released: authPhaseReleased, auth_evidence: authEvidence ?? null, auth_calls: authCalls, profile_calls: profileCalls, profile_stages: profileStages, options_count: optionsCount, recovery_explicitly_released: recoveryReleased, decoded_json_proxy: true, operation_id: operationId ?? null, transport_digest: digest,
+    receipt_hash: receiptHash ?? null, calls, responses, blocked_external_origins: [...blockedOrigins].sort(),
+    explicit_test_origin_and_public_key_translation: true, normal_browser_cleanup: browserClosed, normal_vite_cleanup: viteClosed,
+    elapsed_seconds: (performance.now() - start) / 1000, full_auth_acceptance: false, full_protocol_acceptance: false,
+    native_origin_security_certification: false, clinical_activation: false, hosted_writes: 0,
+    failure_type: failure?.name ?? null });
+}
+function finalDeadlineCheck() {
+  if (performance.now() < deadline) return;
+  latchFailure();
+  output("post-persistence-cutoff-failure.json", { passed: false, candidate_result_not_acceptance: true });
+  throw new Error("Original clinical browser cutoff exceeded after persistence or terminal output");
+}
+finalDeadlineCheck();
+if (failure) throw new Error("Closed local browser read proof failed; private evidence was retained");
+console.log("Closed local clinical SDK browser flow returned; exact source/metadata/Auth/data admission remains the owning wrapper's responsibility.");
+finalDeadlineCheck();

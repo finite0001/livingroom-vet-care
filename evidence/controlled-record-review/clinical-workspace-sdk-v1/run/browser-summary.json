@@ -1,0 +1,272 @@
+{
+  "cycles": {
+    "anesthesia": {
+      "browser": {
+        "auth_calls": 1,
+        "auth_phase_released": true,
+        "beforeunload_warning_accepted": true,
+        "blocked_external_origins": [],
+        "calls": [
+          {
+            "method": "list_controlled_record_reviews_v3",
+            "request_sha256": "db006dd6e310b507d07c789c39f21e6e64902e8027d6799d60024823972ae040"
+          },
+          {
+            "method": "get_controlled_record_review_event_v3",
+            "request_sha256": "2b875a3e08f21aa0d1b73a6ba769d9800f93310787ca3a38e3560ae2cfdb0030"
+          },
+          {
+            "method": "prepare_controlled_record_review_v3",
+            "request_sha256": "5aeb63f8597c24dc1802975b86407d98eec168b288db9e7423a3d0ce513ea4c6"
+          },
+          {
+            "method": "execute_controlled_record_review_v3",
+            "request_sha256": "11f8fdbf1ff50a33c866912307748782bf38e9b9376db5df8c7c0f164b8788d9"
+          },
+          {
+            "method": "read_controlled_record_review_v3",
+            "request_sha256": "11f8fdbf1ff50a33c866912307748782bf38e9b9376db5df8c7c0f164b8788d9"
+          }
+        ],
+        "clinical_activation": false,
+        "clinical_presentation_verified": true,
+        "decoded_json_proxy": true,
+        "dialog_explicit_open_no_rpc": true,
+        "elapsed_seconds": 14.476349917,
+        "event_kind": "record_anesthesia_drug_administration",
+        "explicit_test_origin_and_public_key_translation": true,
+        "failure_type": null,
+        "full_auth_acceptance": false,
+        "full_protocol_acceptance": false,
+        "hosted_writes": 0,
+        "kind": "closed-local-clinical-workspace-sdk-browser-v1",
+        "native_origin_security_certification": false,
+        "normal_browser_cleanup": true,
+        "normal_vite_cleanup": true,
+        "options_count": 0,
+        "passed": true,
+        "profile_stages": [
+          {
+            "profiles": 1,
+            "user_roles": 1
+          },
+          {
+            "profiles": 1,
+            "user_roles": 1
+          }
+        ],
+        "queue_detail_admitted": true,
+        "recovery_dialog_explicit_open_no_rpc": true,
+        "recovery_explicitly_released": true,
+        "reload_selection_absent": true,
+        "responses": [
+          {
+            "method": "list_controlled_record_reviews_v3",
+            "status": 200
+          },
+          {
+            "method": "get_controlled_record_review_event_v3",
+            "status": 200
+          },
+          {
+            "method": "prepare_controlled_record_review_v3",
+            "status": 200
+          },
+          {
+            "method": "execute_controlled_record_review_v3",
+            "status": 200
+          },
+          {
+            "method": "read_controlled_record_review_v3",
+            "status": 200
+          }
+        ],
+        "sdk_identity_verified": true,
+        "server_selection_used": true
+      },
+      "browser_sha256": "a16ec24ed47116e97e77f6aa3fbda96a203e1ab8e01fabf59c8b28be08182e55",
+      "supervisor": {
+        "auth_phase_exact_counts": true,
+        "auth_phase_non_auth_preserved": true,
+        "binding_sha256": "6f74ebfd216a4a906fc9b15ad2f5de631d4cbe02b69f206433dc5a887a733050",
+        "elapsed_seconds": 24.23915300000226,
+        "emergency_termination": false,
+        "exit_code": 0,
+        "normal_browser_cleanup": true,
+        "normal_child_exit": true,
+        "normal_vite_cleanup": true,
+        "owned_processes_absent": true,
+        "ownership_observation_ledger": [],
+        "passed": true,
+        "pending_metadata_pids": [],
+        "readonly_exact_row_preservation": true,
+        "source_admission_after": true,
+        "source_admission_before": true,
+        "tree_counts": [
+          {
+            "directories": 78,
+            "files": 616,
+            "name": "frontend-src",
+            "symlinks": 0
+          },
+          {
+            "directories": 5,
+            "files": 13,
+            "name": "frontend-public",
+            "symlinks": 0
+          },
+          {
+            "directories": 2797,
+            "files": 30775,
+            "name": "installed-node-modules",
+            "symlinks": 28
+          },
+          {
+            "directories": 324,
+            "files": 340,
+            "name": "chromium-app",
+            "symlinks": 5
+          }
+        ],
+        "universal_descendant_claim": false,
+        "unverified_processes": []
+      },
+      "supervisor_sha256": "6786cd80e1d575d3d7fc0e9844fb5c038a0c192c25c793460bfa2142c19f711b"
+    },
+    "treatment": {
+      "browser": {
+        "auth_calls": 1,
+        "auth_phase_released": true,
+        "beforeunload_warning_accepted": true,
+        "blocked_external_origins": [],
+        "calls": [
+          {
+            "method": "list_controlled_record_reviews_v3",
+            "request_sha256": "b97442393a692085c2474444d6af68fbe14d42df9c71ca0c3c6e13338087eefa"
+          },
+          {
+            "method": "get_controlled_record_review_event_v3",
+            "request_sha256": "cf13a0dcb40572f9d8bae2676ff99e4ed2e5ae422fba6456d1e6c5007b189fdc"
+          },
+          {
+            "method": "prepare_controlled_record_review_v3",
+            "request_sha256": "d597858948a92f0805b988ebcf6c50209c85b880f95cb046b86ebb639cf91085"
+          },
+          {
+            "method": "execute_controlled_record_review_v3",
+            "request_sha256": "f35d84fd1615d8634fb9dd97aa09fb6dc062226e045f48b9fed81650f475880f"
+          },
+          {
+            "method": "read_controlled_record_review_v3",
+            "request_sha256": "f35d84fd1615d8634fb9dd97aa09fb6dc062226e045f48b9fed81650f475880f"
+          }
+        ],
+        "clinical_activation": false,
+        "clinical_presentation_verified": true,
+        "decoded_json_proxy": true,
+        "dialog_explicit_open_no_rpc": true,
+        "elapsed_seconds": 13.72206625,
+        "event_kind": "record_patient_treatment",
+        "explicit_test_origin_and_public_key_translation": true,
+        "failure_type": null,
+        "full_auth_acceptance": false,
+        "full_protocol_acceptance": false,
+        "hosted_writes": 0,
+        "kind": "closed-local-clinical-workspace-sdk-browser-v1",
+        "native_origin_security_certification": false,
+        "normal_browser_cleanup": true,
+        "normal_vite_cleanup": true,
+        "options_count": 0,
+        "passed": true,
+        "profile_stages": [
+          {
+            "profiles": 1,
+            "user_roles": 1
+          },
+          {
+            "profiles": 1,
+            "user_roles": 1
+          }
+        ],
+        "queue_detail_admitted": true,
+        "recovery_dialog_explicit_open_no_rpc": true,
+        "recovery_explicitly_released": true,
+        "reload_selection_absent": true,
+        "responses": [
+          {
+            "method": "list_controlled_record_reviews_v3",
+            "status": 200
+          },
+          {
+            "method": "get_controlled_record_review_event_v3",
+            "status": 200
+          },
+          {
+            "method": "prepare_controlled_record_review_v3",
+            "status": 200
+          },
+          {
+            "method": "execute_controlled_record_review_v3",
+            "status": 200
+          },
+          {
+            "method": "read_controlled_record_review_v3",
+            "status": 200
+          }
+        ],
+        "sdk_identity_verified": true,
+        "server_selection_used": true
+      },
+      "browser_sha256": "7e7b9f822f4baf2c0f5b1f2bd10996d692c5b9d368e68594dbbf9a362d5b396d",
+      "supervisor": {
+        "auth_phase_exact_counts": true,
+        "auth_phase_non_auth_preserved": true,
+        "binding_sha256": "6f74ebfd216a4a906fc9b15ad2f5de631d4cbe02b69f206433dc5a887a733050",
+        "elapsed_seconds": 23.309418000018923,
+        "emergency_termination": false,
+        "exit_code": 0,
+        "normal_browser_cleanup": true,
+        "normal_child_exit": true,
+        "normal_vite_cleanup": true,
+        "owned_processes_absent": true,
+        "ownership_observation_ledger": [],
+        "passed": true,
+        "pending_metadata_pids": [],
+        "readonly_exact_row_preservation": true,
+        "source_admission_after": true,
+        "source_admission_before": true,
+        "tree_counts": [
+          {
+            "directories": 78,
+            "files": 616,
+            "name": "frontend-src",
+            "symlinks": 0
+          },
+          {
+            "directories": 5,
+            "files": 13,
+            "name": "frontend-public",
+            "symlinks": 0
+          },
+          {
+            "directories": 2797,
+            "files": 30775,
+            "name": "installed-node-modules",
+            "symlinks": 28
+          },
+          {
+            "directories": 324,
+            "files": 340,
+            "name": "chromium-app",
+            "symlinks": 5
+          }
+        ],
+        "universal_descendant_claim": false,
+        "unverified_processes": []
+      },
+      "supervisor_sha256": "483d21b288c2a91226e0ab4a1401e454767210e54cd18f1f479aa5bffbe0f5b4"
+    }
+  },
+  "projection_only": true,
+  "synthetic_records_only": true
+}
