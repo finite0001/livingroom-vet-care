@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "manifest_sha256": "dc3024a0c6f406200f72343f21fc1b9cee56efc8b06d508d37be98b8dd5d9607",
+  "source_ready_sha256": "41e90a6f4a95cbfaba4d2841a3b3bdd3e8abd6d6cd1187553692f7641945392a",
+  "focused_tests_independent": 263,
+  "author_pinned_full_tests": 2213,
+  "author_pinned_TS_checks": 3,
+  "author_pinned_build": true,
+  "own_original_programs": 7,
+  "own_actual_main_mutants_refused": 13,
+  "own_actual_main_positives": 20,
+  "own_private_ledger_rule_checks": 459,
+  "services_started": 0,
+  "broader_native_Auth_or_production_admission": false
+}

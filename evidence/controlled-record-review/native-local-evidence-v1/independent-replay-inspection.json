@@ -1,0 +1,38 @@
+{
+  "physical_pins_verified": 146,
+  "owned": 27,
+  "unchanged_dependencies": 34,
+  "seven_programs": [
+    {
+      "program": "authorization",
+      "recommitted_mutants_refused": 1
+    },
+    {
+      "program": "baseline",
+      "positive_passed": 20
+    },
+    {
+      "program": "correction",
+      "recommitted_mutants_refused": 4
+    },
+    {
+      "program": "discrepancy",
+      "recommitted_mutants_refused": 3
+    },
+    {
+      "program": "fulfillment",
+      "recommitted_mutants_refused": 1
+    },
+    {
+      "program": "refill",
+      "recommitted_mutants_refused": 2
+    },
+    {
+      "program": "return",
+      "recommitted_mutants_refused": 2
+    }
+  ],
+  "all13_mutants_refused": true,
+  "positive_actual_main_checks": 20,
+  "services_started": 0
+}

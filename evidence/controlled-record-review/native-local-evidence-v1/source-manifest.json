@@ -1,0 +1,648 @@
+{
+  "V6_refill_checkpoint": {
+    "bytes": 25284,
+    "sha256": "96102f2f8c16edc635f6adfce477f00ff5c8c5492d7608f0f34f0192ddc5eb1d"
+  },
+  "actual_main_adversarial_vectors": 13,
+  "actual_main_all13_refused": true,
+  "actual_main_all20_passed": true,
+  "actual_main_matrix_programs": 7,
+  "actual_main_positive_controls": 20,
+  "all18_fixture_bytes_and_provenance_unchanged": true,
+  "all_V2_component_declarations_exact": 25,
+  "all_original_component_declarations_exact": 19,
+  "base": "e761b21e",
+  "byte_exact_fixtures": 18,
+  "commit_or_push": false,
+  "complete_evidence_admission": false,
+  "delta_files": [
+    "NATIVE-EVIDENCE.md",
+    "src/hub/features/controlled-drugs/record-review/prospective-native-movement.ts",
+    "tests/controlled-drugs/record-review-native-completion.test.ts"
+  ],
+  "exact_Root_counterexamples": {
+    "new_V7_refuses": true,
+    "preserved_V3_and_V4_accept": true
+  },
+  "existing_lint_warnings": 4,
+  "external_authority": {
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/protocol-independent-review-20261024/native-frontend-root-v3-review/CAUSAL-PLAN-GATE.md": {
+      "bytes": 1360,
+      "sha256": "98a191395419711be12c68a74ad9f92801f0aa3964afbe1e1dbe883cd2c5b64c"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/protocol-independent-review-20261024/native-frontend-root-v4-review/REVIEW.md": {
+      "bytes": 1887,
+      "sha256": "13e24392a511aba2aded9fbe598909d3986b59edaa70a446b6e1f88aa99d386b"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-frontend-completion-plan-v1-review/REVIEW.md": {
+      "bytes": 5221,
+      "sha256": "d7ccf610ffb560ed09592556864da6322e52479423efc3115d2af5ee2880be5e"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-frontend-v2-review/REVIEW.md": {
+      "bytes": 3841,
+      "sha256": "65f179ad584f10970681d55e722595799ee0a4b4577c7bd15f1dba77a9730cca"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-refill-head-cause-v1/REVIEW.md": {
+      "bytes": 4058,
+      "sha256": "f3c5d48e88ae589e38ccbd63d88f8642954adab037f85ca3e9366ff422e50245"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-refill-head-cause-v1/inspection.json": {
+      "bytes": 375,
+      "sha256": "cb1afe1b6a8391a5e773dcfde640e668224da74e1b2318d11eb596c8c4d0989b"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-refill-head-cause-v1/reproduce.mts": {
+      "bytes": 5153,
+      "sha256": "38518876c1ca68ff3c6908a4aca12963d44f4188f6a1f71d6512decb19d47386"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-refill-head-cause-v1/review-files.json": {
+      "bytes": 507,
+      "sha256": "d4ca2fd898464c45c3ee7a251f6db70465722cc07d9d0ac66e308d5b532477f7"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-refill-head-cause-v1/source-pins.json": {
+      "bytes": 2218,
+      "sha256": "8014f99a7a64b079824a8ead2d9f393dc5795878f538b9914ec119bbd4f37919"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/REVIEW.md": {
+      "bytes": 9148,
+      "sha256": "70fa973df3d848607f1586d2efca19c610056db67626e7d2164696bc0bd7c943"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/authorization-inspection.json": {
+      "bytes": 169,
+      "sha256": "fc65e099d96035537720b99ffd26a6641c2c8d9bc909d0fa687e1d0b82febe81"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/authorization.mts": {
+      "bytes": 897,
+      "sha256": "d2fa1dc594283c7485133d023f381bd930dde725c116bf12f539ebf44a7be89a"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/baseline-inspection.json": {
+      "bytes": 1788,
+      "sha256": "c28e1e82527569db6e2c8afb575863477b37d1e5e56ac16b016a7794f57dc087"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/baseline.mts": {
+      "bytes": 5135,
+      "sha256": "6f44d0a37171df7e74a24937c687dcf5d0199e68c62f259cabef55cef2fa443c"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/correction-inspection.json": {
+      "bytes": 563,
+      "sha256": "e1cd4821eca10ea50895fe640da20f7f392e4366aff19e04bb248af6430a8490"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/correction.mts": {
+      "bytes": 1462,
+      "sha256": "44290130d5d1d2318c06fd64baccc102cd41dbf501f3af2d0928eed21e132c4f"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/discrepancy-inspection.json": {
+      "bytes": 481,
+      "sha256": "b1a25980d4cfc994a50f909141782739fcbea20b496682d3c5135c1484b83356"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/discrepancy.mts": {
+      "bytes": 2196,
+      "sha256": "bb84caf7a97919a45b9ca329270e598382f6ed70907a3dd4ccac2cb14d58725a"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/fulfillment-inspection.json": {
+      "bytes": 181,
+      "sha256": "10bf5a7a973bfeb3ca2e5833aced8a7bde7e9ed1c75706dff273f5cbfaa72188"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/fulfillment.mts": {
+      "bytes": 863,
+      "sha256": "508172954a094cabe28fc911607c6c6ad3dfad6e6d85b9e854bebd3e73182ac4"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/refill-inspection.json": {
+      "bytes": 344,
+      "sha256": "0e38febbf50a06c513366e2a27bd454705463ee6eb87aef0cb8f2d83e3c1ab4c"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/refill.mts": {
+      "bytes": 5180,
+      "sha256": "01db1921845409456ccd29a65757f0a6aede429523ba05f21e0286a095ab4a88"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/return-inspection.json": {
+      "bytes": 326,
+      "sha256": "268ff1cd4a3f093297d070830a4d89f470d19b6f411be3765986a4130585ed7d"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/return.mts": {
+      "bytes": 1232,
+      "sha256": "393e49a42fff7690f5704e0355c8ac18267081c37b29b99839a4fa27bd59e4c3"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/source-pins.json": {
+      "bytes": 3738,
+      "sha256": "dd76206baa1384cb3952fee4b59a7d914d758334ddb9e8b3d769d082bdd348a4"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/source-ready.json": {
+      "bytes": 2488,
+      "sha256": "2290e387f26d65eea4aac1ed9a85906cb06f5408f0572dc0b75fb4c0abe076bf"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-locktail-independent-review/native-visible-head-crossbinding-v1/visible-head-matrix.json": {
+      "bytes": 14139,
+      "sha256": "0746576cb91f3d9099d7efafee6adb1597686f90d61c7f43fd5bf3e5e352224b"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-completion-plan-v1/plan-ready.json": {
+      "bytes": 1715,
+      "sha256": "d448144fd34f0de5b19284a0e28ad1aa93325ee761e44fe96a28288aa60cf507"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-implementation-v5/source-manifest.json": {
+      "bytes": 21452,
+      "sha256": "bab6bff3bbd6050cbb4d5ab496e6e71908c34b6142069c9db7eb69ac7a6fdef7"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-opening-head-correction-v1/source-ready.json": {
+      "bytes": 448,
+      "sha256": "6bca7fe40fd41bed54df63a5266158d540d692b5158e0e718b057f4ff50fb47c"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-source-handoff-v1/CONTRACT.md": {
+      "bytes": 22781,
+      "sha256": "18b043372c20b43c24a7204882aeae9be18364a08ab705ff94cdc4c449d78240"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-source-handoff-v1/COVERAGE.md": {
+      "bytes": 4377,
+      "sha256": "d67df062ad6ed86743b9bcf88c9bb040bffb5c8c326dee045684a3e0e457c258"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-source-handoff-v1/OMITTED-PREIMAGES.md": {
+      "bytes": 6449,
+      "sha256": "6f670eab8b8f09c5e2682207a8285d5d3f21e22c5628af7edeec0b750b5b29ef"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-source-handoff-v1/source-pins.json": {
+      "bytes": 383763,
+      "sha256": "e909cd617367275007c0888ac2e8b5365cf536d1b78cc5331c01335233ecc68d"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-source-handoff-v1/source-ready.json": {
+      "bytes": 5098,
+      "sha256": "ebd2c2aa4fe37f625747f40b5a5d57529d8c255289f0de84d721e365d1915104"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-source-handoff-v2/CONTRACT.md": {
+      "bytes": 1904,
+      "sha256": "a1b5f5d7307dae7f4fcf38674ebab5d2aa9e92fb8460df3ca1cbf202493abc3f"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-source-handoff-v2/fixture-provenance.json": {
+      "bytes": 4713,
+      "sha256": "ae45528d2e1507b3f604bd2c0f603c2f5e9f546c5b9dc362e97a28193c5914c4"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-source-handoff-v2/source-pins.json": {
+      "bytes": 209831,
+      "sha256": "80a4fa092adb917f55291f82cdec3e30fa6bcfb1450f45d260cf5281f3298bcd"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-source-handoff-v2/source-ready.json": {
+      "bytes": 1599,
+      "sha256": "6dc96c6431435233f10a9d5449d645291e5c6c1c9185061e07d7576301d8160b"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-v1-preservation/authority/independent-review-hold-v1.md": {
+      "bytes": 5551,
+      "sha256": "9fa3cbcf6fc830b7c42151d210e563dbb0ffd9dc609c75d3aeb8be28a01cefbc"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-v1-preservation/preservation.json": {
+      "bytes": 25942,
+      "sha256": "ad32f3fcacf49d1c2cc1ec06c5ad9cc5c462ae6e627b2a7af26141d59f8cdced"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-v2-preservation/preservation.json": {
+      "bytes": 26838,
+      "sha256": "6bb23ca085af5ba04f76f539c2e97fd107ab655d6b4013d280f48761a06addca"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-v3-preservation/preservation.json": {
+      "bytes": 26231,
+      "sha256": "72231c4ab7f067ab10c5dcc8f985513c9035dd5af44d6f4a0e233014b9d74b5c"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-v5-preservation/preservation.json": {
+      "bytes": 28116,
+      "sha256": "8cc9c24821fda80dfc13b2fcfe8bc5691a6e904aff0c8631e6b34784ba8b0958"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-v6-refill-checkpoint-preservation/preservation.json": {
+      "bytes": 25284,
+      "sha256": "96102f2f8c16edc635f6adfce477f00ff5c8c5492d7608f0f34f0192ddc5eb1d"
+    },
+    "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-variant-auth-fixture-plan-v1/source-ready.json": {
+      "bytes": 450,
+      "sha256": "77746d270fd31852706fb8b60510b655a7c2faacfe9a0a1b9b89033589f4dd4a"
+    },
+    "/Users/davidedler/Developer/lrv-native-review-evidence-20261025/package-lock.json": {
+      "bytes": 342068,
+      "sha256": "a39299c33e0a62edcbfaa9324a9846895c4d5b870d0c6235d98a9af3aa30ba6f"
+    },
+    "/Users/davidedler/Developer/lrv-native-review-evidence-20261025/package.json": {
+      "bytes": 4738,
+      "sha256": "6f527f6ac68983c6295e69c3392a82a00ee7e8f789e633e78e99e638f9746965"
+    },
+    "/Users/davidedler/Developer/lrv-native-review-evidence-20261025/tsconfig.app.json": {
+      "bytes": 635,
+      "sha256": "b358b1b595f2c31d2d4461046fa57ae416283072909bcfa13feb14d41124978c"
+    }
+  },
+  "focused_tests": 263,
+  "freshness": "only each append source-proved earlier observations; later heads may name prior new IDs",
+  "full_check_passed": true,
+  "full_repo_tests": 2213,
+  "hash_schemas_unchanged": true,
+  "independent_review_pending": true,
+  "kind": "prospective-native-local-evidence-source-v7-visible-head-matrix",
+  "literal_extraction_origins": 26,
+  "literal_native_kinds": 18,
+  "local_review_files": {
+    "authority-rechecks.json": {
+      "bytes": 950,
+      "sha256": "168a1750bda5ce42e3acf3da44fa82da21c39b526fd18e02f8254490eed6bdbd"
+    },
+    "authorization-new-inspection.json": {
+      "bytes": 170,
+      "sha256": "b4456137aa3ae57ca01d82294608d6184919cca203f5879f13570a1b37a88b18"
+    },
+    "authorization-new.log": {
+      "bytes": 149,
+      "sha256": "94489317a41aebf09a7df9a5e3a231dcd62a26f2b6cd24b66c62a2238ca6936e"
+    },
+    "authorization-new.mts": {
+      "bytes": 779,
+      "sha256": "ec4334c84f879563413568b0ec9651e50d2dcabfe050c4bc54b4b7dd4b9ce2de"
+    },
+    "baseline-new-inspection.json": {
+      "bytes": 1788,
+      "sha256": "c28e1e82527569db6e2c8afb575863477b37d1e5e56ac16b016a7794f57dc087"
+    },
+    "baseline-new.log": {
+      "bytes": 36,
+      "sha256": "459eba5ccf98b06d2ac19332bbecbf91f10aa646fcc3c0c241e269259deaae9b"
+    },
+    "baseline-new.mts": {
+      "bytes": 4529,
+      "sha256": "490c543b334d9bdab0ada24f0d405622dadf467d6bf4c034f83a0c296ac68cb7"
+    },
+    "correction-new-inspection.json": {
+      "bytes": 567,
+      "sha256": "3a8ca939b3c1eaf59a377f9347e5f12754f95c66806a6cc71a136ab5480ac96a"
+    },
+    "correction-new.log": {
+      "bytes": 355,
+      "sha256": "547bb4fb47f641dc2bac81839e57c1aeb7f517ac80e43efa39be57b297a24067"
+    },
+    "correction-new.mts": {
+      "bytes": 1344,
+      "sha256": "f8651e146b01fb4f349c409666be0fcff23957ace61116b984eb9301bd60b86a"
+    },
+    "discrepancy-new-inspection.json": {
+      "bytes": 482,
+      "sha256": "884fbfa59161034e1a4cdccf56025614909ab2352ce616ccdb9985430b9482ce"
+    },
+    "discrepancy-new.log": {
+      "bytes": 304,
+      "sha256": "ae4f37c35d65d21f630aa145a3d3e2fc701cc2e54f41de265704b3bdef0c6623"
+    },
+    "discrepancy-new.mts": {
+      "bytes": 1956,
+      "sha256": "1d851a9c2732e5684f59f572af605b31a6510651bc68777a8f68f979f6a3c4a2"
+    },
+    "exact-root-old-new.json": {
+      "bytes": 853,
+      "sha256": "0fbf16274cc26aedd154a248f94bef392e2ed294691e84e4b0cf9be887e127c3"
+    },
+    "focused-tests.log": {
+      "bytes": 51673,
+      "sha256": "1f6e8ce7ea3dcca502baf6beb5e8372e304da12049032699c433a4fd00eb6a52"
+    },
+    "fulfillment-new-inspection.json": {
+      "bytes": 182,
+      "sha256": "ede1194286ec475bfeaf20f459ad3d30b7e76d57b689d6bf0dbd541f7dad14a6"
+    },
+    "fulfillment-new.log": {
+      "bytes": 161,
+      "sha256": "828faac6a445cbbd84d6777158da0c2d43d965fdd7868a28eacbd45de6e008cf"
+    },
+    "fulfillment-new.mts": {
+      "bytes": 745,
+      "sha256": "daf3f28d71257588517628c496607a3be1390a72cb0aa078997bce932664a01e"
+    },
+    "full-check.log": {
+      "bytes": 486130,
+      "sha256": "3875544f35857842eed8dc883f4fe76a50759c2f15ff3463619a1a3cb0504880"
+    },
+    "inspect.mjs": {
+      "bytes": 2573,
+      "sha256": "fb2836670ddee0fb53fe2eb69bea75da19d5eb4caf4f4ad86cd0fbb71f6f69cf"
+    },
+    "new-matrix-replays.json": {
+      "bytes": 2079,
+      "sha256": "7442f3d2303c816834e32d59aa340bd7ee1f53850ea27802d977ccd68af6ae19"
+    },
+    "old-components-inspection.json": {
+      "bytes": 3511,
+      "sha256": "f456cfd94a5a9a1de233587572a5e088f1db109cf3f1269bdbdc85a1fabc0cf5"
+    },
+    "refill-new-inspection.json": {
+      "bytes": 346,
+      "sha256": "64e8e1eb6b57752ce72188501c194e861e758caaff006e492ee192dfe7f4a372"
+    },
+    "refill-new.log": {
+      "bytes": 202,
+      "sha256": "47afe90682ea6e8148513eb690318f0067c74030bca78bbb1b57497d39e124b0"
+    },
+    "refill-new.mts": {
+      "bytes": 4574,
+      "sha256": "6093cb2abfc9b75638d99bf89d25ca39bf506caf8a3107e151c2b31a46d65706"
+    },
+    "return-new-inspection.json": {
+      "bytes": 328,
+      "sha256": "de23c159370c184a15837f76fdd089d4e996a4c1a42652917dec65b65223e12a"
+    },
+    "return-new.log": {
+      "bytes": 184,
+      "sha256": "cae145f5179de99c0bddba28d7ee4948af9f15254621aa1408254346a0dc60c7"
+    },
+    "return-new.mts": {
+      "bytes": 1114,
+      "sha256": "6ee3446ca9fd3a15684b64255c01b5af0fe0849107423cc929baddadbf083429"
+    },
+    "root-same-boundary-new.log": {
+      "bytes": 102,
+      "sha256": "1904330221b03fae70f7a0c28823540bfed1c4e79cc032f13ddc65e1c4d63dfb"
+    },
+    "root-same-boundary-new.mts": {
+      "bytes": 9338,
+      "sha256": "89134375274f89395c4318769d395e60a75e2b6a098e5fb1b32e0b912c9b2cd4"
+    },
+    "root-same-boundary-old.log": {
+      "bytes": 101,
+      "sha256": "523492753d8f485509dbc16c3a9a7fee7b2b88775ef630ad194edb776dc4a55f"
+    },
+    "root-same-boundary-old.mts": {
+      "bytes": 9948,
+      "sha256": "bd151c4383eb6671952789a063292b415acc6985226885eb43c7bf35a76e9dae"
+    },
+    "root-same-uuid-new.log": {
+      "bytes": 110,
+      "sha256": "a77e206d0d640f7661fb558ab71b0eda30118a33aec6681b0492e1cb28df8925"
+    },
+    "root-same-uuid-new.mts": {
+      "bytes": 9346,
+      "sha256": "3ff6767b165058d8b0e77116aa8580b1fdc64cf8179701d2906f40a8d48de4a4"
+    },
+    "root-same-uuid-old.log": {
+      "bytes": 109,
+      "sha256": "fde9342412a50afd093efef673aff7159ec8eaebdce5bb00c4583983539414eb"
+    },
+    "root-same-uuid-old.mts": {
+      "bytes": 9956,
+      "sha256": "263e29671cc855231a75deab04c015f1f91f847a4df8f1d44c766d9da2f5b723"
+    }
+  },
+  "mutable_authorization_state_and_cross_revision_refill_snapshots": "not immutable payloads",
+  "new_variant_genuine_Auth_corpus": false,
+  "new_variant_unit_controls_only": true,
+  "omitted_history_and_pickup_after_revision": "backend-owned; no invented fields or lookup",
+  "owned_files": {
+    "NATIVE-EVIDENCE.md": {
+      "bytes": 10595,
+      "sha256": "1ac09d8f951157bc5303fec930b7e4adee32be3f3ee043ccdad0c27715a4b392"
+    },
+    "src/hub/features/controlled-drugs/record-review/component-hashes.ts": {
+      "bytes": 14038,
+      "sha256": "ab5fc451dbc9eab9ffd0ed3941c0e9337640f54c0b33040411a27e833e35d8ee"
+    },
+    "src/hub/features/controlled-drugs/record-review/native-movement-structure.ts": {
+      "bytes": 33372,
+      "sha256": "1a05143b188e0538d8d1ac9d8ba9bfefc1c85a570169ab63651fd91ee5e47107"
+    },
+    "src/hub/features/controlled-drugs/record-review/prospective-native-movement.ts": {
+      "bytes": 103377,
+      "sha256": "c1173d8471384d56f363b0668224690016cbb96d619ef059014fa1728bdb19ed"
+    },
+    "tests/controlled-drugs/record-review-native-completion.test.ts": {
+      "bytes": 34102,
+      "sha256": "e31dcf2b2644a6919656390979091bb6fa686518752664fadac6bf06ff0ac557"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-00.json": {
+      "bytes": 151581,
+      "sha256": "fdb6d3c7b82588f67ba752836692da9ebecf1bbdae28c6326162839dd880dbce"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-01.json": {
+      "bytes": 193656,
+      "sha256": "2ae34605c6307e791035c78b5f3ebc50f0b7208648f9fe2f9ccffec466687a89"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-02.json": {
+      "bytes": 206634,
+      "sha256": "721b134262ccf3caeab25b4be40ff23d91d0c37affdb4e5f79dcfa97465498d3"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-03.json": {
+      "bytes": 225545,
+      "sha256": "9156d11e792aedeba26cfb1f11cccb04794f1485f25d23ae0464b66e0ed41b9b"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-04.json": {
+      "bytes": 270843,
+      "sha256": "cf55de19602fa3132a84061bbba5310b1eeff3e3eb3d53642be32d760b6a64bb"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-05.json": {
+      "bytes": 297637,
+      "sha256": "8f43b60d2a0b59b8e3693e28e05c9ead171718dccbc434a63e6d6da9b90f4a4f"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-06.json": {
+      "bytes": 262351,
+      "sha256": "56978b3ad701442f2bef166a9b50ad5f8cb4ec05f04de9f18c46f5fbf30ce955"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-07.json": {
+      "bytes": 239105,
+      "sha256": "243a4f49ce0af1f2bbba65dc678797c2cdc210a4c56b1d52a6ce2e28c3da9067"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-08.json": {
+      "bytes": 150992,
+      "sha256": "f2e6634865be00c09bdc4b37f7b9a0df9cfb7ae9ba914e6014bc4405973d910a"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-09.json": {
+      "bytes": 153986,
+      "sha256": "926025e0516a993194282f913151c82edb83264065845c8f3089155d4eb98d4c"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-10.json": {
+      "bytes": 241576,
+      "sha256": "ea35642fc1f8e170c1eb592b73683622c8a95436fb056f6f1d79eddfd842d650"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-11.json": {
+      "bytes": 179550,
+      "sha256": "1398b3de0d9441cfa91a39d02cf19397a10c2ce673487c832e1c86f82c03c6ba"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-12.json": {
+      "bytes": 189449,
+      "sha256": "ef68231a7313c56ea0b87bb26a9ec2e3dfc43494aaa01518929a0de8de4344b3"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-13.json": {
+      "bytes": 207996,
+      "sha256": "0fed3767ab544d795b04378bf0ef3fcdd8780640f2ff17163baa479708f889f1"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-14.json": {
+      "bytes": 242938,
+      "sha256": "9272993898619c98b4aee37e28463712c1f8cba68fec5a99b6aa1a89becddf26"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-15.json": {
+      "bytes": 244900,
+      "sha256": "dd98c4fced50f280f09bf6b2731be75dd237efb47dfdbd7d5bfe08b450f1ecea"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-16.json": {
+      "bytes": 266530,
+      "sha256": "47e4db2e0f928538700c1e2ffdc4b4b5cc10e7502e7a1139c1fab1339e92387f"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/native-detail-17.json": {
+      "bytes": 265330,
+      "sha256": "a6ee0ad1297b367ca92c8fd20cb8a1f89275a84ee080c07896b3cfe46146176b"
+    },
+    "tests/controlled-drugs/record-review-native-fixtures/provenance.json": {
+      "bytes": 17177,
+      "sha256": "5e9341b606db4f11bc3df539813f0a827fe27a8a726c863204ba586983a1a9ce"
+    },
+    "tests/controlled-drugs/record-review-native-hashes.test.ts": {
+      "bytes": 6232,
+      "sha256": "8ef078a0017a8f0e24e59b1ea3243881df28e85b8ca2a90d833a9fdb0d7bc724"
+    },
+    "tests/controlled-drugs/record-review-native-movement.test.ts": {
+      "bytes": 11485,
+      "sha256": "f14bbbd4ee8a7403ddbb412dedcfee0e0cf70449471d323f7c2368063948a7bd"
+    },
+    "tests/controlled-drugs/record-review-native-test-data.ts": {
+      "bytes": 10306,
+      "sha256": "fcfaa3688c34456de2fa2628d3de1f0bdd193945cdf3139067f7c080c799cfc2"
+    }
+  },
+  "previous_manifest": {
+    "bytes": 21452,
+    "sha256": "bab6bff3bbd6050cbb4d5ab496e6e71908c34b6142069c9db7eb69ac7a6fdef7"
+  },
+  "prior_adversarial_baseline": {
+    "old_accepted": 11,
+    "old_refused": 2
+  },
+  "production_route_or_authorization": false,
+  "services_started": false,
+  "source_gate": "independent-review-pending",
+  "three_TS_checks_passed": true,
+  "unchanged_module_dependencies": {
+    "src/hub/features/controlled-drugs/record-review/CLINICAL-EVIDENCE.md": {
+      "bytes": 2823,
+      "sha256": "b87a51031a612291cb5905dde5d472185a1a0f143fe12742b85bc7ba737fd4db"
+    },
+    "src/hub/features/controlled-drugs/record-review/README.md": {
+      "bytes": 8202,
+      "sha256": "d20fc4060fb1c11b91e42743eb5d6e8c3dd3406120584fed1ee854219d1a4173"
+    },
+    "src/hub/features/controlled-drugs/record-review/RecordReviewDetail.tsx": {
+      "bytes": 4203,
+      "sha256": "2051834a448e5327a81b9363153b49dc86cba710fc48714c05c5c9bf6908d2a8"
+    },
+    "src/hub/features/controlled-drugs/record-review/RecordReviewDialog.tsx": {
+      "bytes": 6201,
+      "sha256": "4899972f94365cebd530083167aa224ee03a17f6ef2beb05266e059df31466ce"
+    },
+    "src/hub/features/controlled-drugs/record-review/RecordReviewQueue.tsx": {
+      "bytes": 3531,
+      "sha256": "03f3e2d36cbbf5702d237d2fe74112d0949bef5c38c5a20976aa63d25a024868"
+    },
+    "src/hub/features/controlled-drugs/record-review/RecordReviewWorkflow.tsx": {
+      "bytes": 16618,
+      "sha256": "5e9ca385a16c63f38713034e9f825e97279768be89042b84c02819e460a6a4fe"
+    },
+    "src/hub/features/controlled-drugs/record-review/RecordReviewWorkspace.tsx": {
+      "bytes": 3596,
+      "sha256": "5ec719f469c9d52e341aacb9ad3dcb3eb3dd4ab06a49df0f7248a49aa44db135"
+    },
+    "src/hub/features/controlled-drugs/record-review/STAFF-WORKFLOW.md": {
+      "bytes": 7687,
+      "sha256": "362134dcb19714031d844d8f507e54a6cf8df701e00a7bca7bfcc7335928d919"
+    },
+    "src/hub/features/controlled-drugs/record-review/clinical-alert-snapshot.ts": {
+      "bytes": 1917,
+      "sha256": "923eb0c61054c4662fd69a3781d4321fe36b03051e74ed4ac77165421778f2bf"
+    },
+    "src/hub/features/controlled-drugs/record-review/clinical-movement-structure.ts": {
+      "bytes": 2979,
+      "sha256": "9fae256221b06fd9a150aa2353a8a6e15004d8d52f76f65bd61d6f5c3683346b"
+    },
+    "src/hub/features/controlled-drugs/record-review/display-evidence.ts": {
+      "bytes": 1042,
+      "sha256": "db67a739815be7f76cfe3db393c945539dbe73e7aa00d2f304bdc3b80f87a914"
+    },
+    "src/hub/features/controlled-drugs/record-review/exact-json.ts": {
+      "bytes": 7003,
+      "sha256": "2cf2211a314c06b56ffd587ec7addc767e8e050fe709deea45ab00d4357a55e0"
+    },
+    "src/hub/features/controlled-drugs/record-review/exact-values.ts": {
+      "bytes": 3756,
+      "sha256": "3f25140930747c858aacf11317a053a3d81390a554b813fb82097452b4703111"
+    },
+    "src/hub/features/controlled-drugs/record-review/jsonb-equality.ts": {
+      "bytes": 2360,
+      "sha256": "4601979058941ab2f3c176874eaaf10199918098ffbb387060614357578624c5"
+    },
+    "src/hub/features/controlled-drugs/record-review/lifecycle.ts": {
+      "bytes": 13437,
+      "sha256": "9cb32b31490746713392a26a62e301674bd6dd1f8e8fcac13027f5683087b531"
+    },
+    "src/hub/features/controlled-drugs/record-review/movement-structure.ts": {
+      "bytes": 6073,
+      "sha256": "011af5668087b1c211de07e1ab554713b62860dbc5743d18b3713ddd9044828a"
+    },
+    "src/hub/features/controlled-drugs/record-review/owned-outcome.ts": {
+      "bytes": 2259,
+      "sha256": "a22b19181544cdec1df0004a833d2abf1220bfe476b13862a44b28a9424434df"
+    },
+    "src/hub/features/controlled-drugs/record-review/prepared-packet.ts": {
+      "bytes": 9682,
+      "sha256": "cb7e06e99a15df976930620a72b7ac3800d8895a453be4ac7690a3ded6496607"
+    },
+    "src/hub/features/controlled-drugs/record-review/prospective-component-consistency.ts": {
+      "bytes": 8490,
+      "sha256": "e70609748ecb49ef74a34727b7ba7aaf7cdb1e53184d7accbe142c4b7aa3e550"
+    },
+    "src/hub/features/controlled-drugs/record-review/prospective-packet-structure.ts": {
+      "bytes": 11622,
+      "sha256": "a6fe174db179b2db952c8ab077c8f74d2e9c75764dd0227e098de57e10c15c29"
+    },
+    "src/hub/features/controlled-drugs/record-review/prospective-source-shapes.ts": {
+      "bytes": 11526,
+      "sha256": "ed80205623bfc5ef527a916141489a350bd7081dbc619be9e4f0709f4100feff"
+    },
+    "src/hub/features/controlled-drugs/record-review/prospective-stock-movement.ts": {
+      "bytes": 20127,
+      "sha256": "374e4cd1a36d593bc2c972ead21c2bc04c1f249253faf5022e0d8248412f6e36"
+    },
+    "src/hub/features/controlled-drugs/record-review/queue-model.ts": {
+      "bytes": 9243,
+      "sha256": "5d40d439a44d1122aec385c04c735db86b2e052848d6a7e90252b0f431ee54df"
+    },
+    "src/hub/features/controlled-drugs/record-review/queue-reader.ts": {
+      "bytes": 5146,
+      "sha256": "63f14f3bd2282e289e345089a9f6e8da4ed8342d985acc89811a5057d5807743"
+    },
+    "src/hub/features/controlled-drugs/record-review/raw-rpc.ts": {
+      "bytes": 5762,
+      "sha256": "136c39af6aa4ff670a840c84e422d27639235a779b78f7ea0139611042e7c2ed"
+    },
+    "src/hub/features/controlled-drugs/record-review/read-detail.ts": {
+      "bytes": 8610,
+      "sha256": "1316b07c2c31e32cfb1e80b9db47958457be78a69495b2853c9018b0c288aa23"
+    },
+    "src/hub/features/controlled-drugs/record-review/read-rpc.ts": {
+      "bytes": 5288,
+      "sha256": "6d2e1b87bccf392169e3236a1f06b7d7c0c9398aa050522b887763a4a739317e"
+    },
+    "src/hub/features/controlled-drugs/record-review/recovery-pointer.ts": {
+      "bytes": 3900,
+      "sha256": "3a9d10ea2f12d09dab9665f218bd37663ce4222e4da8d8a0b5eca2ab5000b146"
+    },
+    "src/hub/features/controlled-drugs/record-review/request.ts": {
+      "bytes": 2472,
+      "sha256": "baf5cd312fd3d30754592d8284bd18a3a5cd914ba99c15666bd32cb8689678ea"
+    },
+    "src/hub/features/controlled-drugs/record-review/review-summary.ts": {
+      "bytes": 8697,
+      "sha256": "a96d93d339304ea6c6280af68dc4c2aeabb84e057f18256d4f128a5f4de76f23"
+    },
+    "src/hub/features/controlled-drugs/record-review/staff-session-context.ts": {
+      "bytes": 454,
+      "sha256": "46c8cb04484b23e0e5eaa99a7ca5fcbd8f135a458fd5542a6b51772309600772"
+    },
+    "src/hub/features/controlled-drugs/record-review/staff-session.ts": {
+      "bytes": 5870,
+      "sha256": "bd9ee5ef45c10b2016c4b7bdad12469d5603a397059e4c0196fcb6c6be97d44b"
+    },
+    "src/hub/features/controlled-drugs/record-review/status-copy.ts": {
+      "bytes": 1722,
+      "sha256": "fed6a350a9ec6e5455bbb5c10751c7f93aeed5f92cc3791ec8165a4a95971df4"
+    },
+    "src/hub/features/controlled-drugs/record-review/workspace.ts": {
+      "bytes": 7902,
+      "sha256": "c3eccf38acab577719b4bef97eb5f61f071bbcebce3d2f14d49b7a4b2d2a8496"
+    }
+  },
+  "unordered_schema_pair_categories": 82,
+  "visible_head_streams": 6,
+  "worktree": "/Users/davidedler/Developer/lrv-native-review-evidence-20261025"
+}

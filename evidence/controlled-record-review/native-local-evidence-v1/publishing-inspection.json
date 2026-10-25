@@ -1,0 +1,20 @@
+{
+  "K_unchanged": true,
+  "all61_M_index_and_worktree_files_match_projection": true,
+  "cached_diff_check_passed": true,
+  "evidence_files": 12,
+  "exact_owned_files": 26,
+  "exact_staged_file_count": 39,
+  "no_portable_runtime_or_new_admission_claim": true,
+  "one_owned_helper_final_LF_removed": true,
+  "original_evidence_authorities_and_copied_summaries_unchanged": true,
+  "original_helper_bytes": 10306,
+  "original_helper_sha256": "fcfaa3688c34456de2fa2628d3de1f0bdd193945cdf3139067f7c080c799cfc2",
+  "original_manifest_sha256": "dc3024a0c6f406200f72343f21fc1b9cee56efc8b06d508d37be98b8dd5d9607",
+  "owned_files": 27,
+  "passed": true,
+  "published_helper_bytes": 10305,
+  "published_helper_sha256": "a036544660e57d7d22e62b3308c46061ca0344f5172df2ec1d7bb18ef13dffc2",
+  "services_started": 0,
+  "unchanged_dependency_files": 34
+}

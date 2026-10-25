@@ -1,6 +1,8 @@
 import { ExactJsonNumber, validUnicode, type ExactJson } from "./exact-json.ts";
-import { reviewNumericTextBytes, reviewTargetSchema } from "./prepared-packet.ts";
+import { reviewJsonbTextBytes, reviewNumericTextBytes, reviewTargetSchema } from "./prepared-packet.ts";
 import { prospectiveSourceShapes } from "./prospective-source-shapes.ts";
+import { nativeContextSchemas, nativeDocumentSchemas, nativeDispenseArtifactSchema, nativeRequestSchemas, nativeFulfillmentReceiptSchema, type NativeDocumentKind, type NativeWriter } from "./native-movement-structure.ts";
+import { reviewUuidSchema } from "./request.ts";
 import { clinicalAlertSnapshotSchema } from "./clinical-alert-snapshot.ts";
 
 interface EvidenceObject { readonly [key: string]: ExactJson }
@@ -177,4 +179,52 @@ export function hashReviewObligation(value: unknown): Promise<string> {
 export function hashReviewClinicalAlertSnapshot(value: unknown): Promise<string> {
   const snapshot = exactKeys(value, ["schema_version", "pet_id", "patient_version", "important_problems", "legacy_allergies"]);
   return hashComponent(snapshot, () => { clinicalAlertSnapshotSchema.parse(snapshot); });
+}
+
+async function hashNativeComponent(value: ExactJson, validate: () => void): Promise<string> {
+  try { return await hashComponent(value, validate); } catch { return invalid(); }
+}
+
+/** Native component APIs have literal semantic schemas. They do not accept P,
+ * fabricate a source-row wrapper, attest DB membership or expose the codec. */
+export function hashReviewNativeDocument(kind: NativeDocumentKind, value: unknown): Promise<string> {
+  if (typeof kind !== "string" || !Object.prototype.hasOwnProperty.call(nativeDocumentSchemas, kind)) invalid();
+  const document = object(value);
+  return hashNativeComponent(document, () => { nativeDocumentSchemas[kind].parse(document); });
+}
+export function hashReviewNativeRecord(kind: "return_v1" | "return_v2" | "correction" | "discrepancy" | "return_policy", value: unknown): Promise<string> {
+  if (!["return_v1", "return_v2", "correction", "discrepancy", "return_policy"].includes(kind)) invalid();
+  const document = object(value);
+  // This digest is excluded from the codec preimage. Admit its own primitive
+  // data value before Zod can inspect an otherwise unwalked object/then getter.
+  const digestField = Object.getOwnPropertyDescriptor(document, "record_hash");
+  if (!digestField || !("value" in digestField) || typeof digestField.value !== "string" || !/^[a-f0-9]{64}$/.test(digestField.value)) invalid();
+  return hashNativeComponent(Object.fromEntries(Object.entries(document).filter(([key]) => key !== "record_hash")),
+    () => { nativeDocumentSchemas[kind].parse(document); });
+}
+export function hashReviewNativeContext(kind: Exclude<NativeDocumentKind, "return_policy">, value: unknown): Promise<string> {
+  if (typeof kind !== "string" || !Object.prototype.hasOwnProperty.call(nativeContextSchemas, kind)) invalid();
+  const context = object(value);
+  return hashNativeComponent(context, () => { nativeContextSchemas[kind].parse(context); });
+}
+export function hashReviewNativeArtifact(value: unknown): Promise<string> {
+  const artifact = object(value);
+  return hashNativeComponent(artifact, () => { nativeDispenseArtifactSchema.parse(artifact); });
+}
+export function hashReviewNativeRequest(writer: NativeWriter, actorId: unknown, value: unknown): Promise<string> {
+  if (typeof writer !== "string" || !Object.prototype.hasOwnProperty.call(nativeRequestSchemas, writer)) invalid();
+  const request = object(value), version = new ExactJsonNumber(writer === "record_native_dispense_return_v2" ? "2" : "1");
+  const operation = writer === "record_native_dispense" ? "dispense" : writer === "record_native_pickup" ? "pickup" : writer;
+  return hashNativeComponent({ version, actor_id: actorId as ExactJson, operation, request }, () => {
+    reviewUuidSchema.parse(actorId); nativeRequestSchemas[writer].parse(request);
+    // Every selected C0/native request has the narrower original 64KiB bound.
+    if (reviewJsonbTextBytes(request) > 65536) invalid();
+  });
+}
+
+/** Exact version1 native fulfillment receipt, used only where that complete
+ * retained preimage is supplied. Hash consistency does not attest its DB PK. */
+export function hashReviewNativeFulfillmentReceipt(value: unknown): Promise<string> {
+  const receipt = object(value);
+  return hashNativeComponent(receipt, () => { nativeFulfillmentReceiptSchema.parse(receipt); });
 }

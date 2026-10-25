@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "typescript_version": "5.8.3",
+  "target": "ES2022",
+  "module": "ESNext",
+  "diagnostics": 0,
+  "all_AST_statement_source_text_equal": true,
+  "emitted_JS_bytes": 10095,
+  "emitted_JS_sha256": "26efcf2fb3e032eb18bf518d663c50ac7c1e37652918b1c4b8f69dce5a6e71a9",
+  "emitted_JS_byte_identical": true,
+  "services_started": 0
+}
