@@ -1,0 +1,82 @@
+{
+  "excludes": [
+    "package-inventory.json"
+  ],
+  "files": {
+    "README.md": {
+      "bytes": 3831,
+      "sha256": "5f31b3f31d7a1eadc1c104f9cf22f696165d950021c3004a304b3eab1422e7e5"
+    },
+    "archive-index.json": {
+      "bytes": 426149,
+      "sha256": "5c98aa587dfd3e8177e2522f2bdafc9ce6ba1e4767ec919dee14d415c786a919"
+    },
+    "authority/backend-manifest.json": {
+      "bytes": 132125,
+      "sha256": "1c612c7c79c39afecbf565dca0cf9b0ca64bb2eafd0c3dcd1b5756253ede45f4"
+    },
+    "authority/backend-profile.json": {
+      "bytes": 115598,
+      "sha256": "0b57e4244b7f8ff0fe84c4a336b202e51a25d5ff7d692b71fbf345808be2064d"
+    },
+    "authority/frontend-binding.json": {
+      "bytes": 6448065,
+      "sha256": "23e4f0dacab74458237b4921a67b4f17dc36b91ab6b2a91612fbd06a7ebe2b35"
+    },
+    "harness/local-authenticated-staff-input.test.ts.txt": {
+      "bytes": 2071,
+      "sha256": "a957120a5fdce50548176fe022a422fa0b2f77d1a99ebf21cdbdf44fd430b7d4"
+    },
+    "harness/local-authenticated-staff-input.ts.txt": {
+      "bytes": 1467,
+      "sha256": "ab4923a2282a2aa7116e5cc0b234090a034af828829999c9d7c0deab34a7a0e0"
+    },
+    "harness/record-review-authenticated-staff-app.tsx.txt": {
+      "bytes": 6742,
+      "sha256": "abb49f4e631b7f6dcff2db61f50a0e22a43fdf2e4562f6ab5ca465e9089a9756"
+    },
+    "harness/record-review-authenticated-staff-fixture.html.txt": {
+      "bytes": 320,
+      "sha256": "a1505177f343014f8ae8b7903b5314ea713f88d920d08fceca7db76559d50c52"
+    },
+    "harness/record-review-authenticated-staff-fixture.tsx.txt": {
+      "bytes": 1234,
+      "sha256": "fbf5d63b2889cccdf3706ce8cfa692ea8684d8e485d7607599c1dc9beec550f5"
+    },
+    "harness/run-local-authenticated-workspace-review.mjs.txt": {
+      "bytes": 25157,
+      "sha256": "b1c69076ca17c00d6aa6f98c7dd3c2b1f91f33c3fa687d66ca96b71b54c9abc8"
+    },
+    "reviews/REVIEW.md": {
+      "bytes": 6657,
+      "sha256": "39c94f99445df0fa7c841c3bb6b5bfcbb7ed9f0c872d59c522514bc14e62e5e3"
+    },
+    "reviews/inspection.json": {
+      "bytes": 4318,
+      "sha256": "d450a6e015aa9e3ca68d282dc746609e66ae06ba0d7d2555816f0dfb74994086"
+    },
+    "run/browser-summary.json": {
+      "bytes": 1040,
+      "sha256": "a3061fb039fb074f6b2b83b498f8c7a4daf25450ba934d6df5e47007ad134726"
+    },
+    "run/result.json": {
+      "bytes": 1553,
+      "sha256": "9dcd51e67c2a1c4df7a73c488063bb91b4d07f4e1bbb29d117c396d8d1c56492"
+    },
+    "run/root-direct-tool-return.json": {
+      "bytes": 2617,
+      "sha256": "f481e8ee8cf1a328021f02a4bf60bd494ca142f87fa6e34dc3cbc0b3deedbefd"
+    },
+    "source.tar.gz": {
+      "bytes": 23154310,
+      "sha256": "5cea67b34c59c3b329b678b78012db323f95927a49b994ce6b4fbf6023030d74"
+    },
+    "verify.py": {
+      "bytes": 8118,
+      "sha256": "1eb259cc7034cdbb6d846d9562810c82bbd4819b6e15b83b1eace58bb77ad559"
+    }
+  },
+  "fresh_execution_claim": false,
+  "kind": "historical-byte-package-inventory-v1",
+  "source_expectations_from_original_authorities": true
+}

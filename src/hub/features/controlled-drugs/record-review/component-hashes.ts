@@ -1,6 +1,7 @@
 import { ExactJsonNumber, validUnicode, type ExactJson } from "./exact-json.ts";
 import { reviewNumericTextBytes, reviewTargetSchema } from "./prepared-packet.ts";
 import { prospectiveSourceShapes } from "./prospective-source-shapes.ts";
+import { clinicalAlertSnapshotSchema } from "./clinical-alert-snapshot.ts";
 
 interface EvidenceObject { readonly [key: string]: ExactJson }
 const byteLimit = 1024 * 1024;
@@ -172,4 +173,8 @@ export function hashReviewParentRequest(value: unknown): Promise<string> {
 export function hashReviewObligation(value: unknown): Promise<string> {
   const obligation = exactKeys(value, obligationKeys);
   return hashComponent(Object.fromEntries(Object.entries(obligation).filter(([key]) => key !== "binding_hash")));
+}
+export function hashReviewClinicalAlertSnapshot(value: unknown): Promise<string> {
+  const snapshot = exactKeys(value, ["schema_version", "pet_id", "patient_version", "important_problems", "legacy_allergies"]);
+  return hashComponent(snapshot, () => { clinicalAlertSnapshotSchema.parse(snapshot); });
 }
