@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.app.json",
+  "include": [
+    "src/vite-env.d.ts",
+    "tests/controlled-drugs/local-authenticated-clinical-input.ts",
+    "tests/controlled-drugs/record-review-authenticated-clinical-app.tsx",
+    "tests/controlled-drugs/record-review-authenticated-clinical-fixture.tsx"
+  ]
+}

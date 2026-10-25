@@ -1,0 +1,26 @@
+{
+  "command": "python3 -I -B - <<'PY'\nfrom pathlib import Path\nimport hashlib,importlib.util\np=Path('/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/clinical-workspace-sdk-prototype-v6/clinical_workspace_sdk_runtime_v6.py')\nif hashlib.sha256(p.read_bytes()).hexdigest()!='d597703f29ee2a3464b5266525e5245d16213819b67d6920431df40b60751909':raise ValueError('Frozen runtime changed')\ns=importlib.util.spec_from_file_location('root_clinical_workspace_v6_actual',p);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)\nm.run('eaa01b0a8f89587ad4e41355283a77290af4ba0b6c5f6b0f986a3660d5c96902')\nPY",
+  "returns": [
+    {
+      "chunk_id": "c03b9e",
+      "wall_time_seconds": 1.003141916,
+      "session_id": 43186,
+      "original_token_count": 20,
+      "output": "Protected closed prototype: /private/tmp/lrv-closed-clinical-workspace-xws58q32\n"
+    },
+    {
+      "chunk_id": "589dbe",
+      "wall_time_seconds": 5.001277084,
+      "session_id": 43186,
+      "original_token_count": 0,
+      "output": ""
+    },
+    {
+      "chunk_id": "46a04b",
+      "wall_time_seconds": 0.000021083,
+      "exit_code": 0,
+      "original_token_count": 406,
+      "output": "{\"all10_relation_tail_lock_preflight\": true, \"both_browser_auth_observers_typechecked\": true, \"browser_acceptance\": false, \"canonical_two_clinical_writers\": true, \"canonical_writer_http\": true, \"cleanup_failed\": false, \"clinical_activation\": false, \"clinical_browser_signing_and_recovery\": true, \"clinical_policy_fixture_checks\": true, \"clinical_two_writer_http\": true, \"clinical_typed_dependency_checks\": true, \"complete_generated_select_typechecks\": true, \"complete_original_reference_equal\": true, \"controlled_real_password_sessions\": true, \"elapsed_seconds\": 147.32997529100976, \"exact_audit_payloads\": true, \"exact_auth_side_effects\": true, \"exact_clinical_callback_effects\": true, \"exact_committed_invariants\": true, \"exact_static_metadata\": true, \"full_auth_acceptance\": false, \"full_protocol_acceptance\": false, \"global_closure_security_certification\": false, \"guarded_owner_publication\": true, \"hosted_writes\": 0, \"kind\": \"closed-local-clinical-workspace-sdk-prototype-v6\", \"known_path_lifecycle_http\": true, \"manifest_sha256\": \"eaa01b0a8f89587ad4e41355283a77290af4ba0b6c5f6b0f986a3660d5c96902\", \"native_origin_security_certification\": false, \"natural_expiry_contention_acceptance\": false, \"normal_owned_cleanup\": true, \"owned_saved_recovery\": true, \"passed\": true, \"preexisting_parent_rows_preserved\": true, \"prepare_reuse_typed_checks\": true, \"primary_failed\": false, \"profile_sha256\": \"554d25c9532ca54f054a884d4a39b1ffa08cf045bf729d1fa1dcd76ed6b833c7\", \"provider_requests\": 0, \"python_http_requests\": 34, \"readonly_exact_rows_preserved\": true, \"restore_acceptance\": false, \"server_detail_selection_used\": true}\n"
+    }
+  ]
+}
