@@ -1,0 +1,13 @@
+{
+  "added_lines": [
+    "      - name: Verify retained backend proof bytes without executing archived code",
+    "        run: |",
+    "          python3 -I -B evidence/controlled-record-review/backend-workflow-proofs-v1/verify.py",
+    "          python3 -I -B evidence/controlled-record-review/backend-workflow-proofs-v1/test_verifier.py"
+  ],
+  "archive_execution_or_services_added": false,
+  "commands_only_offline_fixed_verifier_and_its_inert_tests": true,
+  "passed": true,
+  "removed_lines": 0,
+  "workflow_sha256": "f7f0d1736ad2806c3e6edfd5bbce6fd849953a5f904e1d7275729eccd02a1d68"
+}

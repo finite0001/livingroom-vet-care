@@ -1,0 +1,15 @@
+{
+  "actual_monotonic_seconds": 797.3042664169916,
+  "after_server": "2026-10-25T07:01:00.194100Z",
+  "before_server": "2026-10-25T06:47:42.897985Z",
+  "clock_patched": false,
+  "db_strictly_after_due": true,
+  "due_at": "2026-10-25T07:01:00.000000Z",
+  "kind": "actual-db-and-monotonic-natural-late-wait-v1",
+  "max_sleep_seconds": 30,
+  "original_complete_budget_seconds": 5400,
+  "passed": true,
+  "postwait_cleanup_reserve_seconds": 900,
+  "required_monotonic_seconds": 797.102015,
+  "samples": 28
+}

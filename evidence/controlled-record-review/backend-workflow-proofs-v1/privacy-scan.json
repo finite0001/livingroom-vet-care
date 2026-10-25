@@ -1,0 +1,14 @@
+{
+  "actual_auth_inputs_included": false,
+  "actual_credential_values_checked": 20,
+  "credential_matches": 0,
+  "credential_values_disclosed": 0,
+  "kind": "historical-source-package-privacy-scan-v1",
+  "passed": true,
+  "private_actual_body_exports_included": false,
+  "published_vendor_fixture_keys_are_actual_credentials": false,
+  "runtime_or_browser_binaries_included": false,
+  "screenshots_included": false,
+  "selected_source_files": 3628,
+  "source_module_zips_preserved": true
+}

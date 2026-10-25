@@ -1,0 +1,18 @@
+{
+  "decisions_eight": true,
+  "exact_discrepancies": true,
+  "exact_native_returns": true,
+  "held_one": true,
+  "invoice_version_two": true,
+  "no_original_pickup": true,
+  "no_policy_mutation": true,
+  "package_onsite_three": true,
+  "physical_lines_six": true,
+  "physical_transitions_four": true,
+  "prepared_one": true,
+  "resolution_link_exact": true,
+  "slot_exact": true,
+  "stock_exact": true,
+  "stock_head_one": true,
+  "ttl_exact": true
+}

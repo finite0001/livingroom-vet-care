@@ -1,0 +1,8 @@
+{
+  "anesthesia_revision_exact": true,
+  "decisions_three": true,
+  "head_version_three": true,
+  "invoice_version_four": true,
+  "stock_exact": true,
+  "ttl_exact": true
+}

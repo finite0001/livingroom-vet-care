@@ -1,0 +1,13 @@
+{
+  "all_old_refresh_rows_exact": true,
+  "all_other_sequence_states_exact": true,
+  "baseline_last_value": 3,
+  "complete_metadata_exact_except_two_declared_serial_advances": true,
+  "final_last_value": 5,
+  "final_native_owners_and_acls_exact": true,
+  "general_rowcount_sequence_theorem": false,
+  "is_called": true,
+  "kind": "closed-two-clone-grants-serial-effect-v1",
+  "session_c_refresh_id": 4,
+  "session_d_refresh_id": 5
+}

@@ -1,0 +1,180 @@
+{
+  "files": {
+    "README.md": {
+      "bytes": 4753,
+      "sha256": "aa431be0a86431f69976703dec1d73eece9afae1907fb746510deaa87666e59f"
+    },
+    "archive-index.json": {
+      "bytes": 902654,
+      "sha256": "502d4be2bfba3d0359ebffae7d2e1c4f2f1e93ba0f30ffbe7d12cfa1e0f90b74"
+    },
+    "authority/native-manifest.json": {
+      "bytes": 223594,
+      "sha256": "a53f9526573589e94351ba2935845af6c32390b265d0f3fde565f29ffcdd4b30"
+    },
+    "authority/native-profile.json": {
+      "bytes": 171186,
+      "sha256": "e8a665ead9cc391348b7646df2c284207e70be13a8564e63492102bbf656eec1"
+    },
+    "authority/natural-manifest.json": {
+      "bytes": 201957,
+      "sha256": "3137a45a385bd7953d6fa181ce8ba2c1d35a8a1dc207c821efc9994ccc72e4fa"
+    },
+    "authority/natural-profile.json": {
+      "bytes": 275141,
+      "sha256": "66fde901adbf632acde35a81322cbb5a8d8d9ba7f530fed76ac3b3d92a625b1d"
+    },
+    "authority/restore-manifest.json": {
+      "bytes": 360664,
+      "sha256": "7bf6e28150d7413d0f4b53efb25a79a45b07f471bd2da29434c5aa5b8b804f5d"
+    },
+    "authority/restore-profile.json": {
+      "bytes": 115598,
+      "sha256": "0b57e4244b7f8ff0fe84c4a336b202e51a25d5ff7d692b71fbf345808be2064d"
+    },
+    "privacy-scan.json": {
+      "bytes": 490,
+      "sha256": "e845362b030b8ec3bc8884bb76f811c4b6408a359ff2ba1d37ef73fd84efa850"
+    },
+    "reviews/native-audit.md": {
+      "bytes": 6652,
+      "sha256": "e337851de405c01a49215b32ddb4f6bd9af30f0ea2472fe58548450e3c578c0b"
+    },
+    "reviews/native-source-gate.md": {
+      "bytes": 3249,
+      "sha256": "26c38a81d473b6b0f2794d7ac8c3bf491c55909805352314ff32c901a61cddc5"
+    },
+    "reviews/natural-audit.md": {
+      "bytes": 6274,
+      "sha256": "8dba30a7e68a460624f1989d4311aec5ee971058a0cd63d1594a0f17934b0c06"
+    },
+    "reviews/natural-source-gate.md": {
+      "bytes": 6847,
+      "sha256": "35e42d2b887adc3a38f3ec2c6a16351eb6bd33640da1a5735841aa24dee98efc"
+    },
+    "reviews/restore-audit.md": {
+      "bytes": 7089,
+      "sha256": "4462bdcfd3b74ae5e1397bcba0cc1ae911ca9d05669d3c9b429a3b0e34001a77"
+    },
+    "reviews/restore-source-gate.md": {
+      "bytes": 4980,
+      "sha256": "28e8a0bd7f9ee9e5411cb7f36dc92d92c4cd97bf53838cd219f7e78efa75ec03"
+    },
+    "runs/native-invariants.json": {
+      "bytes": 452,
+      "sha256": "b00679b8e24b57ab7473adfc08d99a23ff7ddd556906cee5483034ffc1c3937a"
+    },
+    "runs/native-result.json": {
+      "bytes": 2188,
+      "sha256": "5b2136486d9bc2e79792cdbb887d2c98cc3f2de49ef413a102f772d0f4c14047"
+    },
+    "runs/native-root-tool-return.json": {
+      "bytes": 3905,
+      "sha256": "ed2a32c37f61a8a36545b177471968b529b637642a1dd2135ad68dc7a70e1f4b"
+    },
+    "runs/natural-invariants.json": {
+      "bytes": 173,
+      "sha256": "aae5ea6620f56695670dfacab0c8e9c7e3726bc61de5f73053b80bcfcff7c796"
+    },
+    "runs/natural-result.json": {
+      "bytes": 1818,
+      "sha256": "62f96a29b9cf7f1f8ba4cb8c174525bc10f902ff9180ed48dc5b98caeb0c90d4"
+    },
+    "runs/natural-root-tool-return.json": {
+      "bytes": 4311,
+      "sha256": "867514cd6fc1d1cd5a1dd90cadba7e327c7b8e4f9794eb8b972fb308c7b23571"
+    },
+    "runs/natural-wait-result.json": {
+      "bytes": 504,
+      "sha256": "9bcae0fb716d9b3e524fd04c54a52c284cda17bfa16d5d4432f9807720a503c1"
+    },
+    "runs/restore-auth-sequence-effects.json": {
+      "bytes": 433,
+      "sha256": "7b55c7132a348414f3154c5722c0549deb5325a5078247750c203d6af9c4ba26"
+    },
+    "runs/restore-helper-projection.json": {
+      "bytes": 1641,
+      "sha256": "abd1f36d9520d9843cd7fa9ff0ff21560417f23a65d494eef55a5de32475a0d0"
+    },
+    "runs/restore-result.json": {
+      "bytes": 1715,
+      "sha256": "2b23cdc02a97975dddc1b8dd6ce5555e3eb1ba7166116ed0d3afd8196546b87d"
+    },
+    "runs/restore-root-tool-return.json": {
+      "bytes": 3584,
+      "sha256": "663c4167cc38c6e18e3dd1d553366e76286632e475c32b8bccf6766f11fd9d8b"
+    },
+    "source.tar.gz": {
+      "bytes": 38812194,
+      "sha256": "a77a148e1310e1e70acf2b575dbdfccb8be64097cf05756ef66a6af96f4f71e4"
+    },
+    "test_verifier.py": {
+      "bytes": 8697,
+      "sha256": "684ecf7b2c3de9224dd615396ee60650291ac43822a884cf88c1b4395310ce95"
+    },
+    "third-party/kong-2.8.1-COPYRIGHT": {
+      "bytes": 126712,
+      "sha256": "6d81ea08e13dc56793f921c4dc99fa339874e57930bf71422a99bc98e3c6236c"
+    },
+    "third-party/kong-2.8.1-LICENSE": {
+      "bytes": 11345,
+      "sha256": "104aed7ff96eb6263412957ff4aef10666cfc8182ea314206ca9a4eb1f9d4792"
+    },
+    "third-party/moby-v27.4.0-LICENSE": {
+      "bytes": 10765,
+      "sha256": "7c87873291f289713ac5df48b1f2010eb6963752bbd6b530416ab99fc37914a8"
+    },
+    "third-party/moby-v27.4.0-NOTICE": {
+      "bytes": 642,
+      "sha256": "b40ec5b16182103ef1cd69d42a21c98369e35bd483b3973902da4807c0755446"
+    },
+    "third-party/pgtype-LICENSE": {
+      "bytes": 1078,
+      "sha256": "467f95e074fe23079a5623ed652619682692041b8551da27e3c2ddb9659a1507"
+    },
+    "third-party/pgx-LICENSE": {
+      "bytes": 1078,
+      "sha256": "467f95e074fe23079a5623ed652619682692041b8551da27e3c2ddb9659a1507"
+    },
+    "third-party/pop-LICENSE.txt": {
+      "bytes": 1067,
+      "sha256": "692e24554548f7b323c6ecdc05fdbd30a7de1c9865cb478626c32183794fea4b"
+    },
+    "third-party/postgres-REL_17_6-COPYRIGHT": {
+      "bytes": 1198,
+      "sha256": "5ed3ce5c9373dff7f98b1fae7a6c7ccd98df7d734d46d24c1bcebf1240be8307"
+    },
+    "third-party/postgrest-v16.3-LICENSE": {
+      "bytes": 1075,
+      "sha256": "1729d66741c5844f47962f91838bae897aa23d7e08272f5f012fca576288fafb"
+    },
+    "third-party/provenance.json": {
+      "bytes": 3366,
+      "sha256": "c6173370356b26ad4fdc08c97174e945b09e841055e2075de34001c20288ee80"
+    },
+    "third-party/sqlx-LICENSE": {
+      "bytes": 1077,
+      "sha256": "a0cc6c18255c47fad558e3a40ab10df927dd914156b267a819e073f8755991b3"
+    },
+    "third-party/supabase-auth-v2.197.0-LICENSE": {
+      "bytes": 1093,
+      "sha256": "68c80ef00664ea62a2c6f38c0ef044497caacc6648a8bd92eec7fdb81e01f904"
+    },
+    "third-party/supabase-cli-2.118.0-LICENSE": {
+      "bytes": 1088,
+      "sha256": "81f7d60afa4316010b1c0df8eb8f0c80b27586a86b72f1bde85e129bfd10d52a"
+    },
+    "third-party/supabase-postgres-17.6.1.171-LICENSE": {
+      "bytes": 932,
+      "sha256": "fd313c784c2e3c964fe043fdb7bcffa8f84627d53d2cf3a61c61586ff6c3f4c1"
+    },
+    "verify.py": {
+      "bytes": 21020,
+      "sha256": "09041564489fe84b46d67c9852636c8ef1170822e4aaf414e56051f8ad97ca93"
+    }
+  },
+  "fresh_execution_claim": false,
+  "integrated_candidate": false,
+  "kind": "historical-backend-proof-package-inventory-v1",
+  "runtime_admission": false
+}
