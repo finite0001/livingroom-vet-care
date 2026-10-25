@@ -1,0 +1,20 @@
+{
+  "kind": "root-clinical-frontend-review-input-v2",
+  "root": "/Users/davidedler/Developer/lrv-controlled-review-clinical-evidence-20261024",
+  "base": "e1adb17c9e482f82579ca015b67926cad82421f4",
+  "files": {
+    "src/hub/features/controlled-drugs/record-review/CLINICAL-EVIDENCE.md": "b87a51031a612291cb5905dde5d472185a1a0f143fe12742b85bc7ba737fd4db",
+    "src/hub/features/controlled-drugs/record-review/README.md": "d20fc4060fb1c11b91e42743eb5d6e8c3dd3406120584fed1ee854219d1a4173",
+    "src/hub/features/controlled-drugs/record-review/clinical-alert-snapshot.ts": "923eb0c61054c4662fd69a3781d4321fe36b03051e74ed4ac77165421778f2bf",
+    "src/hub/features/controlled-drugs/record-review/clinical-movement-structure.ts": "9fae256221b06fd9a150aa2353a8a6e15004d8d52f76f65bd61d6f5c3683346b",
+    "src/hub/features/controlled-drugs/record-review/component-hashes.ts": "9615e20476155642cf4db1f3f1b0ae41e7ae869bc3db69eedaab9ae35ec35f5b",
+    "src/hub/features/controlled-drugs/record-review/prospective-stock-movement.ts": "374e4cd1a36d593bc2c972ead21c2bc04c1f249253faf5022e0d8248412f6e36",
+    "tests/controlled-drugs/record-review-anesthesia-reference.json": "d878d7d16b2c1b3bdf828f886229135cfe12361e525aebcbaff8abb1a57c65c1",
+    "tests/controlled-drugs/record-review-clinical-alert.test.ts": "d34a21a61a743c1979a049ec2a6a2d7d7e1e4524825f9eb4456785b02d9c4ddf",
+    "tests/controlled-drugs/record-review-clinical-movement.test.ts": "c6cabba56c7ca259f6e78293946ac745734cf30eaf72f66e973d4b1510aa1635",
+    "tests/controlled-drugs/record-review-treatment-reference.json": "9086650ad5aca4a589c0207a12c9866d52613ec186292fa47239f2fafc3ac91a"
+  },
+  "production_mount": false,
+  "complete_evidence_authority_claim": false,
+  "previous_review_input_sha256": "5c47e5b376ac1c50da78ac987fbc8037a1ec4fdca111be4e41ae755294d7854f"
+}
