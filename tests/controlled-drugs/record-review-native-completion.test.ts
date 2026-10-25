@@ -122,6 +122,8 @@ test("new schema/hash entry boundaries remain strict and bounded", async () => {
 
 test("unit mixed UUID refill requests preserve original request hash bytes", async () => {
   const u = refillUnit(true); o(u.request.refill).id = ids.refill.toUpperCase(); o(u.c.target).refill = clone(u.request.refill); o(u.pr!.refill_close).id = ids.refill.toUpperCase();
+  // Canonical constructors copy these two raw JSON identity strings verbatim.
+  u.doc.refill_id = o(u.request.refill).id; o(u.f.native("pickup").document).refill_id = o(u.pr!.refill_close).id;
   await u.f.recommit(); await u.f.component(); await u.f.check();
   const lower = { ...u.request, refill: { ...o(u.request.refill), id: ids.refill } };
   assert.notEqual(u.op.request_hash, await hashReviewNativeRequest("record_native_dispense", u.op.actor_id, lower));
@@ -316,4 +318,31 @@ test("private supplied-fact rules reject only exposed immutable contradictions",
   await t.test("different table may reuse UUID", () => { const l = new Ledger(); l.record(origin, ids.refill, ids.head, 1n); l.record("return.row+document", ids.laterHead, ids.head, 2n); });
   await t.test("different IDs and revisions allow omitted gaps", () => { const l = new Ledger(); l.record(origin, ids.refill, ids.head, 1n); l.record(origin, ids.refill, ids.laterHead, 99n); });
   await t.test("fresh D ID may appear in a later legitimate usage head", () => { const l = new Ledger(); l.record("dispense.document.id (fresh identity only; no supplied version)", ids.refill, ids.head, undefined); l.record("dispense.context.usage.fulfillment_head", ids.refill, ids.head, 3n); });
+});
+
+// Source-derived identity interoperability controls only. No genuine linked-refill
+// DB/GoTrue corpus is created by these in-memory frames.
+test("raw copied refill document identities preserve spelling while typed cross-row identities agree", async t => {
+  const spellings = [ids.refill, ids.refill.toUpperCase(), "aAbBcCdD-0000-4000-8000-000000000001"];
+  for (const dRaw of spellings) for (const pRaw of spellings) await t.test(dRaw + " / " + pRaw, async () => {
+    const u = refillUnit(true);
+    o(u.request.refill).id = dRaw; o(o(u.c.target).refill).id = dRaw; u.doc.refill_id = dRaw;
+    u.pr!.refill_close = { ...o(u.pr!.refill_close), id: pRaw }; o(u.f.native("pickup").document).refill_id = pRaw;
+    await u.f.recommit(); await u.f.component(); await u.f.check();
+    assert.equal(u.doc.refill_id, dRaw); assert.equal(o(u.f.native("pickup").document).refill_id, pRaw);
+  });
+});
+test("recommitted refill document-only case drift and different valid UUIDs refuse", async t => {
+  for (const pickup of [false, true]) for (const mode of ["case_only", "different_id"] as const) await t.test(String(pickup) + mode, async () => {
+    const u = refillUnit(pickup);
+    const document = pickup ? o(u.f.native("pickup").document) : u.doc;
+    document.refill_id = mode === "case_only" ? ids.refill.toUpperCase() : ids.head;
+    await u.f.recommit(); await u.f.component(); await assert.rejects(u.f.check);
+  });
+});
+test("raw document refill identity schemas reject malformed or non-string values before hash processing", async t => {
+  for (const pickup of [false, true]) for (const value of ["", ids.refill.replaceAll("-", ""), "{" + ids.refill + "}", " " + ids.refill, ids.refill + "\n", "ggbbccdd-0000-4000-8000-000000000001", true, n("1"), {}, []] as MutableJson[]) await t.test(String(pickup) + String(value), async () => {
+    const u = refillUnit(pickup), document = pickup ? o(u.f.native("pickup").document) : u.doc; document.refill_id = value;
+    await assert.rejects(() => hashReviewNativeDocument(pickup ? "pickup" : "dispense", document));
+  });
 });

@@ -433,7 +433,7 @@ class NativeGraph {
       const before = this.refillBefore(context.refill, request.refill, doc), wrapper = obj(context.refill), event = obj(result.refill_event);
       nativeFulfillmentRefillEventSchema.parse(event);
       const after = obj(event.after);
-      if (doc.refill_id !== before.id || event.refill_id !== before.id || event.id !== doc.refill_event_id || event.action !== "dispense" || event.actor_id !== row.actor_id ||
+      if (doc.refill_id !== obj(request.refill).id || uuidValue(doc.refill_id) !== before.id || event.refill_id !== before.id || event.id !== doc.refill_event_id || event.action !== "dispense" || event.actor_id !== row.actor_id ||
         event.reason !== request.reason || event.prior_event_id !== wrapper.head_id || event.id === wrapper.head_id || integer(event.revision, 2n) !== integer(before.version, 1n) + 1n || !same(event.before, before) ||
         !same(after, { ...before, version: event.revision, state: "open", updated_by: row.actor_id, updated_at: after.updated_at }) ||
         !same(event.fulfillment_reference, { kind: "dispense", id: row.id, dispense_id: row.id, authorization_id: row.authorization_id })) invalid();
@@ -449,7 +449,7 @@ class NativeGraph {
       if (request.refill_close !== null || doc.refill_id !== null || doc.refill_event_id !== null) invalid();
     } else {
       const before = this.refillBefore(context.refill, request.refill_close, dispense);
-      if (doc.refill_id !== before.id || dispense.refill_id !== before.id || doc.refill_event_id === null || doc.refill_event_id === obj(context.refill).head_id || doc.refill_event_id === dispense.refill_event_id) invalid();
+      if (doc.refill_id !== obj(request.refill_close).id || uuidValue(doc.refill_id) !== before.id || uuidValue(dispense.refill_id) !== before.id || doc.refill_event_id === null || doc.refill_event_id === obj(context.refill).head_id || doc.refill_event_id === dispense.refill_event_id) invalid();
       const original = obj(obj(this.need(opRelations.dispense, row.dispense_id).result).refill_event), after = obj(original.after);
       const sameRevision = same(before.version, after.version), sameHead = obj(context.refill).head_id === original.id;
       if (integer(before.version, 1n) < integer(after.version, 1n) ||

@@ -1,0 +1,61 @@
+{
+  "Auth_bodies_or_credentials_copied": false,
+  "backend_or_hosted_activation": false,
+  "browser_acceptance": false,
+  "complete_frontend_evidence_admission": false,
+  "exact_private_raw_response_bytes_preserved": true,
+  "existing_lint_warnings": 4,
+  "focused_tests": 302,
+  "kind": "native-local-K9-publication-verification",
+  "lint_errors": 0,
+  "main_base": "abe82308cedb5fa8f74bd0f26edf260d860ddb0b",
+  "native_event_kinds": 18,
+  "new_linked_GET_files": 2,
+  "original_K9_author_full_tests": 2252,
+  "owned_files_exact_to_K9": 30,
+  "production_build": true,
+  "public_raw_GET_files": 20,
+  "publish_after_main_full_tests": 2258,
+  "publish_full_check_log_sha256": "d7a3ddcb768342071a203aa019b771401383393ef0c7c96c552a48460e0254fb",
+  "publish_test_failures": 0,
+  "review_files": {
+    "K8-INDEPENDENT-REVIEW.md": {
+      "bytes": 6180,
+      "sha256": "1c66334f883e50dae81dd6078049d06b9a544e139d048da49741f528be428b94"
+    },
+    "K9-INDEPENDENT-REVIEW.md": {
+      "bytes": 3519,
+      "sha256": "e39bcf049829f298875ae94620129a4050a39cc0dbe08b6a571f4bc9487848c1"
+    },
+    "LINKED-REFILL-BACKEND-REVIEW.md": {
+      "bytes": 7224,
+      "sha256": "0aa20d4f5755649a62ffbe5adb521b0609353c92251c8c7d33597b3ff0aac70f"
+    },
+    "ROOT-K9-REVIEW.md": {
+      "bytes": 2047,
+      "sha256": "f78d5fc4496f75e1f36ac37687b5727e081878a61a198b1c3dcea284e8956746"
+    },
+    "source-manifest.json": {
+      "bytes": 52975,
+      "sha256": "6f560f253527732c4d8bf846e83c101172f3528f5380405b863eb625c45d1b14"
+    },
+    "source-ready.json": {
+      "bytes": 1204,
+      "sha256": "6a50a866541b7bb6f13b9af9314c895392e2bd35bcb3490e51c3d6c5fc8fa2d6"
+    }
+  },
+  "root_independent_new_raw_fixture_tests": 3,
+  "same_prior_reviewed_one_LF_projection": {
+    "file": "tests/controlled-drugs/record-review-native-test-data.ts",
+    "identical_to_prior_independently_cleared_projection": true,
+    "original_sha256": "fcfaa3688c34456de2fa2628d3de1f0bdd193945cdf3139067f7c080c799cfc2",
+    "prior_review_sha256": "2e6863cb393ab2fbcad170f450a1bd664478a2853194c320fbb8fd1fa71a3534",
+    "published_sha256": "a036544660e57d7d22e62b3308c46061ca0344f5172df2ec1d7bb18ef13dffc2",
+    "transformation": "Remove exactly one final LF after the closing test-helper function; retain a final newline."
+  },
+  "source_metadata_only_private_paths": true,
+  "staff_route_mounted": false,
+  "two_person_physical_count_or_witness": false,
+  "typescript_checks": 3,
+  "unchanged_dependency_files_exact": 34
+}
