@@ -1,0 +1,11 @@
+{
+  "file": "tests/controlled-drugs/record-review-native-test-data.ts",
+  "kind": "native-publish-whitespace-only-delta-v1",
+  "no_semantic_change_claim_pending_independent_review": true,
+  "original_bytes": 10306,
+  "original_sha256": "fcfaa3688c34456de2fa2628d3de1f0bdd193945cdf3139067f7c080c799cfc2",
+  "published_bytes": 10305,
+  "published_sha256": "a036544660e57d7d22e62b3308c46061ca0344f5172df2ec1d7bb18ef13dffc2",
+  "source_manifest_sha256": "dc3024a0c6f406200f72343f21fc1b9cee56efc8b06d508d37be98b8dd5d9607",
+  "transformation": "Remove exactly one final LF after the closing test-helper function; retain a final newline."
+}

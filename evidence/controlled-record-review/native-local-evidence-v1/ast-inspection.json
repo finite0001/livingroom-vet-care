@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "old_NativeGraph_members_unchanged": 33,
+  "changed_members": [
+    "openingSite",
+    "validate"
+  ],
+  "changed_members_equal_after_only_literal_ledger_calls_removed": true,
+  "new_members": [
+    "visible",
+    "visibleDiscrepancies",
+    "visibleFacts"
+  ],
+  "source_origins": 26,
+  "pair_schema_categories": 82,
+  "literal_origin_call_sites": 27,
+  "unchanged_owned_and_dependency_files": 58,
+  "new_production_module_or_export": false,
+  "services_started": 0
+}

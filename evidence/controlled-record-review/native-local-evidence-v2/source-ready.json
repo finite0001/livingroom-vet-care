@@ -1,0 +1,34 @@
+{
+  "authority_inputs": 106,
+  "complete_frontend_admission": false,
+  "files": {
+    "focused-tests.log": {
+      "bytes": 58655,
+      "sha256": "150c35c5685c2e381c93a95a3c97fef0c8d19b789a7238839ffec7cde13ac563"
+    },
+    "full-check.log": {
+      "bytes": 493165,
+      "sha256": "b8c51a4f86223ea7f42de1ac9aa16c2ef5952382b8031c4aa448f2e606a249d4"
+    },
+    "private-K8-invocation.log": {
+      "bytes": 71,
+      "sha256": "f749180fd42b9fa4a7f1a777679b629c1e25d483281606045db3c5fcd09a8332"
+    },
+    "source-manifest.json": {
+      "bytes": 52975,
+      "sha256": "6f560f253527732c4d8bf846e83c101172f3528f5380405b863eb625c45d1b14"
+    }
+  },
+  "focused_tests": 302,
+  "full_tests": 2252,
+  "independent_whole_review_pending": true,
+  "kind": "native-frontend-K9-source-corpus-ready",
+  "manifest": {
+    "bytes": 52975,
+    "path": "/Users/davidedler/Developer/lrv-controlled-review-v3-design-20261021/tmp/secondary-review-20261021/record-review-v3-protocol-draft/completion-next/native-frontend-implementation-v9/source-manifest.json",
+    "sha256": "6f560f253527732c4d8bf846e83c101172f3528f5380405b863eb625c45d1b14"
+  },
+  "owned_files": 31,
+  "services": false,
+  "unchanged_dependencies": 34
+}

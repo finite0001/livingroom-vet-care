@@ -1,0 +1,10 @@
+{
+  "kind": "reused-publishing-projection-byte-equivalence",
+  "typescript": "5.8.3",
+  "exact_prior_original_and_published_hashes_verified": true,
+  "AST_statements_identical": true,
+  "emitted_JS_identical": true,
+  "emitted_JS_bytes": 10095,
+  "emitted_JS_sha256": "26efcf2fb3e032eb18bf518d663c50ac7c1e37652918b1c4b8f69dce5a6e71a9",
+  "diagnostics": 0
+}

@@ -1,0 +1,55 @@
+{
+  "K8_local_source_manifest_sha256": "a7a89db89010751b85fe1f6831e0e5eee9c137fc6bd7924bdee31b7050416975",
+  "K8_preservation_sha256": "6bf8ef2257ca66c56839c03b7c9a13619fb34d35c1260c175affa89c35401a21",
+  "actual_result_sha256": "00969d5a9342c9fa69315a0869b8be43d52be5a1c327e6adf7e4c0b3de01b780",
+  "actual_root_tool_receipts_sha256": "d9707df916e5c9de2046ed59c870c26147fbaed6de8f9a7acc7f4b660a0e0187",
+  "browser_test": false,
+  "caller_manifest_sha256": "c758d81b4606c5463ed4db334faa3f1bf75ba4ac04a4a210d5a3aa9faa62705b",
+  "complete_frontend_evidence_admission": false,
+  "expected_authority": "canonical source contracts; retained observed fixtures are corpus only",
+  "fixtures": [
+    {
+      "Auth_headers_or_bodies_copied": false,
+      "bytes": 185107,
+      "event_kind": "record_native_dispense",
+      "expected_values_authority": false,
+      "file": "linked-refill-detail-00.json",
+      "request_sha256": "3be0461225994290649b0dbd266a2e03ee85f13806e7fc66f6f424f768a81413",
+      "response_sha256": "d3317bf209f92f3380790fb24fd902c46442d3d57a9fd1f8ba5e0f97d1a2b9ca",
+      "same_site": true,
+      "sha256": "d3317bf209f92f3380790fb24fd902c46442d3d57a9fd1f8ba5e0f97d1a2b9ca",
+      "source_ref_count": 21,
+      "source_request_number": 32
+    },
+    {
+      "Auth_headers_or_bodies_copied": false,
+      "bytes": 286841,
+      "event_kind": "record_native_pickup",
+      "expected_values_authority": false,
+      "file": "linked-refill-detail-01.json",
+      "request_sha256": "2d39044ff1c92f8a0f63e8d090199008dc84fdfdcaef5775ef8fa70c654412fb",
+      "response_sha256": "0604ab4a4671a1410fd52ee88d6a440d7c3cee23d42ca5a74f27d471dc4be8a5",
+      "same_site": true,
+      "sha256": "0604ab4a4671a1410fd52ee88d6a440d7c3cee23d42ca5a74f27d471dc4be8a5",
+      "source_ref_count": 30,
+      "source_request_number": 35
+    }
+  ],
+  "hash_frames_or_packet_fields_changed": false,
+  "independent_backend_actual_review_sha256": "0aa20d4f5755649a62ffbe5adb521b0609353c92251c8c7d33597b3ff0aac70f",
+  "kind": "genuine-synthetic-linked-refill-local-corpus-v1",
+  "new_fresh_parent_bridge_ready_sha256": "421fbba9d13f9d3103784c9b1898fddc23f8e8d49c81e940403044bb4e874607",
+  "omitted_backend_preimages_supplied": false,
+  "previous18_raw_fixtures_and_provenance_unchanged": true,
+  "privacy": {
+    "Auth_headers_or_bodies_copied": false,
+    "actual_credential_values_checked": 8,
+    "actual_password_requests_not_retained": true,
+    "credential_key_value_JWT_private_key_hits": 0
+  },
+  "production_route_or_authorization": false,
+  "reference_precision": "Backend actual audit checked computed full source-reference equality outputs, not independently archived full cold graphs; these files are exact raw HTTP GET responses",
+  "same_site_only": true,
+  "source212_origin_sha256": "e8a665ead9cc391348b7646df2c284207e70be13a8564e63492102bbf656eec1",
+  "synthetic_actual_origin": "lrv-closed-native-refill-7c9b4lc7"
+}

@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "actual_private_class_extracted": true,
+  "category_equal": 82,
+  "category_owner_alias_refused": 82,
+  "category_legitimate_distinct_gaps": 82,
+  "known_version_alias_refused": 75,
+  "known_revision_different_ID_refused": 75,
+  "supplied_hash_drift_refused": 56,
+  "unknown_then_known_ID_resolution_preserved": 7,
+  "services_started": 0,
+  "full_checker_extraction_origin_coverage_not_inferred_from_class_vectors": true
+}
