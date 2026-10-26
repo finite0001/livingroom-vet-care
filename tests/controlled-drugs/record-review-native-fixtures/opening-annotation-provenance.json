@@ -1,0 +1,53 @@
+{
+  "actual_result_sha256": "37d204af59c59006cdb5fb0bf6def8f97117c49f82dcb2c7d31211f953752189",
+  "actual_root_tool_receipts_sha256": "ddd275c83d8a8391d6a4a6bf367e60a33bfe1d1b70bac1e30032f99112374c1b",
+  "browser_test": false,
+  "caller_manifest_sha256": "c125addcac9c1f3fd3de3254a991d1493673f99d6503f8b1667a2926ba1f8fb9",
+  "common269_acceptance": false,
+  "complete_frontend_evidence_admission": false,
+  "expected_authority": "canonical source contracts; retained observed fixtures are corpus only",
+  "fixtures": [
+    {
+      "Auth_headers_or_bodies_copied": false,
+      "bytes": 82350,
+      "event_kind": "append_native_dispense_correction:clinical_annotation",
+      "expected_values_authority": false,
+      "file": "opening-annotation-detail-00.json",
+      "request_sha256": "ad3f998b76194b11df15a6410a801db50437c47adc5c010a9a11a007e993b2f3",
+      "response_sha256": "0918cb708dadc7ab597d84c744d36663e19c24c477a88ab6ba12d2933c001301",
+      "sha256": "0918cb708dadc7ab597d84c744d36663e19c24c477a88ab6ba12d2933c001301",
+      "site_basis": "opening_custody_site",
+      "source_ref_count": 21,
+      "source_request_number": 31
+    },
+    {
+      "Auth_headers_or_bodies_copied": false,
+      "bytes": 85645,
+      "event_kind": "append_native_dispense_correction:operational_annotation",
+      "expected_values_authority": false,
+      "file": "opening-annotation-detail-01.json",
+      "request_sha256": "c6b1991f6e93d1db1a14a0244f2f975b89150fd49847b8436ced625fc805c890",
+      "response_sha256": "eaf46ca03a861ce2a9b18a55d20d36aa754d1cceb2dbc25be3041bf271d71c8d",
+      "sha256": "eaf46ca03a861ce2a9b18a55d20d36aa754d1cceb2dbc25be3041bf271d71c8d",
+      "site_basis": "opening_custody_site",
+      "source_ref_count": 21,
+      "source_request_number": 34
+    }
+  ],
+  "hash_frames_or_packet_fields_changed": false,
+  "independent_backend_actual_review_sha256": "b5c336fbc93e34df256561f5b06a3703883b33e1ac35583b39f8d70fc36c469a",
+  "kind": "genuine-synthetic-opening-annotation-local-corpus-v1",
+  "omitted_backend_preimages_supplied": false,
+  "previous20_raw_fixtures_and_provenance_unchanged": true,
+  "privacy": {
+    "Auth_headers_or_bodies_copied": false,
+    "actual_credential_values_checked": 11,
+    "actual_password_requests_not_retained": true,
+    "credential_key_value_JWT_private_key_hits": 0
+  },
+  "production_route_or_authorization": false,
+  "reference_precision": "Backend audit verified four computed full cold comparisons, not every raw cold graph; these files retain exact raw HTTP GET bytes",
+  "same_site_only": true,
+  "source212_origin_sha256": "e8a665ead9cc391348b7646df2c284207e70be13a8564e63492102bbf656eec1",
+  "synthetic_actual_origin": "lrv-closed-native-opening-dtxvn31u"
+}

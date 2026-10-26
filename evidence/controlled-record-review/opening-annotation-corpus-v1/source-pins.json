@@ -1,0 +1,21 @@
+{
+  "backend_actual_review_sha256": "b5c336fbc93e34df256561f5b06a3703883b33e1ac35583b39f8d70fc36c469a",
+  "base_commit": "89054ce7db7846c1eb456d63a66703cb94ed1285",
+  "kind": "opening-annotation-corpus-source-pins-v1",
+  "local_regression_only": true,
+  "new_files": {
+    "tests/controlled-drugs/record-review-native-fixtures/opening-annotation-detail-00.json": "0918cb708dadc7ab597d84c744d36663e19c24c477a88ab6ba12d2933c001301",
+    "tests/controlled-drugs/record-review-native-fixtures/opening-annotation-detail-01.json": "eaf46ca03a861ce2a9b18a55d20d36aa754d1cceb2dbc25be3041bf271d71c8d",
+    "tests/controlled-drugs/record-review-native-fixtures/opening-annotation-provenance.json": "f9d783cf49dd417d9f9c366d56319b267895c8840573e208a17e9c9e2a6573eb",
+    "tests/controlled-drugs/record-review-native-opening.test.ts": "89f548282b38cc9c77d56c7a94bdc495d9e3f6ec3771144a7e6a680484f0f4ce"
+  },
+  "unchanged_validator_dependencies": {
+    "src/hub/features/controlled-drugs/record-review/component-hashes.ts": "ab5fc451dbc9eab9ffd0ed3941c0e9337640f54c0b33040411a27e833e35d8ee",
+    "src/hub/features/controlled-drugs/record-review/exact-json.ts": "2cf2211a314c06b56ffd587ec7addc767e8e050fe709deea45ab00d4357a55e0",
+    "src/hub/features/controlled-drugs/record-review/native-movement-structure.ts": "eeee62e1aac0da253ed2f08440683cac0cc91a4615ad97cea55240f4350e7f32",
+    "src/hub/features/controlled-drugs/record-review/prepared-packet.ts": "cb7e06e99a15df976930620a72b7ac3800d8895a453be4ac7690a3ded6496607",
+    "src/hub/features/controlled-drugs/record-review/prospective-component-consistency.ts": "e70609748ecb49ef74a34727b7ba7aaf7cdb1e53184d7accbe142c4b7aa3e550",
+    "src/hub/features/controlled-drugs/record-review/prospective-native-movement.ts": "21bb39ac8677e86b29a64e09185274ba701bd865fcba52a69230175565b27c93"
+  },
+  "validator_behavior_changed": false
+}
