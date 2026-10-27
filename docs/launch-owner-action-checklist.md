@@ -2,7 +2,13 @@
 
 **September 25 correction:** The [independent commercial audit](launch-evidence/2026-09-25-independent-commercial-audit.md) supersedes the September 24 gate counts below. Software, database, Edge, scheduler, CI, provider, and recovery blockers remain. The [repair progress](launch-evidence/2026-09-25-repair-progress.md) tracks local fixes and the staging-first release order; no clinical or staff decisions have been inferred.
 
-Last updated: 2026-09-24.
+Last updated: 2026-10-27 for the Antech closeout checkpoint only; dated readiness snapshots below retain their original scope.
+
+## Before project closeout: Antech follow-up
+
+- [ ] Check whether Jennifer Woodmansee at Antech has supplied the integration documentation, NDA/onboarding information and authorized test access requested through Susan's October 26 introduction. If these have not arrived, Dave should follow up before Living Room Vet project closeout and record the response or next action. Owner confirmed October 27 that access is not yet available.
+
+The request covers reference-lab ordering/results and imaging, with possible EKG submissions for radiology/cardiology review. Keep it in the Living Room Vet workstream; it does not hold open GreenTree's completed communications release. See [Antech commissioning](antech-commissioning.md). This is a follow-up checkpoint, not a claim that the vendor integration is implemented or enabled.
 
 This checklist records the remaining actions that require owner, registrar, or practice-policy authority. Hub workflow readiness, Vercel Production deployment, custom-domain HTTPS, and release-control evidence are otherwise prepared for final verification. Current aggregate readiness is 3/6 gates passing. The generated blocker groups are the two local-only readiness migrations, `20260924120000` and `20260924130000`, clinical/staff acceptance decisions and run metadata, and owner public-contact content. The Stage 2 pre-apply refresh is recorded in [2026-09-24 Stage 2 readiness refresh before hosted Phase 2 apply](launch-evidence/2026-09-24-stage-2-readiness-refresh-pre-apply.md), local disabled/test-mode delivery coverage is recorded in [2026-09-24 no-live-send local workflow drill](launch-evidence/2026-09-24-no-live-send-local-drill.md), the local integrated preventive/inventory/billing/payment/certificate workflow proof is recorded in [2026-09-24 integrated synthetic local workflow proof](launch-evidence/2026-09-24-integrated-synthetic-local-workflow.md), and the reviewer package readiness receipt is recorded in [2026-09-24 clinical and staff acceptance package readiness](launch-evidence/2026-09-24-clinical-staff-acceptance-package.md).
 
