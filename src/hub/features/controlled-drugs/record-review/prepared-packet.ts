@@ -53,6 +53,8 @@ const envelope = z.object({ version: wireInteger(3), state: z.literal("prepared"
   packet, packet_hash: reviewDigestSchema, created_at: reviewProtocolInstantSchema, expires_at: reviewProtocolInstantSchema,
 }).strict() }).strict();
 export interface PreparedReview extends z.infer<typeof envelope> {}
+/** Closed response schema; exported for the separate authenticated reconstruction check. */
+export const reviewPreparedResponseSchema = envelope;
 export interface PreparedReviewPacket extends z.infer<typeof packet> {}
 /** P alone: this schema creates no preparation envelope or operation. */
 export const reviewRequiredPacketSchema = packet;

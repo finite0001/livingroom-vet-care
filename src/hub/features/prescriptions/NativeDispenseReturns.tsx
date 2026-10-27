@@ -1,3 +1,4 @@
+import { useControlledWriterIdentity } from "../controlled-drugs/entry/use-controlled-writer-identity";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -82,6 +83,7 @@ function ReturnsWorkspace({
   onConfirmed,
   onClose,
 }: Props) {
+  const expectedIdentity = useControlledWriterIdentity();
   const target = useMemo(
     () => ({
       authorization_id: dispense.authorization_id,
@@ -96,8 +98,9 @@ function ReturnsWorkspace({
           supabase,
           actor,
           target,
+        expectedIdentity,
         ),
-      [actor, target],
+      [actor, target, expectedIdentity],
     ),
     cache = useQueryClient();
   const alive = useRef(true),
@@ -856,14 +859,16 @@ function ReturnDiscrepancies({
   onDirtyChange,
   onConfirmed,
 }: DiscrepancyProps) {
+  const expectedIdentity = useControlledWriterIdentity();
   const api = useMemo(
     () =>
       createNativeReturnDiscrepancyApi(
         supabase,
         actor,
         target,
+        expectedIdentity,
       ),
-    [actor, target],
+    [actor, target, expectedIdentity],
   );
   const [action, setAction] =
       useState<ReturnDiscrepancyIntent["action"]>("report"),

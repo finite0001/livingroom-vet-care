@@ -1,7 +1,8 @@
+import { controlledTestFactory } from "./controlled-writer-test.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  createFulfillmentApi,
+  createFulfillmentApi as originalcreateFulfillmentApi,
   fulfillmentChargeCents,
   fulfillmentMoneySchema,
 } from "../../src/hub/features/prescriptions/fulfillment-api.ts";
@@ -753,4 +754,14 @@ test("usage rejects oversized or untouched open slot remainder and phantom empty
       fulfillment_head: { event_id: id(1), version: 1 },
     }),
   );
+});
+
+const createFulfillmentApi = controlledTestFactory(originalcreateFulfillmentApi);
+
+test("production dispense/pickup paths never fall back to an SDK writer without a captured staff identity", async () => {
+  let writes = 0;
+  const api = originalcreateFulfillmentApi({ rpc: async () => { writes++; return {data:null,error:null}; } }, actor, signed() as never);
+  await assert.rejects(() => api.execute(operation()));
+  await assert.rejects(() => api.execute(pickupOperation()));
+  assert.equal(writes, 0);
 });

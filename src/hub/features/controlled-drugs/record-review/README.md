@@ -1,9 +1,14 @@
 # Controlled-drug record-review foundations
 
-This is Living Room Vet's read-only presentation and client protocol groundwork.
-It is not mounted in Inventory and has no authenticated RPC adapter or signing
-action. Existing medication-configuration drafts remain independent. No backend
-installation, roster, calendar, policy or clinical commissioning is introduced.
+This directory contains Living Room Vet's authenticated register queue, record
+presentation and deliberate preparation/signing/recovery workflow. The narcotics
+log routes compose it through `createStaffRecordReviewWorkspace`, the existing
+staff-session broker and the mandatory reconstruction adapter. Route availability
+in source does not establish backend installation or production activation.
+Existing medication-configuration drafts remain independent.
+
+See [staff instructions](../count/STAFF-WORKFLOW.md). Backend/current-source and
+hosted acceptance remain separate from synthetic client tests.
 
 ## Exact transport boundary
 
@@ -57,12 +62,19 @@ renders review, deadline and signing states separately, preserves actual/recorde
 times, and never infers a deadline or approval from browser time. Snapshot high
 water is a navigation bound, not a claim that this page examined through it.
 
-Before mounting: implement and prove authenticated raw HTTP transport, session
-generation/cache isolation, complete packet/response/error schemas, explicit
-prepare → display → later confirm, permission/revocation/expiry handling and real
-two-user Auth acceptance. The canonical206 private interface is not the v3 UI API;
-do not connect these modules to it or open its grants. Counts, physical witnesses,
-transfers, disposal, reports and commissioning remain separate workflows.
+The mounted composition supplies raw authenticated transport, session-generation
+isolation and explicit prepare → display → later confirm. Complete source evidence
+admission uses `get_controlled_record_review_admission_v1`: the backend reconstructs
+the full current owned packet/read result under its accepted module and Auth
+checks. The client compares every lossless value, including original numeric token
+spellings, strings, membership and order. It also checks component consistency.
+A missing endpoint, mismatch or login change refuses admission. No prospective
+component-only checker or no-op callback serves as a production fallback.
+
+`discover_controlled_record_review_scopes_v1` supplies read-only navigation using
+register READ/exception-read authority independently of count access. GET and each
+signing operation recheck their own current authority. The canonical206 private
+interface is not the UI API and must not receive browser grants.
 
 ## Verification
 
@@ -114,7 +126,7 @@ and preserving original numeric tokens for every component hash. The stock test
 includes a byte-exact synthetic PostgreSQL 17.6 HTTP packet; it passes the full
 response envelope and scoped checker. Its source prototype had not passed final
 Auth/audit accounting, so this fixture does not establish full Auth/protocol or
-production acceptance. Complete admission remains unmounted.
+production acceptance. The scoped checker remains supplementary; complete admission is supplied by the separate authenticated backend reconstruction path.
 
 - `npm run check`: includes 18 protocol/queue unit tests.
 - `node node_modules/@playwright/test/cli.js test --config tests/controlled-drugs/record-review.playwright.ts`:

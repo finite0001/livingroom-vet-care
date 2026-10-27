@@ -1,0 +1,22 @@
+{
+  "execution_admitted": false,
+  "files": {
+    "common-expected.json": {
+      "bytes": 2490624,
+      "sha256": "b37f774ae350e05c32d74417329b9cd1b852cc08683fc018f5d33b2a6813d9ab"
+    },
+    "module-capture.sql": {
+      "bytes": 104341,
+      "sha256": "d95bdab0c358732dc62c4582290774dca0cd1e65a248593574fc62b095e47b1a"
+    },
+    "module-expected.json": {
+      "bytes": 12307959,
+      "sha256": "9df7cae392e389e4c6959868c65e03d28b190420134c970b615cce0a1a150672"
+    },
+    "original-row-hashes.sql": {
+      "bytes": 1473,
+      "sha256": "ea91c774eee6c0a2b251c8a57dcab9b22966dc7a5cd976aeadfe1cfa1177e262"
+    }
+  },
+  "kind": "narcotics-installation-source-data-v1"
+}

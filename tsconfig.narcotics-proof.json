@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.app.json",
+  "include": [
+    "src/vite-env.d.ts",
+    "tests/controlled-drugs/narcotics-authenticated-app.tsx",
+    "tests/controlled-drugs/narcotics-authenticated-fixture.tsx",
+    "tests/controlled-drugs/narcotics-authenticated-input.ts",
+    "tests/controlled-drugs/narcotics-local-transport.ts"
+  ]
+}

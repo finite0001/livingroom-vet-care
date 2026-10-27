@@ -5,6 +5,8 @@ import { UserHeader } from "./UserHeader";
 import { BottomTabBar } from "./BottomTabBar";
 import { GuidedModeProvider } from "./guided-mode";
 import { ErrorBoundary } from "../ErrorBoundary";
+import { ControlledStockEntryProvider } from "../../features/controlled-drugs/entry/ControlledStockEntryProvider";
+import { WitnessRecoveryNotice } from "../../features/controlled-drugs/witness/WitnessWorkspace";
 
 export function AppShell() {
   const location = useLocation();
@@ -13,6 +15,7 @@ export function AppShell() {
 
   return (
     <GuidedModeProvider>
+      <ControlledStockEntryProvider>
       <div className="flex h-dvh overflow-hidden bg-background">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium">
           Skip to main content
@@ -26,6 +29,7 @@ export function AppShell() {
             className={`mx-auto min-w-0 w-full max-w-screen-xl flex-1 animate-fade-in ${isConversation ? "min-h-0 overflow-hidden" : "min-h-0 overflow-y-auto"} ${navHidden ? "pb-0" : "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0"}`}
           >
             <ErrorBoundary>
+              <WitnessRecoveryNotice />
               <Outlet />
             </ErrorBoundary>
           </main>
@@ -36,6 +40,7 @@ export function AppShell() {
           )}
         </div>
       </div>
+      </ControlledStockEntryProvider>
     </GuidedModeProvider>
   );
 }

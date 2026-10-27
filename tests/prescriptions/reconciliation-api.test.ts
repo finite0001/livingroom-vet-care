@@ -1,8 +1,9 @@
+import { controlledTestFactory } from "./controlled-writer-test.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  createNativeReconciliationApi,
-  createNativeReturnDiscrepancyApi,
+  createNativeReconciliationApi as originalcreateNativeReconciliationApi,
+  createNativeReturnDiscrepancyApi as originalcreateNativeReturnDiscrepancyApi,
   reconciliationAttestations,
 } from "../../src/hub/features/prescriptions/fulfillment-reconciliation-api.ts";
 import { returnFixture } from "./return-fixture.ts";
@@ -501,3 +502,7 @@ test("current read rejects fabricated open-case counts and held lots", async () 
     );
   }
 });
+
+const createNativeReconciliationApi = controlledTestFactory(originalcreateNativeReconciliationApi);
+
+const createNativeReturnDiscrepancyApi = controlledTestFactory(originalcreateNativeReturnDiscrepancyApi);

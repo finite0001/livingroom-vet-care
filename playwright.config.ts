@@ -9,6 +9,7 @@ const backend = {
 
 export default defineConfig({
   testDir: "./e2e",
+  testMatch: ["**/*.@(spec|test).?(c|m)[jt]s?(x)", "**/*.playwright.ts"],
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
   reporter: "list",

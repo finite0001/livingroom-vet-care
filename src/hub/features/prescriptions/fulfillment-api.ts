@@ -1,3 +1,7 @@
+import type { ExactJson } from "../controlled-drugs/record-review/exact-json.ts";
+import type { ReviewIdentity } from "../controlled-drugs/record-review/raw-rpc.ts";
+import { invokeCapturedControlledWriter, type ControlledWriterInvoker } from "../controlled-drugs/entry/controlled-api.ts";
+import { admitLegacyResult } from "../controlled-drugs/entry/legacy-result.ts";
 /** Strict native dispensing adapter with exact request recovery and versioned history. */
 import { z } from "zod";
 import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
@@ -728,6 +732,8 @@ export function createFulfillmentApi(
   client: PrescriptionRpc,
   actor: string,
   original: PrescriptionAuthorization,
+  expectedIdentity?: Readonly<ReviewIdentity> | null,
+  controlledInvoke?: ControlledWriterInvoker,
 ) {
   uuid.parse(actor);
   const prior = parsePrescriptionAuthorization(
@@ -869,6 +875,10 @@ export function createFulfillmentApi(
     return r;
   }
   return {
+    admitSaved(id:string,kind:"dispense"|"pickup",requestRaw:ExactJson,resultRaw:ExactJson){
+      const payload=kind==="dispense"?admitLegacyResult(dispenseRequestSchema,requestRaw):admitLegacyResult(pickupRequestSchema,requestRaw);
+      return receipt(admitLegacyResult(receiptSchema,resultRaw),{id,kind,payload});
+    },
     async execute(op: Readonly<PrescriptionOperation>) {
       const request = parseOperation(op),
         names = {
@@ -876,13 +886,11 @@ export function createFulfillmentApi(
           close_slot: "close_native_fill_slot",
           pickup: "record_native_pickup",
         } as const;
-      return receipt(
-        await rpc(names[op.kind as keyof typeof names], {
-          p_id: op.id,
-          p_request: request,
-        }),
-        op,
-      );
+      if (op.kind === "close_slot")
+        return receipt(await rpc(names.close_slot, { p_id: op.id, p_request: request }), op);
+      const writer = op.kind === "dispense" ? names.dispense : names.pickup;
+      return invokeCapturedControlledWriter(writer, { p_id: op.id, p_request: request }, actor,
+        expectedIdentity, raw => receipt(admitLegacyResult(receiptSchema, raw), op), controlledInvoke);
     },
     async recover(op: Readonly<PrescriptionOperation>) {
       parseOperation(op);

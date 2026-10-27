@@ -385,6 +385,7 @@ export function InventoryPage() {
           Medication and vaccine stock by lot, expiry and location.
         </p>
         <Button asChild variant="outline" className="mt-3"><Link to="/hub/whogot">Whogot</Link></Button>
+        <Button asChild variant="outline" className="mt-3 ml-2 min-h-11"><Link to="/hub/inventory/narcotics">Narcotics log</Link></Button>
       </header>
       <SupplierIdentityPanel />
       <ControlledDraftPanel />

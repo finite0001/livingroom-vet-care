@@ -1,0 +1,44 @@
+{
+  "kind": "independent-python-frame-vectors-not-SQL-execution",
+  "source_sha256": "509691b20da48f68b06ca3c2031f505b0de2b0cd8daf9608a42b9ac6e6c67e1c",
+  "request": {
+    "action": "site_register",
+    "actor_id": "10000000-0000-4000-8000-000000000001",
+    "definition": {
+      "locations": [
+        {
+          "initial_custodian_id": null,
+          "key": "main",
+          "kind": "clinic",
+          "label": "Vector-only room"
+        }
+      ],
+      "site": {
+        "label": "Vector-only site",
+        "registration_reference": "Pure codec vector; no registration or physical claim"
+      }
+    },
+    "operation_id": "20000000-0000-4000-8000-000000000001",
+    "product_id": null,
+    "schema_version": 1,
+    "site_id": "20000000-0000-4000-8000-000000000001"
+  },
+  "request_digest": "e3a04906f636ad49245eb3d3747e18431e31cd22092a082e521f4a822cdcee26",
+  "receipt": {
+    "action": "site_register",
+    "actor_id": "10000000-0000-4000-8000-000000000001",
+    "operation_id": "20000000-0000-4000-8000-000000000001",
+    "preparation_id": "20000000-0000-4000-8000-000000000001",
+    "product_id": null,
+    "receipt_digest": "aff39b883a49ca5cf68993de95a25662de0ea9d712a8fc397e426f59bdbc7df4",
+    "recorded_at": "2026-10-27T12:00:00.123456Z",
+    "request_digest": "e3a04906f636ad49245eb3d3747e18431e31cd22092a082e521f4a822cdcee26",
+    "result_ref": {
+      "id": "20000000-0000-4000-8000-000000000001",
+      "kind": "site",
+      "version": "1"
+    },
+    "schema_version": 1,
+    "site_id": "20000000-0000-4000-8000-000000000001"
+  }
+}

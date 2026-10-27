@@ -1,7 +1,8 @@
+import { useControlledWriterIdentity } from "../controlled-drugs/entry/use-controlled-writer-identity";
+import { ControlledStockWriteError, invokeControlledStockWriter } from "../controlled-drugs/entry/gateway";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/hub/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ export function AnesthesiaDrugAdministrations({
   onPendingChange,
 }: AnesthesiaDrugAdministrationsProps) {
   const { user } = useAuth();
+  const expectedIdentity = useControlledWriterIdentity();
   const cache = useQueryClient();
   const locked = anesthesiaDrugsLocked(record);
   const [lotSearch, setLotSearch] = useState("");
@@ -131,13 +133,14 @@ export function AnesthesiaDrugAdministrations({
     setError("");
     setMessage("");
     try {
-      const { error } = await db.rpc("record_anesthesia_drug_administration", {
+      if (!expectedIdentity || expectedIdentity.actorId !== operation.actor)
+        throw new ControlledStockWriteError("CONTROLLED_ENTRY_UNAVAILABLE", true);
+      await invokeControlledStockWriter("record_anesthesia_drug_administration", {
         p_id: operation.id,
         p_record_id: record.id,
         p_pet_id: petId,
-        p_request: operation.request as unknown as Json,
-      });
-      if (error) throw error;
+        p_request: operation.request,
+      }, expectedIdentity);
       pending.current = null;
       setUncertain(false);
       setAcknowledgedHash(null);
@@ -154,7 +157,9 @@ export function AnesthesiaDrugAdministrations({
       ])
         void cache.invalidateQueries({ queryKey: [prefix] });
     } catch (failure) {
-      const definitive = isDefinitiveRejection(failure);
+      const definitive = failure instanceof ControlledStockWriteError
+        ? failure.definitive && (!uncertain || failure.code === "CONTROLLED_ENTRY_CANCELLED")
+        : isDefinitiveRejection(failure);
       if (definitive) {
         pending.current = null;
         setAcknowledgedHash(null);
@@ -230,7 +235,8 @@ export function AnesthesiaDrugAdministrations({
       <p className="text-sm text-muted-foreground">
         Each entry debits the chosen lot and adds one line to the household’s
         draft invoice in a single step. No drug list, dose or quantity is
-        suggested. Controlled-substance (DEA) logs are not kept here.
+        suggested. Medicines requiring a controlled-drug entry continue through its
+        review before saving.
       </p>
       {entries.isPending && <p role="status">Loading anesthesia drugs…</p>}
       {entries.error && (

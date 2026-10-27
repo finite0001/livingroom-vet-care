@@ -216,6 +216,9 @@ test("panel is mounted on saved records with the household and blocks signing wh
     "src/hub/features/anesthesia/AnesthesiaDrugAdministrations.tsx",
   );
   assert.match(panel, /record_anesthesia_drug_administration/);
-  assert.match(panel, /Controlled-substance \(DEA\) logs are not kept here/);
+  assert.match(panel, /Medicines requiring a controlled-drug entry continue through its/);
+  assert.match(panel, /invokeControlledStockWriter\("record_anesthesia_drug_administration"/);
+  assert.match(panel, /useControlledWriterIdentity\(\)/);
+  assert.doesNotMatch(panel, /\.rpc\("record_anesthesia_drug_administration"/);
   assert.doesNotMatch(panel, /defaultValue=/);
 });

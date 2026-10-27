@@ -1,0 +1,38 @@
+{
+  "cli_version": "2.118.0",
+  "hosted_writes": 0,
+  "kind": "narcotics-forward-migration-candidate-v1",
+  "migration_count": 208,
+  "migrations": {
+    "20261027223535_controlled_record_review_workflows.sql": {
+      "bytes": 36657928,
+      "sha256": "7c34e365bb8cd3d703431dade2f173c2ae9c3ea00e5a31e85f7ce763c0a72959"
+    },
+    "20261027223544_narcotics_count_and_stock_workflows.sql": {
+      "bytes": 61500657,
+      "sha256": "5f6363cb9e21d203a27db711c8c5107efa89c4bfd0b83d8692c3852ca096ea92"
+    }
+  },
+  "prefix_migration_count": 206,
+  "ready_for_deployment": false,
+  "source_artifacts": {
+    "20261027223535_controlled_record_review_workflows.sql": {
+      "bytes": 36657813,
+      "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
+    },
+    "20261027223544_narcotics_count_and_stock_workflows.sql": {
+      "bytes": 61496755,
+      "sha256": "c24391bf1fdc5105684fef3abcc59aa1c779d11e5edf0a6c412db60754f667a2"
+    }
+  },
+  "transaction_owner": "official CLI; only outer BEGIN/COMMIT removed; advisory installation fence added",
+  "verification_pending": [
+    "authenticated whole-count closure",
+    "full121 business profiles",
+    "all10 ordinary writers",
+    "real authenticated browser",
+    "forward CLI atomicity/ledger/current metadata",
+    "CI and review",
+    "named PR approval"
+  ]
+}

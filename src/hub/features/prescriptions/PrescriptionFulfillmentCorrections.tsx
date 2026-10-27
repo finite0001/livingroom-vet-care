@@ -1,3 +1,4 @@
+import { useControlledWriterIdentity } from "../controlled-drugs/entry/use-controlled-writer-identity";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,7 @@ function CorrectionWorkspace({
   onConfirmed,
   onClose,
 }: Props) {
+  const expectedIdentity = useControlledWriterIdentity();
   const target = useMemo(
     () => ({
       authorization_id: dispense.authorization_id,
@@ -55,8 +57,9 @@ function CorrectionWorkspace({
         supabase,
         actor,
         target,
+        expectedIdentity,
       ),
-    [actor, target],
+    [actor, target, expectedIdentity],
   );
   const alive = useRef(true);
   const attemptedRevision = useRef(-1);

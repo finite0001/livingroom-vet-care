@@ -1,3 +1,7 @@
+import type { ExactJson } from "../controlled-drugs/record-review/exact-json.ts";
+import type { ReviewIdentity } from "../controlled-drugs/record-review/raw-rpc.ts";
+import { invokeCapturedControlledWriter, type ControlledWriterInvoker } from "../controlled-drugs/entry/controlled-api.ts";
+import { admitLegacyResult } from "../controlled-drugs/entry/legacy-result.ts";
 import { z } from "zod";
 import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
 import type { PrescriptionRpc } from "./prescription-api.ts";
@@ -217,6 +221,8 @@ export function createFulfillmentCorrectionsApi(
   client: PrescriptionRpc,
   actor: string,
   target: CorrectionTarget,
+  expectedIdentity?: Readonly<ReviewIdentity> | null,
+  controlledInvoke?: ControlledWriterInvoker,
 ) {
   const reviewedContexts = new Map<string, CorrectionContext>();
   uuid.parse(actor);
@@ -317,6 +323,9 @@ export function createFulfillmentCorrectionsApi(
     return r;
   }
   return {
+    admitSaved(id:string,requestRaw:ExactJson,resultRaw:ExactJson){
+      return receipt(admitLegacyResult(receiptSchema,resultRaw),{id,kind:"append_correction",payload:admitLegacyResult(correctionRequestSchema,requestRaw)});
+    },
     async preview() {
       const p = previewSchema.parse(
         await rpc("preview_native_dispense_correction", args),
@@ -383,13 +392,8 @@ export function createFulfillmentCorrectionsApi(
     },
     async execute(op: Readonly<PrescriptionOperation>) {
       const request = operation(op);
-      return receipt(
-        await rpc("append_native_dispense_correction", {
-          p_id: op.id,
-          p_request: request,
-        }),
-        op,
-      );
+      return invokeCapturedControlledWriter("append_native_dispense_correction", { p_id: op.id, p_request: request }, actor,
+        expectedIdentity, raw => receipt(admitLegacyResult(receiptSchema, raw), op), controlledInvoke);
     },
     async recover(op: Readonly<PrescriptionOperation>) {
       operation(op);

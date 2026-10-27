@@ -295,3 +295,5 @@ export function decodeCountManagementRequest<K extends CountManagementAction>(ac
   return parseCountManagementRequest(action, decode(raw, RAW_BYTE_LIMIT));
 }
 export function decodeCountManagementReply(raw: Uint8Array): CountManagementReply { return parseCountManagementReply(decode(raw, RAW_BYTE_LIMIT)); }
+/** The management mutation facade returns this direct thin receipt. */
+export function decodeCountManagementReceipt(raw: Uint8Array): CountManagementPublicReceipt { return parseCountManagementReceipt(decode(raw, RECEIPT_BYTE_LIMIT)); }

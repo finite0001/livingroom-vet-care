@@ -1,0 +1,36 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+import { administrationPointerSchema } from "../../src/hub/features/controlled-drugs/administration/schema.ts";
+import { administrationRequestBytes, digestAdministrationReceipt, digestAdministrationRequest, verifyAdministrationReply } from "../../src/hub/features/controlled-drugs/administration/wire.ts";
+import { decodeAdministrationJson, readAdministrationResponse } from "../../src/hub/features/controlled-drugs/administration/response.ts";
+import { decodeExactJson } from "../../src/hub/features/controlled-drugs/record-review/exact-json.ts";
+const vectors = JSON.parse(readFileSync(new URL("./administration-wire-vectors.json", import.meta.url), "utf8"));
+const exact = (value: unknown) => decodeAdministrationJson(new TextEncoder().encode(JSON.stringify(value)));
+test("closed request and receipt match independent Python iN/domain vectors (SQL parity remains separate)", async () => {
+  assert.equal(vectors.kind, "independent-python-frame-vectors-not-SQL-execution");
+  assert.equal(await digestAdministrationRequest(vectors.request), vectors.request_digest);
+  assert.equal(await digestAdministrationReceipt(vectors.receipt), vectors.receipt.receipt_digest);
+  const { definition: _definition, ...fields } = vectors.request;
+  const pointer = administrationPointerSchema.parse(fields);
+  const preparation = { request: vectors.request, request_digest: vectors.request_digest, created_at: "2026-10-27T11:59:00.123456Z", expires_at: "2026-10-27T12:14:00.123456Z", source_state: "current", summary: { site: { id: pointer.site_id, label: vectors.request.definition.site.label }, locations: [{ id: "30000000-0000-4000-8000-000000000001", label: "Vector-only room", kind: "clinic", initial_custodian_id: null }] } };
+  const reply = { schema_version: 1, state: "saved", data: { pointer, preparation, receipt: vectors.receipt } };
+  const value = await verifyAdministrationReply(exact(reply), pointer, vectors.request);
+  assert.equal(value.state, "saved"); assert.ok(Object.isFrozen(value.data.preparation!.request.definition));
+  const altered = structuredClone(reply); altered.data.preparation.request.definition.site.label = "Substituted clinic";
+  await assert.rejects(() => verifyAdministrationReply(exact(altered), pointer, vectors.request));
+  const changedReceipt = structuredClone(reply); changedReceipt.data.receipt.recorded_at = "2026-10-27T12:00:00.123457Z";
+  await assert.rejects(() => verifyAdministrationReply(exact(changedReceipt), pointer, vectors.request));
+  assert.throws(() => administrationRequestBytes({ ...vectors.request, schema_version: -0 }));
+});
+test("administration has its own raw-escape ceiling while retaining strict parsed/stream bounds", async () => {
+  const escaped = new TextEncoder().encode('"' + '\\u0061'.repeat(350000) + '"');
+  assert.throws(() => decodeExactJson(escaped));
+  assert.equal((decodeAdministrationJson(escaped) as string).length, 350000);
+  for (const malformed of ['{"a":1,"a":2}', '[1,]', '"\\ud800"', '"\\u0000"']) assert.throws(() => decodeAdministrationJson(new TextEncoder().encode(malformed)));
+  const signal = new AbortController().signal, deadline = performance.now() + 5000;
+  const response = (body: string) => new Response(body, { headers: { "Content-Type": "application/json" } });
+  await assert.rejects(() => readAdministrationResponse(response('"123456789"'), signal, deadline, { rawBytes: 8, parsedBytes: 100 }));
+  await assert.rejects(() => readAdministrationResponse(response('"123456789"'), signal, deadline, { rawBytes: 100, parsedBytes: 8 }));
+  assert.equal(await readAdministrationResponse(response('"123456"'), signal, deadline, { rawBytes: 8, parsedBytes: 8 }), "123456");
+});

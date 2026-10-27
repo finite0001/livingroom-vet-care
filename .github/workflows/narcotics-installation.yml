@@ -1,0 +1,64 @@
+name: Narcotics installation rehearsal
+
+on:
+  push:
+    branches: [feat/controlled-count-staff-20261026]
+    paths:
+      - 'scripts/narcotics-log/**'
+      - 'supabase/migrations/2026102722*.sql'
+      - '.github/workflows/narcotics-installation.yml'
+  pull_request:
+    paths:
+      - 'scripts/narcotics-log/**'
+      - 'supabase/migrations/2026102722*.sql'
+      - '.github/workflows/narcotics-installation.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: narcotics-installation-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  forward-installation:
+    # This is installation evidence only. Auth, ordinary writers, count
+    # execution and staff browser acceptance have separate remaining gates.
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - run: npm ci --ignore-scripts
+      - name: Verify process containment and framing controls
+        run: |
+          python3 -B -m unittest discover -s scripts/narcotics-log -p 'test_*.py'
+          node --test scripts/narcotics-log/frame-cli.test.mjs
+      - name: Derive forward ledger hashes from the pinned official CLI parser
+        run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
+      - name: Check complete source admission
+        run: python3 -I -B scripts/narcotics-log/install_rehearsal.py --check-source
+      - name: Rehearse actual owned CLI installation and complete source properties
+        run: python3 -I -B scripts/narcotics-log/install_rehearsal.py --run-synthetic-local
+      - name: Retain scoped installation diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-installation-evidence
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/*-failure.txt
+            /tmp/lrv-narcotics-install-*/*-permanent-rows.json
+            /tmp/lrv-narcotics-install-*/common-source-properties.json
+            /tmp/lrv-narcotics-install-*/full-module-properties.json
+            /tmp/lrv-narcotics-install-*/forward-ledger.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log

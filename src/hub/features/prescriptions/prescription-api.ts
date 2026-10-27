@@ -200,4 +200,4 @@ export function createPrescriptionApi(client: PrescriptionRpc, actor: string, pa
 }
 export interface PrescriptionApi extends ReturnType<typeof createPrescriptionApi> {}
 
-export { authorization as parsePrescriptionAuthorization, artifactSchema as nativePrescriptionArtifactSchema, alertSchema as prescriptionAlertSchema, printStatusSchema as nativePrescriptionStatusSchema };
+export { authorizationSchema as nativePrescriptionAuthorizationSchema, authorization as parsePrescriptionAuthorization, artifactSchema as nativePrescriptionArtifactSchema, alertSchema as prescriptionAlertSchema, printStatusSchema as nativePrescriptionStatusSchema };

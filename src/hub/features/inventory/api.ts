@@ -1,3 +1,5 @@
+import { invokeControlledStockWriter } from "../controlled-drugs/entry/gateway";
+import type { ReviewIdentity } from "../controlled-drugs/record-review/raw-rpc";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Tables } from "@/integrations/supabase/types";
 export type Product = Tables<"catalog_products">;
@@ -45,8 +47,11 @@ export async function lots(
 export async function mutateInventory(
   name: InventoryMutation,
   args: InventoryMutationArgs,
+  expectedIdentity?: Readonly<ReviewIdentity> | null,
 ): Promise<unknown> {
-  const { data, error } = await supabase.rpc(name, args);
+  if (name === "receive_inventory" || name === "adjust_inventory" || name === "record_patient_treatment")
+    return invokeControlledStockWriter(name, args, expectedIdentity!);
+  const { data, error } = await supabase.rpc(name, args as Database["public"]["Functions"][typeof name]["Args"]);
   if (error) throw error;
   return data;
 }
