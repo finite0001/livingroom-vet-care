@@ -1,6 +1,6 @@
 CREATE FUNCTION narcotics_recovery_v1.status(p_request jsonb) RETURNS jsonb
 LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $$
-DECLARE actor_value uuid;head_value jsonb;epoch_value jsonb;arm_value jsonb;scope_value jsonb;roles_value jsonb;
+DECLARE actor_value uuid;head_value jsonb;epoch_value jsonb;arm_value jsonb;scope_value jsonb;roles_value jsonb;identity_value jsonb;fresh_value boolean:=false;
  policy_value jsonb;visible_scopes jsonb:='[]';evidence_value record;evidence_document jsonb;
  evidence_values jsonb:='[]';ack_value narcotics_recovery_v1.acknowledgments;admin_value boolean;
 BEGIN
@@ -8,7 +8,7 @@ BEGIN
  head_value:=narcotics_recovery_v1.require_head();
  PERFORM narcotics_register_v1.keys(p_request,ARRAY['schema_version','actor_id']);
  IF(p_request->'schema_version')::text IS DISTINCT FROM'1'THEN RAISE EXCEPTION 'narcotics_request_invalid';END IF;
- actor_value:=narcotics_register_v1.uuid_value(p_request->'actor_id');PERFORM narcotics_register_v1.identity(actor_value,false);
+ actor_value:=narcotics_register_v1.uuid_value(p_request->'actor_id');identity_value:=narcotics_register_v1.identity(actor_value,false);
  SELECT coalesce(jsonb_agg(r.role::text ORDER BY r.role::text COLLATE "C"),'[]'::jsonb),coalesce(bool_or(r.role='ADMIN'),false)
   INTO roles_value,admin_value FROM public.user_roles r WHERE r.user_id=actor_value;
  IF head_value->>'mode'='armed'THEN
@@ -21,6 +21,9 @@ BEGIN
   END LOOP;
   IF head_value->'epoch_id'<>'null'::jsonb THEN
    epoch_value:=narcotics_recovery_v1.require_epoch();
+   SELECT EXISTS(SELECT 1 FROM auth.sessions s WHERE s.id=(identity_value->>'session_id')::uuid AND s.user_id=actor_value
+    AND s.created_at>(epoch_value->>'recorded_at')::timestamptz AND s.created_at>pg_postmaster_start_time()
+    AND(s.not_after IS NULL OR s.not_after>clock_timestamp()))INTO fresh_value;
    IF(SELECT count(*)FROM narcotics_recovery_v1.evidence e WHERE e.epoch_id=(epoch_value->>'epoch_id')::uuid)>64 THEN
    RAISE EXCEPTION 'narcotics_capacity_exceeded' USING ERRCODE='PT413';END IF;
    FOR evidence_value IN SELECT e.evidence_id,e.product_id,e.site_id FROM narcotics_recovery_v1.evidence e
@@ -36,7 +39,8 @@ BEGIN
    END LOOP;
   END IF;
  END IF;
- RETURN jsonb_build_object('schema_version',1,'actor_id',actor_value,'is_admin',admin_value,'mode',head_value->'mode',
+ RETURN jsonb_build_object('schema_version',1,'actor_id',actor_value,'session_id',identity_value->'session_id',
+  'is_admin',admin_value,'fresh_session',fresh_value,'mode',head_value->'mode',
   'head_id',head_value->'head_id','head_hash',head_value->'record_hash','arm_id',head_value->'arm_id','epoch_id',head_value->'epoch_id',
   'epoch_started_at',epoch_value->'recorded_at','native_server',narcotics_recovery_v1.server_identity(),
   'scopes',visible_scopes,'evidence',evidence_values);

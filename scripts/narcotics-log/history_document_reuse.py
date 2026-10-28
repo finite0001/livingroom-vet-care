@@ -159,6 +159,8 @@ BOUNDARY_VALIDATION_AFTER = ''' -- Only earlier completed graph roots can supply
  )then
   perform controlled_count_v1.historical_boundary_values(p_boundary);
  end if;'''
+BOUNDARY_REUSE_BLOCK = BOUNDARY_VALIDATION_AFTER.replace('if not exists(', 'if exists(', 1).replace(
+    '  perform controlled_count_v1.historical_boundary_values(p_boundary);', '  return;', 1)
 
 ROOT_CALL_BEFORE = '  perform controlled_count_v1.readcore_validate_operation_graph(item.operation_id);'
 ROOT_CALL_AFTER = '''  perform controlled_count_v1.history_scan_validate_operation_graph(item.operation_id,validated_documents);

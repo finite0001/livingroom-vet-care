@@ -44,9 +44,10 @@ BEGIN
   request_value:=row_value.original_request;
   PERFORM narcotics_register_v1.keys(request_value,ARRAY['schema_version','actor_id','operation_id','action','expected_head_id','expected_head_hash','data']);
   PERFORM narcotics_register_v1.uuid_value(request_value->'expected_head_id');
-  PERFORM narcotics_register_v1.keys(row_value.receipt,ARRAY['schema_version','operation_id','actor_id','action','state','request_hash','data']);
+  PERFORM narcotics_register_v1.keys(row_value.receipt,ARRAY['schema_version','operation_id','actor_id','action','state','request_hash','data','receipt_hash']);
   expected_receipt:=jsonb_build_object('schema_version',1,'operation_id',row_value.operation_id,'actor_id',row_value.actor_id,
    'action',row_value.action,'state','saved','request_hash',row_value.request_hash,'data',row_value.receipt->'data');
+  expected_receipt:=expected_receipt||jsonb_build_object('receipt_hash',narcotics_register_v1.hash('narcotics-recovery-receipt-v1',expected_receipt));
   IF(request_value->'schema_version')::text IS DISTINCT FROM'1'
   OR request_value->'actor_id'IS DISTINCT FROM to_jsonb(row_value.actor_id)
   OR request_value->'operation_id'IS DISTINCT FROM to_jsonb(row_value.operation_id)
@@ -111,6 +112,7 @@ BEGIN
  at_value:=clock_timestamp();hash_value:=narcotics_register_v1.hash('narcotics-recovery-request-v1',p_request);
  receipt_value:=jsonb_build_object('schema_version',1,'operation_id',operation_value,'actor_id',actor_value,
   'action',p_request->'action','state','saved','request_hash',hash_value,'data',p_data);
+ receipt_value:=receipt_value||jsonb_build_object('receipt_hash',narcotics_register_v1.hash('narcotics-recovery-receipt-v1',receipt_value));
  document_value:=jsonb_build_object('schema_version',1,'domain','lrv-narcotics-recovery-operation-v1',
   'operation_id',operation_value,'actor_id',actor_value,'action',p_request->'action','state','saved',
   'session_id',identity_value->'session_id','recorded_at',narcotics_register_v1.utc(at_value),

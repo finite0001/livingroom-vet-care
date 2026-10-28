@@ -194,7 +194,7 @@
     "forward-fixes/recovery-admission-source.sql": "659ae3425389332af9a22c4694f474192935fb32f8f60eb7f1ea3eb73940bcbf",
     "history-read/private-cores.sql": "8d08144a6ff4f79ba2a0d25f2cb8ab9c65fc48874a2e3f4866a8249e9ddb6600",
     "history-read/root.sql": "9f39988ac7e69dbc6e795d90d140e3db8af9ea94429a2ec33f7282bb537db3fd",
-    "forward-fixes/history-document-reuse.sql": "44c0b50ce9af9a1233626e670b7014fe2f2e707ee3d19eee0ac57d214a76953d"
+    "forward-fixes/history-document-reuse.sql": "a8cf8769ebac263e6e4dfbe72f7db74e7f0a4febe9d719fb97e56cdec59b1052"
   },
   "trigger_addendum_sha256": "6b4f17e0cdc891405a66a0f2ef461dd47e38e1a94534394cc033f482a8c17744",
   "management_bundle_sha256": "8b556cf62be90b8c784d8ba5c55358a89988083357cdfc63c17e46112356e355",
@@ -542,7 +542,7 @@
           "IntervalStyle=postgres",
           "extra_float_digits=3"
         ],
-        "body_sha256": "22b3c33ce93caf8d31523c8d8aacc01cc29e0db7fb9f9425c161000d195e38be",
+        "body_sha256": "b28dc673bd514cee4c971012bd06398a75013534dab3e6e5032eed509974b19b",
         "acl": [
           {
             "grantor": "postgres",
@@ -38854,6 +38854,328 @@
         "argument_count": 1,
         "default_count": 0
       },
+      "controlled_count_v1.history_scan_historical_boundary_values(jsonb,jsonb)": {
+        "schema": "controlled_count_v1",
+        "name": "history_scan_historical_boundary_values",
+        "arg_types": [
+          "jsonb",
+          "jsonb"
+        ],
+        "arg_names": [
+          "p_boundary",
+          "p_validated_documents"
+        ],
+        "all_arg_types": null,
+        "arg_modes": null,
+        "return_type": "void",
+        "setof": false,
+        "language": "plpgsql",
+        "volatility": "s",
+        "definer": false,
+        "strict": false,
+        "leakproof": false,
+        "parallel": "u",
+        "kind": "f",
+        "variadic": 0,
+        "support": 0,
+        "sqlbody_null": true,
+        "owner": "postgres",
+        "cost": 100,
+        "rows": 0,
+        "defaults": null,
+        "configuration": [
+          "search_path=pg_catalog, controlled_count_v1, pg_temp",
+          "TimeZone=UTC",
+          "DateStyle=ISO,YMD",
+          "IntervalStyle=postgres",
+          "extra_float_digits=3"
+        ],
+        "body_sha256": "bc1346fb46af43ae0194c61ad2976d09073096bdd0f66d506001afc3e2a8d615",
+        "acl": [
+          {
+            "grantor": "postgres",
+            "grantee": "postgres",
+            "privilege": "EXECUTE",
+            "grantable": false
+          }
+        ],
+        "probin": null,
+        "argument_count": 2,
+        "default_count": 0
+      },
+      "controlled_count_v1.history_scan_historical_parent_execution_boundaries_values(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)": {
+        "schema": "controlled_count_v1",
+        "name": "history_scan_historical_parent_execution_boundaries_values",
+        "arg_types": [
+          "jsonb",
+          "jsonb",
+          "jsonb",
+          "jsonb",
+          "jsonb",
+          "jsonb",
+          "jsonb",
+          "jsonb"
+        ],
+        "arg_names": [
+          "p_preparation",
+          "p_action",
+          "p_event",
+          "p_source_bundle",
+          "p_expected_effects",
+          "p_before",
+          "p_after",
+          "p_validated_documents"
+        ],
+        "all_arg_types": null,
+        "arg_modes": null,
+        "return_type": "void",
+        "setof": false,
+        "language": "plpgsql",
+        "volatility": "s",
+        "definer": false,
+        "strict": false,
+        "leakproof": false,
+        "parallel": "u",
+        "kind": "f",
+        "variadic": 0,
+        "support": 0,
+        "sqlbody_null": true,
+        "owner": "postgres",
+        "cost": 100,
+        "rows": 0,
+        "defaults": null,
+        "configuration": [
+          "search_path=pg_catalog, controlled_count_v1, pg_temp",
+          "TimeZone=UTC",
+          "DateStyle=ISO,YMD",
+          "IntervalStyle=postgres",
+          "extra_float_digits=3"
+        ],
+        "body_sha256": "8529681404c12a8abd39612ea2ff0ceace3a19419f76559726bb74c47603fbd1",
+        "acl": [
+          {
+            "grantor": "postgres",
+            "grantee": "postgres",
+            "privilege": "EXECUTE",
+            "grantable": false
+          }
+        ],
+        "probin": null,
+        "argument_count": 8,
+        "default_count": 0
+      },
+      "controlled_count_v1.history_scan_historical_parent_execution_boundaries_values_49(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)": {
+        "schema": "controlled_count_v1",
+        "name": "history_scan_historical_parent_execution_boundaries_values_49",
+        "arg_types": [
+          "jsonb",
+          "jsonb",
+          "jsonb",
+          "jsonb",
+          "jsonb",
+          "jsonb",
+          "jsonb",
+          "jsonb"
+        ],
+        "arg_names": [
+          "p_preparation",
+          "p_action",
+          "p_event",
+          "p_source_bundle",
+          "p_expected_effects",
+          "p_before",
+          "p_after",
+          "p_validated_documents"
+        ],
+        "all_arg_types": null,
+        "arg_modes": null,
+        "return_type": "void",
+        "setof": false,
+        "language": "plpgsql",
+        "volatility": "s",
+        "definer": false,
+        "strict": false,
+        "leakproof": false,
+        "parallel": "u",
+        "kind": "f",
+        "variadic": 0,
+        "support": 0,
+        "sqlbody_null": true,
+        "owner": "postgres",
+        "cost": 100,
+        "rows": 0,
+        "defaults": null,
+        "configuration": [
+          "search_path=pg_catalog, controlled_count_v1, pg_temp",
+          "TimeZone=UTC",
+          "DateStyle=ISO,YMD",
+          "IntervalStyle=postgres",
+          "extra_float_digits=3"
+        ],
+        "body_sha256": "6d6157b8dcae0fc52f6dd598a04176af3310103b80c1e9de457236dac351cc0c",
+        "acl": [
+          {
+            "grantor": "postgres",
+            "grantee": "postgres",
+            "privilege": "EXECUTE",
+            "grantable": false
+          }
+        ],
+        "probin": null,
+        "argument_count": 8,
+        "default_count": 0
+      },
+      "controlled_count_v1.history_scan_historical_parent_preparation_boundary_values(jsonb,jsonb,jsonb)": {
+        "schema": "controlled_count_v1",
+        "name": "history_scan_historical_parent_preparation_boundary_values",
+        "arg_types": [
+          "jsonb",
+          "jsonb",
+          "jsonb"
+        ],
+        "arg_names": [
+          "p_preparation",
+          "p_boundary",
+          "p_validated_documents"
+        ],
+        "all_arg_types": null,
+        "arg_modes": null,
+        "return_type": "void",
+        "setof": false,
+        "language": "plpgsql",
+        "volatility": "s",
+        "definer": false,
+        "strict": false,
+        "leakproof": false,
+        "parallel": "u",
+        "kind": "f",
+        "variadic": 0,
+        "support": 0,
+        "sqlbody_null": true,
+        "owner": "postgres",
+        "cost": 100,
+        "rows": 0,
+        "defaults": null,
+        "configuration": [
+          "search_path=pg_catalog, controlled_count_v1, pg_temp",
+          "TimeZone=UTC",
+          "DateStyle=ISO,YMD",
+          "IntervalStyle=postgres",
+          "extra_float_digits=3"
+        ],
+        "body_sha256": "a71b78c82b037e2d1adbae8c82cacd03b5102d1031dd13c3e94d15d15c706a6b",
+        "acl": [
+          {
+            "grantor": "postgres",
+            "grantee": "postgres",
+            "privilege": "EXECUTE",
+            "grantable": false
+          }
+        ],
+        "probin": null,
+        "argument_count": 3,
+        "default_count": 0
+      },
+      "controlled_count_v1.history_scan_historical_parent_preparation_cell_values(jsonb,jsonb,uuid,jsonb)": {
+        "schema": "controlled_count_v1",
+        "name": "history_scan_historical_parent_preparation_cell_values",
+        "arg_types": [
+          "jsonb",
+          "jsonb",
+          "uuid",
+          "jsonb"
+        ],
+        "arg_names": [
+          "p_preparation",
+          "p_boundary",
+          "p_cause_cell",
+          "p_validated_documents"
+        ],
+        "all_arg_types": null,
+        "arg_modes": null,
+        "return_type": "void",
+        "setof": false,
+        "language": "plpgsql",
+        "volatility": "s",
+        "definer": false,
+        "strict": false,
+        "leakproof": false,
+        "parallel": "u",
+        "kind": "f",
+        "variadic": 0,
+        "support": 0,
+        "sqlbody_null": true,
+        "owner": "postgres",
+        "cost": 100,
+        "rows": 0,
+        "defaults": null,
+        "configuration": [
+          "search_path=pg_catalog, controlled_count_v1, pg_temp",
+          "TimeZone=UTC",
+          "DateStyle=ISO,YMD",
+          "IntervalStyle=postgres",
+          "extra_float_digits=3"
+        ],
+        "body_sha256": "5cf0499d5b18ffdcc0126ac1ffc3197ae9fa900f0e234e5727fc3518afba736a",
+        "acl": [
+          {
+            "grantor": "postgres",
+            "grantee": "postgres",
+            "privilege": "EXECUTE",
+            "grantable": false
+          }
+        ],
+        "probin": null,
+        "argument_count": 4,
+        "default_count": 0
+      },
+      "controlled_count_v1.history_scan_saved_assert_result_cause(text,jsonb,jsonb)": {
+        "schema": "controlled_count_v1",
+        "name": "history_scan_saved_assert_result_cause",
+        "arg_types": [
+          "text",
+          "jsonb",
+          "jsonb"
+        ],
+        "arg_names": [
+          "p_kind",
+          "p_source",
+          "p_validated_documents"
+        ],
+        "all_arg_types": null,
+        "arg_modes": null,
+        "return_type": "void",
+        "setof": false,
+        "language": "plpgsql",
+        "volatility": "v",
+        "definer": false,
+        "strict": false,
+        "leakproof": false,
+        "parallel": "u",
+        "kind": "f",
+        "variadic": 0,
+        "support": 0,
+        "sqlbody_null": true,
+        "owner": "postgres",
+        "cost": 100,
+        "rows": 0,
+        "defaults": null,
+        "configuration": [
+          "search_path=pg_catalog, controlled_count_v1"
+        ],
+        "body_sha256": "b80adca21cf229ba98ffb8e896e6dfb08d7db23e92a2823fba31e919d9709cf5",
+        "acl": [
+          {
+            "grantor": "postgres",
+            "grantee": "postgres",
+            "privilege": "EXECUTE",
+            "grantable": false
+          }
+        ],
+        "probin": null,
+        "argument_count": 3,
+        "default_count": 0
+      },
       "controlled_count_v1.history_scan_saved_available_cause_cell(jsonb,jsonb,uuid,uuid,jsonb)": {
         "schema": "controlled_count_v1",
         "name": "history_scan_saved_available_cause_cell",
@@ -38937,7 +39259,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "0ba8acd5e2ba2edb3be33324ba13dedd263f390117f11968127b7a8da32a7ae9",
+        "body_sha256": "774dda6ed3529fb165a9421aa219fd8567f6281c84b4dffb64795412f696c553",
         "acl": [
           {
             "grantor": "postgres",
@@ -39035,7 +39357,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "6ae8ae6ddd737637481316df52253a541ccabc403c382c068f6ab966a4a8f3ab",
+        "body_sha256": "08ad3766861a20ad0d471159036fbebd9a098b145663bfeeab4a1e690049badc",
         "acl": [
           {
             "grantor": "postgres",
@@ -39088,7 +39410,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "876a961a6e1acaef5d3a12e2a434c7dd7957cd4f4c21106ab42097b36251d0b0",
+        "body_sha256": "b22241ac851f75d783ab006bce3e204bbae6f9afb8fd9378b3a2b50a3707dcdf",
         "acl": [
           {
             "grantor": "postgres",
@@ -39186,7 +39508,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "563503f60e12150e8698601504782b01c022e0e20cd8c863aeb3a59dc8a2692f",
+        "body_sha256": "c0f66dd66fb3cf32475df280c7846e7acd7125897cf5a7952092d3e6607a8191",
         "acl": [
           {
             "grantor": "postgres",
@@ -39335,6 +39657,53 @@
         "argument_count": 2,
         "default_count": 0
       },
+      "controlled_count_v1.history_scan_saved_body_values(text,jsonb,jsonb)": {
+        "schema": "controlled_count_v1",
+        "name": "history_scan_saved_body_values",
+        "arg_types": [
+          "text",
+          "jsonb",
+          "jsonb"
+        ],
+        "arg_names": [
+          "p_kind",
+          "p_document",
+          "p_validated_documents"
+        ],
+        "all_arg_types": null,
+        "arg_modes": null,
+        "return_type": "jsonb",
+        "setof": false,
+        "language": "plpgsql",
+        "volatility": "s",
+        "definer": false,
+        "strict": false,
+        "leakproof": false,
+        "parallel": "u",
+        "kind": "f",
+        "variadic": 0,
+        "support": 0,
+        "sqlbody_null": true,
+        "owner": "postgres",
+        "cost": 100,
+        "rows": 0,
+        "defaults": null,
+        "configuration": [
+          "search_path=pg_catalog, controlled_count_v1"
+        ],
+        "body_sha256": "b0fbe9a3341f9830e8dcbfa14ed19ce2e2645a54529063da6d3f6122c3ef66e3",
+        "acl": [
+          {
+            "grantor": "postgres",
+            "grantee": "postgres",
+            "privilege": "EXECUTE",
+            "grantable": false
+          }
+        ],
+        "probin": null,
+        "argument_count": 3,
+        "default_count": 0
+      },
       "controlled_count_v1.history_scan_saved_boundary_manifest(jsonb,uuid,jsonb)": {
         "schema": "controlled_count_v1",
         "name": "history_scan_saved_boundary_manifest",
@@ -39369,7 +39738,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "dbabc2d1385ce5b896480c0549f73d06da482683607c6c12a837c09ed0e89ce8",
+        "body_sha256": "d2690a1bda441393de342ad232416d70cd53dbcade308e7355b5240a372df0e3",
         "acl": [
           {
             "grantor": "postgres",
@@ -39380,6 +39749,102 @@
         ],
         "probin": null,
         "argument_count": 3,
+        "default_count": 0
+      },
+      "controlled_count_v1.history_scan_saved_cause_category(text,jsonb,jsonb)": {
+        "schema": "controlled_count_v1",
+        "name": "history_scan_saved_cause_category",
+        "arg_types": [
+          "text",
+          "jsonb",
+          "jsonb"
+        ],
+        "arg_names": [
+          "p_kind",
+          "p_source",
+          "p_validated_documents"
+        ],
+        "all_arg_types": null,
+        "arg_modes": null,
+        "return_type": "text",
+        "setof": false,
+        "language": "plpgsql",
+        "volatility": "s",
+        "definer": false,
+        "strict": false,
+        "leakproof": false,
+        "parallel": "u",
+        "kind": "f",
+        "variadic": 0,
+        "support": 0,
+        "sqlbody_null": true,
+        "owner": "postgres",
+        "cost": 100,
+        "rows": 0,
+        "defaults": null,
+        "configuration": [
+          "search_path=pg_catalog, controlled_count_v1"
+        ],
+        "body_sha256": "91548cef642e63ebe24428bdf0882b772d47895e7a42e8e549c8caab57810828",
+        "acl": [
+          {
+            "grantor": "postgres",
+            "grantee": "postgres",
+            "privilege": "EXECUTE",
+            "grantable": false
+          }
+        ],
+        "probin": null,
+        "argument_count": 3,
+        "default_count": 0
+      },
+      "controlled_count_v1.history_scan_saved_cause_row_values(jsonb,text,jsonb,jsonb)": {
+        "schema": "controlled_count_v1",
+        "name": "history_scan_saved_cause_row_values",
+        "arg_types": [
+          "jsonb",
+          "text",
+          "jsonb",
+          "jsonb"
+        ],
+        "arg_names": [
+          "p_row",
+          "p_kind",
+          "p_source",
+          "p_validated_documents"
+        ],
+        "all_arg_types": null,
+        "arg_modes": null,
+        "return_type": "jsonb",
+        "setof": false,
+        "language": "plpgsql",
+        "volatility": "s",
+        "definer": false,
+        "strict": false,
+        "leakproof": false,
+        "parallel": "u",
+        "kind": "f",
+        "variadic": 0,
+        "support": 0,
+        "sqlbody_null": true,
+        "owner": "postgres",
+        "cost": 100,
+        "rows": 0,
+        "defaults": null,
+        "configuration": [
+          "search_path=pg_catalog, controlled_count_v1"
+        ],
+        "body_sha256": "0c309548b05e71c5185e657d6c55c733587f4f360b5d9f01a50de88310c2092c",
+        "acl": [
+          {
+            "grantor": "postgres",
+            "grantee": "postgres",
+            "privilege": "EXECUTE",
+            "grantable": false
+          }
+        ],
+        "probin": null,
+        "argument_count": 4,
         "default_count": 0
       },
       "controlled_count_v1.history_preparation_graph(uuid)": {
@@ -51671,9 +52136,18 @@
         "controlled_count_v1.historical_witness_transition_values(jsonb,jsonb,jsonb)",
         "controlled_count_v1.historical_witness_values(jsonb,jsonb,jsonb)",
         "controlled_count_v1.history_preparation_graph(uuid)",
+        "controlled_count_v1.history_scan_historical_boundary_values(jsonb,jsonb)",
+        "controlled_count_v1.history_scan_historical_parent_execution_boundaries_values(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)",
+        "controlled_count_v1.history_scan_historical_parent_execution_boundaries_values_49(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)",
+        "controlled_count_v1.history_scan_historical_parent_preparation_boundary_values(jsonb,jsonb,jsonb)",
+        "controlled_count_v1.history_scan_historical_parent_preparation_cell_values(jsonb,jsonb,uuid,jsonb)",
+        "controlled_count_v1.history_scan_saved_assert_result_cause(text,jsonb,jsonb)",
         "controlled_count_v1.history_scan_saved_available_cause_cell(jsonb,jsonb,uuid,uuid,jsonb)",
+        "controlled_count_v1.history_scan_saved_body_values(text,jsonb,jsonb)",
         "controlled_count_v1.history_scan_saved_boundary_manifest(jsonb,uuid,jsonb)",
+        "controlled_count_v1.history_scan_saved_cause_category(text,jsonb,jsonb)",
         "controlled_count_v1.history_scan_saved_cause_graph(uuid,jsonb)",
+        "controlled_count_v1.history_scan_saved_cause_row_values(jsonb,text,jsonb,jsonb)",
         "controlled_count_v1.history_scan_saved_clean_count_observations(uuid,jsonb)",
         "controlled_count_v1.history_scan_saved_count_children(text,jsonb,jsonb,jsonb,jsonb,jsonb)",
         "controlled_count_v1.history_scan_saved_management_children(text,jsonb,jsonb,jsonb,jsonb,jsonb)",
