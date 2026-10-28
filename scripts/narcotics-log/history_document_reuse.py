@@ -209,6 +209,9 @@ PREPARATION_ENTRY = '''
  if p_kind='reconciliation_execution'then
   return controlled_count_v1.history_execution_graph(p_id);
  end if;
+ if p_kind='cause_resolution'then
+  return controlled_count_v1.history_resolution_graph(p_id);
+ end if;
 '''
 
 # The ordinary graph retains its original complete frontier assertion before
@@ -451,5 +454,105 @@ BEGIN
   WHEN OTHERS THEN validated_documents:='{}'::jsonb;
  END;
  RETURN controlled_count_v1.history_scan_saved_result_graph('reconciliation_execution',p_id,validated_documents);
+END $$;
+'''
+
+
+RESOLUTION_GRAPH_SQL = '''CREATE FUNCTION controlled_count_v1.history_resolution_graph(p_id uuid) RETURNS jsonb
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog,controlled_count_v1,pg_temp
+SET timezone='UTC' SET datestyle='ISO,YMD' SET intervalstyle='postgres' SET extra_float_digits=3 AS $$
+DECLARE resolution_row jsonb;post_cycle jsonb;post_outcome jsonb;cycle_document jsonb;snapshot_row jsonb;snapshot_document jsonb;
+ cause_row jsonb;source_kind text;source_id uuid;confirmation_row jsonb;confirmation_document jsonb;execution_row jsonb;preparation_row jsonb;approval_row jsonb;
+ targets jsonb;target jsonb;kind_value text;id_value uuid;retained_row jsonb;document_value jsonb;registry_row jsonb;
+ validated_documents jsonb:='{}';memo_key text;stage_value integer;
+BEGIN
+ PERFORM controlled_count_entry_v1.resource_origin_catalog_required();
+ PERFORM controlled_count_entry_v1.assert_read_frontier();
+ SELECT to_jsonb(r)INTO STRICT resolution_row FROM controlled_count_v1.resolutions r WHERE r.resolution_id=p_id;
+ BEGIN
+  SELECT to_jsonb(c)INTO STRICT post_cycle FROM controlled_count_v1.cycles c WHERE to_jsonb(c.count_id)=resolution_row->'post_count_id';
+  SELECT to_jsonb(o)INTO STRICT post_outcome FROM controlled_count_v1.outcomes o WHERE to_jsonb(o.count_id)=resolution_row->'post_count_id';
+  FOR stage_value IN 1..4 LOOP
+   targets:='[]';
+   IF stage_value=1 THEN
+    PERFORM controlled_count_v1.history_scan_validate_operation_graph((post_cycle->>'start_operation_id')::uuid,validated_documents);
+    targets:=jsonb_build_array(jsonb_build_object('kind','cycle','id',post_cycle->'count_id'));
+   ELSIF stage_value=2 THEN
+    PERFORM controlled_count_v1.history_scan_validate_operation_graph((post_outcome->>'operation_id')::uuid,validated_documents);
+    -- This COMPLETE outcome graph has now validated both exact statements,
+    -- the cycle and its snapshot. Closures are checked again before reuse.
+    targets:=jsonb_build_array(jsonb_build_object('kind','outcome','id',post_outcome->'outcome_id'),
+     jsonb_build_object('kind','statement','id',post_outcome->'statement_a_id'),jsonb_build_object('kind','statement','id',post_outcome->'statement_b_id'));
+   ELSIF stage_value=3 THEN
+    SELECT to_jsonb(c)INTO STRICT cause_row FROM controlled_count_v1.causes c WHERE to_jsonb(c.cause_id)=resolution_row->'cause_id';
+    IF(cause_row->'statement_id'IS DISTINCT FROM'null'::jsonb)::integer
+     +(cause_row->'outcome_id'IS DISTINCT FROM'null'::jsonb)::integer
+     +(cause_row->'cancellation_id'IS DISTINCT FROM'null'::jsonb)::integer<>1 THEN
+     RAISE EXCEPTION 'count_source_invalid'using errcode='P0001',detail='',hint='';END IF;
+    IF cause_row->'statement_id'IS DISTINCT FROM'null'::jsonb THEN source_kind:='statement';source_id:=(cause_row->>'statement_id')::uuid;
+    ELSIF cause_row->'outcome_id'IS DISTINCT FROM'null'::jsonb THEN source_kind:='outcome';source_id:=(cause_row->>'outcome_id')::uuid;
+    ELSE source_kind:='cancellation';source_id:=(cause_row->>'cancellation_id')::uuid;END IF;
+    PERFORM controlled_count_v1.history_scan_saved_cause_graph((cause_row->>'cause_id')::uuid,validated_documents);
+    targets:=jsonb_build_array(jsonb_build_object('kind',source_kind,'id',source_id));
+   ELSE
+    IF resolution_row->'confirmation_id'='null'::jsonb THEN CONTINUE;END IF;
+    SELECT to_jsonb(c)INTO STRICT confirmation_row FROM controlled_count_v1.reconciliation_confirmations c WHERE to_jsonb(c.confirmation_id)=resolution_row->'confirmation_id';
+    confirmation_document:=controlled_count_v1.readcore_saved_result_graph('reconciliation_confirmation',(confirmation_row->>'confirmation_id')::uuid);
+    SELECT to_jsonb(e)INTO STRICT execution_row FROM controlled_count_v1.reconciliation_executions e WHERE to_jsonb(e.execution_id)=confirmation_row->'execution_id';
+    SELECT to_jsonb(p)INTO STRICT preparation_row FROM controlled_count_v1.reconciliation_preparations p WHERE to_jsonb(p.preparation_id)=execution_row->'preparation_id';
+    SELECT to_jsonb(a)INTO STRICT approval_row FROM controlled_count_v1.reconciliation_approvals a WHERE to_jsonb(a.approval_id)=execution_row->'approval_id';
+    IF confirmation_document::text IS DISTINCT FROM(confirmation_row->'document')::text
+    OR confirmation_document#>'{body,execution_id}'IS DISTINCT FROM execution_row->'execution_id'
+    OR confirmation_document#>'{body,execution_hash}'IS DISTINCT FROM execution_row->'record_hash'
+    OR execution_row#>'{document,body,preparation_id}'IS DISTINCT FROM preparation_row->'preparation_id'
+    OR execution_row#>'{document,body,preparation_hash}'IS DISTINCT FROM preparation_row->'record_hash'
+    OR execution_row#>'{document,body,approval_id}'IS DISTINCT FROM approval_row->'approval_id'
+    OR execution_row#>'{document,body,approval_hash}'IS DISTINCT FROM approval_row->'record_hash'
+    OR approval_row->'preparation_id'IS DISTINCT FROM preparation_row->'preparation_id'THEN
+     RAISE EXCEPTION 'count_source_invalid'using errcode='P0001',detail='',hint='';END IF;
+    targets:=jsonb_build_array(jsonb_build_object('kind','reconciliation_confirmation','id',confirmation_row->'confirmation_id'),
+     jsonb_build_object('kind','reconciliation_execution','id',execution_row->'execution_id'),jsonb_build_object('kind','reconciliation_preparation','id',preparation_row->'preparation_id'),
+     jsonb_build_object('kind','reconciliation_approval','id',approval_row->'approval_id'));
+   END IF;
+   FOR target IN SELECT value FROM jsonb_array_elements(targets)LOOP
+    kind_value:=target->>'kind';id_value:=(target->>'id')::uuid;
+    retained_row:=controlled_count_v1.readcore_saved_result_row(kind_value,id_value);document_value:=retained_row->'document';
+    SELECT to_jsonb(o)INTO STRICT registry_row FROM controlled_count_v1.operations o WHERE to_jsonb(o.operation_id)=document_value->'operation_id';
+    PERFORM controlled_count_v1.saved_registry_values(registry_row,document_value);
+    IF document_value->'id'IS DISTINCT FROM to_jsonb(id_value)
+    OR document_value->'record_hash'IS DISTINCT FROM retained_row->'record_hash'
+    OR document_value->>'record_hash'IS DISTINCT FROM controlled_count_v1.document_hash(document_value)
+    OR document_value->'operation_id'IS DISTINCT FROM(CASE WHEN kind_value='cycle'THEN retained_row->'start_operation_id'ELSE retained_row->'operation_id'END)
+    OR registry_row->>'result_kind'IS DISTINCT FROM kind_value OR registry_row->'result_id'IS DISTINCT FROM to_jsonb(id_value)
+    OR registry_row->'product_id'IS DISTINCT FROM document_value->'product_id'OR registry_row->'site_id'IS DISTINCT FROM document_value->'site_id'
+    OR registry_row->'product_id'IS DISTINCT FROM post_cycle->'product_id'OR registry_row->'site_id'IS DISTINCT FROM post_cycle->'site_id'THEN
+     RAISE EXCEPTION 'count_source_invalid'using errcode='P0001',detail='',hint='';END IF;
+    PERFORM controlled_count_v1.readcore_operation_closure_required((registry_row->>'operation_id')::uuid);
+    memo_key:=kind_value||':'||id_value::text;
+    IF octet_length(validated_documents::text)+octet_length(document_value::text)+octet_length(memo_key)+8<=16777216 THEN
+     validated_documents:=validated_documents||jsonb_build_object(memo_key,document_value);
+    END IF;
+   END LOOP;
+   IF stage_value=1 THEN
+    cycle_document:=(controlled_count_v1.readcore_saved_result_row('cycle',(post_cycle->>'count_id')::uuid))->'document';
+    SELECT to_jsonb(s)INTO STRICT snapshot_row FROM controlled_count_v1.snapshots s WHERE to_jsonb(s.snapshot_id)=post_cycle->'snapshot_id';
+    snapshot_document:=snapshot_row->'document';
+    IF snapshot_document->'id'IS DISTINCT FROM cycle_document#>'{body,snapshot_id}'
+    OR snapshot_document->'record_hash'IS DISTINCT FROM cycle_document#>'{body,snapshot_hash}'
+    OR snapshot_document->'record_hash'IS DISTINCT FROM snapshot_row->'record_hash'
+    OR snapshot_document->>'record_hash'IS DISTINCT FROM controlled_count_v1.document_hash(snapshot_document)THEN
+     RAISE EXCEPTION 'count_source_invalid'using errcode='P0001',detail='',hint='';END IF;
+    memo_key:='snapshot:'||(snapshot_document->>'id');
+    IF octet_length(validated_documents::text)+octet_length(snapshot_document::text)+octet_length(memo_key)+8<=16777216 THEN
+     validated_documents:=validated_documents||jsonb_build_object(memo_key,snapshot_document);
+    END IF;
+   END IF;
+  END LOOP;
+ EXCEPTION WHEN query_canceled OR assert_failure THEN RAISE;
+  WHEN OTHERS THEN validated_documents:='{}'::jsonb;
+ END;
+ -- Existing root evidence/freshness/source-cell/cause association checks run
+ -- in full. Only completed immutable ancestor documents can be read faster.
+ RETURN controlled_count_v1.history_scan_saved_result_graph('cause_resolution',p_id,validated_documents);
 END $$;
 '''

@@ -111,8 +111,9 @@ try {
   await page.reload({ timeout: remaining() }); await expect(page.getByRole('heading', { name: 'Check the original action' })).toBeVisible({ timeout: remaining() });
   assert.equal(await page.evaluate(key => localStorage.getItem(key), recoveryKey),armRaw); armReload = true;
   await page.getByRole('button', { name: 'Check original result' }).click();
+  await expect(page.getByRole('heading', { name: 'Saved recovery receipt' })).toBeVisible({ timeout: remaining() });
+  await expect.poll(() => page.evaluate(key => localStorage.getItem(key), recoveryKey), { timeout: remaining() }).toBeNull();
   await expect(page.getByRole('heading', { name: 'On the original server' })).toBeVisible({ timeout: remaining() });
-  assert.equal(await page.evaluate(key => localStorage.getItem(key), recoveryKey),null);
   assert.deepEqual(JSON.parse(regular(resolve(folder,calls.find(call => call.rpc === 'narcotics_recovery_read_operation_v1').request.file),8388608,true)).p_request,armPointer);
   await page.getByRole('button', { name: 'Resume unchanged original server' }).click();
   await expect(page.getByRole('heading', { name: 'Prepare a protected backup' })).toBeVisible({ timeout: remaining() });

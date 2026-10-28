@@ -3,8 +3,9 @@
 This package belongs to **Living Room Vet**. GreenTree, VetConnect Hub and ezyVet
 are separate work.
 
-The two new migrations contain the staff record-review backend and the count,
-stock-entry, witnessing, administration and correction backend. They follow the
+The first two new migrations contain the staff record-review backend and the count,
+stock-entry, witnessing, administration and correction backend. A third adds
+register exports, preserved original files and recovery controls. They follow the
 existing controlled-stock and private-review migrations. The official CLI owns
 each migration's transaction and ledger insertion; the standalone install
 programs' outer transaction wrappers have been removed.
@@ -23,7 +24,7 @@ The old 206-file proofs remain unchanged. `prefix_view.py` verifies all original
 migration hashes, checks the exact named forward files, and copies the historical
 proof dependencies into a private 206-file view. Each old proof runs in that view.
 Those results apply to the historical prefix; they do not certify the current
-208-file application.
+208-file count application or the subsequent 209-file operational application.
 
 The retained database, controlled-stock and renderer CI jobs use a separate Git
 worktree. Its original 206 files are verified before and after excluding only
@@ -127,10 +128,17 @@ or PostgreSQL 17's known flattened BETWEEN spelling, and recreates that one
 constraint using its frozen original source. The unchanged metadata seals and
 complete original rows, sequences and Auth comparisons must then pass.
 
+The operational rehearsals first finish the original populated 208 count and Auth
+checks. With only their captured ingress services stopped and drained, the real
+CLI then installs the exact source-framed 209 migration. The full source-derived
+ledger, original rows, Auth data, sequences and both source-property checks must
+pass before ingress reopens. The restored archive's complete 209 ledger is checked
+against that same source expectation before opening its receiver.
+
 The rehearsal also restarts only its captured receiver database, requires a new
 recovery epoch and independent acknowledgment, and rejects earlier sessions and
-the earlier acknowledgment. An eight-second reconciliation execution failure
-still blocks full acceptance. These source changes and partial proofs do not
+the earlier acknowledgment. Complete discrepancy closure and operational browser
+acceptance remain release requirements. These source changes and partial proofs do not
 authorize production installation or certify stock. The production SQL source omits engineering probes and masks internal errors;
 it remains uninstalled until the complete genuine workflows and operational
 browser pass.

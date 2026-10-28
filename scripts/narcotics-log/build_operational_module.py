@@ -15,7 +15,7 @@ REGISTER = 'narcotics_register_v1'
 RECOVERY = 'narcotics_recovery_v1'
 REFERENCE_REGISTER = 'narcotics_register_reference_v1'
 REFERENCE_RECOVERY = 'narcotics_recovery_reference_v1'
-MIGRATION = '20261028044922_narcotics_register_exports_and_recovery.sql'
+MIGRATION = '20261028170038_narcotics_register_exports_and_recovery.sql'
 SOURCE = HERE / 'operational-module'
 REGISTER_APIS = {
     'list_narcotics_registers_v1': "narcotics_register_v1.list_reports(p_request)",

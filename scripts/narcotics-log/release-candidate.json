@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61759178,
-      "sha256": "c89d48aaf82e8f16dfbc3e0db385a8f6ce356c06d3fee8fe30bbd9ee6522f6eb"
+      "bytes": 61771183,
+      "sha256": "a343f2ec6eba54c34bf8fe7e4cf31909f605bb5074ee8ebef6dca181244dce78"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61755276,
-      "sha256": "c6f617aa8e8a2458bd2ee7724182fc67606a2ad565afc50195efa787ee6719b0"
+      "bytes": 61767281,
+      "sha256": "2f655e2501d7f6632a8ae127d2cd57f801a99cc18abccd0af6eaf474834243fd"
     }
   },
   "source_corrections": {
@@ -467,7 +467,7 @@
         "map_added_only_after_complete_operation_and_closure_validation": true,
         "no_persisted_or_caller_supplied_certificate": true,
         "ordinary_preparation_entry": {
-          "new_body_sha256": "678a689ebf818b062a972814b1ae374c6486cf65311d5d0f14c1da5d07f10c34",
+          "new_body_sha256": "dbef33e95696393a0f0afe32a294a7bcb657b9d44e303e32bbaba8c3ca3810d8",
           "original_body_sha256": "adddd0c05f6b46bb5f4f199a4c70f5908712ce23fa727bff51634162960c15f8",
           "original_full_frontier_retained": true,
           "signature": "controlled_count_v1.saved_result_graph(text,uuid)",
@@ -475,7 +475,7 @@
         },
         "origin_and_current_authority_unchanged": true,
         "preparation_entry": {
-          "new_body_sha256": "e3170cc6124d1c23a0f64c03da0192443f834c16c21c99820737f9b6a0d6c7e9",
+          "new_body_sha256": "bd832191aca75f5e37bf5b473c47b4299c8b5521853ba190c788c470967d14e9",
           "original_body_sha256": "1490dc6bf20a108afd60c33b4a50c94d73bc8e55cc1f07cabb0aa94c217d5931",
           "signature": "controlled_count_v1.readcore_saved_result_graph(text,uuid)",
           "whole_body_inverse": true
@@ -486,6 +486,12 @@
           "only_exact_preparation_ancestors": true,
           "signature": "controlled_count_v1.history_preparation_graph(uuid)",
           "whole_sql_sha256": "429fd5ca30c819f9e45d75b147e19e4d11681e95efbe2bdc6f5b116450ad9044"
+        },
+        "resolution_helper": {
+          "body_sha256": "c854dc3e94f7e4daa26fde54301317d364f3b13872c62f87d5ced7d3ac5f4c08",
+          "only_completed_count_cause_and_confirmation_ancestors": true,
+          "signature": "controlled_count_v1.history_resolution_graph(uuid)",
+          "whole_sql_sha256": "e027a1140134cfb988e6a408ded8374bea7acfc57fa350942bc9ea879c5fcc68"
         },
         "reuse_capacity_only_with_full_validation_fallback": true,
         "root_new_body_sha256": "ba723077141417efc5e3be1764981c751c74100ac62d179fc725173d66a03f76",
@@ -655,7 +661,7 @@
           }
         }
       },
-      "only_twenty_six_private_functions_and_ten_body_hashes_added": true,
+      "only_twenty_seven_private_functions_and_ten_body_hashes_added": true,
       "original_relation_frontiers_and_current_authority_preserved": true,
       "real_Auth_verification_pending": true,
       "recovery": {
@@ -762,15 +768,15 @@
       "source_tools": {
         "build_operational_module.py": {
           "bytes": 32163,
-          "sha256": "a53fb3c5cc162fb7868c3247d692e6ff8415906fde93a9b411b43b101e4e0ef3"
+          "sha256": "7153f29a366cb3b729e59c466020977393fcbaaeb02ebaa3fc770c15eedd9734"
         },
         "frontier_projection.py": {
           "bytes": 6418,
           "sha256": "c3e4751d002d04aeb0cc4c285aa79c59bfcd33a6870a251a21a78057789ef59c"
         },
         "history_document_reuse.py": {
-          "bytes": 30329,
-          "sha256": "28b0c23c15bdcd5f5454ee731615bf466a3263f14f984631321b4f28f118a0a3"
+          "bytes": 39195,
+          "sha256": "0d6066f6e2dc6675cc43399c59ca4b2447550a45a7920a5e20e1aea538bdf2a0"
         },
         "recovery_admission_source.py": {
           "bytes": 10068,

@@ -19,6 +19,7 @@ import business_rehearsal as business
 import build_operational_module as operational
 import bounded_archive
 import receiver_auth
+import operational_release
 from diagnose_register import wait_for_owned_rest
 
 installation = business.installation
@@ -150,7 +151,7 @@ class Receiver(installation.Installation):
         self.remaining()
 
 
-class PopulatedRecovery(business.BusinessInstallation):
+class PopulatedRecovery(operational_release.SourceLedger,business.BusinessInstallation):
     def __init__(self, *args):
         super().__init__(*args, profile='count_agreement')
         self.receiver = None
@@ -159,19 +160,17 @@ class PopulatedRecovery(business.BusinessInstallation):
 
     def after_installation(self, runtime):
         self.bootstrap_module = sys.modules[type(self.boot).__module__]
-        sql, proof = operational.build(register_only=True)
-        business.save(self.evidence, 'recovery-operational-source', proof)
-        runtime.raw_query('recovery-operational-install', 'BEGIN;\n' + sql + '\nCOMMIT;')
 
     def after_business(self, context, methods, runtime, proof):
         # Preserve context privately, but finish the unchanged business runner's
         # complete Auth, sequence, original-row and metadata checks FIRST.
         self.source_context, self.methods = context, methods
+        self.source_runtime = runtime
 
     def execute(self):
         super().execute()
-        source_runtime = business.Runtime(self)
-        self.source_runtime = source_runtime
+        source_runtime = self.source_runtime
+        operational_release.install(source_runtime)
         ctx = self.source_context
         source_http = ctx['http']; a, b = ctx['users']
         current_b = ctx['current_actors'][b['id']]
@@ -229,6 +228,7 @@ class PopulatedRecovery(business.BusinessInstallation):
         self.archive.restore(['docker', '--host', self.receiver.boot.endpoint, 'exec', '-i', self.receiver.boot.container_id, 'pg_restore',
             '-U', 'supabase_admin', '-d', 'postgres', '--clean', '--if-exists', '--exit-on-error', '--single-transaction'], timeout=min(30, self.remaining()), env=self.receiver.boot.env, cwd=receiver_folder)
         rr.raw_query("restore-original-witness-check", "BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='5s';\n" + (HERE / "restore-witness-check.sql").read_text() + "\nCOMMIT;")
+        operational_release.verify_ledger(rr,self.operational_ledger,'restored-complete209-source-ledger')
         try:
             rr.verify_module('restored-full-source-properties')
         except BaseException:
@@ -477,6 +477,7 @@ def main():
     os.umask(0o077)
     started = time.monotonic()
     layout, pins = business.source_admission()
+    operational_release.pin_sources(pins)
     for path in [HERE / name for name in ('receiver_rehearsal.py', 'receiver_auth.py', 'bounded_archive.py', 'recovery-observation.sql', 'restore-defaults.sql', 'restore-witness-check.sql', 'build_operational_module.py', 'recovery_admission_source.py', 'diagnose_register.py')] + sorted(operational.SOURCE.glob('*.sql')):
         pins[str(path.relative_to(installation.ROOT))] = digest(installation.prefix.regular(path))
     if args.check_source:

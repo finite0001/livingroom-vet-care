@@ -194,7 +194,7 @@
     "forward-fixes/recovery-admission-source.sql": "15c02507e1126613a1d163bd250c1514a99d8f6bd328030a645c03bbc942760e",
     "history-read/private-cores.sql": "8d08144a6ff4f79ba2a0d25f2cb8ab9c65fc48874a2e3f4866a8249e9ddb6600",
     "history-read/root.sql": "9f39988ac7e69dbc6e795d90d140e3db8af9ea94429a2ec33f7282bb537db3fd",
-    "forward-fixes/history-document-reuse.sql": "ea6e690d03956034fb8ab5aa5f2e91b4635c5b17eaada8ac12b7644c2e2dc40b",
+    "forward-fixes/history-document-reuse.sql": "b2185a02c6b6356229d245fec44115e035a2ee75e83c1bce6e77e6cece2069c0",
     "forward-fixes/fresh-frontier-projections.sql": "4c1b4cc5b0e577ac081597e9fa678074ebc55052ca93d5a4f48600ee1a76ae9b"
   },
   "trigger_addendum_sha256": "6b4f17e0cdc891405a66a0f2ef461dd47e38e1a94534394cc033f482a8c17744",
@@ -543,7 +543,7 @@
           "IntervalStyle=postgres",
           "extra_float_digits=3"
         ],
-        "body_sha256": "61684a1db1f7db10c874d7c69e1b21105ee0b9cb4eb418bd25677b4f0457441a",
+        "body_sha256": "f2752d05c0b1ade8f16a1911bc480272e53d29888d4e5d1f5c945d585b6ad81a",
         "acl": [
           {
             "grantor": "postgres",
@@ -11131,7 +11131,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "678a689ebf818b062a972814b1ae374c6486cf65311d5d0f14c1da5d07f10c34",
+        "body_sha256": "dbef33e95696393a0f0afe32a294a7bcb657b9d44e303e32bbaba8c3ca3810d8",
         "acl": [
           {
             "grantor": "postgres",
@@ -38522,7 +38522,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "e3170cc6124d1c23a0f64c03da0192443f834c16c21c99820737f9b6a0d6c7e9",
+        "body_sha256": "bd832191aca75f5e37bf5b473c47b4299c8b5521853ba190c788c470967d14e9",
         "acl": [
           {
             "grantor": "postgres",
@@ -39977,6 +39977,53 @@
           "extra_float_digits=3"
         ],
         "body_sha256": "fcd595c7890b5f9e125e81eb2943add0184e5f819bab42ec151149d642bbe957",
+        "acl": [
+          {
+            "grantor": "postgres",
+            "grantee": "postgres",
+            "privilege": "EXECUTE",
+            "grantable": false
+          }
+        ],
+        "probin": null,
+        "argument_count": 1,
+        "default_count": 0
+      },
+      "controlled_count_v1.history_resolution_graph(uuid)": {
+        "schema": "controlled_count_v1",
+        "name": "history_resolution_graph",
+        "arg_types": [
+          "uuid"
+        ],
+        "arg_names": [
+          "p_id"
+        ],
+        "all_arg_types": null,
+        "arg_modes": null,
+        "return_type": "jsonb",
+        "setof": false,
+        "language": "plpgsql",
+        "volatility": "v",
+        "definer": false,
+        "strict": false,
+        "leakproof": false,
+        "parallel": "u",
+        "kind": "f",
+        "variadic": 0,
+        "support": 0,
+        "sqlbody_null": true,
+        "owner": "postgres",
+        "cost": 100,
+        "rows": 0,
+        "defaults": null,
+        "configuration": [
+          "search_path=pg_catalog, controlled_count_v1, pg_temp",
+          "TimeZone=UTC",
+          "DateStyle=ISO,YMD",
+          "IntervalStyle=postgres",
+          "extra_float_digits=3"
+        ],
+        "body_sha256": "c854dc3e94f7e4daa26fde54301317d364f3b13872c62f87d5ced7d3ac5f4c08",
         "acl": [
           {
             "grantor": "postgres",
@@ -52233,6 +52280,7 @@
         "controlled_count_v1.history_approval_graph(uuid)",
         "controlled_count_v1.history_execution_graph(uuid)",
         "controlled_count_v1.history_preparation_graph(uuid)",
+        "controlled_count_v1.history_resolution_graph(uuid)",
         "controlled_count_v1.history_scan_historical_boundary_values(jsonb,jsonb)",
         "controlled_count_v1.history_scan_historical_parent_execution_boundaries_values(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)",
         "controlled_count_v1.history_scan_historical_parent_execution_boundaries_values_49(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)",

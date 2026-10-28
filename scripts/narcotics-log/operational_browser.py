@@ -24,6 +24,7 @@ import business_rehearsal as business
 import build_operational_module as operational
 import receiver_auth
 import bounded_archive
+import operational_release
 from receiver_rehearsal import observe, no_auth_change
 from diagnose_register import pdf_fixture
 
@@ -183,24 +184,22 @@ def browser(context, modules, runtime, initial_data, initial_auth):
             raise ValueError('Actual operational browser or normal owned cleanup failed')
 
 
-class OperationalBrowser(business.BusinessInstallation):
+class OperationalBrowser(operational_release.SourceLedger,business.BusinessInstallation):
     def __init__(self,*args):
         super().__init__(*args,profile='count_agreement')
 
     def after_installation(self,runtime):
-        sql,proof=operational.build(register_only=True)
-        business.save(self.evidence,'operational-browser-source',proof)
-        runtime.raw_query('operational-browser-install','BEGIN;\n'+sql+'\nCOMMIT;')
+        self.bootstrap_module=sys.modules[type(self.boot).__module__]
 
     def after_business(self,context,methods,runtime,proof):
         self.context=context
+        self.source_context=context
         self.profile_runtime=runtime
 
     def execute(self):
         super().execute()
         runtime=self.profile_runtime;modules=business.modules()
-        runtime.raw_query('operational-browser-gateway','BEGIN;\n'+(operational.SOURCE/'recovery-gateway.sql').read_text()+'\nCOMMIT;')
-        modules.rest.effective_defaults(runtime,recovery=True)
+        operational_release.install(runtime)
         before=observe(runtime,'operational-browser-before');auth=receiver_auth.capture(runtime,'operational-browser-before-Auth')
         result,actor,folder,deadline=browser(self.context,modules,runtime,before,auth)
         self.owner_end=min(deadline,self.owner_end)if self.owner_end is not None else deadline
@@ -234,11 +233,28 @@ class OperationalBrowser(business.BusinessInstallation):
         business.save(self.evidence,'authenticated-operational-browser-proof',self.result)
         runtime.remaining(1)
 
+    def cleanup(self):
+        # If CLI installation failed with ingress closed, reopen only the
+        # captured services so the unchanged owner can validate and remove its
+        # complete resources. Both steps share ONE cleanup endpoint.
+        self.owner_end=None
+        self.phase_end=min(self.deadline,time.monotonic()+business.installation.CLEANUP_SECONDS)
+        if self.boot is not None and self.boot.started:
+            self.boot.deadline=self.phase_end
+            if getattr(self,'paused_ingress',None):
+                from receiver_rehearsal import owned_ingress
+                owned_ingress(self.source_runtime,'start',cleanup=True)
+            if not self.boot.record.get('failure_cleanup_complete'):self.boot.cleanup()
+            if any(self.boot.inventory()):raise ValueError('Owned operational browser resources remain')
+        self.remaining();self.project_sources()
+        self.result.update(normal_owned_cleanup=True,copied_migrations_rechecked=True)
+
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);group=parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--check-source',action='store_true');group.add_argument('--run-synthetic-local',action='store_true');args=parser.parse_args()
     os.umask(0o077);started=time.monotonic();layout,pins=business.source_admission()
+    operational_release.pin_sources(pins)
     for path in [Path(__file__),HERE/'receiver_auth.py',HERE/'bounded_archive.py',HERE/'receiver_rehearsal.py',HERE/'diagnose_register.py',HERE/'recovery-observation.sql',HERE/'build_operational_module.py',HERE/'recovery_admission_source.py',*operational.SOURCE.glob('*.sql')]:
         pins[str(path.relative_to(ROOT))]=hashlib.sha256(business.installation.prefix.regular(path)).hexdigest()
     for name,value in sources().items():pins[name]=value['sha256']

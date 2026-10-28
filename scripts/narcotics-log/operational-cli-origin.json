@@ -1,0 +1,12 @@
+{
+  "cli_version": "2.118.0",
+  "creation_command": [
+    "supabase",
+    "migration",
+    "new",
+    "narcotics_register_exports_and_recovery"
+  ],
+  "kind": "official-cli-created-operational-migration-v1",
+  "migration": "20261028170038_narcotics_register_exports_and_recovery.sql",
+  "original_created_file_bytes": 0
+}

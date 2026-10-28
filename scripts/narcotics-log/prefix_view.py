@@ -8,6 +8,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import stat
 import subprocess
@@ -77,8 +78,16 @@ def canonical206(root):
     directory = root / "supabase/migrations"
     actual = sorted(path.name for path in directory.glob("*.sql"))
     if actual not in (sorted(expected), sorted([*expected, *FORWARD])):
-        raise ValueError("Only the complete 206 or named 208 inventory is admitted")
-    if len(actual) == 208:
+        manifest=json.loads(regular(root / "scripts/narcotics-log/operational-release.json"))
+        name=manifest.get("migration")
+        if manifest.get("kind")!="narcotics-operational-cli209-source-v1"or manifest.get("cli_version")!="2.118.0"or manifest.get("prefix_migration_count")!=208 or manifest.get("migration_count")!=209 or manifest.get("database_operations")!=0:
+            raise ValueError("Exact separately framed209 manifest required")
+        if name!="20261028170038_narcotics_register_exports_and_recovery.sql" or actual!=sorted([*expected,*FORWARD,name]):
+            raise ValueError("Only the complete206, named208 or exact source-pinned209 inventory is admitted")
+        body=regular(directory/name);framing=manifest["framing"]
+        if framing["bytes"]!=len(body)or framing["sha256"]!=digest(body):
+            raise ValueError("Operational209 source differs from its declared framing")
+    if len(actual) >= 208:
         candidate = json.loads(regular(root / "scripts/narcotics-log/release-candidate.json"))
         if candidate["prefix_migration_count"] != 206 or candidate["migration_count"] != 208 or set(candidate["migrations"]) != set(FORWARD):
             raise ValueError("Exact named forward source binding required")
