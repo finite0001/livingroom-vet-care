@@ -221,6 +221,10 @@ FROM supabase_migrations.schema_migrations;ROLLBACK;
     def execute(self):
         for port in (64660, 64661, 64662, 64664):
             with socket.socket() as sock:
+                # A just-closed native transport control can leave TIME_WAIT.
+                # Reuse permits that state, while a live listener still refuses
+                # the bind. No SO_REUSEPORT or existing-service stop is used.
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 sock.bind(("127.0.0.1", port))
         migrations = self.project / "supabase/migrations"
         migrations.mkdir(mode=0o700, parents=True)
