@@ -155,15 +155,15 @@ jobs:
           path: |
             /tmp/lrv-narcotics-install-*/diagnostic-native-failure-*.txt
             /tmp/lrv-narcotics-install-*/diagnostic-function-costs.json
-      - name: Trace variance finalization in a separate owned engineering database
+      - name: Trace discrepancy preparation in a separate owned engineering database
         if: matrix.profile == 'variance_reconciliation'
         continue-on-error: true
-        run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local --target variance-finalize
+        run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local --target variance-prepare
       - name: Retain bounded variance native error and timing
         if: always() && matrix.profile == 'variance_reconciliation'
         uses: actions/upload-artifact@v4
         with:
-          name: narcotics-engineering-variance-finalize
+          name: narcotics-engineering-variance-prepare
           retention-days: 7
           if-no-files-found: ignore
           path: |

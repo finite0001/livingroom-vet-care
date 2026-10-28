@@ -21,6 +21,9 @@ TARGETS = {
         ("public.finalize_controlled_count_v1(jsonb)", "count_request_failed", True))),
 }
 TARGETS['variance-finalize'] = ('variance_reconciliation', *TARGETS['count-finalize'][1:])
+TARGETS['variance-prepare'] = ('variance_reconciliation', 'prepare_controlled_count_reconciliation_v1', (
+    ('controlled_count_v1.dispatch_count_management_mutation(text,jsonb)', 'count_request_failed', False),
+    ('public.prepare_controlled_count_reconciliation_v1(jsonb)', 'count_request_failed', True)))
 
 
 def instrument(raw, static, signature, failure, rethrow):
@@ -48,12 +51,13 @@ def instrument(raw, static, signature, failure, rethrow):
         changed = changed.replace(original,
             "GET STACKED DIAGNOSTICS diagnostic_native_context = PG_EXCEPTION_CONTEXT;"
             "RAISE EXCEPTION USING ERRCODE=SQLSTATE,MESSAGE=SQLERRM,DETAIL=diagnostic_native_context,HINT='';", 1)
-        if signature == "controlled_count_v1.dispatch_count_mutation(text,jsonb)":
+        if signature in ("controlled_count_v1.dispatch_count_mutation(text,jsonb)", "controlled_count_v1.dispatch_count_management_mutation(text,jsonb)"):
             anchor = "begin\n perform controlled_count_entry_v1.count_entry_budget_required();"
             if changed.count(anchor) != 1:
                 raise ValueError("Exact finalization profiling anchor required")
+            action = 'reconciliation_prepare' if 'management' in signature else 'finalize'
             changed = changed.replace(anchor,
-                "begin\n if p_action='finalize'then perform pg_catalog.set_config('track_functions','all',true);end if;\n"
+                "begin\n if p_action='" + action + "'then perform pg_catalog.set_config('track_functions','all',true);end if;\n"
                 " perform controlled_count_entry_v1.count_entry_budget_required();", 1)
             changed = changed.replace(
                 "GET STACKED DIAGNOSTICS diagnostic_native_context = PG_EXCEPTION_CONTEXT;",
@@ -73,7 +77,7 @@ class Diagnosis(business.BusinessInstallation):
 
     def after_installation(self, runtime):
         self.diagnostic_runtime = runtime
-        if self.target in ("count-finalize", "variance-finalize"):
+        if self.target in ("count-finalize", "variance-finalize", "variance-prepare"):
             # Only this disposable diagnostic grants the database owner access
             # to timing instrumentation; no staff or application role changes.
             self.boot.sql("GRANT SET ON PARAMETER track_functions TO postgres;"
@@ -135,10 +139,10 @@ ALTER TABLE controlled_count_v1.descriptor ENABLE TRIGGER count_history_immutabl
                         stream.write(response)
             raise
         finally:
-            if self.target in ("count-finalize", "variance-finalize") and hasattr(self, "diagnostic_runtime"):
+            if self.target in ("count-finalize", "variance-finalize", "variance-prepare") and hasattr(self, "diagnostic_runtime"):
                 try:
                     costs = self.diagnostic_runtime.selected_query("engineering-function-costs", """
-select jsonb_build_object('engineering_only',true,'scope','finalization nested user functions; SQL inlining may omit individual functions',
+select jsonb_build_object('engineering_only',true,'scope','fixed API nested user functions; SQL inlining may omit individual functions',
 'functions',(select coalesce(jsonb_agg(to_jsonb(s)order by s.self_time desc,s.signature),'[]'::jsonb)
 from(select funcid::regprocedure::text as signature,calls,total_time,self_time
 from pg_stat_user_functions where schemaname in('public','controlled_count_v1','controlled_count_entry_v1',
