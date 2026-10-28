@@ -32,7 +32,7 @@ BEGIN
   IF jsonb_array_length(line_values)=0 THEN line_values:='[null]'::jsonb;END IF;
   FOR line_value IN SELECT value FROM jsonb_array_elements(line_values) LOOP
    SELECT value INTO cell_value FROM jsonb_array_elements(p_dataset->'cells') WHERE value->>'cell_id'=line_value->>'cell_id';
-   result:=result||narcotics_register_v1.csv_row(prefix||ARRAY['Movement',event_value->>'event_id',event_value->>'sequence',event_value->>'event_kind',event_value->>'actor_name',event_value->>'observed_at',event_value->>'recorded_at',p_dataset#>>'{request,from_at}',p_dataset#>>'{request,to_at}',line_value->>'cell_id',line_value->>'channel',cell_value->>'opening_quantity',line_value->>'quantity_delta',line_value->>'running_quantity',cell_value->>'closing_quantity',p_dataset->>'stock_unit',event_value->>'note']);
+   result:=result||narcotics_register_v1.csv_row(prefix||ARRAY[CASE event_value->>'basis' WHEN 'physical_record' THEN 'Physical movement' WHEN 'annotation' THEN 'Annotation' WHEN 'correction_assertion' THEN 'Correction assertion' WHEN 'discrepancy_assertion' THEN 'Discrepancy assertion' ELSE 'Unclassified record' END,event_value->>'event_id',event_value->>'sequence',event_value->>'event_kind',event_value->>'actor_name',event_value->>'observed_at',event_value->>'recorded_at',p_dataset#>>'{request,from_at}',p_dataset#>>'{request,to_at}',line_value->>'cell_id',line_value->>'channel',cell_value->>'opening_quantity',line_value->>'quantity_delta',line_value->>'running_quantity',cell_value->>'closing_quantity',p_dataset->>'stock_unit',event_value->>'note']);
    IF octet_length(result)>4194304 THEN RAISE EXCEPTION 'narcotics_capacity_exceeded' USING ERRCODE='PT413';END IF;
   END LOOP;
  END LOOP;

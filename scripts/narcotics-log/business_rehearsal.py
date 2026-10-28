@@ -38,7 +38,7 @@ def source_admission():
     browser_names = {"tests/controlled-drugs/" + name for name in (
         "run-local-authenticated-count-finalize.mjs", "narcotics-finalize-browser-bindings.json",
         "narcotics-finalize-browser-input.ts", "narcotics-finalize-driver-source.test.ts",
-        "narcotics-finalize-portability-inverse.json")}
+        "narcotics-finalize-portability-inverse.json", "narcotics-finalize-diagnostics-inverse.json")}
     if set(source["browser_sources"]) != browser_names:
         raise ValueError("Exact fixed authenticated browser source inventory required")
     for name, wanted in source["browser_sources"].items():

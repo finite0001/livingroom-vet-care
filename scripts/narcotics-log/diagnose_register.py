@@ -65,9 +65,9 @@ class RegisterDiagnosis(business.BusinessInstallation):
         instant = datetime.fromisoformat(current.replace('Z', '+00:00')).astimezone(timezone.utc)
         utc = lambda value: value.isoformat(timespec='milliseconds').replace('+00:00', 'Z')
         scope = dict(schema_version=1, actor_id=actor['id'], product_id=ids['product'], site_id=ids['site'])
-        permissions = rpc('self-role-permission', 'narcotics_recovery_probe_permissions_v1', dict(schema_version=1, actor_id=actor['id']))
-        if permissions['engineering_only'] is not True or permissions['actual_authenticated_self_role_setting'] is not True or permissions['catalog_unchanged_after_rollback'] is not True:
-            raise ValueError('Actual authenticated self-role permission probe failed')
+        permissions = rpc('owned-schema-permission', 'narcotics_recovery_probe_permissions_v1', dict(schema_version=1, actor_id=actor['id']))
+        if permissions['engineering_only'] is not True or permissions['actual_authenticated_owned_schema_comment'] is not True or permissions['catalog_unchanged_after_rollback'] is not True:
+            raise ValueError('Actual authenticated owned-schema permission probe failed')
         business.save(self.evidence, 'recovery-permission-engineering-proof', permissions)
         raw = pdf_fixture(); form_id = new_id()
         form = {**scope, 'operation_id': form_id, 'event_id': context['gateway']['pointer']['operation_id'],

@@ -191,7 +191,7 @@
     "byte_once/base49-root.sql": "ea05b24f7fba4895280049dd02e18eb6b49835a8ad34ab2811a6fc8974af7af2",
     "byte_once/pb50-private-cores.sql": "1b881adb63610469e70f6f262172f9acde178221bd42d5b331a1f4e7e91069f3",
     "byte_once/pb50-root.sql": "f5efde6addd696ef5437026e8f7db68d641b5d68ecbbccbbfd649d7738d24f91",
-    "history-read/private-cores.sql": "e6f9d65a75aa5f4ce0e316df338bc9bea63bcb4fcaa0e742021156f70ef54f31",
+    "history-read/private-cores.sql": "8d08144a6ff4f79ba2a0d25f2cb8ab9c65fc48874a2e3f4866a8249e9ddb6600",
     "history-read/root.sql": "9f39988ac7e69dbc6e795d90d140e3db8af9ea94429a2ec33f7282bb537db3fd"
   },
   "trigger_addendum_sha256": "6b4f17e0cdc891405a66a0f2ef461dd47e38e1a94534394cc033f482a8c17744",
@@ -11083,7 +11083,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "f3828cacfe6ac656d81664b4f5800129423ced719b724efeff8a4bb02488f166",
+        "body_sha256": "849371026fbd21392b8f9e8d06107f46d9daa9840ed29fa63be701571ac3ec3a",
         "acl": [
           {
             "grantor": "postgres",
@@ -38214,7 +38214,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "df34bc780c3d4804e1a306df9a4d88c1404236d2e0e5f1ad08d2e028211f3a18",
+        "body_sha256": "296cd87e380653b04a34b851a732cd43f66717dd55d54aee8333e81aee48672f",
         "acl": [
           {
             "grantor": "postgres",

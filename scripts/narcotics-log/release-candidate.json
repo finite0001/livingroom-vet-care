@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61518714,
-      "sha256": "e5e43911ca3f577c71ead24e491dae87ab76209ef56edc50086850b06cfc9154"
+      "bytes": 61535586,
+      "sha256": "eb5ec87db4885aa64c2471f8d1bbee5f13ca96987b8fc68e8502ae00d2330be8"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61514812,
-      "sha256": "51324e0ca23199f2490f60f21771c47b9c9727266aa2344633b662fe9b7d70e7"
+      "bytes": 61531684,
+      "sha256": "e84ee17471ee5d33b3ca4decf7c011c325593846fae9568898c56f293b4e16e7"
     }
   },
   "source_corrections": {
@@ -400,6 +400,30 @@
         }
       },
       "only_three_function_body_hash_metadata_differences": true
+    },
+    "validated_count_scope_reuse": {
+      "all_deadlines_unchanged": true,
+      "both_original_full_boundaries_validated_before_reuse": true,
+      "changed_components_source_sha256": "5207dbfcbdcfadc5bacc9f7ff5d685e241fda4f1a210a98ed34a1ee7ca869b3f",
+      "common_statement_source_sha256": "adddd0c05f6b46bb5f4f199a4c70f5908712ce23fa727bff51634162960c15f8",
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_v1.readcore_saved_count_children(text,jsonb,jsonb,jsonb,jsonb)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "296cd87e380653b04a34b851a732cd43f66717dd55d54aee8333e81aee48672f",
+          "old_body_sha256": "df34bc780c3d4804e1a306df9a4d88c1404236d2e0e5f1ad08d2e028211f3a18"
+        },
+        "controlled_count_v1.saved_count_children(text,jsonb,jsonb,jsonb,jsonb)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "849371026fbd21392b8f9e8d06107f46d9daa9840ed29fa63be701571ac3ec3a",
+          "old_body_sha256": "f3828cacfe6ac656d81664b4f5800129423ced719b724efeff8a4bb02488f166"
+        }
+      },
+      "no_cached_certificates": true,
+      "only_two_body_hashes_and_one_derived_source_hash": true,
+      "real_Auth_verification_pending": true,
+      "statement_policy_and_registry_and_slot_and_time_and_membership_and_cause_checks_retained": true
     }
   },
   "transaction_owner": "official CLI; outer BEGIN/COMMIT removed; advisory installation fence added; exact historical ledger literals restored from independent source pins",

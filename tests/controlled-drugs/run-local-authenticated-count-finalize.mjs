@@ -24,6 +24,19 @@ process.umask(0o077);
 const root=fileURLToPath(new URL('../../',import.meta.url)),pageOrigin='http://127.0.0.1:64901';
 const started=performance.now(),deadline=started+120000;let failure;
 const fail=()=>{failure??=new Error('Closed count browser phase failed');};
+const failureDiagnostics=[];
+function noteFailure(error,phase){
+ try{
+  if(failureDiagnostics.length>=8)return;
+  const names=new Set(['Error','AssertionError','TimeoutError','TypeError','ReferenceError','SyntaxError']);
+  const name=error instanceof Error&&names.has(error.name)?error.name:'Other';
+  const match=error instanceof Error?/run-local-authenticated-count-finalize\.mjs:(\d+):(\d+)/.exec(error.stack??''):null;
+  const record={phase,error_name:name,driver_line:match?Number(match[1]):null,driver_column:match?Number(match[2]):null};
+  if(Number.isInteger(error?.actual)&&error.actual>=0&&error.actual<=599)record.actual_integer=error.actual;
+  if(Number.isInteger(error?.expected)&&error.expected>=0&&error.expected<=599)record.expected_integer=error.expected;
+  failureDiagnostics.push(record);
+ }catch{/* Diagnostics never change success, failure or cleanup behavior. */}
+}
 function remaining(cap=15000){if(failure)throw failure;const left=deadline-performance.now()-30000;if(left<=0)throw new Error('Original120s browser cutoff reserved for cleanup');return Math.min(cap,left);}
 const sha=b=>createHash('sha256').update(b).digest('hex');
 function regular(path,cap,privateFile=false){
@@ -134,12 +147,12 @@ try{
     closure=await verifyCountOperationClosureReply(new Uint8Array(got.body),q);assert.equal(closure.state,'saved');assert.equal(closure.operation_id,operationRequest.operation_id);assert.deepEqual(closure.receipt,acceptedReceipt);
    }
    await route.fulfill({status:200,headers:got.headers,body:got.body});
-  }catch{fail();await route.abort().catch(()=>{});}
+  }catch(error){noteFailure(error,'route');fail();await route.abort().catch(()=>{});}
  });
  // Only the four PUBLIC harness fields are passed. Login/count IDs remain in
  // Node memory/private input, never in a source file, query or initScript.
  await context.addInitScript(value=>Object.defineProperty(window,'__LRV_NARCOTICS_LOCAL_INPUT__',{value}),publicInput);
- page=await context.newPage();page.setDefaultTimeout(remaining());page.on('pageerror',fail);
+ page=await context.newPage();page.setDefaultTimeout(remaining());page.on('pageerror',error=>{noteFailure(error,'page');fail();});
  page.on('dialog',dialog=>{fail();void dialog.dismiss().catch(()=>{});});
  await page.goto(pageOrigin+'/tests/controlled-drugs/narcotics-authenticated-fixture.html',{waitUntil:'networkidle',timeout:remaining(30000)});
  await expect(page.getByLabel('Email',{exact:true})).toBeVisible({timeout:remaining()});assert.equal(authCalls,0);assert.equal(calls.length,0);
@@ -157,7 +170,7 @@ try{
  await page.getByRole('button',{name:'Check original save',exact:true}).click();await expect(page.getByText('The original action was recorded.',{exact:true})).toBeVisible({timeout:remaining()});await expect(page.getByRole('region',{name:'Pending count save',exact:true})).toHaveCount(0,{timeout:remaining()});assert.equal(await page.evaluate(key=>localStorage.getItem(key),pointerKey),null);storageCleared=true;assert(closure);assert.equal(calls.length,5);
  await page.getByRole('button',{name:'Refresh count list',exact:true}).click();await expect(page.getByRole('button',{name:'Open count',exact:true})).toHaveCount(1,{timeout:remaining()});await page.getByRole('button',{name:'Open count',exact:true}).click();await expect(page.getByText('Count agrees',{exact:true})).toBeVisible({timeout:remaining()});assert(lastRead);assert.equal(calls.length,7);agreementShown=true;
  await expect(page.locator('input[type="password"]')).toHaveCount(0,{timeout:remaining()});await expect(page.getByLabel('Email',{exact:true})).toHaveCount(0,{timeout:remaining()});await page.screenshot({path:resolve(folder,'agreement-after-recovery.png'),fullPage:true});remaining();
-}catch{fail();}finally{
+}catch(error){noteFailure(error,'workflow');fail();}finally{
  let bad=false;
  try{if(context)await closeWithin(()=>context.close(),4000);}catch{bad=true;fail();}
  try{if(browser)await closeWithin(()=>browser.close(),4000);}catch{bad=true;fail();}
@@ -165,7 +178,7 @@ try{
  try{if(vite){await closeWithin(()=>vite.close(),5000);assert.equal(vite.httpServer.listening,false);}viteClosed=true;}catch{fail();}
  try{assert.equal(verifySources(),sourcesSha);}catch{fail();}
  if(performance.now()>=deadline||authCalls!==1||profiles.profiles<1||profiles.user_roles<1||!authReleased||!readReleased||!reviewExplicit||!lostOnce||!unknownShown||!storageCleared||!agreementShown||!acceptedReceipt||!closure||!lastRead||blocked.size||calls.length!==7||calls.some(c=>c.status!==200))fail();
- output('result.json',{kind:'closed-local-count-finalize-ack-loss-browser-v1',passed:!failure&&browserClosed&&viteClosed,actor_id:input.actorId,session_id:authSession?.sessionId??null,count_id:input.countId,operation_id:operationRequest?.operation_id??null,outcome_id:operationRequest?.outcome_id??null,source_binding_sha256:sourcesSha,auth_calls:authCalls,profile_calls:profileCalls,options_count:optionsCount,calls,auth_phase_released:authReleased,read_phase_released:readReleased,review_both_explicit:reviewExplicit,actual_finalize_200_then_ack_lost_once:lostOnce,unknown_UI_shown:unknownShown,id_only_pointer_retained:!!pointer,saved_closure_observed:!!closure,storage_cleared:storageCleared,agreement_UI_read:agreementShown,blocked_origins:[...blocked].sort(),normal_browser_cleanup:browserClosed,normal_vite_cleanup:viteClosed,decoded_entity_proxy:true,elapsed_seconds:(performance.now()-started)/1000,full_Auth_or_count_kernel_or_browser_or_physical_or_production_acceptance:false});
+ output('result.json',{kind:'closed-local-count-finalize-ack-loss-browser-v1',failure_diagnostics:failureDiagnostics,passed:!failure&&browserClosed&&viteClosed,actor_id:input.actorId,session_id:authSession?.sessionId??null,count_id:input.countId,operation_id:operationRequest?.operation_id??null,outcome_id:operationRequest?.outcome_id??null,source_binding_sha256:sourcesSha,auth_calls:authCalls,profile_calls:profileCalls,options_count:optionsCount,calls,auth_phase_released:authReleased,read_phase_released:readReleased,review_both_explicit:reviewExplicit,actual_finalize_200_then_ack_lost_once:lostOnce,unknown_UI_shown:unknownShown,id_only_pointer_retained:!!pointer,saved_closure_observed:!!closure,storage_cleared:storageCleared,agreement_UI_read:agreementShown,blocked_origins:[...blocked].sort(),normal_browser_cleanup:browserClosed,normal_vite_cleanup:viteClosed,decoded_entity_proxy:true,elapsed_seconds:(performance.now()-started)/1000,full_Auth_or_count_kernel_or_browser_or_physical_or_production_acceptance:false});
 }
 function finalCutoff(){if(performance.now()<deadline)return;fail();output('post-persistence-cutoff-failure.json',{passed:false,candidate_result_not_acceptance:true});throw new Error('Original count-browser120s cutoff exceeded');}
 finalCutoff();if(failure)throw new Error('Closed count browser phase failed; private evidence retained');console.log('Closed count browser phase returned; parent source/metadata/Auth/data admission remains required.');finalCutoff();

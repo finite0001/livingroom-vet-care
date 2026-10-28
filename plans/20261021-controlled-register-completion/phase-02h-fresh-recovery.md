@@ -13,27 +13,29 @@ source authority, current real sessions, exact operation recovery. No owner
 clinical seeding, fake claims, caller skip flag, or old record replacement.
 
 One PostgREST pre-request gate runs before the main query. The same catalog-only
-admission also runs first in BOTH current source frontier acquisition helpers
+admission runs first in BOTH current source frontier acquisition helpers
 (shared121 and exclusive stock-workflow121), before old practice locks or user
-relations. This protects physical writers even when a PostgREST instance has no
-hook or has stale configuration. Source/root checks remain after actual121.
-Installation precedes any controlled-stock activation, or drains old API work
-under an approved rollout; NOTIFY cannot retire an already-running old call. Dedicated admission
-advisory key precedes every stock/count lock: shared ordinary requests, exclusive
-arm/source-resume/release endpoints. Read the mode from raw global postgres
-`pg_db_role_setting.setconfig` only: `narcotics_recovery.mode=idle:<head_uuid>` or
-`armed:<arm_uuid>:<head_uuid>`. A monotonic immutable head/hash binds every
-transition expected_head_id/hash, preventing delayed commands across an idle/armed/idle cycle. Never trust current_setting for this value. Owner-only lifecycle
-functions atomically append immutable audit and ALTER ROLE under the exclusive
-admission lock. New functions compare the exact projection with immutable history
-AFTER taking the original complete121 frontier. This is durable owner-protected
-state, not a cached lock certificate. Any unknown/duplicate/database-scoped mode
-projection refuses. No mutable caller GUC grants authority.
+relations. This protects writers even when a PostgREST instance has no hook or
+has stale configuration. Installation precedes controlled-stock activation or
+drains old API work; NOTIFY cannot retire an already-running old call.
 
-Catalog-only hook reads are required: reading a new mode table first would trip
-old any_user_held and break ordinary cold ingress. Do not pre-acquire all stock
-locks in the hook or classify every existing business endpoint. All existing
-frontiers/writer signatures/metadata checks retain their source meanings.
+Dedicated admission advisory key precedes every stock/count lock. Read durable
+nonsecret mode/head/hash from the COMMENT on the NEW postgres-owned recovery
+schema, using only pg_namespace and pg_description (exact class and objsubid).
+An initial source-owned head and a canonical domain/version envelope distinguish
+this control record from arbitrary text. Missing, malformed, wrong-owner or
+mismatched projections refuse. Never trust current_setting or a caller flag.
+A monotonic immutable head/hash binds every transition expected_head_id/hash,
+preventing delayed commands across idle/armed/idle cycles. Owned-schema COMMENT
+and immutable audit append commit atomically under exclusive admission. No extra
+role-admin/parameter grants are needed. The earlier self-role setting design was
+rejected after a real authenticated native permission failure.
+
+After actual complete121, verify the immutable head/audit agrees with the raw
+comment and verify the complete own module before any physical command. The
+before-lock part stays catalog-only: reading an audit table there would trip
+old any_user_held. Source-own and seal this post-frontier checker; source/root
+checks and all original writer/authority semantics remain mandatory.
 
 Idle mode returns after catalog/role/origin checks. Armed mode permits read-only
 GET/HEAD plus a fixed POST count/reconciliation/recovery allowlist. Refuse all
@@ -63,7 +65,8 @@ refuse. No shared-to-exclusive upgrade, no new ID substituted for an uncertain s
   idle mode atomically. Original source can then post a real synthetic movement
   after backup; retain its original HTTP bytes outside the database.
 - Fresh receiver stays inaccessible until dump restored AND exact reviewed hook
-  and armed role projection installed/verified (pg_dump omits global role settings).
+  configuration installed/verified and the restored armed schema comment agreeing
+  with its immutable audit (pg_dump retains schema comments).
   Recheck complete metadata/ledger/rows/sequences and actual armed HTTP refusal.
 - Missing-history evidence preserves original supplied bytes/references with real
   staff attribution and distinct second-user acknowledgment of the exact digest.
@@ -74,7 +77,10 @@ refuse. No shared-to-exclusive upgrade, no new ID substituted for an uncertain s
   requires both count ID and operation ID absent, calls the unchanged count-start
   API, validates the complete new graph/receipt, and appends its epoch marker in
   the same transaction. Exact marked retries recover the original; unmarked old
-  cycles cannot be relabeled. Do not compare tuple xmin with the top transaction
+  cycles cannot be relabeled. The start wrapper uses admission/practice int2 + complete121 and reads its own
+  epoch before entering unchanged start. It takes NO product or hashed operation
+  lock first: the old fresh-start guard rejects all preheld int8 advisory locks.
+  Held121 serializes absence checks and marker insertion. Do not compare tuple xmin with the top transaction
   ID: PL/pgSQL exception handlers may create subtransactions.
 - Release only after fresh independent real Auth sessions and physical statements
   recorded/observed after the current epoch. Require the wrapper's actual current
@@ -96,13 +102,14 @@ stock-state or unrelated investigation holds.
 
 ## Settings and proof
 
-Version rest_defaults to require exact `pgrst.db_pre_request` and valid protected
-mode projection; reject every other existing forbidden setting. Initial hook
-registration uses reviewed ALTER ROLE plus config reload. The custom mode belongs to the postgres role itself: an authenticated definer
-can change its own ordinary custom setting without broad role-admin grants.
-The supported pgrst.db_pre_request setting stays on authenticator. Verify native
-permissions before acceptance. Mode reads raw catalog, so changes do not depend on a config reload reaching all pooled connections.
-Preserve default API scopes/search_path. Test actual runtime hook enforcement.
+Version rest_defaults to require the exact reviewed pgrst.db_pre_request on
+its supported authenticator setting, rejecting other forbidden overrides. The
+mode is an owned schema comment, not a custom role setting. Verify ordinary
+COMMENT ownership through a real authenticated definer call with a deliberate
+subtransaction rollback before adoption. Hook registration uses reviewed config
+reload; actual mode changes are immediate raw catalog reads and do not depend
+on every pool observing reload. Preserve default API scopes/search_path. Test
+actual runtime enforcement both with the hook and with it deliberately absent.
 
 Fresh source and receiver owned clusters/volumes, same original600/work540/cleanup55,
 owner30/app8/lock5 deadlines (no renewal). Populate real current reviews/counts,

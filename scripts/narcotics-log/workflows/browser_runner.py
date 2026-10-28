@@ -164,6 +164,25 @@ def run(context, modules, runtime, save):
                  "normal_browser_cleanup", "normal_vite_cleanup")
         diagnostic = {key: result.get(key) for key in flags if type(result.get(key)) is bool}
         diagnostic["candidate_not_acceptance"] = True
+        for key in ("auth_calls", "options_count"):
+            if type(result.get(key)) is int and 0 <= result[key] <= 100:
+                diagnostic[key] = result[key]
+        diagnostic["profile_statuses"] = [{"relation": call.get("relation"), "status": call.get("status")}
+            for call in result.get("profile_calls", []) if type(call) is dict
+            and call.get("relation") in ("profiles", "user_roles") and type(call.get("status")) is int]
+        if type(result.get("blocked_origins")) is list:
+            diagnostic["blocked_origin_count"] = len(result["blocked_origins"])
+        diagnostic["failure_diagnostics"] = []
+        for item in result.get("failure_diagnostics", [])[:8]:
+            if type(item) is not dict or item.get("phase") not in ("route", "page", "workflow"):
+                continue
+            if item.get("error_name") not in ("Error", "AssertionError", "TimeoutError", "TypeError", "ReferenceError", "SyntaxError", "Other"):
+                continue
+            safe = {"phase": item["phase"], "error_name": item["error_name"]}
+            for key in ("driver_line", "driver_column", "actual_integer", "expected_integer"):
+                if item.get(key) is None or type(item.get(key)) is int and 0 <= item[key] <= 100000:
+                    safe[key] = item[key]
+            diagnostic["failure_diagnostics"].append(safe)
         diagnostic["rpc_statuses"] = [{"rpc": call.get("rpc"), "status": call.get("status")}
             for call in result.get("calls", []) if type(call) is dict
             and call.get("rpc") in pair.RPCS and type(call.get("status")) is int]

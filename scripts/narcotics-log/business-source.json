@@ -9,23 +9,27 @@
       "bytes": 1201,
       "sha256": "b78e16427d9a611a46bd4186fba6a16d54c082e9424153abfc04fa9216b0137b"
     },
+    "tests/controlled-drugs/narcotics-finalize-diagnostics-inverse.json": {
+      "bytes": 2148,
+      "sha256": "d33c59f9b8a4baa7ae7cc7bb10128f599b3a285ce59a76e62e4a7f4bd1d43e03"
+    },
     "tests/controlled-drugs/narcotics-finalize-driver-source.test.ts": {
-      "bytes": 8306,
-      "sha256": "be508dd13706a5fb89d228b8c75eff6dc9845f8540819ed973d5005e0be3c8bd"
+      "bytes": 8742,
+      "sha256": "8ad50f6ec348ad92ba38fc307c986b8d9f97356774c9b409cd9a8f508a807b04"
     },
     "tests/controlled-drugs/narcotics-finalize-portability-inverse.json": {
       "bytes": 2661,
       "sha256": "a98156576118a021367def963c897a9d32b8d302b55941a5acd79cb96e751490"
     },
     "tests/controlled-drugs/run-local-authenticated-count-finalize.mjs": {
-      "bytes": 22797,
-      "sha256": "1d6bbeeef1ed1dadc1212c1d1b7c56d633306b0ba5b24637bccbe53e5be4f3a5"
+      "bytes": 23833,
+      "sha256": "72b50a4f60d26b946a2bc5d53d28cf99b559fe29b61352371f09c97260dd1df3"
     }
   },
   "kind": "narcotics-genuine-business-source-v1",
   "runner": {
-    "bytes": 16104,
-    "sha256": "a8e698829536508bcfb2261cc86cf52536a26b4ee7a13a3fbb321f7bb39796c2"
+    "bytes": 16151,
+    "sha256": "26007229da9d420f88704b8b4d6d0faa0490209d28f9c116cb63bce6801d5805"
   },
   "workflows": {
     "auth_effects.py": {
@@ -33,8 +37,8 @@
       "sha256": "a7c1a5c1a9bdbf91f694225ed942597c957b65d0e33c91a148bacb8d064d0eba"
     },
     "browser_runner.py": {
-      "bytes": 14332,
-      "sha256": "708b95ebc11e6644f3850549b8572757c8b2f521bb98de25fe3fc92c17eefd40"
+      "bytes": 15705,
+      "sha256": "d1d9fca5427033803891ec404a174b509be1122719cc6773ca08a9a40d5ea830"
     },
     "count_audit.py": {
       "bytes": 5832,

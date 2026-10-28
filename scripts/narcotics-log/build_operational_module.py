@@ -156,8 +156,8 @@ def build(register_only=False):
     private = '\n'.join(raw.decode().replace('__PUBLIC_FACADE_NAMES__', public_names) for raw in sources.values())
     copied, copy_proof = terminal_count_copy()
     private += '\n' + copied
-    # Engineering-only: real Auth exercises self-role permissions, and an
-    # exception subtransaction rolls back the exact harmless probe setting.
+    # Engineering-only: real Auth exercises owned-schema comment permissions;
+    # an exception subtransaction rolls back the exact harmless probe comment.
     # This cannot change the durable recovery mode or grant release acceptance.
     private += '''
 CREATE FUNCTION narcotics_register_v1.probe_recovery_permission(p_request jsonb) RETURNS jsonb
@@ -168,16 +168,16 @@ BEGIN
  IF(p_request->'schema_version')::text IS DISTINCT FROM'1' THEN RAISE EXCEPTION 'narcotics_request_invalid';END IF;
  actor_value:=narcotics_register_v1.uuid_value(p_request->'actor_id');
  PERFORM narcotics_register_v1.identity(actor_value,true);
- SELECT to_jsonb(s.setconfig)INTO before_value FROM pg_db_role_setting s WHERE s.setrole='postgres'::regrole AND s.setdatabase=0;
+ SELECT to_jsonb(d.description)INTO before_value FROM pg_namespace n LEFT JOIN pg_description d ON d.objoid=n.oid AND d.classoid='pg_namespace'::regclass AND d.objsubid=0 WHERE n.nspname='narcotics_recovery_v1';
  SELECT jsonb_build_object('superuser',r.rolsuper,'createrole',r.rolcreaterole,'can_login',r.rolcanlogin)INTO STRICT attributes FROM pg_roles r WHERE r.rolname='postgres';
  BEGIN
-  ALTER ROLE postgres SET narcotics_recovery.permission_probe='owned_engineering_probe';
-  observed:=EXISTS(SELECT 1 FROM pg_db_role_setting s CROSS JOIN LATERAL unnest(s.setconfig)v WHERE s.setrole='postgres'::regrole AND s.setdatabase=0 AND v='narcotics_recovery.permission_probe=owned_engineering_probe');
+  COMMENT ON SCHEMA narcotics_recovery_v1 IS 'owned_engineering_probe';
+  observed:=EXISTS(SELECT 1 FROM pg_namespace n JOIN pg_description d ON d.objoid=n.oid AND d.classoid='pg_namespace'::regclass AND d.objsubid=0 WHERE n.nspname='narcotics_recovery_v1'AND n.nspowner='postgres'::regrole AND d.description='owned_engineering_probe');
   RAISE EXCEPTION 'owned_probe_rollback' USING ERRCODE='PZ001';
  EXCEPTION WHEN SQLSTATE'PZ001' THEN NULL;END;
- SELECT to_jsonb(s.setconfig)INTO after_value FROM pg_db_role_setting s WHERE s.setrole='postgres'::regrole AND s.setdatabase=0;
+ SELECT to_jsonb(d.description)INTO after_value FROM pg_namespace n LEFT JOIN pg_description d ON d.objoid=n.oid AND d.classoid='pg_namespace'::regclass AND d.objsubid=0 WHERE n.nspname='narcotics_recovery_v1';
  IF observed IS NOT TRUE OR before_value IS DISTINCT FROM after_value THEN RAISE EXCEPTION 'owned_probe_did_not_rollback';END IF;
- RETURN jsonb_build_object('engineering_only',true,'actual_authenticated_self_role_setting',true,'catalog_unchanged_after_rollback',true,'postgres_attributes',attributes);
+ RETURN jsonb_build_object('engineering_only',true,'actual_authenticated_owned_schema_comment',true,'catalog_unchanged_after_rollback',true,'postgres_attributes',attributes);
 END $$;
 '''
     admission = cold_admission(functions(private))
