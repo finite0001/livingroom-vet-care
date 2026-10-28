@@ -126,6 +126,43 @@ def build(nodes):
  IF NOT EXISTS(SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname='narcotics_recovery_v1')THEN
  perform controlled_count_entry_v1.require_bound_module();END IF;"""
     change('controlled_count_v1.dispatch_count_management_mutation(text,jsonb)', [(old, new)])
+    parent_signature = 'controlled_count_v1.reconciliation_parent_source_required(jsonb,text)'
+    parent_source = body(nodes[parent_signature])[1]
+    if sha(parent_source) != '0b6cc89f3ee5129087ef9421ee98acd2d2e087fcf596689451f217fc53b993a2':
+        raise ValueError('Reviewed read-only parent source closure required')
+    if re.search(r'\breturn\b|\bexception\s+when\b', code_mask(parent_source), re.I):
+        raise ValueError('Parent scan must dominate every successful stage completion')
+    closing_signature = 'controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)'
+    before_parent = "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'before');\n"
+    after_parent = "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'after');\n"
+    global_tail = " perform controlled_count_v1.product_live_causes((scope_value->>'product_id')::uuid);\nend "
+    queued_tail = """ -- Closing retains every operation/context/result/principal check above.
+ -- Actual fact collectors require a full guarded product check before finish.
+ IF p_operation IS DISTINCT FROM 'DELETE' AND new_phase IS DISTINCT FROM 'count_finishing' THEN
+ perform controlled_count_v1.product_live_causes((scope_value->>'product_id')::uuid);
+ END IF;
+end """
+    change(closing_signature, [
+        (before_parent, before_parent.replace(';\n', ';return;\n', 1)),
+        (after_parent, after_parent.replace(';\n', ';return;\n', 1)),
+        (global_tail, queued_tail)])
+    # Reuse only PURE policy grammar/hash already established by the closed
+    # invocation-local constructors. Exact row/cache/input bytes still agree.
+    policy_signature = 'controlled_count_v1.history_scan_policy_values(jsonb,jsonb)'
+    policy_before = body(nodes[policy_signature])[1]
+    arm_start = policy_before.index(' if exists(\n  select 1 from controlled_count_v1.policies policy_row')
+    arm_end = policy_before.index('  union all\n', arm_start)
+    old_arm = policy_before[arm_start:arm_end]
+    hash_check = '   and controlled_count_v1.document_hash(p_document)=policy_row.record_hash\n'
+    lookup = "where policy_row.policy_id::text=p_document->>'policy_id'"
+    indexed = "where policy_row.policy_id=CASE WHEN controlled_count_v1.count_wire_uuid(p_document->'policy_id')THEN(p_document->>'policy_id')::uuid ELSE NULL::uuid END"
+    if old_arm.count(hash_check) != 1 or old_arm.count(lookup) != 1:
+        raise ValueError('One exact admitted policy-cache arm required')
+    new_arm = old_arm.replace(hash_check, '', 1).replace(lookup, indexed, 1)
+    policy_node = change(policy_signature, [(old_arm, new_arm)])
+    policy_after = body(policy_node)[1]
+    if policy_after.split('  union all\n', 1)[1] != policy_before.split('  union all\n', 1)[1]:
+        raise ValueError('Snapshot-cache hash and complete original fallback must remain exact')
     change('controlled_count_v1.count_graph_deferred()', [(OLD_GLOBAL, NEW_GLOBAL)])
     return changed, dict(
         predecessor='V45 source composition', body_inverses=proofs,
@@ -135,6 +172,22 @@ def build(nodes):
         fact_tables=list(FACT_TABLES), new_private_functions=sorted(NEW_FUNCTIONS),
         new_trigger_identities=sorted(NEW_TRIGGERS),
         no_validity_certificate=True, unchanged_final_ALL_IMMEDIATE=True,
+        context_scan_schedule=dict(
+            source_function=closing_signature, parent_source_function=parent_signature,
+            reviewed_parent_body_sha256=sha(parent_source),
+            predecessor_readonly_closure_sha256='2c765dae3922ca5032ed4e046d0aad7e1f813f6c0137f0a4d7dfe03913390ccc',
+            parent_stages_keep_their_complete_scan=True,
+            only_immediately_dominated_outer_parent_scans_removed=True,
+            closing_product_scan_required_by_guarded_pending_delete=True,
+            original_operation_context_result_principal_checks_unchanged=True),
+        policy_pure_hash_reuse=dict(
+            source_function=policy_signature, first_arm_only=True,
+            exact_current_row_cache_input_text_and_scope_bindings_retained=True,
+            snapshot_arm_and_original_fallback_byte_identical=True,
+            constructors='original policy_history followed by root seeding; four helpers call original policy_values before seeding',
+            admitted_private_source_owned_maps_only=True,
+            arbitrary_owner_supplied_private_input_equivalence_claimed=False,
+            indexed_uuid_lookup_has_guarded_cast=True),
         immediate_metadata_dominance=dict(
             dispatcher='controlled_count_v1.dispatch_count_management_mutation(text,jsonb)',
             present_branch_full_check=ENTRY + 'recovery_post_frontier_required()',

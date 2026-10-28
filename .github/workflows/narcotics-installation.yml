@@ -329,6 +329,7 @@ jobs:
             /tmp/lrv-narcotics-install-*/result.json
             /tmp/lrv-narcotics-install-*/pending-fault-rollback-proof.json
             /tmp/lrv-narcotics-install-*/pending-fault-source-inverses.json
+            /tmp/lrv-narcotics-install-*/pending-fault-policy-grammar-controls.json
             /tmp/lrv-narcotics-install-*/cleanup-failure.txt
             /tmp/lrv-narcotics-install-*/source-failure.txt
 

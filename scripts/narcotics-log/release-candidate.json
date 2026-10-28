@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61925580,
-      "sha256": "bd039bd6f0c55e7eb4ab98919db5e6c344e218b23bd7aaeed38ae3c5ff67b133"
+      "bytes": 61925872,
+      "sha256": "724a4746fb8e5c18445752ec5e2e81219f8e4e76e8dc05a7cc1cde85cb4d80b1"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61921678,
-      "sha256": "88f053a5d271c75960068492f7541b7e8e99d3065b731dc8af548cabd01154d6"
+      "bytes": 61921970,
+      "sha256": "1efba3a8586ce84b0cd0883a789f148a23a69494895ead0216d89e25bddc37a4"
     }
   },
   "source_corrections": {
@@ -431,6 +431,36 @@
           ],
           "whole_body_inverse": true
         },
+        "controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)": {
+          "new_body_sha256": "3a31221bc2da622ee0371d113741c6562d77108d3650ed6fd70780c39d23eee4",
+          "original_body_sha256": "5bc404e90e44dce98eb5d4c0ea4b3d0a75c144d1d79039a3feb537f24cb62a74",
+          "replacements": [
+            [
+              "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'before');\n",
+              "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'before');return;\n"
+            ],
+            [
+              "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'after');\n",
+              "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'after');return;\n"
+            ],
+            [
+              " perform controlled_count_v1.product_live_causes((scope_value->>'product_id')::uuid);\nend ",
+              " -- Closing retains every operation/context/result/principal check above.\n -- Actual fact collectors require a full guarded product check before finish.\n IF p_operation IS DISTINCT FROM 'DELETE' AND new_phase IS DISTINCT FROM 'count_finishing' THEN\n perform controlled_count_v1.product_live_causes((scope_value->>'product_id')::uuid);\n END IF;\nend "
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_v1.history_scan_policy_values(jsonb,jsonb)": {
+          "new_body_sha256": "0f57cfc1b2925c28ea8d84883e07e50ee8d158a23b90c4415eb798458a7bf75d",
+          "original_body_sha256": "522068bfce948fbec1d5900e297c9f64e0d3ed849ecc979d0eb57d04d536196d",
+          "replacements": [
+            [
+              " if exists(\n  select 1 from controlled_count_v1.policies policy_row\n  where policy_row.policy_id::text=p_document->>'policy_id'\n   and(p_validated_documents->('policy_values:'||policy_row.policy_id::text))::text is not distinct from policy_row.document::text\n   and policy_row.document::text is not distinct from p_document::text\n   and p_document->'policy_id'=to_jsonb(policy_row.policy_id)\n   and p_document->'product_id'=to_jsonb(policy_row.product_id)and p_document->'site_id'=to_jsonb(policy_row.site_id)\n   and p_document->>'record_hash'=policy_row.record_hash\n   and controlled_count_v1.document_hash(p_document)=policy_row.record_hash\n",
+              " if exists(\n  select 1 from controlled_count_v1.policies policy_row\n  where policy_row.policy_id=CASE WHEN controlled_count_v1.count_wire_uuid(p_document->'policy_id')THEN(p_document->>'policy_id')::uuid ELSE NULL::uuid END\n   and(p_validated_documents->('policy_values:'||policy_row.policy_id::text))::text is not distinct from policy_row.document::text\n   and policy_row.document::text is not distinct from p_document::text\n   and p_document->'policy_id'=to_jsonb(policy_row.policy_id)\n   and p_document->'product_id'=to_jsonb(policy_row.product_id)and p_document->'site_id'=to_jsonb(policy_row.site_id)\n   and p_document->>'record_hash'=policy_row.record_hash\n"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
         "controlled_stock_workflow_v1.witness_121_required()": {
           "new_body_sha256": "a06e98e4fb7259a94b3f7e6795ced6a1d874192254f417969fc393b1ccae3173",
           "original_body_sha256": "9a11760e0a146dda3b3ff7b74e871bf70fbe1889c3d8eed108775cff9e596ec3",
@@ -461,10 +491,22 @@
         "controlled_count_entry_v1.stock_workflow_resource_origin_catalog_required()",
         "controlled_count_v1.count_graph_deferred()",
         "controlled_count_v1.dispatch_count_management_mutation(text,jsonb)",
+        "controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)",
+        "controlled_count_v1.history_scan_policy_values(jsonb,jsonb)",
         "controlled_stock_workflow_v1.witness_121_required()"
       ],
       "compiler_inverse_all_seven_artifacts_exact": true,
       "complete_CLI_publication_inverse": true,
+      "context_scan_schedule": {
+        "closing_product_scan_required_by_guarded_pending_delete": true,
+        "only_immediately_dominated_outer_parent_scans_removed": true,
+        "original_operation_context_result_principal_checks_unchanged": true,
+        "parent_source_function": "controlled_count_v1.reconciliation_parent_source_required(jsonb,text)",
+        "parent_stages_keep_their_complete_scan": true,
+        "predecessor_readonly_closure_sha256": "2c765dae3922ca5032ed4e046d0aad7e1f813f6c0137f0a4d7dfe03913390ccc",
+        "reviewed_parent_body_sha256": "0b6cc89f3ee5129087ef9421ee98acd2d2e087fcf596689451f217fc53b993a2",
+        "source_function": "controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)"
+      },
       "current_artifacts": {
         "capture.sql": {
           "bytes": 109082,
@@ -476,15 +518,15 @@
         },
         "expected-module.json": {
           "bytes": 12383153,
-          "sha256": "d7a81ffca17ec657e254d6a43be29d5b8ff252651cc684bde03fced6d35fb814"
+          "sha256": "8871e705e934987aee1a973e96f63c18df3ee6e2d630dfb9145ab0a7bfb53454"
         },
         "install.sql": {
-          "bytes": 61921678,
-          "sha256": "88f053a5d271c75960068492f7541b7e8e99d3065b731dc8af548cabd01154d6"
+          "bytes": 61921970,
+          "sha256": "1efba3a8586ce84b0cd0883a789f148a23a69494895ead0216d89e25bddc37a4"
         },
         "postcheck.sql": {
           "bytes": 31295133,
-          "sha256": "289b7c09a8968e6d9cd0ee4989e377ac760f6f63d9cf4bcc478a281ff0278f09"
+          "sha256": "c175e77affcdebf2b7629120986c9a1eaf33af9d66d769fc9d71e6054c3869cc"
         },
         "preflight.sql": {
           "bytes": 2551471,
@@ -492,7 +534,7 @@
         },
         "source-expected.sql": {
           "bytes": 9163592,
-          "sha256": "137cc24b65471cef0d51bbb5c30469570bd33a2a94034c7df399e090fdbf2215"
+          "sha256": "3376af224fc0da3428bcae2eb6a99d5b95c742bf118e6ca60703be8a5bfbb635"
         }
       },
       "fact_tables": [
@@ -605,6 +647,16 @@
       ],
       "no_validity_certificate": true,
       "original_authorization_row_guards_and_full_product_validator_unchanged": true,
+      "policy_pure_hash_reuse": {
+        "admitted_private_source_owned_maps_only": true,
+        "arbitrary_owner_supplied_private_input_equivalence_claimed": false,
+        "constructors": "original policy_history followed by root seeding; four helpers call original policy_values before seeding",
+        "exact_current_row_cache_input_text_and_scope_bindings_retained": true,
+        "first_arm_only": true,
+        "indexed_uuid_lookup_has_guarded_cast": true,
+        "snapshot_arm_and_original_fallback_byte_identical": true,
+        "source_function": "controlled_count_v1.history_scan_policy_values(jsonb,jsonb)"
+      },
       "predecessor": "V45 source composition",
       "predecessor_artifacts": {
         "capture.sql": {
@@ -645,8 +697,8 @@
           "sha256": "e5664aeb827274b77b765314a18739dc7de10addba39c74d555fb14b922e30e2"
         },
         "pending_validation.py": {
-          "bytes": 9250,
-          "sha256": "04012cafd1ce93e39c1db58de082ae1cebda0d07bc6e518dfba48baa5a2be027"
+          "bytes": 13299,
+          "sha256": "9b78c0705b38133da3ff74fd2ea915eeda17dcda2c4f04d52984bc31a7172e8d"
         }
       },
       "unchanged_final_ALL_IMMEDIATE": true

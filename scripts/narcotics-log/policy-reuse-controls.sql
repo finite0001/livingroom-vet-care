@@ -22,7 +22,7 @@ BEGIN
  -- grammar validator independently certifies the full document before caching.
  original_value:=controlled_count_v1.policy_values(actual.document);
  cache:=jsonb_build_object('policy_values:'||actual.policy_id::text,original_value);
- FOR variant IN 1..11 LOOP
+ FOR variant IN 1..17 LOOP
   candidate:=original_value;selected_cache:=cache;
   IF variant IN(2,3)THEN
    candidate:=candidate||jsonb_build_object('unreviewed_extra_field',true);
@@ -38,16 +38,22 @@ BEGIN
   ELSIF variant=11 THEN
    candidate:=jsonb_set(candidate,'{read_enabled}','false');
    candidate:=jsonb_set(candidate,'{record_hash}',to_jsonb(controlled_count_v1.document_hash(candidate)));
+  ELSIF variant=12 THEN candidate:=jsonb_set(candidate,'{policy_id}','null');
+  ELSIF variant=13 THEN candidate:=jsonb_set(candidate,'{policy_id}','"not-a-uuid"');
+  ELSIF variant=14 THEN candidate:=jsonb_set(candidate,'{policy_id}','"00000000-0000-0000-0000-000000000000"');
+  ELSIF variant=15 THEN candidate:=jsonb_set(candidate,'{policy_id}',to_jsonb(upper(actual.policy_id::text)));
+  ELSIF variant=16 THEN candidate:=jsonb_set(candidate,'{policy_id}','1');
+  ELSIF variant=17 THEN candidate:=NULL;
   END IF;
   roles_value:=CASE WHEN variant=10 THEN'[]'::jsonb ELSE original_value->'reader_roles'END;
   old_code:=NULL;new_code:=NULL;old_message:=NULL;new_message:=NULL;old_result:=NULL;new_result:=NULL;
   BEGIN
-   IF variant<=8 THEN old_result:=controlled_count_v1.policy_values(candidate);
+   IF variant<=8 OR variant>=12 THEN old_result:=controlled_count_v1.policy_values(candidate);
    ELSE old_result:=to_jsonb(controlled_count_v1.policy_capability_values(candidate,roles_value,'read'));END IF;
   EXCEPTION WHEN query_canceled OR assert_failure THEN RAISE;
    WHEN OTHERS THEN GET STACKED DIAGNOSTICS old_code=RETURNED_SQLSTATE,old_message=MESSAGE_TEXT;END;
   BEGIN
-   IF variant<=8 THEN new_result:=controlled_count_v1.history_scan_policy_values(candidate,selected_cache);
+   IF variant<=8 OR variant>=12 THEN new_result:=controlled_count_v1.history_scan_policy_values(candidate,selected_cache);
    ELSE new_result:=to_jsonb(controlled_count_v1.history_scan_policy_capability_values(candidate,roles_value,'read',selected_cache));END IF;
   EXCEPTION WHEN query_canceled OR assert_failure THEN RAISE;
    WHEN OTHERS THEN GET STACKED DIAGNOSTICS new_code=RETURNED_SQLSTATE,new_message=MESSAGE_TEXT;END;

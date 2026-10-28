@@ -173,6 +173,9 @@ class PopulatedRecovery(operational_release.SourceLedger,business.BusinessInstal
     def after_receiver_restore(self,runtime):
         """Normal acceptance never instruments the restored application."""
 
+    def before_receiver_ingress(self,runtime):
+        """Normal acceptance preserves the fully verified restored source."""
+
     def execute(self):
         super().execute()
         source_runtime = self.source_runtime
@@ -275,6 +278,7 @@ class PopulatedRecovery(operational_release.SourceLedger,business.BusinessInstal
         if datetime.fromisoformat(native['boot'].replace('Z', '+00:00')) <= datetime.fromisoformat(completed.replace('Z', '+00:00')):
             raise ValueError('Receiver did not start strictly after actual archive completion')
         rr.raw_query('restore-owned-gateway', 'BEGIN;\n' + (operational.SOURCE / 'recovery-gateway.sql').read_text() + '\nCOMMIT;')
+        self.before_receiver_ingress(rr)
         owned_ingress(rr, 'start')
         wait_for_owned_rest(rr, ctx['public_anon_key'])
         status = installation.decode(rr.command(['supabase', 'status', '--workdir', str(self.receiver.project), '-o', 'json']).stdout)

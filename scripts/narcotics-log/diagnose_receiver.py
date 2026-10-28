@@ -23,11 +23,14 @@ class ReceiverDiagnosis(recovery.PopulatedRecovery):
         _,self.api,self.functions=diagnosis.TARGETS[target]
         self.result.update(kind='narcotics-restored-receiver-engineering-only-v1',engineering_only=True,diagnostic_target=target)
 
-    def after_installation(self,runtime):
-        super().after_installation(runtime)
-        # Reuse the existing fixed two-body source transform; only this new208
-        # disposable descriptor is rebound. Historical205/206/269 stay intact.
-        diagnosis.Diagnosis.after_installation(self,runtime)
+    def before_receiver_ingress(self,runtime):
+        # Original source backup, restore fidelity, module/ledger and Auth
+        # comparisons have already passed. Instrument only this receiver;
+        # ordinary source writes must retain their exact normal source.
+        self.receiver_diagnostic_runtime=runtime
+        receiver=runtime.install
+        receiver.target=self.target;receiver.functions=self.functions
+        diagnosis.Diagnosis.after_installation(receiver,runtime)
         raw=business.installation.prefix.regular(business.installation.ROOT/'supabase/migrations'/business.installation.prefix.FORWARD[1]).decode()
         static=json.loads((business.HERE/'module-expected.json').read_text())
         transformed=deepcopy(self.expected_module)
@@ -38,12 +41,7 @@ class ReceiverDiagnosis(recovery.PopulatedRecovery):
         # This expectation comes only from that exact source transform, never
         # from observed database metadata. It is NOT the release expectation.
         self.expected_module=transformed
-
-    def after_receiver_restore(self,runtime):
-        self.receiver_diagnostic_runtime=runtime
-        # Parameter ACLs are global and pg_dump does not transfer this grant.
-        runtime.install.boot.sql('GRANT SET ON PARAMETER track_functions TO postgres;'
-            'GRANT EXECUTE ON FUNCTION pg_catalog.pg_stat_force_next_flush() TO postgres;',admin=True)
+        receiver.expected_module=transformed
 
     def execute(self):
         try:

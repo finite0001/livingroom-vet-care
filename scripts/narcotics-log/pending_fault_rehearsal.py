@@ -70,6 +70,13 @@ class FaultHttp:
             return self.original.rpc(name, payload, user, expected)
         if expected != 200 or set(payload) != {'p_request'}:
             raise ValueError('Exact unchanged positive-profile start request required')
+        controls = self.runtime.selected_query('fault-policy-grammar-controls',
+            business.installation.prefix.regular(business.HERE / 'policy-reuse-controls.sql').decode())
+        if controls != dict(kind='historical-policy-grammar-controls-v1', cases=17,
+                original_and_context_results_exact=True, captured_capability_decisions_recomputed=True,
+                domain_writes=0, Auth_acceptance=False):
+            raise ValueError('Complete admitted-policy grammar and invalid-UUID controls required')
+        business.save(self.folder, 'pending-fault-policy-grammar-controls', controls)
         before = observe(self.runtime, 'fault-before-complete-data')
         auth_before = receiver_auth.capture(self.runtime, 'fault-before-complete-Auth')
         self.runtime.verify_pending_empty('fault-before-pending-empty')
@@ -174,7 +181,8 @@ def main():
     layout, pins = business.source_admission()
     for name in ('pending_fault_rehearsal.py', 'receiver_auth.py', 'receiver_rehearsal.py',
                  'receiver_reauthentication.py', 'bounded_archive.py', 'recovery-observation.sql',
-                 'diagnose_register.py', 'build_operational_module.py', 'operational_release.py'):
+                 'diagnose_register.py', 'build_operational_module.py', 'operational_release.py',
+                 'policy-reuse-controls.sql'):
         path = business.HERE / name
         pins[str(path.relative_to(business.installation.ROOT))] = business.installation.sha(business.installation.prefix.regular(path))
     try:

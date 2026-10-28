@@ -720,8 +720,8 @@
       "sha256": "dce9bc4df128cde16770c78025d373dc64de62ce9c6520a3aeed978fb99b680d"
     },
     "scripts/narcotics-log/policy-reuse-controls.sql": {
-      "bytes": 4067,
-      "sha256": "bb1ff6c011d25109dad930491700d74ad091fa3b349d071bff3a394d55fdaf22"
+      "bytes": 4600,
+      "sha256": "866ec8927586b987253ff2a238e7918c836446f8550d0bc959ffe30a8b695fcd"
     },
     "scripts/narcotics-log/boundary-reuse-controls.sql": {
       "bytes": 5342,
@@ -737,7 +737,7 @@
     },
     "scripts/narcotics-log/operational_release.py": {
       "bytes": 11418,
-      "sha256": "52996e50d871f3dc14c913a34695fa87eba6c54118dbef90dcea7e96d7010c01"
+      "sha256": "8602bca00d06a4c01e4f5d130965828e7d2db22adf9fbc9586cdb6ba71bc1c1a"
     },
     "scripts/narcotics-log/frame-operational.mjs": {
       "bytes": 2819,

@@ -165,3 +165,35 @@ whose source prefix takes that lock exclusively before creating schemas. No
 runtime validity flag, persistent certificate, session/epoch skip or deadline
 change is introduced. Nested recovery post-checks stay unchanged. Native
 performance and full final acceptance remain required.
+
+## Reviewed scan schedule and pure-policy refinement
+
+The clean runner still hit8seconds. A restored engineering trace measured15
+whole-product history scans in one execution; the clean-runner trace reached
+closure construction at its deadline. Keep every context transition, current
+principal, actual raw context/resource and immutable operation/result/nonce/
+policy comparison. Change only three tail positions in
+entry_context_source_required. For the two parent transitions, return after
+reconciliation_parent_source_required: that helper has already run the same
+complete product scan, and its282-function remaining read closure performs no
+writes. The global scan has no clock or current-authorization refresh behavior.
+For verified DELETE/count_finishing, defer the tail scan to mandatory pending
+work. The actual operation row necessarily came through the collector after
+context birth; finishing disallows further fact writes; force validates pending
+work before context deletion. An earlier flush validates through the same guard,
+and any later fact write re-enqueues. All unrelated phases keep their scan.
+This explicitly refines the earlier commitment to unchanged context-global
+scan timing; all context-specific checks and the final full scan remain.
+
+For the FIRST policy_values cache arm only, reuse the deterministic hash of
+exactly identical policy bytes already validated by original policy_history/
+policy_values at the closed map constructors. Keep current typed-row IDs,
+product/site, hash field and exact row/cache/input text comparisons. The
+snapshot arm and complete original fallback remain byte-identical. Use a
+canonical-UUID-guarded cast to permit the typed policy primary-key lookup.
+No public input supplies this private map, no authority/session/history result
+is cached, and no arbitrary owner-supplied private-input equivalence is claimed.
+Read-only predecessor closure evidence is preserved in
+`docs/controlled-drugs/context-scan-dominance-source-20261028.json`; the pure
+query delta has its own exact source inverse. New normal/negative native and
+clean-runner acceptance remains required.

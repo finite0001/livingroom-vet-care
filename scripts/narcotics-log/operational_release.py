@@ -135,7 +135,7 @@ def install(runtime):
     runtime.remaining(1)
     expected=expected_ledger(target.operational_prefix_ledger,manifest)
     controls=runtime.selected_query('historical-policy-grammar-controls',prefix.regular(HERE/'policy-reuse-controls.sql').decode())
-    if controls!=dict(kind='historical-policy-grammar-controls-v1',cases=11,
+    if controls!=dict(kind='historical-policy-grammar-controls-v1',cases=17,
             original_and_context_results_exact=True,captured_capability_decisions_recomputed=True,domain_writes=0,Auth_acceptance=False):
         raise ValueError('Exact original/context policy grammar controls required')
     target.source_runtime=runtime
