@@ -106,6 +106,32 @@ def owned_ingress(runtime, action, *, cleanup=False):
     return selected
 
 
+def restart_owned_database(runtime):
+    """Restart exactly the captured receiver ID; one original owner deadline."""
+    runtime.verify()
+    boot = runtime.install.boot
+    boot.owned_resources()
+    deadline = time.monotonic() + runtime.remaining(30)
+    previous = runtime.install.owner_end
+    runtime.install.owner_end = min(deadline, previous) if previous is not None else deadline
+    try:
+        boot.command(['docker', '--host', boot.endpoint, 'restart', boot.container_id], timeout=runtime.remaining(30))
+        while True:
+            left = min(deadline - time.monotonic(), runtime.remaining(30))
+            if left <= 0:
+                raise TimeoutError('Original owned database restart deadline exhausted')
+            health = boot.command(['docker', '--host', boot.endpoint, 'inspect', '--format', '{{.State.Health.Status}}', boot.container_id], timeout=min(5, left)).strip()
+            if health == 'healthy':
+                break
+            if health != 'starting':
+                raise ValueError('Owned restarted database did not become healthy')
+            time.sleep(min(0.1, max(0, deadline - time.monotonic())))
+        boot.owned_resources()
+        runtime.remaining(1)
+    finally:
+        runtime.install.owner_end = previous
+
+
 class Receiver(installation.Installation):
     def __init__(self, source, evidence):
         super().__init__(source.view, evidence, source.layout, source.started)
@@ -199,8 +225,10 @@ class PopulatedRecovery(business.BusinessInstallation):
         self.receiver.runtime = rr
         owned_ingress(rr, 'stop')
         self.receiver.boot.sql('DROP SCHEMA IF EXISTS realtime CASCADE;', admin=True)
+        self.receiver.boot.sql("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='5s';\n" + (HERE / 'restore-defaults.sql').read_text() + '\nCOMMIT;', admin=True)
         self.archive.restore(['docker', '--host', self.receiver.boot.endpoint, 'exec', '-i', self.receiver.boot.container_id, 'pg_restore',
             '-U', 'supabase_admin', '-d', 'postgres', '--clean', '--if-exists', '--exit-on-error', '--single-transaction'], timeout=min(30, self.remaining()), env=self.receiver.boot.env, cwd=receiver_folder)
+        rr.raw_query("restore-original-witness-check", "BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='5s';\n" + (HERE / "restore-witness-check.sql").read_text() + "\nCOMMIT;")
         try:
             rr.verify_module('restored-full-source-properties')
         except BaseException:
@@ -293,6 +321,51 @@ class PopulatedRecovery(business.BusinessInstallation):
             filename='synthetic-original-post-backup-response.json', mime='application/json', base64=__import__('base64').b64encode(lost_bytes).decode()))
         acknowledged = controls(http, fresh_b, 'acknowledge_evidence', epoch['data'], dict(evidence_id=evidence['data']['evidence_id'],
             evidence_hash=evidence['data']['evidence_hash'], acknowledged=True, review_note='Synthetic independent review of the exact original response and reported missing event.'))
+        first_epoch = epoch
+        first_acknowledged = acknowledged
+        old_count_request = dict(schema_version=1, actor_id=fresh_a['id'], count_id=ctx['count']['agreement']['count_id'])
+        before_restart_read = http.rpc('read_controlled_count_v1', {'p_request': old_count_request}, fresh_a)
+        if before_restart_read['state'] != 'available' or before_restart_read['data']['count_id'] != old_count_request['count_id']:
+            raise ValueError('Exact old-session request must succeed before the actual restart')
+        # Interrupt an ACTIVE recovery using the actual captured database ID.
+        # Rows, sequences, source ACLs and retained original evidence must survive.
+        before_restart = observe(rr, 'before-actual-receiver-restart')
+        restart_owned_database(rr)
+        if observe(rr, 'after-actual-receiver-restart') != before_restart:
+            raise ValueError('Actual receiver restart changed retained data or sequences')
+        rr.verify_module('restarted-full-source-properties')
+        restarted_native = rr.selected_query('actual-restarted-receiver-identity', 'SELECT narcotics_recovery_v1.server_identity();')
+        if {k: v for k, v in restarted_native.items() if k != 'boot'} != {k: v for k, v in native.items() if k != 'boot'} or restarted_native['boot'] <= native['boot']:
+            raise ValueError('Actual restart did not preserve database identity with a new native boot')
+        wait_for_owned_rest(rr, status['ANON_KEY'])
+        stale_status = http.rpc('narcotics_recovery_status_v1', {'p_request': dict(schema_version=1, actor_id=fresh_a['id'])}, fresh_a)
+        if stale_status['needs_new_epoch'] is not True or stale_status['fresh_session'] is not False or stale_status['epoch_id'] != first_epoch['data']['epoch_id']:
+            raise ValueError('Active restart did not expose the required new recovery attempt')
+        before_restart_refusals = observe(rr, 'before-restart-stale-requests')
+        # A valid old count READ is refused by the restart/session fence before
+        # its original business handler; it is not an invalid-payload negative.
+        code, error = http.post('/rest/v1/rpc/read_controlled_count_v1', {'p_request': old_count_request}, fresh_a['token'])
+        if code not in (400, 403, 409):
+            raise ValueError('Earlier active-recovery session bypassed restart fence')
+        business.save(receiver_folder, 'actual-restart-old-session-refusal', dict(status=code, error=error))
+        if observe(rr, 'after-restart-stale-requests') != before_restart_refusals:
+            raise ValueError('Refused stale request changed restored data')
+        next_pre_epoch = login(a, 'restarted-receiver-grant')
+        epoch = controls(http, next_pre_epoch, 'begin_epoch', first_epoch['data'], dict(marker_id=backup['data']['marker']['marker_id'],
+            marker_hash=backup['data']['marker_hash'], external_capsule_sha256=capsule_hash, external_archive_sha256=self.archive.sha256))
+        if epoch['data']['epoch_id'] == first_epoch['data']['epoch_id'] or epoch['data']['native_receiver'] != restarted_native:
+            raise ValueError('Actual restart failed to establish a distinct bound epoch')
+        fresh_a = login(a, 'restarted-fresh-A-grant'); fresh_b = login(b, 'restarted-fresh-B-grant')
+        current_status = http.rpc('narcotics_recovery_status_v1', {'p_request': dict(schema_version=1, actor_id=fresh_b['id'])}, fresh_b)
+        if current_status['epoch_id'] != epoch['data']['epoch_id'] or current_status['needs_new_epoch'] or len(current_status['evidence']) != 1 or current_status['evidence'][0]['acknowledgment'] is not None:
+            raise ValueError('New epoch must retain original evidence and require a new independent acknowledgment')
+        retained_evidence = current_status['evidence'][0]['evidence']
+        if retained_evidence['evidence_id'] != evidence['data']['evidence_id'] or retained_evidence['record_hash'] != evidence['data']['evidence_hash']:
+            raise ValueError('Restart changed the exact retained original evidence')
+        acknowledged = controls(http, fresh_b, 'acknowledge_evidence', epoch['data'], dict(evidence_id=evidence['data']['evidence_id'],
+            evidence_hash=evidence['data']['evidence_hash'], acknowledged=True, review_note='Synthetic replacement review after actual receiver restart; exact original file and staff account reviewed again.'))
+        if acknowledged['data']['acknowledgment_id'] == first_acknowledged['data']['acknowledgment_id']:
+            raise ValueError('Replacement acknowledgment must preserve the original and create a new record')
         class FreshCountTransport:
             def rpc(self, name, payload, user, expected=200):
                 if name == 'start_controlled_count_v1':
@@ -307,6 +380,16 @@ class PopulatedRecovery(business.BusinessInstallation):
         import full121_management as management
         proof = management.run(receiver_context, self.methods, rr, receiver_folder, rr.selected_query, business.save)
         post = receiver_context['count']['post_reconciliation']
+        old_ack_request = dict(schema_version=1, actor_id=fresh_a['id'], operation_id=__import__('uuid').uuid4().__str__(), action='release',
+            expected_head_id=epoch['data']['head_id'], expected_head_hash=epoch['data']['head_hash'],
+            data=dict(agreements=[dict(product_id=ctx['ids']['product'], site_id=ctx['ids']['site'], count_id=post['count_id'], outcome_id=post['finalize']['request']['outcome_id'])],
+                acknowledgments=[dict(evidence_id=evidence['data']['evidence_id'], acknowledgment_id=first_acknowledged['data']['acknowledgment_id'])],
+                history_review_note='Synthetic attempt with the original acknowledgment after actual restart.'))
+        before_old_ack = observe(rr, 'before-original-acknowledgment-release')
+        code, error = http.post('/rest/v1/rpc/narcotics_recovery_release_v1', {'p_request': old_ack_request}, fresh_a['token'])
+        business.save(receiver_folder, 'actual-original-acknowledgment-refusal', dict(status=code, error=error))
+        if code not in (400, 403, 409) or observe(rr, 'after-original-acknowledgment-release') != before_old_ack:
+            raise ValueError('Original acknowledgment survived the new epoch or altered retained data')
         released = controls(http, fresh_a, 'release', epoch['data'], dict(agreements=[dict(product_id=ctx['ids']['product'], site_id=ctx['ids']['site'],
             count_id=post['count_id'], outcome_id=post['finalize']['request']['outcome_id'])], acknowledgments=[dict(evidence_id=evidence['data']['evidence_id'], acknowledgment_id=acknowledged['data']['acknowledgment_id'])], history_review_note='Synthetic full restored history and missing-event evidence reviewed; fresh independent agreement after physical reconciliation.'))
         if released['data']['mode'] != 'idle':
@@ -342,11 +425,13 @@ class PopulatedRecovery(business.BusinessInstallation):
         gateway.reply(pointer, http.rpc('prepare_managed_stock_intent_v1', {'p_request': current_request}, fresh_a), 'prepared', probe_request['legacy_arguments'])
         gateway.reply(pointer, http.rpc('close_managed_stock_intent_v1', {'p_request': pointer}, fresh_a), 'abandoned', probe_request['legacy_arguments'])
         auth_proof = receiver_auth.validate(rr, original_auth, users, grants, original['sequences'],
-            observe(rr, 'receiver-final-data')['sequences'], native['boot'], epoch['data']['started_at'])
+            observe(rr, 'receiver-final-data')['sequences'], native['boot'], first_epoch['data']['started_at'],
+            rollover=dict(native_boot=restarted_native['boot'], epoch_at=epoch['data']['started_at']))
         business.save(receiver_folder, 'receiver-actual-Auth-effects', auth_proof)
         rr.verify_module('receiver-final-full-source-properties')
         self.result.update(populated_receiver_verified=True, original_complete_rows_and_sequences_restored=True,
-            original_Auth_principals_preserved=True, fresh_real_password_grants=3, actual_variance_reconciliation_and_release=True,
+            original_Auth_principals_preserved=True, fresh_real_password_grants=6, actual_variance_reconciliation_and_release=True,
+            actual_active_receiver_restart=True, new_epoch_and_replacement_independent_acknowledgment=True,
             late_original_requests_refused=True, archive_bytes=self.archive.length, archive_sha256=self.archive.sha256)
         business.save(receiver_folder, 'populated-recovery-result', self.result)
 
@@ -392,7 +477,7 @@ def main():
     os.umask(0o077)
     started = time.monotonic()
     layout, pins = business.source_admission()
-    for path in [HERE / name for name in ('receiver_rehearsal.py', 'receiver_auth.py', 'bounded_archive.py', 'recovery-observation.sql', 'build_operational_module.py', 'recovery_admission_source.py', 'diagnose_register.py')] + sorted(operational.SOURCE.glob('*.sql')):
+    for path in [HERE / name for name in ('receiver_rehearsal.py', 'receiver_auth.py', 'bounded_archive.py', 'recovery-observation.sql', 'restore-defaults.sql', 'restore-witness-check.sql', 'build_operational_module.py', 'recovery_admission_source.py', 'diagnose_register.py')] + sorted(operational.SOURCE.glob('*.sql')):
         pins[str(path.relative_to(installation.ROOT))] = digest(installation.prefix.regular(path))
     if args.check_source:
         print(json.dumps(dict(source_files=len(pins), database_operations=0, ready_for_deployment=False)))

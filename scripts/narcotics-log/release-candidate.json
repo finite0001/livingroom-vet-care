@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61747169,
-      "sha256": "dff23e56057c6cd78c29ca7217d5d6fef0d46d56178b63a309cc99e3970c9f71"
+      "bytes": 61750672,
+      "sha256": "c36f3707f380c5a3997f6073564e987519d6ac813244432236384e58ebb8a678"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61743267,
-      "sha256": "8842e0208110493960a42e15eb6cefb75214a01b7e993759883a8c1387da4407"
+      "bytes": 61746770,
+      "sha256": "5cbd5cfa4a8ef5b22704c08cf007a4d1e99536e7a09a6911c5fd3542c110b416"
     }
   },
   "source_corrections": {
@@ -400,6 +400,15 @@
           "controlled_count_v1.saved_cause_row_values"
         ],
         "kind": "single-invocation-validated-history-documents-v1",
+        "live_causes": {
+          "explicit_selected_registry_root_required": true,
+          "new_body_sha256": "bb8d66fc31b05867eca41f91d04cbb304c4cf5d5c3f55d514718bb24e4c5baf0",
+          "original_body_sha256": "3cf48d5e4ebe1651f962083bdedfda1f0c2e4405cf9b8ae50093840dd37bbbee",
+          "original_graph_fallback": true,
+          "signature": "controlled_count_v1.product_live_causes(uuid)",
+          "unchanged_complete_history_dominates_both_reads": true,
+          "whole_body_inverse": true
+        },
         "map_added_only_after_complete_operation_and_closure_validation": true,
         "no_persisted_or_caller_supplied_certificate": true,
         "ordinary_preparation_entry": {
@@ -591,7 +600,7 @@
           }
         }
       },
-      "only_twenty_five_private_functions_and_six_body_hashes_added": true,
+      "only_twenty_five_private_functions_and_seven_body_hashes_added": true,
       "original_relation_frontiers_and_current_authority_preserved": true,
       "real_Auth_verification_pending": true,
       "recovery": {
@@ -691,7 +700,7 @@
           "controlled_count_entry_v1.recovery_post_frontier_required()"
         ],
         "pre_frontier_reads": "catalogs and pg_locks only",
-        "register_source_sha256": "c307873f61dba1c943b1901ae1e1ecc860b9db8432e1b35bfe2e60e370dd5673",
+        "register_source_sha256": "aeaae6cd304a2c2bb25a780bd675d6e81bb6c35d682485e1e17cc2ea9b66c280",
         "source_program_sha256": "15c02507e1126613a1d163bd250c1514a99d8f6bd328030a645c03bbc942760e",
         "whole_catalog_projection_inverse": true
       },
@@ -701,8 +710,8 @@
           "sha256": "a1c73a3e5c440cdeadea81ea273ce780d47874e5bc75ceac5204fb173a999d0c"
         },
         "history_document_reuse.py": {
-          "bytes": 21226,
-          "sha256": "6290fe12a95a9792f1f630eb125903c2e07de9f537d346556462c677f26f447c"
+          "bytes": 25312,
+          "sha256": "56440cd8b3d5e5febdf9e31e5bac15516be40da3e37706996d3348ffa61092e8"
         },
         "recovery_admission_source.py": {
           "bytes": 10068,

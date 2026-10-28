@@ -194,6 +194,9 @@ BEGIN
  PERFORM controlled_count_entry_v1.assert_read_frontier();
  epoch_value:=narcotics_recovery_v1.latest_epoch(p_head);
  IF epoch_value IS NULL THEN RETURN;END IF;
+ IF p_head->>'mode'='armed'AND p_head->'epoch_id'<>'null'::jsonb
+ AND epoch_value#>'{body,native_receiver}'IS DISTINCT FROM narcotics_recovery_v1.server_identity()THEN
+ RAISE EXCEPTION 'narcotics_recovery_receiver_changed' USING ERRCODE='42501';END IF;
  actor_value:=auth.uid();identity_value:=narcotics_register_v1.identity(actor_value,false);
  IF NOT EXISTS(SELECT 1 FROM auth.sessions s WHERE s.id=(identity_value->>'session_id')::uuid AND s.user_id=actor_value
   AND s.created_at>(epoch_value->>'recorded_at')::timestamptz

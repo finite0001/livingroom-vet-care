@@ -74,24 +74,34 @@ def password_grant(http, original):
         'private_refresh_hash': hashlib.sha256(refresh.encode()).hexdigest()}
 
 
-def validate(runtime, original, users, grants, before_sequences, after_sequences, receiver_boot, epoch_at):
-    """Exactly A-before-epoch, A-after-epoch, B-after-epoch; never signup effects."""
+def validate(runtime, original, users, grants, before_sequences, after_sequences, receiver_boot, epoch_at, *, rollover=None):
+    """Fixed three-grant restore, optionally repeated after an actual restart."""
     before = snapshot(original)
     receiver_boot = auth.login_timestamp(receiver_boot)
     epoch_at = auth.login_timestamp(epoch_at)
     if epoch_at <= receiver_boot:
         raise ValueError('Actual receiver epoch must follow native startup')
-    if type(grants) is not list or len(grants) != 3 or type(users) is not list or len(users) != 2:
+    schedule = [(0, receiver_boot, epoch_at), (0, epoch_at, None), (1, epoch_at, None)]
+    if rollover is not None:
+        if type(rollover) is not dict or set(rollover) != {'native_boot', 'epoch_at'}:
+            raise ValueError('Exact independently observed restart boundaries required')
+        next_boot = auth.login_timestamp(rollover['native_boot'])
+        next_epoch = auth.login_timestamp(rollover['epoch_at'])
+        if not epoch_at < next_boot < next_epoch:
+            raise ValueError('Actual restarted epoch must follow the previous epoch')
+        schedule += [(0, next_boot, next_epoch), (0, next_epoch, None), (1, next_epoch, None)]
+    count = len(schedule)
+    if type(grants) is not list or len(grants) != count or type(users) is not list or len(users) != 2:
         raise ValueError('Fixed populated receiver login schedule required')
     base = before_sequences.get('auth.refresh_tokens_id_seq')
-    if type(base) is not dict or set(base) != {'last_value', 'is_called'} or base['is_called'] is not True or type(base['last_value']) is not int or not 1 <= base['last_value'] <= 9223372036854775804:
+    if type(base) is not dict or set(base) != {'last_value', 'is_called'} or base['is_called'] is not True or type(base['last_value']) is not int or not 1 <= base['last_value'] <= 9223372036854775807 - count:
         raise ValueError('Capsule-derived populated refresh sequence required')
-    expected_sequences = {**before_sequences, 'auth.refresh_tokens_id_seq': dict(last_value=base['last_value'] + 3, is_called=True)}
+    expected_sequences = {**before_sequences, 'auth.refresh_tokens_id_seq': dict(last_value=base['last_value'] + count, is_called=True)}
     if after_sequences != expected_sequences:
-        raise ValueError('Only three fixed password grants may allocate sequences')
+        raise ValueError('Only the fixed password grants may allocate sequences')
     sessions = []
     for index, grant in enumerate(grants):
-        selected = 0 if index < 2 else 1
+        selected, minimum, maximum = schedule[index]
         pair = [grant, users[1]] if selected == 0 else [users[0], grant]
         principal = auth.user_values(pair)[selected]
         if any(grant[k] != users[selected][k] for k in ('id', 'email', 'name')):
@@ -102,7 +112,7 @@ def validate(runtime, original, users, grants, before_sequences, after_sequences
             raise ValueError('Original refresh response hash required')
         principal.update(refresh_id=base['last_value'] + index + 1, refresh_hash=grant['private_refresh_hash'],
             grant_index=index,
-            minimum_created_at=receiver_boot if index == 0 else epoch_at,
+            minimum_created_at=minimum, maximum_created_at=maximum,
             latest_login=auth.login_timestamp(grant['auth_last_sign_in_at']),
             latest_updated=auth.login_timestamp(grant['auth_updated_at']))
         sessions.append(principal)
@@ -121,14 +131,14 @@ def validate(runtime, original, users, grants, before_sequences, after_sequences
             if current[identifier] != digest:
                 raise ValueError('A preexisting Auth row changed')
         new_ids[table] = sorted(set(current) - set(previous))
-    expected = dict(users=0, identities=0, sessions=3, refresh_tokens=3, mfa_amr_claims=3, audit_log_entries=3)
+    expected = dict(users=0, identities=0, sessions=count, refresh_tokens=count, mfa_amr_claims=count, audit_log_entries=count)
     if any(len(new_ids[table]) != expected[table] for table in TABLES):
         raise ValueError('Exact receiver login row deltas differ')
     if set(new_ids['sessions']) != {p['session_id'] for p in sessions} or set(new_ids['refresh_tokens']) != {str(p['refresh_id']) for p in sessions}:
         raise ValueError('Actual session/serial identities differ from original grants')
-    latest = [sessions[1], sessions[2]]
+    latest = sessions[-2:]
     ctes = ['expected_sessions AS(SELECT *FROM jsonb_to_recordset(' + auth.jsql(sessions)
-        + ')AS e(user_id uuid,session_id uuid,email text,name text,amr_timestamp bigint,refresh_id bigint,refresh_hash text,grant_index integer,minimum_created_at timestamptz,latest_login timestamptz,latest_updated timestamptz))',
+        + ')AS e(user_id uuid,session_id uuid,email text,name text,amr_timestamp bigint,refresh_id bigint,refresh_hash text,grant_index integer,minimum_created_at timestamptz,maximum_created_at timestamptz,latest_login timestamptz,latest_updated timestamptz))',
         'expected_users AS(SELECT *FROM jsonb_to_recordset(' + auth.jsql(latest)
         + ')AS e(user_id uuid,latest_login timestamptz,latest_updated timestamptz))']
     for table in TABLES:
@@ -136,7 +146,7 @@ def validate(runtime, original, users, grants, before_sequences, after_sequences
             + ','.join(auth.literal(i) for i in new_ids[table]) + ']::text[]))')
     ctes += [
         "valid_users AS(SELECT u.id FROM auth.users u JOIN expected_users e ON u.id=e.user_id WHERE u.last_sign_in_at=e.latest_login AND u.updated_at=e.latest_updated)",
-        "valid_sessions AS(SELECT s.id FROM new_sessions s JOIN expected_sessions e ON s.id=e.session_id AND s.user_id=e.user_id WHERE s.aal='aal1'AND s.factor_id IS NULL AND s.oauth_client_id IS NULL AND s.not_after IS NULL AND s.scopes IS NULL AND isfinite(s.created_at)AND s.created_at>e.minimum_created_at AND s.created_at>" + auth.literal(receiver_boot) + "::timestamptz AND(e.grant_index>0 OR s.created_at<" + auth.literal(epoch_at) + "::timestamptz))",
+        "valid_sessions AS(SELECT s.id FROM new_sessions s JOIN expected_sessions e ON s.id=e.session_id AND s.user_id=e.user_id WHERE s.aal='aal1'AND s.factor_id IS NULL AND s.oauth_client_id IS NULL AND s.not_after IS NULL AND s.scopes IS NULL AND isfinite(s.created_at)AND s.created_at>e.minimum_created_at AND(e.maximum_created_at IS NULL OR s.created_at<e.maximum_created_at))",
         "valid_refresh_tokens AS(SELECT r.id FROM new_refresh_tokens r JOIN expected_sessions e ON r.id=e.refresh_id AND r.session_id=e.session_id AND r.user_id::uuid=e.user_id WHERE NOT r.revoked AND coalesce(r.parent,'')=''AND encode(sha256(convert_to(r.token,'UTF8')),'hex')=e.refresh_hash)",
         "valid_mfa_amr_claims AS(SELECT a.id FROM new_mfa_amr_claims a JOIN expected_sessions e ON a.session_id=e.session_id WHERE (SELECT count(*)FROM new_mfa_amr_claims x WHERE x.session_id=e.session_id)=1 AND a.authentication_method='password'AND a.created_at=a.updated_at AND isfinite(a.created_at)AND floor(extract(epoch FROM a.updated_at))::bigint=e.amr_timestamp AND(to_jsonb(a)-ARRAY['id','session_id','created_at','updated_at','authentication_method'])='{}'::jsonb)",
         "expected_audit AS(SELECT jsonb_build_object('actor_id',e.user_id,'actor_via_sso',false,'actor_username',e.email,'actor_name',e.name,'action','login','log_type','account','traits',jsonb_build_object('provider','email'))payload FROM expected_sessions e)",
@@ -145,8 +155,8 @@ def validate(runtime, original, users, grants, before_sequences, after_sequences
     sql = 'WITH ' + ','.join(ctes) + ' SELECT jsonb_build_object(' + ','.join(
         auth.literal(table) + ',(SELECT count(*)FROM valid_' + table + ')' for table in ('users', 'sessions', 'refresh_tokens', 'mfa_amr_claims', 'audit_log_entries')) + ');'
     valid = runtime.selected_query('receiver-source-login-effects', sql)
-    if valid != dict(users=2, sessions=3, refresh_tokens=3, mfa_amr_claims=3, audit_log_entries=3):
+    if valid != dict(users=2, sessions=count, refresh_tokens=count, mfa_amr_claims=count, audit_log_entries=count):
         raise ValueError('Source-derived actual receiver login effects differ')
-    return dict(password_grants=3, new_sessions=3, no_new_Auth_users_or_identities=True, original_Auth_rows_preserved=True,
+    return dict(password_grants=count, new_sessions=count, actual_restart_schedule=rollover is not None, no_new_Auth_users_or_identities=True, original_Auth_rows_preserved=True,
                 only_user_login_timestamps_changed=True, exact_refresh_response_hashes=True, all_other_sequences_exact=True,
                 public_domain_rows_require_separate_exact_comparison=True)

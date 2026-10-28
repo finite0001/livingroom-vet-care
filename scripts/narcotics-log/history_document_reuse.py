@@ -338,3 +338,53 @@ BEGIN
  RETURN controlled_count_v1.history_scan_saved_result_graph('reconciliation_approval',p_id,validated_documents);
 END $$;
 '''
+
+LIVE_CAUSE_ORIGINAL = '  cause_doc:=controlled_count_v1.readcore_saved_cause_graph(item.cause_id);'
+LIVE_CAUSE_REUSE = '''  declare retained_cause_row jsonb;retained_source_row jsonb;retained_source_document jsonb;retained_kind text;retained_id uuid;
+  begin
+   select to_jsonb(c)into strict retained_cause_row from controlled_count_v1.causes c where c.cause_id=item.cause_id;
+   if(retained_cause_row->'statement_id'is distinct from 'null'::jsonb)::integer
+    +(retained_cause_row->'outcome_id'is distinct from 'null'::jsonb)::integer
+    +(retained_cause_row->'cancellation_id'is distinct from 'null'::jsonb)::integer<>1 then
+    raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;
+   if retained_cause_row->'statement_id'is distinct from 'null'::jsonb then retained_kind:='statement';retained_id:=(retained_cause_row->>'statement_id')::uuid;
+   elsif retained_cause_row->'outcome_id'is distinct from 'null'::jsonb then retained_kind:='outcome';retained_id:=(retained_cause_row->>'outcome_id')::uuid;
+   else retained_kind:='cancellation';retained_id:=(retained_cause_row->>'cancellation_id')::uuid;end if;
+   retained_source_row:=controlled_count_v1.readcore_saved_result_row(retained_kind,retained_id);
+   retained_source_document:=retained_source_row->'document';
+   -- The SAME preceding complete first inventory selected this exact registry
+   -- root and finished its graph+closure. A document product claim alone is
+   -- insufficient: an orphan can be absent from joined result inventories.
+   if retained_cause_row->'cause_id'=to_jsonb(item.cause_id)
+    and retained_cause_row->'cause_id'=to_jsonb(controlled_count_v1.saved_cause_identifier(retained_kind,retained_id))
+    and retained_source_document->'product_id'=to_jsonb(p_product)
+    and retained_source_document->'id'=to_jsonb(retained_id)
+    and retained_source_document->'record_hash'=retained_source_row->'record_hash'
+    and retained_source_document->>'record_hash'=controlled_count_v1.document_hash(retained_source_document)
+    and exists(select 1 from controlled_count_v1.operations o
+     where to_jsonb(o.operation_id)=retained_source_document->'operation_id'
+      and o.result_kind=retained_kind and o.result_id=retained_id
+      and(o.product_id=p_product or o.document->'product_id'=to_jsonb(p_product)))then
+    -- The completed registry graph also validated this exact deterministic
+    -- cause row and its reciprocal source/category/hash. Held relation locks
+    -- exclude concurrent writes; no write intervenes in this invocation.
+    cause_doc:=retained_cause_row->'document';
+   else cause_doc:=controlled_count_v1.readcore_saved_cause_graph(item.cause_id);end if;
+  end;'''
+LIVE_RESOLUTION_ORIGINAL = "   resolution_doc:=controlled_count_v1.readcore_saved_result_graph('cause_resolution',resolution_value);"
+LIVE_RESOLUTION_REUSE = '''   declare retained_resolution_row jsonb;retained_resolution_document jsonb;
+   begin
+    retained_resolution_row:=controlled_count_v1.readcore_saved_result_row('cause_resolution',resolution_value);
+    retained_resolution_document:=retained_resolution_row->'document';
+    if retained_resolution_document->'product_id'=to_jsonb(p_product)
+     and retained_resolution_document->'id'=to_jsonb(resolution_value)
+     and retained_resolution_document->'record_hash'=retained_resolution_row->'record_hash'
+     and retained_resolution_document->>'record_hash'=controlled_count_v1.document_hash(retained_resolution_document)
+     and exists(select 1 from controlled_count_v1.operations o
+      where to_jsonb(o.operation_id)=retained_resolution_document->'operation_id'
+       and o.result_kind='cause_resolution'and o.result_id=resolution_value
+       and(o.product_id=p_product or o.document->'product_id'=to_jsonb(p_product)))then
+     resolution_doc:=retained_resolution_document;
+    else resolution_doc:=controlled_count_v1.readcore_saved_result_graph('cause_resolution',resolution_value);end if;
+   end;'''
+LIVE_CAUSE_EDITS = ((LIVE_CAUSE_ORIGINAL, LIVE_CAUSE_REUSE), (LIVE_RESOLUTION_ORIGINAL, LIVE_RESOLUTION_REUSE))
