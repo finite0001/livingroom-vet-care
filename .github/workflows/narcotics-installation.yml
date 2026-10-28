@@ -155,19 +155,19 @@ jobs:
           path: |
             /tmp/lrv-narcotics-install-*/diagnostic-native-failure-*.txt
             /tmp/lrv-narcotics-install-*/diagnostic-function-costs.json
-      - name: Trace discrepancy preparation in a separate owned engineering database
+      - name: Trace discrepancy execution in a separate owned engineering database
         if: matrix.profile == 'variance_reconciliation'
         continue-on-error: true
-        run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local --target variance-prepare
+        run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local --target variance-execute
       - name: Retain bounded variance native error and timing
         if: always() && matrix.profile == 'variance_reconciliation'
         uses: actions/upload-artifact@v4
         with:
-          name: narcotics-engineering-variance-prepare
+          name: narcotics-engineering-variance-execute
           retention-days: 7
           if-no-files-found: ignore
           path: |
-            /tmp/lrv-narcotics-install-*/diagnostic-native-failure-variance-prepare.txt
+            /tmp/lrv-narcotics-install-*/diagnostic-native-failure-variance-execute.txt
             /tmp/lrv-narcotics-install-*/diagnostic-function-costs.json
       - name: Admit fixed genuine business sources
         run: python3 -I -B scripts/narcotics-log/business_rehearsal.py --check-source --profile ${{ matrix.profile }}
@@ -232,3 +232,41 @@ jobs:
             /tmp/lrv-narcotics-install-*/register-engineering-install-stderr.bin
             /tmp/lrv-narcotics-install-*/rpc-failure.json
             /tmp/lrv-narcotics-install-*/*-failure.txt
+
+  populated-recovery:
+    needs: forward-installation
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - run: npm ci --ignore-scripts
+      - run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
+      - name: Verify complete populated recovery using original Auth principals
+        run: python3 -I -B scripts/narcotics-log/receiver_rehearsal.py --run-synthetic-local
+      - name: Retain bounded synthetic result diagnostics only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-populated-recovery
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/primary-failure.txt
+            /tmp/lrv-narcotics-install-*/cleanup-failure.txt
+            /tmp/lrv-narcotics-install-*/source-failure.txt
+            /tmp/lrv-narcotics-install-*/rpc-failure.json
+            /tmp/lrv-narcotics-install-*/receiver/rpc-failure.json
+            /tmp/lrv-narcotics-install-*/receiver/populated-recovery-result.json
+            /tmp/lrv-narcotics-install-*/receiver/receiver-actual-Auth-effects.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log
+            /tmp/lrv-narcotics-install-*/receiver/bootstrap/*-status.json
+            /tmp/lrv-narcotics-install-*/receiver/bootstrap/*-stderr.log

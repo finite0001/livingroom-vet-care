@@ -220,6 +220,10 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Verify native prescribing, real browser dispensing and populated restore
         run: python3 -B tests/prescriptions/native-disposable.py --run-synthetic-local
+      - name: Project safe historical RPC failure codes without exposing private logs
+        if: failure()
+        working-directory: ${{ github.workspace }}
+        run: python3 -I -B scripts/narcotics-log/collect_historical_failure.py
       - uses: denoland/setup-deno@v2
         with:
           deno-version: 2.9.6

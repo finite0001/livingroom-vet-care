@@ -42,11 +42,11 @@ CREATE FUNCTION narcotics_recovery_v1.release(p_request jsonb) RETURNS jsonb
 LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $$
 DECLARE receipt_value jsonb;epoch_value jsonb;arm_value jsonb;capture_value jsonb;scope_value jsonb;chosen_value jsonb;
  agreements_value jsonb:='[]';evidence_value record;evidence_document jsonb;acknowledgment_value jsonb;
- evidence_refs jsonb:='[]';product_value jsonb;causes_value jsonb;head_value jsonb;note_value text;scope_count integer;
+ evidence_refs jsonb:='[]';product_value jsonb;causes_value jsonb;head_value jsonb;note_value text;scope_count integer;chosen_ack jsonb;
 BEGIN
  receipt_value:=narcotics_recovery_v1.operation_request(p_request,'release');
  IF receipt_value IS NOT NULL THEN RETURN receipt_value;END IF;
- PERFORM narcotics_register_v1.keys(p_request->'data',ARRAY['agreements','history_review_note']);
+ PERFORM narcotics_register_v1.keys(p_request->'data',ARRAY['agreements','acknowledgments','history_review_note']);
  IF jsonb_typeof(p_request#>'{data,agreements}')IS DISTINCT FROM'array'
  OR jsonb_array_length(p_request#>'{data,agreements}')>256 THEN RAISE EXCEPTION 'narcotics_request_invalid';END IF;
  note_value:=narcotics_register_v1.text_value(p_request#>'{data,history_review_note}',4000);
@@ -72,12 +72,21 @@ BEGIN
   IF causes_value->'causes'IS DISTINCT FROM'[]'::jsonb OR causes_value->'membership'IS DISTINCT FROM'[]'::jsonb THEN
   RAISE EXCEPTION 'narcotics_recovery_unresolved_causes' USING ERRCODE='PT409';END IF;
  END LOOP;
- IF(SELECT count(*)FROM narcotics_recovery_v1.evidence e WHERE e.epoch_id=(epoch_value->>'epoch_id')::uuid)>64 THEN
+ IF jsonb_typeof(p_request#>'{data,acknowledgments}')IS DISTINCT FROM'array'
+ OR jsonb_array_length(p_request#>'{data,acknowledgments}')>64
+ OR jsonb_array_length(p_request#>'{data,acknowledgments}')<>(SELECT count(*)FROM narcotics_recovery_v1.evidence e WHERE e.arm_id=(epoch_value->>'arm_id')::uuid)
+ OR(SELECT count(DISTINCT value->'evidence_id')FROM jsonb_array_elements(p_request#>'{data,acknowledgments}'))<>jsonb_array_length(p_request#>'{data,acknowledgments}')THEN
+ RAISE EXCEPTION 'narcotics_recovery_every_evidence_review_required' USING ERRCODE='PT409';END IF;
+ IF(SELECT count(*)FROM narcotics_recovery_v1.evidence e WHERE e.arm_id=(epoch_value->>'arm_id')::uuid)>64 THEN
  RAISE EXCEPTION 'narcotics_capacity_exceeded' USING ERRCODE='PT413';END IF;
  FOR evidence_value IN SELECT e.evidence_id FROM narcotics_recovery_v1.evidence e
-  WHERE e.epoch_id=(epoch_value->>'epoch_id')::uuid ORDER BY e.evidence_id LOOP
+  WHERE e.arm_id=(epoch_value->>'arm_id')::uuid ORDER BY e.evidence_id LOOP
   evidence_document:=narcotics_recovery_v1.evidence_record(evidence_value.evidence_id);
-  acknowledgment_value:=narcotics_recovery_v1.acknowledgment_record(evidence_value.evidence_id);
+  SELECT value INTO STRICT chosen_ack FROM jsonb_array_elements(p_request#>'{data,acknowledgments}')
+   WHERE value->'evidence_id'=to_jsonb(evidence_value.evidence_id);
+  PERFORM narcotics_register_v1.keys(chosen_ack,ARRAY['evidence_id','acknowledgment_id']);
+  acknowledgment_value:=narcotics_recovery_v1.acknowledgment_record(evidence_value.evidence_id,(epoch_value->>'epoch_id')::uuid,
+   narcotics_register_v1.uuid_value(chosen_ack->'acknowledgment_id'));
   PERFORM controlled_count_v1.observer_candidate((acknowledgment_value->>'actor_id')::uuid,
    (evidence_document->>'product_id')::uuid,(evidence_document->>'site_id')::uuid);
   IF NOT EXISTS(SELECT 1 FROM auth.sessions s WHERE s.id=(acknowledgment_value->>'session_id')::uuid

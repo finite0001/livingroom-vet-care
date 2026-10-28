@@ -162,3 +162,43 @@ BEGIN
  EXECUTE format('COMMENT ON SCHEMA narcotics_recovery_v1 IS %L',projection::text);
  RETURN narcotics_recovery_v1.require_head();
 END $$;
+
+CREATE FUNCTION narcotics_recovery_v1.latest_epoch(p_head jsonb) RETURNS jsonb
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $$
+DECLARE row_value narcotics_recovery_v1.heads;prior_hash text;depth_value integer:=0;
+BEGIN
+ PERFORM controlled_count_entry_v1.assert_read_frontier();
+ -- The caller has validated the entire module and head inventory. Bind the
+ -- supplied complete document again, then follow actual ancestry, not dates.
+ SELECT *INTO STRICT row_value FROM narcotics_recovery_v1.heads h WHERE h.head_id=(p_head->>'head_id')::uuid;
+ IF p_head::text IS DISTINCT FROM(row_value.document||jsonb_build_object('record_hash',row_value.record_hash))::text
+ OR narcotics_recovery_v1.projection_of(row_value.document,row_value.record_hash)IS DISTINCT FROM narcotics_recovery_v1.catalog_projection()THEN
+ RAISE EXCEPTION 'narcotics_recovery_history_invalid' USING ERRCODE='23514';END IF;
+ LOOP
+  depth_value:=depth_value+1;
+  IF depth_value>4096 OR row_value.record_hash IS DISTINCT FROM narcotics_register_v1.hash('narcotics-recovery-head-v1',row_value.document)THEN
+  RAISE EXCEPTION 'narcotics_recovery_history_invalid' USING ERRCODE='23514';END IF;
+  IF row_value.kind='epoch_started'THEN RETURN row_value.document||jsonb_build_object('record_hash',row_value.record_hash);END IF;
+  IF row_value.prior_head_id IS NULL THEN RETURN NULL;END IF;
+  prior_hash:=row_value.prior_head_hash;
+  SELECT *INTO STRICT row_value FROM narcotics_recovery_v1.heads h WHERE h.head_id=row_value.prior_head_id;
+  IF row_value.record_hash IS DISTINCT FROM prior_hash THEN
+  RAISE EXCEPTION 'narcotics_recovery_history_invalid' USING ERRCODE='23514';END IF;
+ END LOOP;
+END $$;
+
+CREATE FUNCTION narcotics_recovery_v1.post_frontier_session_required(p_head jsonb) RETURNS void
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $$
+DECLARE epoch_value jsonb;identity_value jsonb;actor_value uuid;
+BEGIN
+ PERFORM controlled_count_entry_v1.assert_read_frontier();
+ epoch_value:=narcotics_recovery_v1.latest_epoch(p_head);
+ IF epoch_value IS NULL THEN RETURN;END IF;
+ actor_value:=auth.uid();identity_value:=narcotics_register_v1.identity(actor_value,false);
+ IF NOT EXISTS(SELECT 1 FROM auth.sessions s WHERE s.id=(identity_value->>'session_id')::uuid AND s.user_id=actor_value
+  AND s.created_at>(epoch_value->>'recorded_at')::timestamptz
+  AND(s.not_after IS NULL OR s.not_after>clock_timestamp()))THEN
+ RAISE EXCEPTION 'narcotics_recovery_fresh_session_required' USING ERRCODE='42501';END IF;
+ -- This is a lasting session watermark, including after release. Ordinary
+ -- server restarts do not invalidate sessions created after recovery.
+END $$;

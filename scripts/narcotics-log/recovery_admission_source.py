@@ -124,11 +124,18 @@ END''')
     call = 'PERFORM narcotics_register_v1.enter_register();'
     if cold.count(call) != 1:
         raise ValueError('Exact cold metadata boundary required')
-    post = create('recovery_post_frontier_required', '''BEGIN
+    post = create('recovery_post_frontier_required', '''DECLARE head_value jsonb;
+BEGIN
  IF NOT EXISTS(SELECT 1 FROM pg_namespace WHERE nspname='narcotics_recovery_v1')THEN RETURN;END IF;
  -- Complete parent source validation precedes the first own descriptor/audit read.
  PERFORM controlled_count_entry_v1.require_bound_module();
-''' + cold.replace(call, 'PERFORM narcotics_recovery_v1.require_head();') + '\nEND')
+''' + cold.replace(call, 'head_value:=narcotics_recovery_v1.require_head();') + '''
+ -- Exact control paths perform their own action-specific identity checks.
+ -- A nested ordinary entry retains request.path; no caller bypass flag exists.
+ IF NOT coalesce(current_setting('request.method',true)='POST'AND current_setting('request.path',true)=ANY(''' + paths(CONTROL) + '''),false)THEN
+  PERFORM narcotics_recovery_v1.post_frontier_session_required(head_value);
+ END IF;
+END''')
     definitions = operational.functions(getter + admission + post)
     enter = seal(definitions, ['controlled_count_entry_v1.admit_recovery_request()', 'controlled_count_entry_v1.recovery_post_frontier_required()'])
     enter += '\n PERFORM controlled_count_entry_v1.admit_recovery_request();\n'

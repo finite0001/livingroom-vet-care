@@ -13,7 +13,9 @@ CREATE TABLE narcotics_recovery_v1.evidence (
 );
 CREATE TABLE narcotics_recovery_v1.acknowledgments (
  acknowledgment_id uuid PRIMARY KEY REFERENCES narcotics_recovery_v1.operations(operation_id) DEFERRABLE INITIALLY DEFERRED,
- evidence_id uuid NOT NULL UNIQUE REFERENCES narcotics_recovery_v1.evidence(evidence_id),
+ evidence_id uuid NOT NULL REFERENCES narcotics_recovery_v1.evidence(evidence_id),
+ epoch_id uuid NOT NULL REFERENCES narcotics_recovery_v1.heads(head_id),
+ UNIQUE(evidence_id,epoch_id,session_id),
  evidence_hash text NOT NULL,actor_id uuid NOT NULL,session_id uuid NOT NULL,
  recorded_at timestamptz NOT NULL,review_note text NOT NULL,
  document jsonb NOT NULL,record_hash text NOT NULL CHECK(record_hash~'^[0-9a-f]{64}$'),
@@ -94,41 +96,45 @@ BEGIN
  epoch_value:=narcotics_recovery_v1.require_epoch();
  identity_value:=narcotics_recovery_v1.fresh_identity((p_request->>'actor_id')::uuid,false,epoch_value);
  evidence_value:=narcotics_recovery_v1.evidence_record(narcotics_register_v1.uuid_value(data_value->'evidence_id'));
- IF evidence_value->'actor_id'=p_request->'actor_id'OR evidence_value->'epoch_id'IS DISTINCT FROM epoch_value->'epoch_id'
+ IF evidence_value->'actor_id'=p_request->'actor_id'OR evidence_value->'arm_id'IS DISTINCT FROM epoch_value->'arm_id'
  OR evidence_value->>'record_hash'IS DISTINCT FROM data_value->>'evidence_hash'THEN
  RAISE EXCEPTION 'narcotics_recovery_independent_review_required' USING ERRCODE='PT409';END IF;
  PERFORM controlled_count_v1.current_principal((p_request->>'actor_id')::uuid,
   (evidence_value->>'product_id')::uuid,(evidence_value->>'site_id')::uuid,'observe');
  note_value:=narcotics_register_v1.text_value(data_value->'review_note',2000);at_value:=clock_timestamp();
  document_value:=jsonb_build_object('schema_version',1,'domain','lrv-narcotics-recovery-acknowledgment-v1',
-  'acknowledgment_id',p_request->'operation_id','evidence_id',evidence_value->'evidence_id','evidence_hash',evidence_value->'record_hash',
+  'acknowledgment_id',p_request->'operation_id','epoch_id',epoch_value->'epoch_id','evidence_id',evidence_value->'evidence_id','evidence_hash',evidence_value->'record_hash',
   'actor_id',p_request->'actor_id','session_id',identity_value->'session_id','recorded_at',narcotics_register_v1.utc(at_value),
   'review_note',note_value,'meaning_version','1',
   'meaning','I reviewed this exact file and the staff-reported account. This acknowledgment does not certify the file as a recovered original database event.');
  receipt_value:=narcotics_recovery_v1.save_operation(p_request,jsonb_build_object('acknowledgment_id',p_request->'operation_id',
   'evidence_id',evidence_value->'evidence_id','evidence_hash',evidence_value->'record_hash',
   'acknowledgment_hash',narcotics_register_v1.hash('narcotics-recovery-acknowledgment-v1',document_value)));
- INSERT INTO narcotics_recovery_v1.acknowledgments VALUES((p_request->>'operation_id')::uuid,(evidence_value->>'evidence_id')::uuid,
+ INSERT INTO narcotics_recovery_v1.acknowledgments VALUES((p_request->>'operation_id')::uuid,(evidence_value->>'evidence_id')::uuid,(epoch_value->>'epoch_id')::uuid,
   evidence_value->>'record_hash',(p_request->>'actor_id')::uuid,(identity_value->>'session_id')::uuid,at_value,note_value,
   document_value,narcotics_register_v1.hash('narcotics-recovery-acknowledgment-v1',document_value));
  RETURN receipt_value;
 END $$;
 
-CREATE FUNCTION narcotics_recovery_v1.acknowledgment_record(p_evidence uuid) RETURNS jsonb
+CREATE FUNCTION narcotics_recovery_v1.acknowledgment_record(p_evidence uuid,p_epoch uuid,p_acknowledgment uuid) RETURNS jsonb
 LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $$
-DECLARE saved narcotics_recovery_v1.acknowledgments;evidence_value jsonb;operation_value jsonb;expected jsonb;
+DECLARE saved narcotics_recovery_v1.acknowledgments;evidence_value jsonb;operation_value jsonb;expected jsonb;epoch_value narcotics_recovery_v1.heads;
 BEGIN
  PERFORM controlled_count_entry_v1.assert_read_frontier();PERFORM narcotics_recovery_v1.require_exclusive_admission();
  evidence_value:=narcotics_recovery_v1.evidence_record(p_evidence);
- SELECT *INTO STRICT saved FROM narcotics_recovery_v1.acknowledgments a WHERE a.evidence_id=p_evidence;
+ SELECT *INTO STRICT saved FROM narcotics_recovery_v1.acknowledgments a WHERE a.evidence_id=p_evidence AND a.epoch_id=p_epoch AND a.acknowledgment_id=p_acknowledgment;
+ SELECT *INTO STRICT epoch_value FROM narcotics_recovery_v1.heads h WHERE h.head_id=p_epoch;
  operation_value:=narcotics_recovery_v1.saved_operation(saved.acknowledgment_id);
  expected:=jsonb_build_object('schema_version',1,'domain','lrv-narcotics-recovery-acknowledgment-v1',
-  'acknowledgment_id',saved.acknowledgment_id,'evidence_id',saved.evidence_id,'evidence_hash',saved.evidence_hash,
+  'acknowledgment_id',saved.acknowledgment_id,'epoch_id',saved.epoch_id,'evidence_id',saved.evidence_id,'evidence_hash',saved.evidence_hash,
   'actor_id',saved.actor_id,'session_id',saved.session_id,'recorded_at',narcotics_register_v1.utc(saved.recorded_at),
   'review_note',saved.review_note,'meaning_version','1',
   'meaning','I reviewed this exact file and the staff-reported account. This acknowledgment does not certify the file as a recovered original database event.');
  PERFORM narcotics_register_v1.keys(operation_value#>'{original_request,data}',ARRAY['evidence_id','evidence_hash','acknowledged','review_note']);
- IF expected::text IS DISTINCT FROM saved.document::text
+ IF epoch_value.kind<>'epoch_started'OR to_jsonb(epoch_value.arm_id)IS DISTINCT FROM evidence_value->'arm_id'
+ OR saved.recorded_at<=epoch_value.recorded_at
+ OR operation_value#>'{original_request,expected_head_id}'IS DISTINCT FROM to_jsonb(saved.epoch_id)
+ OR expected::text IS DISTINCT FROM saved.document::text
  OR saved.record_hash IS DISTINCT FROM narcotics_register_v1.hash('narcotics-recovery-acknowledgment-v1',expected)
  OR saved.evidence_hash IS DISTINCT FROM evidence_value->>'record_hash'
  OR saved.actor_id=(evidence_value->>'actor_id')::uuid
@@ -163,7 +169,7 @@ BEGIN
  IF NOT EXISTS(SELECT 1 FROM jsonb_array_elements(arm_value#>'{capture,inventory,scopes}')scope(value)
   WHERE scope.value->'product_id'=to_jsonb(product_value)AND scope.value->'site_id'=to_jsonb(site_value))THEN
  RAISE EXCEPTION 'narcotics_recovery_scope_unavailable' USING ERRCODE='PT409';END IF;
- IF(SELECT count(*)FROM narcotics_recovery_v1.evidence e WHERE e.epoch_id=(epoch_value->>'epoch_id')::uuid)>=64 THEN
+ IF(SELECT count(*)FROM narcotics_recovery_v1.evidence e WHERE e.arm_id=(epoch_value->>'arm_id')::uuid)>=64 THEN
  RAISE EXCEPTION 'narcotics_capacity_exceeded' USING ERRCODE='PT413';END IF;
  reported_value:=narcotics_register_v1.instant_value(data_value->'reported_occurred_at');
  claim_value:=narcotics_register_v1.text_value(data_value->'claim',4000);

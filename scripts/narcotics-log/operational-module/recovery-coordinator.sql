@@ -67,7 +67,7 @@ END $$;
 
 CREATE FUNCTION narcotics_recovery_v1.begin_epoch(p_request jsonb) RETURNS jsonb
 LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $$
-DECLARE receipt_value jsonb;head_value jsonb;marker_value jsonb;server_value jsonb;identity_value jsonb;capture_value jsonb;arm_value jsonb;
+DECLARE receipt_value jsonb;head_value jsonb;marker_value jsonb;server_value jsonb;identity_value jsonb;capture_value jsonb;arm_value jsonb;prior_epoch jsonb;
 BEGIN
  receipt_value:=narcotics_recovery_v1.operation_request(p_request,'begin_epoch');
  IF receipt_value IS NOT NULL THEN RETURN receipt_value;END IF;
@@ -76,11 +76,21 @@ BEGIN
   AND(jsonb_typeof(item.value)IS DISTINCT FROM'string'OR item.value#>>'{}'!~'^[0-9a-f]{64}$'))THEN
  RAISE EXCEPTION 'narcotics_request_invalid';END IF;
  head_value:=narcotics_recovery_v1.require_head();
- IF head_value->>'mode'<>'armed'OR head_value->'epoch_id'<>'null'::jsonb THEN
+ IF head_value->>'mode'<>'armed'THEN
  RAISE EXCEPTION 'narcotics_recovery_epoch_unavailable' USING ERRCODE='PT409';END IF;
  marker_value:=narcotics_recovery_v1.backup_record(narcotics_register_v1.uuid_value(p_request#>'{data,marker_id}'));
  server_value:=narcotics_recovery_v1.server_identity();
  identity_value:=narcotics_register_v1.identity((p_request->>'actor_id')::uuid,true);
+ IF head_value->'epoch_id'<>'null'::jsonb THEN
+  prior_epoch:=narcotics_recovery_v1.latest_epoch(head_value);
+  IF prior_epoch->'epoch_id'IS DISTINCT FROM head_value->'epoch_id'
+  OR prior_epoch#>'{body,native_receiver}'IS NOT DISTINCT FROM server_value
+  OR prior_epoch#>'{body,operator_supplied_backup_references}'IS DISTINCT FROM p_request->'data' THEN
+  RAISE EXCEPTION 'narcotics_recovery_epoch_unavailable' USING ERRCODE='PT409';END IF;
+ END IF;
+ -- Epoch time must strictly separate every restored session from later grants.
+ IF EXISTS(SELECT 1 FROM auth.sessions s WHERE NOT isfinite(s.created_at)OR s.created_at>clock_timestamp())THEN
+ RAISE EXCEPTION 'narcotics_recovery_auth_clock_invalid' USING ERRCODE='PT409';END IF;
  IF marker_value->'arm_id'IS DISTINCT FROM head_value->'arm_id'
  OR marker_value->>'record_hash'IS DISTINCT FROM p_request#>>'{data,marker_hash}'
  OR marker_value#>'{source,boot}'IS NOT DISTINCT FROM server_value->'boot'
@@ -90,8 +100,9 @@ BEGIN
   AND(s.not_after IS NULL OR s.not_after>clock_timestamp()))THEN
  RAISE EXCEPTION 'narcotics_recovery_fresh_receiver_required' USING ERRCODE='PT409';END IF;
  arm_value:=narcotics_recovery_v1.arm_record((head_value->>'arm_id')::uuid);
- capture_value:=narcotics_recovery_v1.capture_inventory((p_request->>'actor_id')::uuid,true);
- IF capture_value::text IS DISTINCT FROM(arm_value->'capture')::text THEN
+ capture_value:=narcotics_recovery_v1.capture_inventory((p_request->>'actor_id')::uuid,prior_epoch IS NULL);
+ IF(prior_epoch IS NULL AND capture_value::text IS DISTINCT FROM(arm_value->'capture')::text)
+ OR(capture_value->'inventory')::text IS DISTINCT FROM(arm_value#>'{capture,inventory}')::text THEN
  RAISE EXCEPTION 'narcotics_recovery_boundary_changed' USING ERRCODE='PT409';END IF;
  -- External file references are explicitly attributed to the operator. This
  -- database cannot prove its own dump completed, nor a future archive hash.
@@ -99,7 +110,9 @@ BEGIN
  -- startup before it admits a populated restore proof.
  head_value:=narcotics_recovery_v1.append_head('epoch_started',(p_request->>'operation_id')::uuid,(p_request->>'actor_id')::uuid,
   jsonb_build_object('marker_id',marker_value->'marker_id','marker_hash',marker_value->'record_hash',
-   'native_receiver',server_value,'operator_supplied_backup_references',p_request->'data'),
+   'native_receiver',server_value,'prior_epoch_id',prior_epoch->'epoch_id',
+   'current_capture_hash',narcotics_register_v1.hash('narcotics-recovery-capture-v1',capture_value),
+   'operator_supplied_backup_references',p_request->'data'),
   (p_request->>'expected_head_id')::uuid,p_request->>'expected_head_hash');
  RETURN narcotics_recovery_v1.save_operation(p_request,jsonb_build_object('head_id',head_value->'head_id','head_hash',head_value->'record_hash',
   'arm_id',head_value->'arm_id','epoch_id',head_value->'epoch_id','mode','armed','started_at',head_value->'recorded_at','native_receiver',server_value));
