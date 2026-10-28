@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ${{ runner.temp }}/lrv-canonical206-regression
+        working-directory: ../lrv-canonical206-regression
     steps:
       - uses: actions/checkout@v4
       - name: Admit unchanged historical 206 regression source
@@ -357,7 +357,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     defaults:
       run:
-        working-directory: ${{ runner.temp }}/lrv-canonical206-regression
+        working-directory: ../lrv-canonical206-regression
     steps:
       - uses: actions/checkout@v4
       - name: Admit unchanged historical 206 regression source
@@ -393,7 +393,7 @@ jobs:
     timeout-minutes: 25
     defaults:
       run:
-        working-directory: ${{ runner.temp }}/lrv-canonical206-regression
+        working-directory: ../lrv-canonical206-regression
     steps:
       - uses: actions/checkout@v4
       - name: Admit unchanged historical 206 regression source

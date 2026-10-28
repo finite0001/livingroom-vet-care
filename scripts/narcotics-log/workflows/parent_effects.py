@@ -33,8 +33,14 @@ def commissioning_parent_additions(grants):
 def verify_admissions(context, proof, query):
     actor = values.uid(context["users"][0]["id"])
     allowed = {("receive_inventory", values.uid(context["ids"]["legacy_receive"]))}
-    for entry in proof["writes"]:
+    for entry in proof.get("writes", []):
         allowed.add((entry["writer"], values.uid(entry["pointer"]["operation_id"])))
+    if "gateway" in context:
+        allowed.add(("adjust_inventory", values.uid(context["gateway"]["pointer"]["operation_id"])))
+    if "witness" in context:
+        allowed.add(("adjust_inventory", values.uid(context["witness"]["parent_pointer"]["operation_id"])))
+    if "management" in context:
+        allowed.add(("adjust_inventory", values.uid(context["management"]["parent_action_id"])))
     if "historical_nonstock" in proof:
         allowed.add(("record_patient_treatment", values.uid(proof["historical_nonstock"]["request"]["p_id"])))
     pairs = ",".join("('" + writer + "','" + identifier + "'::uuid)" for writer, identifier in sorted(allowed))
@@ -98,6 +104,15 @@ def expected(profile, grants):
             if profile == "native_return_v2_discrepancy":
                 add(1, "native_return_discrepancy_events", "native_return_discrepancy_operations", "stock_discrepancy_sources")
                 add(2, "audit_logs")
+    elif profile in ("ordinary_none", "independent_witness", "variance_reconciliation"):
+        add(1, "inventory_movements", "stock_movement_sources", "audit_logs", "controlled_stock_source_links",
+            "controlled_stock_actions", "controlled_stock_events", "controlled_stock_event_lines", "controlled_stock_container_transitions")
+        add(2 if profile == "ordinary_none" else 1, "controlled_stock_preparations")
+        if profile == "ordinary_none":
+            add(1, "controlled_stock_cancellations")
+        if profile == "independent_witness":
+            add(1, "controlled_stock_policy_versions", "controlled_stock_policy_sites", "controlled_stock_state_events")
+        result.pop("public.stock_writer_admissions")
     elif profile != "commission_all" and profile not in ("count_agreement", "browser_lost_finalize"):
         raise ValueError("Finite prospective profile required")
 

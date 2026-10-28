@@ -37,8 +37,17 @@ class Diagnosis(business.BusinessInstallation):
         if body.count(original) != 1 or body.count("exception when others or query_canceled or assert_failure then") != 1:
             raise ValueError("Exact source exception fence required")
         program = raw[start:body_start].replace("CREATE FUNCTION", "CREATE OR REPLACE FUNCTION", 1)
-        program += body.replace(original, "RAISE;", 1) + "$$;"
-        runtime.raw_query("engineering-only-unmask-one-api", program)
+        instrumented = body.replace(original, "RAISE;", 1)
+        program += instrumented + "$$;"
+        # This is deliberately committed only in the owned diagnostic fixture.
+        # The normal read-only observer wrapper otherwise rolls DDL back.
+        runtime.raw_query("engineering-only-unmask-one-api", "BEGIN;" + program + "COMMIT;")
+        wanted = hashlib.sha256(instrumented.encode()).hexdigest()
+        checked = runtime.selected_query("engineering-instrumentation-verified",
+            "select jsonb_build_object('source_body_matches',encode(sha256(convert_to(prosrc,'UTF8')),'hex')='" + wanted + "')"
+            "from pg_proc where oid='public.execute_controlled_stock_administration_v1(jsonb)'::regprocedure;")
+        if checked != {"source_body_matches": True}:
+            raise ValueError("Engineering-only source instrumentation did not persist")
 
     def execute(self):
         try:

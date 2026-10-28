@@ -17,9 +17,11 @@ def main():
     root = prefix.ROOT
     if os.environ.get("GITHUB_ACTIONS") != "true":
         raise ValueError("This fixed historical worktree entry point is CI-only")
-    parent = Path(os.environ["RUNNER_TEMP"])
-    if not parent.is_absolute() or parent.is_symlink() or not parent.is_dir():
-        raise ValueError("Real existing runner temp required")
+    if Path(os.environ["GITHUB_WORKSPACE"]).resolve() != root:
+        raise ValueError("Exact checked-out CI workspace required")
+    parent = root.parent
+    if parent.is_symlink() or not parent.is_dir():
+        raise ValueError("Real existing runner workspace parent required")
     target = parent / "lrv-canonical206-regression"
     if target.exists() or target.is_symlink():
         raise ValueError("Fresh historical worktree required")
