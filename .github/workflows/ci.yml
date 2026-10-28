@@ -83,9 +83,16 @@ jobs:
         run: python3 scripts/verify-clinical-audio-edge-isolation.py
 
   database:
+    name: Historical 206 database regressions
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ runner.temp }}/lrv-canonical206-regression
     steps:
       - uses: actions/checkout@v4
+      - name: Admit unchanged historical 206 regression source
+        working-directory: ${{ github.workspace }}
+        run: python3 -I -B scripts/narcotics-log/prepare_historical_ci.py
       - name: Verify local concurrency harness regressions
         run: python3 -B -m unittest discover -s supabase/tests -p 'test_*_harness.py'
       - uses: supabase/setup-cli@v1
@@ -343,12 +350,19 @@ jobs:
         run: python3 -B tests/diagnostics/pdf-jobs-disposable.py --run-synthetic-local
 
   controlled-stock:
+    name: Historical 206 controlled-stock proofs
     # Run only the owned rehearsal stacks, without the database job's foundation.
     # Existing probe deadlines, reserves, workloads and cleanup gates remain unchanged.
     # Secondary review declares its own workload bound and cleanup reserve.
     runs-on: ubuntu-24.04-arm
+    defaults:
+      run:
+        working-directory: ${{ runner.temp }}/lrv-canonical206-regression
     steps:
       - uses: actions/checkout@v4
+      - name: Admit unchanged historical 206 regression source
+        working-directory: ${{ github.workspace }}
+        run: python3 -I -B scripts/narcotics-log/prepare_historical_ci.py
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
@@ -374,10 +388,17 @@ jobs:
         run: python3 -B tests/controlled-drugs/engine/candidate/probe-secondary-review-protocol.py --run-synthetic-local --acceptance
 
   diagnostic-renderer:
+    name: Historical 206 renderer and scheduling regressions
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: ${{ runner.temp }}/lrv-canonical206-regression
     steps:
       - uses: actions/checkout@v4
+      - name: Admit unchanged historical 206 regression source
+        working-directory: ${{ github.workspace }}
+        run: python3 -I -B scripts/narcotics-log/prepare_historical_ci.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22

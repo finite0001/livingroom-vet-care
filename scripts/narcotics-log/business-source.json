@@ -24,8 +24,8 @@
   },
   "kind": "narcotics-genuine-business-source-v1",
   "runner": {
-    "bytes": 16041,
-    "sha256": "d56062025539c022c21344de11c51e616aa56d92d82d869daff580b762ffe8df"
+    "bytes": 16203,
+    "sha256": "9635e5b893043d9202d90205c17d03e115cc3e4627088e213728449eff747b9d"
   },
   "workflows": {
     "auth_effects.py": {

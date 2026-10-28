@@ -217,6 +217,9 @@ def commissioning_parent_additions(grants):
 
 
 class BusinessInstallation(installation.Installation):
+    def after_installation(self, runtime):
+        """Normal acceptance never instruments the installed application."""
+
     def __init__(self, view, evidence, layout, started, *, profile):
         super().__init__(view, evidence, layout, started)
         self.profile = profile
@@ -227,6 +230,7 @@ class BusinessInstallation(installation.Installation):
         super().execute()
         m = modules()
         runtime = Runtime(self)
+        self.after_installation(runtime)
         save(self.evidence, "genuine-REST-source-defaults", m.rest.effective_defaults(runtime))
         save(self.evidence, "genuine-Auth-source-defaults", m.auth.effective_defaults(runtime))
         auth_before = m.auth.initial(runtime)

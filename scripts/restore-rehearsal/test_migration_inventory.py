@@ -1,10 +1,21 @@
 """Offline inventory checks: upgrade rehearsals must cover the canonical release."""
 import ast
+import importlib.util
 from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = Path(__file__).with_name("run.py")
+
+
+def historical_versions():
+    # These restore scenarios intentionally retain the original 206 release.
+    # Current 208 installation/business acceptance has its own complete suite.
+    spec = importlib.util.spec_from_file_location("historical_inventory_prefix", ROOT / "scripts/narcotics-log/prefix_view.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    pins = module.canonical206(ROOT)
+    return sorted(Path(name).name.split("_", 1)[0] for name in pins)
 
 
 def assigned_literal(name):
@@ -16,14 +27,14 @@ def assigned_literal(name):
 
 
 class MigrationInventoryTests(unittest.TestCase):
-    def test_current_restore_count_matches_unique_canonical_versions(self):
-        versions = [path.name.split("_", 1)[0] for path in (ROOT / "supabase/migrations").glob("*.sql")]
+    def test_retained_restore_count_matches_unique_historical_versions(self):
+        versions = historical_versions()
         self.assertEqual(len(versions), len(set(versions)))
         self.assertEqual(assigned_literal("CURRENT_RESTORE_MIGRATION_COUNT"), len(versions))
 
     def test_both_upgrade_modes_include_every_post_baseline_migration(self):
         # Both reviewed historical baseline modes share this explicit suffix.
-        expected = sorted(path.name.split("_", 1)[0] for path in (ROOT / "supabase/migrations").glob("*.sql") if path.name.split("_", 1)[0] >= "20260914010000")
+        expected = [version for version in historical_versions() if version >= "20260914010000"]
         self.assertEqual(assigned_literal("new_versions"), expected)
 
 

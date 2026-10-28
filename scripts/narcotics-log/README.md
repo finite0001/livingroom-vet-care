@@ -25,6 +25,12 @@ proof dependencies into a private 206-file view. Each old proof runs in that vie
 Those results apply to the historical prefix; they do not certify the current
 208-file application.
 
+The retained database, controlled-stock and renderer CI jobs use a separate Git
+worktree. Its original 206 files are verified before and after excluding only
+the two explicitly pinned forward files. Existing proof programs, budgets and
+assertions stay unchanged. Current frontend checks run in the complete checkout;
+the dedicated narcotics jobs install and exercise the complete 208 release.
+
 Source-only checks:
 
 ```sh
@@ -39,6 +45,9 @@ node --test scripts/narcotics-log/frame-cli.test.mjs
 The dedicated GitHub workflow runs on an isolated runner. It derives statement
 hashes from the pinned official CLI parser and TypeScript implementation before
 constructing a database. No observed database values become expected metadata.
+The literal golden is supplemented by independently created, empty source
+reference schemas. Their complete expected metadata is checked against the
+installed metadata; unrelated golden values cannot change through that join.
 
 The rehearsal creates a fresh local project, pauses and drains its scheduler
 before applying the original 206 migrations, and applies the two forward

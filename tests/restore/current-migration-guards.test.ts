@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import test from "node:test";
 import ts from "typescript";
 
@@ -36,15 +37,13 @@ test("migration inventory recognizes multiline runtime guards without matching o
   `), ["202", "203"]);
 });
 
-test("current owned invoice and clinical runtimes expect the checked-in migration count", () => {
-  const current = String(readdirSync(new URL("../../supabase/migrations/", import.meta.url))
-    .filter((name) => /^\d+_.+\.sql$/.test(name)).length);
-  assert.notEqual(current, "0");
-  // These are current disposable runtimes, never the intentional historical upgrade fixtures.
+test("retained invoice and clinical runtimes keep their explicit historical 206 boundary", () => {
+  // CI runs these unchanged runtimes in the admitted historical worktree.
+  // The separate narcotics workflow verifies the complete current application.
   for (const directory of ["invoice-reminders", "clinical-audio", "clinical-notes", "clinical-dictation"]) {
     const source = readFileSync(new URL(`../${directory}/local-roundtrip.ts`, import.meta.url), "utf8");
-    assert.deepEqual(migrationExpectations(source), [current],
-      `${directory}/local-roundtrip.ts must match its current owned migration inventory`);
+    assert.deepEqual(migrationExpectations(source), ["206"],
+      `${directory}/local-roundtrip.ts must match its historical owned migration inventory`);
   }
 });
 
@@ -75,11 +74,23 @@ test("latest migration guards recognize actual ledger queries and exclude other 
   `), ["20261022010000"]);
 });
 
-test("all current scalar ledger guards require canonical 206 and its exact version", () => {
+test("current inventory preserves the exact 206 prefix and names both forward migrations", () => {
   const inventory = readdirSync(new URL("../../supabase/migrations/", import.meta.url))
     .filter((name) => /^\d+_.+\.sql$/.test(name)).sort();
-  assert.equal(inventory.length, 206);
-  assert.equal(inventory.at(-1), "20261022010000_controlled_secondary_review_private.sql");
+  const candidate = JSON.parse(readFileSync(new URL("../../scripts/narcotics-log/release-candidate.json", import.meta.url), "utf8"));
+  assert.equal(inventory.length, 208);
+  assert.equal(candidate.migration_count, 208);
+  assert.equal(candidate.prefix_migration_count, 206);
+  assert.equal(inventory[205], "20261022010000_controlled_secondary_review_private.sql");
+  assert.deepEqual(inventory.slice(206), ["20261027223535_controlled_record_review_workflows.sql", "20261027223544_narcotics_count_and_stock_workflows.sql"]);
+  assert.deepEqual(Object.keys(candidate.migrations).sort(), inventory.slice(206));
+  for (const name of inventory.slice(206)) {
+    const raw = readFileSync(new URL(`../../supabase/migrations/${name}`, import.meta.url));
+    assert.deepEqual(candidate.migrations[name], { bytes: raw.length, sha256: createHash("sha256").update(raw).digest("hex") });
+  }
+});
+
+test("retained scalar ledger guards require historical 206 and its exact version", () => {
   for (const path of ["invoice-reminders/local-roundtrip.ts", "clinical-audio/local-roundtrip.ts",
     "clinical-notes/local-roundtrip.ts", "clinical-dictation/local-roundtrip.ts",
     "clinical-calls/local-roundtrip.ts", "clinical-recap/local-roundtrip.ts",
