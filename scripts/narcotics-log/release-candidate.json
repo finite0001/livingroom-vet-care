@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61508280,
-      "sha256": "80b08f6fe06ee6bbbe520cb9f6ce2aa7fd10aca8c5f00f5db8083518d6494d98"
+      "bytes": 61508331,
+      "sha256": "28d86646cae86eb080bb7719c66f3aa3dfba8a6b076996b169331c511fdfab75"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61504378,
-      "sha256": "85828a9e4d755b3dc56e51cb56e0e0f1d2fa93823f6114421e712f937801923a"
+      "bytes": 61504429,
+      "sha256": "51dcc499e9ea1f3215b7825c77138c3616189bbb8df4ce791aee8239813dc7c5"
     }
   },
   "source_corrections": {
@@ -251,6 +251,40 @@
       ],
       "no_observed_target_expected_values": true,
       "reason": "Before any current function installation, verify original205 and original206 metadata against their independently frozen source. Preserve the separate final current-source metadata checks."
+    },
+    "staff_sql_expression_repairs": {
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_v1.policy_closure_values(jsonb,jsonb)": {
+          "actual_real_Auth_verification_pending": true,
+          "all_other_checks_unchanged": true,
+          "complete_source_inverse": true,
+          "new_body_sha256": "26a779db438f7705d4466e0c867cbcdad1f1e2d319a8fb5d6e6f3c35ec9f6b6e",
+          "new_expression": "((p_policy->'actor')-'name')::text",
+          "old_body_sha256": "966e3308ae471e4a8b80946478d9614a50a2a91e473e9dffb6a569e01cf7dd52",
+          "old_expression": "(p_policy->'actor'-'name')::text"
+        },
+        "controlled_stock_workflow_v1.managed_parent_row_values(jsonb)": {
+          "actual_real_Auth_verification_pending": true,
+          "all_other_checks_unchanged": true,
+          "complete_source_inverse": true,
+          "new_body_sha256": "1f798a3fdb12858f93b522e8b5a51ed3d6c0458fcd27c1a47197caf6f2f09fff",
+          "new_expression": "jsonb_array_elements(f->'expected_effects') AS expected_effect(effect) GROUP BY expected_effect.effect-'quantity_delta'",
+          "old_body_sha256": "e87af79400fd2e75ed9eef89af3befae7b7d6364f4259da362aa617b2b29d969",
+          "old_expression": "jsonb_array_elements(f->'expected_effects')x group by x-'quantity_delta'"
+        },
+        "controlled_stock_workflow_v1.witness_row_required(jsonb)": {
+          "actual_real_Auth_verification_pending": true,
+          "all_other_checks_unchanged": true,
+          "complete_source_inverse": true,
+          "new_body_sha256": "04682845bad50dbbe30a6b29572ec53a23c54c8eb6693c42bf228e690f38466e",
+          "new_expression": "((p_row->'request')-array['preparation_digest','attest_witness'])::text",
+          "old_body_sha256": "d3cb5367a0fb225815099a967c129f1c4e6beb3fbb8593501959a7744738cad9",
+          "old_expression": "(p_row->'request'-array['preparation_digest','attest_witness'])::text"
+        }
+      },
+      "only_three_function_body_hash_metadata_differences": true
     }
   },
   "transaction_owner": "official CLI; outer BEGIN/COMMIT removed; advisory installation fence added; exact historical ledger literals restored from independent source pins",
