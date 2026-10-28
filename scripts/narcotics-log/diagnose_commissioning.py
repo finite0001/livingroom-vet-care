@@ -13,16 +13,23 @@ import time
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import business_rehearsal as business
 
+TARGETS = {
+    "stock-prepare": ("ordinary_none", "prepare_managed_stock_intent_v1", "stock_entry_request_failed"),
+    "count-policy": ("count_agreement", "publish_controlled_count_policy_v1", "count_request_failed"),
+}
+
 
 class Diagnosis(business.BusinessInstallation):
-    def __init__(self, *args):
-        super().__init__(*args, profile="ordinary_none")
-        self.result.update(kind="narcotics-stock-preparation-engineering-only-v1", engineering_only=True)
+    def __init__(self, *args, target):
+        self.target = target
+        profile, self.api, self.failure = TARGETS[target]
+        super().__init__(*args, profile=profile)
+        self.result.update(kind="narcotics-fixed-api-engineering-only-v1", engineering_only=True, diagnostic_target=target)
 
     def after_installation(self, runtime):
         root = business.installation.ROOT
         raw = business.installation.prefix.regular(root / "supabase/migrations" / business.installation.prefix.FORWARD[1]).decode()
-        marker = "CREATE FUNCTION public.prepare_managed_stock_intent_v1("
+        marker = "CREATE FUNCTION public." + self.api + "("
         if raw.count(marker) != 1:
             raise ValueError("Exactly one source commissioning API required")
         start = raw.index(marker)
@@ -30,10 +37,11 @@ class Diagnosis(business.BusinessInstallation):
         end = raw.index("$$;", body_start)
         body = raw[body_start:end]
         static = json.loads((business.HERE / "module-expected.json").read_text())
-        expected = static["properties"]["functions"]["public.prepare_managed_stock_intent_v1(jsonb)"]["body_sha256"]
+        signature = "public." + self.api + "(jsonb)"
+        expected = static["properties"]["functions"][signature]["body_sha256"]
         if hashlib.sha256(body.encode()).hexdigest() != expected:
             raise ValueError("Original uninstrumented source API hash differs")
-        original = "raise exception 'stock_entry_request_failed'using errcode='P0001',detail='',hint='';"
+        original = "raise exception '" + self.failure + "'using errcode='P0001',detail='',hint='';"
         if body.count(original) != 1 or body.count("exception when others or query_canceled or assert_failure then") != 1:
             raise ValueError("Exact source exception fence required")
         program = raw[start:body_start].replace("CREATE FUNCTION", "CREATE OR REPLACE FUNCTION", 1)
@@ -50,7 +58,7 @@ class Diagnosis(business.BusinessInstallation):
         # unrelated earlier writer correctly refuses instrumentation. Original
         # 205/206/269 descriptors and all business rows remain untouched.
         expected = business.installation.canonical(self.expected_module).replace("'", "''")
-        path = "ARRAY['properties','functions','public.prepare_managed_stock_intent_v1(jsonb)','body_sha256']"
+        path = "ARRAY['properties','functions','" + signature + "','body_sha256']"
         bind = """ALTER TABLE controlled_count_v1.descriptor DISABLE TRIGGER count_history_immutable;
 DO $engineering_source_binding$ DECLARE changed integer;BEGIN
  UPDATE controlled_count_v1.descriptor d SET
@@ -66,7 +74,7 @@ ALTER TABLE controlled_count_v1.descriptor ENABLE TRIGGER count_history_immutabl
         runtime.raw_query("engineering-only-unmask-one-api", "BEGIN;" + program + bind + "COMMIT;")
         checked = runtime.selected_query("engineering-instrumentation-verified",
             "select jsonb_build_object('source_body_matches',encode(sha256(convert_to(prosrc,'UTF8')),'hex')='" + wanted + "')"
-            "from pg_proc where oid='public.prepare_managed_stock_intent_v1(jsonb)'::regprocedure;")
+            "from pg_proc where oid='" + signature + "'::regprocedure;")
         if checked != {"source_body_matches": True}:
             raise ValueError("Engineering-only source instrumentation did not persist")
 
@@ -77,14 +85,14 @@ ALTER TABLE controlled_count_v1.descriptor ENABLE TRIGGER count_history_immutabl
             transcript = self.evidence / "http-transcript.json"
             if transcript.is_file():
                 calls = json.loads(transcript.read_text())
-                if calls and calls[-1]["path"] == "/rest/v1/rpc/prepare_managed_stock_intent_v1" and 400 <= calls[-1]["status"] <= 599:
+                if calls and calls[-1]["path"] == "/rest/v1/rpc/" + self.api and 400 <= calls[-1]["status"] <= 599:
                     response = business.installation.prefix.regular(self.evidence / f"http-{len(calls):03d}-response.json", 2097152)
                     if hashlib.sha256(response).hexdigest() != calls[-1]["response_sha256"]:
                         raise ValueError("Original diagnostic response changed")
                     error = json.loads(response)
                     if type(error) is not dict or set(error) != {"code", "details", "hint", "message"}:
                         raise ValueError("Exact native error response required")
-                    with (self.evidence / "diagnostic-native-failure.txt").open("xb") as stream:
+                    with (self.evidence / ("diagnostic-native-failure-" + self.target + ".txt")).open("xb") as stream:
                         stream.write(response)
             raise
         finally:
@@ -94,11 +102,12 @@ ALTER TABLE controlled_count_v1.descriptor ENABLE TRIGGER count_history_immutabl
 
 
 if __name__ == "__main__":
-    if sys.argv[1:] != ["--run-synthetic-local"]:
+    if len(sys.argv) != 4 or sys.argv[1:3] != ["--run-synthetic-local", "--target"] or sys.argv[3] not in TARGETS:
         raise ValueError("Explicit fixed local diagnosis required")
+    from functools import partial
     os.umask(0o077)
     started = time.monotonic()
     layout, pins = business.source_admission()
     name = str(Path(__file__).resolve().relative_to(business.installation.ROOT))
     pins[name] = business.installation.sha(business.installation.prefix.regular(Path(__file__).resolve()))
-    business.installation.execute_owned(layout, pins, started, Diagnosis)
+    business.installation.execute_owned(layout, pins, started, partial(Diagnosis, target=sys.argv[3]))
