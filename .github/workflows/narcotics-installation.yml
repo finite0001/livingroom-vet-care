@@ -21,22 +21,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  staff-frontend:
+  historical-source-boundary:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-    env:
-      VITE_SUPABASE_URL: http://127.0.0.1:54321
-      VITE_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-not-a-production-key
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run check
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - name: Materialize and admit the unchanged historical release
+        run: python3 -I -B scripts/narcotics-log/prepare_historical_ci.py
+      - name: Verify retained installation artifacts in that historical view
+        working-directory: ../lrv-canonical206-regression
+        run: |
+          python3 -B tests/controlled-drugs/engine/candidate/release_assembly.py --check
+          python3 -B tests/controlled-drugs/engine/candidate/cli_migration_body.py --check
+          python3 -B tests/controlled-drugs/engine/candidate/secondary_review_release.py --check
+          python3 -B tests/controlled-drugs/engine/candidate/secondary_review_cli_body.py --check
 
   forward-installation:
     # This is installation evidence only. Auth, ordinary writers, count

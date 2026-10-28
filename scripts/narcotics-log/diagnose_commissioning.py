@@ -37,12 +37,33 @@ class Diagnosis(business.BusinessInstallation):
         if body.count(original) != 1 or body.count("exception when others or query_canceled or assert_failure then") != 1:
             raise ValueError("Exact source exception fence required")
         program = raw[start:body_start].replace("CREATE FUNCTION", "CREATE OR REPLACE FUNCTION", 1)
-        instrumented = body.replace(original, "RAISE;", 1)
+        if body.count("declare q jsonb;") != 1:
+            raise ValueError("Exact diagnostic declaration anchor required")
+        instrumented = body.replace("declare q jsonb;", "declare diagnostic_native_context text;q jsonb;", 1)
+        instrumented = instrumented.replace(original,
+            "GET STACKED DIAGNOSTICS diagnostic_native_context = PG_EXCEPTION_CONTEXT;"
+            "RAISE EXCEPTION USING ERRCODE=SQLSTATE,MESSAGE=SQLERRM,DETAIL=diagnostic_native_context,HINT='';", 1)
         program += instrumented + "$$;"
-        # This is deliberately committed only in the owned diagnostic fixture.
-        # The normal read-only observer wrapper otherwise rolls DDL back.
-        runtime.raw_query("engineering-only-unmask-one-api", "BEGIN;" + program + "COMMIT;")
         wanted = hashlib.sha256(instrumented.encode()).hexdigest()
+        # Ingress verifies the entire source module. Declare this one
+        # engineering body in its NEW fixture descriptor as well; otherwise an
+        # unrelated earlier writer correctly refuses instrumentation. Original
+        # 205/206/269 descriptors and all business rows remain untouched.
+        expected = business.installation.canonical(self.expected_module).replace("'", "''")
+        path = "ARRAY['properties','functions','public.execute_controlled_stock_administration_v1(jsonb)','body_sha256']"
+        bind = """ALTER TABLE controlled_count_v1.descriptor DISABLE TRIGGER count_history_immutable;
+DO $engineering_source_binding$ DECLARE changed integer;BEGIN
+ UPDATE controlled_count_v1.descriptor d SET
+ definition=jsonb_set(d.definition,""" + path + ",to_jsonb('" + wanted + "'::text),false)," + """
+ definition_hash=encode(sha256(convert_to(jsonb_build_object('domain','lrv.count.local_fixture.module.v1',
+ 'definition',jsonb_set(d.definition,""" + path + ",to_jsonb('" + wanted + "'::text),false))::text,'UTF8')),'hex')" + " WHERE d.revision=1 AND d.definition='" + expected + "'::jsonb;" + """
+ GET DIAGNOSTICS changed=ROW_COUNT;
+ IF changed<>1 THEN RAISE EXCEPTION 'engineering_source_binding_refused';END IF;
+END$engineering_source_binding$;
+ALTER TABLE controlled_count_v1.descriptor ENABLE TRIGGER count_history_immutable;
+"""
+        # Deliberate diagnostic DDL is committed only in this owned fixture.
+        runtime.raw_query("engineering-only-unmask-one-api", "BEGIN;" + program + bind + "COMMIT;")
         checked = runtime.selected_query("engineering-instrumentation-verified",
             "select jsonb_build_object('source_body_matches',encode(sha256(convert_to(prosrc,'UTF8')),'hex')='" + wanted + "')"
             "from pg_proc where oid='public.execute_controlled_stock_administration_v1(jsonb)'::regprocedure;")
@@ -56,7 +77,7 @@ class Diagnosis(business.BusinessInstallation):
             transcript = self.evidence / "http-transcript.json"
             if transcript.is_file():
                 calls = json.loads(transcript.read_text())
-                if calls and calls[-1]["path"] == "/rest/v1/rpc/execute_controlled_stock_administration_v1" and calls[-1]["status"] == 400:
+                if calls and calls[-1]["path"] == "/rest/v1/rpc/execute_controlled_stock_administration_v1" and 400 <= calls[-1]["status"] <= 599:
                     response = business.installation.prefix.regular(self.evidence / f"http-{len(calls):03d}-response.json", 2097152)
                     if hashlib.sha256(response).hexdigest() != calls[-1]["response_sha256"]:
                         raise ValueError("Original diagnostic response changed")

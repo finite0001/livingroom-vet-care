@@ -55,10 +55,10 @@ def validate(context, actual):
         raise ValueError("Expected policy closure membership missing")
     for entry in policy["published"]:
         row = closures[entry["pointer"]["operation_id"]]
-        if row["state"] != "saved" or row["original_action"] != "policy_publish" or row["original_session_id"] != actors[entry["pointer"]["actor_id"]]["session_id"] or row["document"]["pointer"] != entry["pointer"]:
+        if row["state"] != "saved" or row["actor_id"] != entry["pointer"]["actor_id"] or row["original_action"] != "policy_publish" or row["original_session_id"] != actors[entry["pointer"]["actor_id"]]["session_id"] or row["document"]["pointer"] != entry["pointer"]:
             raise ValueError("Saved policy closure changed its original pointer/session")
     row = closures[abandoned_policy]
-    if row["state"] != "abandoned" or row["saved_operation_id"] is not None or row["original_action"] != "policy_publish" or row["document"]["pointer"] != policy["abandoned_pointer"] or row["original_session_id"] != actors[policy["abandoned_pointer"]["actor_id"]]["session_id"]:
+    if row["state"] != "abandoned" or row["actor_id"] != policy["abandoned_pointer"]["actor_id"] or row["saved_operation_id"] is not None or row["original_action"] != "policy_publish" or row["document"]["pointer"] != policy["abandoned_pointer"] or row["original_session_id"] != actors[policy["abandoned_pointer"]["actor_id"]]["session_id"]:
         raise ValueError("Unsent policy crossed its terminal fence")
     remaining -= policy_ids | {abandoned_policy}
     abandoned = context.get("count", {}).get("cancel_and_abandon")
@@ -66,7 +66,7 @@ def validate(context, actual):
         pointer = abandoned["abandoned_pointer"]
         remaining -= {pointer["operation_id"]}
         row = closures[pointer["operation_id"]]
-        if row["state"] != "abandoned" or row["saved_operation_id"] is not None or row["document"]["pointer"] != pointer or pointer["operation_id"] in operations:
+        if row["state"] != "abandoned" or row["actor_id"] != pointer["actor_id"] or row["original_session_id"] != actors[pointer["actor_id"]]["session_id"] or row["saved_operation_id"] is not None or row["document"]["pointer"] != pointer or pointer["operation_id"] in operations:
             raise ValueError("Unsent count crossed its terminal fence")
     if remaining:
         raise ValueError("Unexpected committed count closure")

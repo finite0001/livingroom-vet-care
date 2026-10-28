@@ -1,0 +1,40 @@
+name: Narcotics staff frontend
+
+on:
+  push:
+    branches: [feat/controlled-count-staff-20261026]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'e2e/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '*config*'
+      - 'public/**'
+      - '.github/workflows/narcotics-frontend.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: narcotics-frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  staff-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      VITE_SUPABASE_URL: http://127.0.0.1:54321
+      VITE_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-not-a-production-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
