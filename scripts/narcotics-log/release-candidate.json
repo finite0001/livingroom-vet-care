@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61536288,
-      "sha256": "3c0bea37771646d041de83c032bb5b03846aaf19f53828f19f77ab8ca5ac4839"
+      "bytes": 61641345,
+      "sha256": "199755e99fd4b02f28db28641b2d9285b9b5f9788785103380e99d36384c24ed"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61532386,
-      "sha256": "cd1bf314d0e6be054c834a75e50b0792ae790a2984199f6ba17c2884644ff845"
+      "bytes": 61637443,
+      "sha256": "3804170a0157525247b0a1918e2bf3dddb4a570baadda90334f8124c1aa4a331"
     }
   },
   "source_corrections": {
@@ -361,6 +361,211 @@
       ],
       "no_observed_target_expected_values": true,
       "reason": "Before any current function installation, verify original205 and original206 metadata against their independently frozen source. Preserve the separate final current-source metadata checks."
+    },
+    "recovery_admission_and_single_invocation_history": {
+      "all_deadlines_unchanged": true,
+      "candidate_artifacts_exact": true,
+      "compiler_inverse_all_seven_artifacts_exact": true,
+      "complete_CLI_publication_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "history": {
+        "actual_result_document_reread_and_exactly_bound": true,
+        "both_root_inventories_retained": true,
+        "kind": "single-invocation-validated-history-documents-v1",
+        "map_added_only_after_complete_operation_and_closure_validation": true,
+        "no_persisted_or_caller_supplied_certificate": true,
+        "origin_and_current_authority_unchanged": true,
+        "reuse_capacity_only_with_full_validation_fallback": true,
+        "root_new_body_sha256": "126275733155b8af879c515cbb65e38ae4acd5a8186499ff01af5f6b628cda5d",
+        "root_original_body_sha256": "55ec2c3b165253179871a6194c2c374d745e778920749182d152d3fb16faa8ce",
+        "root_whole_body_inverse": true,
+        "variants": {
+          "controlled_count_v1.readcore_saved_available_cause_cell(jsonb,jsonb,uuid,uuid)": {
+            "changed_private_callee_references": 2,
+            "new_signature": "controlled_count_v1.history_scan_saved_available_cause_cell(jsonb,jsonb,uuid,uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "1f7b0a699cd60be227ac8020c5f6e46e8503b0e09e8b3caf679d3def38c6e83f",
+            "variant_body_sha256": "ac4417df2be882b4523b3b9aaf6f2373c229a61da25f5e78fb24675c6e728c8e",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_cause_graph(uuid)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_saved_cause_graph(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "3a700933d2569256ec409359b9e3f439ce6ec3e12652185c089081f20ec882cd",
+            "variant_body_sha256": "0ba8acd5e2ba2edb3be33324ba13dedd263f390117f11968127b7a8da32a7ae9",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_clean_count_observations(uuid)": {
+            "changed_private_callee_references": 2,
+            "new_signature": "controlled_count_v1.history_scan_saved_clean_count_observations(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "782eddc3f8b6e872c80da9585577a1ba35aac92dfe9bb706957c8caabcf1f3c8",
+            "variant_body_sha256": "38caf75ea451ed9cc96f7644b4346587dcd65ef75e9891de69e558d10c786677",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_count_children(text,jsonb,jsonb,jsonb,jsonb)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_saved_count_children(text,jsonb,jsonb,jsonb,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "296cd87e380653b04a34b851a732cd43f66717dd55d54aee8333e81aee48672f",
+            "variant_body_sha256": "0f4fe09f9cfac17e9741b5bb22450e36a111936ecd194c51678bf9970d6f7a21",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_management_children(text,jsonb,jsonb,jsonb,jsonb)": {
+            "changed_private_callee_references": 8,
+            "new_signature": "controlled_count_v1.history_scan_saved_management_children(text,jsonb,jsonb,jsonb,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "a53fa25f36df5d09cad89901362bc6f2496876449e574e04353b97a96a4c6776",
+            "variant_body_sha256": "876a961a6e1acaef5d3a12e2a434c7dd7957cd4f4c21106ab42097b36251d0b0",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_resolution_children(jsonb,jsonb,jsonb,jsonb)": {
+            "changed_private_callee_references": 12,
+            "new_signature": "controlled_count_v1.history_scan_saved_resolution_children(jsonb,jsonb,jsonb,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "6d34fddf1250f18cf8a84af739ff2db53717f31cdec746469cd36b1a15f1929c",
+            "variant_body_sha256": "194c51af3e129827ac75069128fe570e3405232f3bd13b5d4f90e84f93ab5137",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_result_graph(text,uuid)": {
+            "changed_private_callee_references": 2,
+            "new_signature": "controlled_count_v1.history_scan_saved_result_graph(text,uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "1490dc6bf20a108afd60c33b4a50c94d73bc8e55cc1f07cabb0aa94c217d5931",
+            "variant_body_sha256": "563503f60e12150e8698601504782b01c022e0e20cd8c863aeb3a59dc8a2692f",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_validate_operation_graph(uuid)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_validate_operation_graph(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "c1cc8940225c358a19bc73d17745a4a3e05b058b2f27b2e2a3806bd52e17c945",
+            "variant_body_sha256": "89e9ec32161d6cf66da46ade94be85d2075f98ded45a9a429f60747d41d57875",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_validate_operation_graph_v3(uuid)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_validate_operation_graph_v3(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "178a5cff978022cea722a4aec0045b2375905c49478d61fd1b226775a3c63fe9",
+            "variant_body_sha256": "e08c3d7da0e5671a8da126171ab1fe62cc9d296bbc522495ca51da7c8f940b9e",
+            "whole_body_inverse": true
+          }
+        }
+      },
+      "only_twelve_private_functions_and_four_body_hashes_added": true,
+      "original_relation_frontiers_and_current_authority_preserved": true,
+      "real_Auth_verification_pending": true,
+      "recovery": {
+        "armed_post_routes": [
+          "narcotics_recovery_arm_v1",
+          "narcotics_recovery_source_resume_v1",
+          "narcotics_recovery_begin_epoch_v1",
+          "narcotics_recovery_start_count_v1",
+          "narcotics_recovery_preserve_evidence_v1",
+          "narcotics_recovery_acknowledge_evidence_v1",
+          "narcotics_recovery_release_v1",
+          "narcotics_recovery_read_operation_v1",
+          "narcotics_recovery_close_operation_v1",
+          "narcotics_recovery_status_v1",
+          "narcotics_recovery_probe_state_v1",
+          "narcotics_recovery_probe_gate_v1",
+          "list_controlled_count_scopes_v1",
+          "discover_controlled_counts_v1",
+          "read_controlled_count_policy_v1",
+          "read_controlled_count_v1",
+          "save_controlled_count_statement_v1",
+          "finalize_controlled_count_v1",
+          "recover_controlled_count_operation_v1",
+          "read_controlled_count_operation_closure_v1",
+          "read_controlled_count_operation_closure_v2",
+          "close_controlled_count_operation_v1",
+          "close_controlled_count_operation_v2",
+          "cancel_controlled_count_v1",
+          "discover_controlled_count_causes_v1",
+          "list_controlled_count_investigations_v1",
+          "list_controlled_count_reconciliations_v1",
+          "read_controlled_count_reconciliation_detail_v1",
+          "read_controlled_count_reconciliation_v1",
+          "prepare_controlled_count_reconciliation_v1",
+          "approve_controlled_count_reconciliation_v1",
+          "execute_controlled_count_reconciliation_v1",
+          "confirm_controlled_count_reconciliation_v1",
+          "resolve_controlled_count_cause_v1",
+          "list_controlled_record_reviews_v3",
+          "get_controlled_record_review_event_v3",
+          "prepare_controlled_record_review_v3",
+          "read_controlled_record_review_v3",
+          "execute_controlled_record_review_v3",
+          "list_narcotics_registers_v1",
+          "create_narcotics_register_v1",
+          "read_narcotics_register_v1",
+          "close_narcotics_register_operation_v1",
+          "preserve_narcotics_form_v1",
+          "read_narcotics_form_operation_v1",
+          "download_narcotics_form_v1"
+        ],
+        "before_any_practice_or_user_relation": true,
+        "catalog_projection_original_sha256": "5a3eedb8d37355d45789c12017637fdb9f73731988b3527022558e61c2e20b63",
+        "current_audit_validation": "after complete original121 frontier",
+        "engineering_only": true,
+        "epoch_required_post_routes": [
+          "narcotics_recovery_start_count_v1",
+          "execute_controlled_count_reconciliation_v1"
+        ],
+        "exclusive_routes": [
+          "narcotics_recovery_arm_v1",
+          "narcotics_recovery_source_resume_v1",
+          "narcotics_recovery_begin_epoch_v1",
+          "narcotics_recovery_start_count_v1",
+          "narcotics_recovery_preserve_evidence_v1",
+          "narcotics_recovery_acknowledge_evidence_v1",
+          "narcotics_recovery_release_v1",
+          "narcotics_recovery_read_operation_v1",
+          "narcotics_recovery_close_operation_v1",
+          "narcotics_recovery_status_v1",
+          "narcotics_recovery_probe_state_v1",
+          "narcotics_recovery_probe_gate_v1"
+        ],
+        "frontier_body_inverses": {
+          "controlled_count_entry_v1.acquire_shared_product_relation_frontier()": {
+            "complete_source_inverse": true,
+            "new_body_sha256": "ee4c0877bb26e3c45b4c7eceb35fe9f55e8eae6bcf563775db15e8a6a39cbdb9",
+            "old_body_sha256": "518f6f8ad485874f4025a7141e2cd50b325dc37a9d36002885438708c1bb5c76",
+            "post_frontier_exits": 2
+          },
+          "controlled_count_entry_v1.acquire_stock_workflow_relation_frontier()": {
+            "complete_source_inverse": true,
+            "new_body_sha256": "14741bba7be3d1d858689a6fb77aff64b2552768bfc52aea8d63df7676e98dfd",
+            "old_body_sha256": "41c8d742734fbd8e393e2776091c71e9cb05b87abbcb238eb1d5d6bbbe131edc",
+            "post_frontier_exits": 2
+          }
+        },
+        "new_helpers": [
+          "controlled_count_entry_v1.recovery_catalog_projection()",
+          "controlled_count_entry_v1.admit_recovery_request()",
+          "controlled_count_entry_v1.recovery_post_frontier_required()"
+        ],
+        "pre_frontier_reads": "catalogs and pg_locks only",
+        "register_source_sha256": "fc1ca494ad6857de797db24208349ed051b6a3f5ae29b8775001f9f028f68d24",
+        "source_program_sha256": "d3a48999b32108c0cb2f7d6a744cbf06ea08266ea1069d340cce2a803fbe8bd9",
+        "whole_catalog_projection_inverse": true
+      },
+      "source_tools": {
+        "build_operational_module.py": {
+          "bytes": 28416,
+          "sha256": "41782f9dc1f9db4a950f1bc275f4053154d401116def0128d248546b0bf2a07b"
+        },
+        "history_document_reuse.py": {
+          "bytes": 6794,
+          "sha256": "9472ae4537f9ac0cb991db8032abbf1c45509cb2374a5ea95e1cf265e883a49d"
+        },
+        "recovery_admission_source.py": {
+          "bytes": 9307,
+          "sha256": "a2d597d51ab255e306ef87ad638ea47a3467d6cdc24e981c831e79916b5f094c"
+        }
+      }
     },
     "snapshot_validation_deduplication": {
       "all_deadlines_unchanged": true,

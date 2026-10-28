@@ -32,6 +32,7 @@ LEAVES = {
     'narcotics_register_v1.module_properties(text,text,text,text)': ('plpgsql', 's', 'jsonb'),
     'narcotics_register_v1.hash(text,jsonb)': ('sql', 'i', 'text'),
     'narcotics_recovery_v1.enter_recovery()': ('plpgsql', 'v', 'void'),
+    'narcotics_recovery_v1.require_head()': ('plpgsql', 'v', 'jsonb'),
 }
 
 
@@ -179,6 +180,7 @@ def build(register_only=False):
     apis['narcotics_recovery_probe_permissions_v1'] = 'narcotics_register_v1.probe_recovery_permission(p_request)'
     apis['narcotics_recovery_probe_boundary_v1'] = 'narcotics_recovery_v1.probe_boundary(p_request)'
     apis['narcotics_recovery_probe_state_v1'] = 'narcotics_recovery_v1.probe_state(p_request)'
+    apis['narcotics_recovery_probe_gate_v1'] = 'narcotics_recovery_v1.probe_gate(p_request)'
     names = ('common.sql', 'register.sql', 'register-operations.sql', 'recovery-state.sql', 'metadata.sql')
     sources = {name: (SOURCE / name).read_bytes() for name in names}
     public_names = 'ARRAY[' + ','.join(literal(name) for name in sorted(apis)) + ']::text[]'
@@ -215,6 +217,29 @@ BEGIN
   narcotics_register_v1.authority(actor_value,product_value,site_value)IS DISTINCT FROM authority_value THEN
  RAISE EXCEPTION 'narcotics_recovery_boundary_invalid';END IF;
  RETURN jsonb_build_object('engineering_only',true,'physical_classes',50,'boundary_sha256',encode(sha256(convert_to(boundary_text,'UTF8')),'hex'),'utf8_bytes',octet_length(boundary_text));
+END $$;
+'''
+    private += '''
+CREATE FUNCTION narcotics_recovery_v1.probe_gate(p_request jsonb) RETURNS jsonb
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $$
+DECLARE actor_value uuid;head_value jsonb;action_value text;id_value uuid;hash_value text;
+BEGIN
+ PERFORM narcotics_register_v1.keys(p_request,ARRAY['schema_version','actor_id','action','expected_head_id','expected_head_hash']);
+ IF(p_request->'schema_version')::text IS DISTINCT FROM'1'OR jsonb_typeof(p_request->'action')IS DISTINCT FROM'string'THEN RAISE EXCEPTION 'narcotics_request_invalid';END IF;
+ actor_value:=narcotics_register_v1.uuid_value(p_request->'actor_id');PERFORM narcotics_register_v1.identity(actor_value,true);
+ action_value:=p_request->>'action';head_value:=narcotics_recovery_v1.require_head();
+ IF action_value='status'THEN
+  IF p_request->'expected_head_id'IS DISTINCT FROM'null'::jsonb OR p_request->'expected_head_hash'IS DISTINCT FROM'null'::jsonb THEN RAISE EXCEPTION 'narcotics_request_invalid';END IF;
+ ELSE
+  id_value:=narcotics_register_v1.uuid_value(p_request->'expected_head_id');
+  hash_value:=p_request->>'expected_head_hash';
+  IF jsonb_typeof(p_request->'expected_head_hash')IS DISTINCT FROM'string'OR hash_value!~'^[0-9a-f]{64}$'THEN RAISE EXCEPTION 'narcotics_request_invalid';END IF;
+  IF action_value NOT IN ('arm','resume')THEN RAISE EXCEPTION 'narcotics_request_invalid';END IF;
+  head_value:=narcotics_recovery_v1.append_head(CASE action_value WHEN'arm'THEN'armed'ELSE'source_resumed'END,gen_random_uuid(),actor_value,
+   jsonb_build_object('engineering_only',true,'basis','owned_no_hook_gate_probe'),id_value,hash_value);
+ END IF;
+ RETURN jsonb_build_object('engineering_only',true,'head_id',head_value->'head_id','head_hash',head_value->'record_hash','mode',head_value->'mode',
+  'request_method',current_setting('request.method',true),'request_path',current_setting('request.path',true));
 END $$;
 '''
     private += '''
@@ -270,7 +295,7 @@ END $$;
     admission = cold_admission(functions(private))
     actual = private + '\n' + '\n'.join(facade(name, call,
         admission.replace('PERFORM narcotics_register_v1.enter_register();', 'PERFORM narcotics_recovery_v1.enter_recovery();')
-        if name == 'narcotics_recovery_probe_state_v1' else admission, engineering=register_only) for name, call in apis.items())
+        if name in ('narcotics_recovery_probe_state_v1','narcotics_recovery_probe_gate_v1') else admission, engineering=register_only) for name, call in apis.items())
     actual += table_controls(actual)
     definitions = functions(actual)
     for signature in definitions:
@@ -322,7 +347,7 @@ DO $operational_installed$BEGIN
  PERFORM controlled_count_entry_v1.require_bound_module();
 END $operational_installed$;
 '''
-    prefix = "SET LOCAL lock_timeout='5s';SET LOCAL statement_timeout='30s';SET LOCAL client_min_messages='warning';SET LOCAL quote_all_identifiers=false;SET LOCAL TimeZone='UTC';SET LOCAL DateStyle='ISO,YMD';SET LOCAL IntervalStyle='postgres';SET LOCAL extra_float_digits=3;\nSELECT pg_advisory_xact_lock(90271040,0);\nDO $operational_parent$BEGIN PERFORM controlled_count_entry_v1.require_bound_module();END $operational_parent$;\n"
+    prefix = "SET LOCAL lock_timeout='5s';SET LOCAL statement_timeout='30s';SET LOCAL client_min_messages='warning';SET LOCAL quote_all_identifiers=false;SET LOCAL TimeZone='UTC';SET LOCAL DateStyle='ISO,YMD';SET LOCAL IntervalStyle='postgres';SET LOCAL extra_float_digits=3;\nSELECT pg_advisory_xact_lock(90271190,0);\nSELECT pg_advisory_xact_lock(90271040,0);\nDO $operational_parent$BEGIN PERFORM controlled_count_entry_v1.require_bound_module();END $operational_parent$;\n"
     sql = prefix + actual + reference + tail
     proof = {'kind': 'narcotics-operational-source-draft-v1', 'engineering_only': True, 'ready_for_deployment': False,
         'expected_metadata_origin': 'independent empty source reference DDL; no observed actual target expectations',

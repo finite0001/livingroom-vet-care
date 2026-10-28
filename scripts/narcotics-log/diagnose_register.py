@@ -152,8 +152,33 @@ class RegisterDiagnosis(business.BusinessInstallation):
                 {**(report if kind == 'report' else form), 'operation_id': operation})
             if rpc(kind + '-closed-read', api, pointer) != closed:
                 raise ValueError('Delayed original changed its terminal closure')
+        gate_request = dict(schema_version=1, actor_id=actor['id'], action='status', expected_head_id=None, expected_head_hash=None)
+        initial_gate = rpc('gate-status', 'narcotics_recovery_probe_gate_v1', gate_request)
+        if initial_gate['engineering_only'] is not True or initial_gate['mode'] != 'idle' or initial_gate['request_method'] != 'POST' or initial_gate['request_path'] != '/rpc/narcotics_recovery_probe_gate_v1':
+            raise ValueError('Owned recovery gate did not begin idle')
+        armed_gate = rpc('gate-arm', 'narcotics_recovery_probe_gate_v1', {**gate_request, 'action': 'arm',
+            'expected_head_id': initial_gate['head_id'], 'expected_head_hash': initial_gate['head_hash']})
+        if armed_gate['mode'] != 'armed':
+            raise ValueError('Owned recovery mode was not committed')
+        # Exact previously saved/abandoned inputs are harmless if admission is
+        # broken, but must still be refused by the armed physical-write guard.
+        refuse('armed-prepare-without-hook', 'prepare_managed_stock_intent_v1', context['gateway']['abandoned_request'])
+        refuse('armed-execute-without-hook', 'execute_managed_stock_intent_v1', context['gateway']['pointer'])
+        allowed_read = rpc('armed-register-read', 'list_narcotics_registers_v1', listing)
+        if allowed_read != first_page:
+            raise ValueError('Armed recovery changed an authorized nonphysical report read')
+        resumed_gate = rpc('gate-resume', 'narcotics_recovery_probe_gate_v1', {**gate_request, 'action': 'resume',
+            'expected_head_id': armed_gate['head_id'], 'expected_head_hash': armed_gate['head_hash']})
+        if resumed_gate['mode'] != 'idle':
+            raise ValueError('Owned engineering gate did not resume')
+        if rpc('boundary-after-gate', 'narcotics_recovery_probe_boundary_v1', scope) != boundary:
+            raise ValueError('Recovery gate exercise changed physical source history')
+        business.save(self.evidence, 'recovery-no-hook-gate-engineering-proof', dict(engineering_only=True,
+            actual_committed_armed_mode=True, physical_prepare_and_execute_refused=True,
+            authorized_register_read_preserved=True, exact_original_physical_boundary_preserved=True,
+            normal_idle_resumption=True))
         counts = runtime.selected_query('register-engineering-exact-counts', "select jsonb_build_object('descriptor',(select count(*)from narcotics_register_v1.descriptor),'operations',(select count(*)from narcotics_register_v1.operations),'reports',(select count(*)from narcotics_register_v1.reports),'contents',(select count(*)from narcotics_register_v1.form_contents),'forms',(select count(*)from narcotics_register_v1.form_records),'recovery_heads',(select count(*)from narcotics_recovery_v1.heads));")
-        if counts != dict(descriptor=1, operations=6, reports=2, contents=2, forms=2, recovery_heads=1):
+        if counts != dict(descriptor=1, operations=6, reports=2, contents=2, forms=2, recovery_heads=3):
             raise ValueError('Exact source-declared new report/form row counts differ')
         business.save(self.evidence, 'register-wire-original-inputs', dict(engineering_only=True, entries=wire_entries))
         checked = business.installation.process.run(['node', '--experimental-strip-types', str(HERE / 'verify-register-native-wire.mjs'), str(self.evidence)],
