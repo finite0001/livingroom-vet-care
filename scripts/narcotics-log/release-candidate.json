@@ -9,8 +9,8 @@
       "sha256": "0f1330e8b9bb77043e5ed878492b6d2dfa35e2ca5c288fb6ca92df72476b92af"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61530215,
-      "sha256": "1268808065bd0196b4f428449b130e57758673842653ba95c63d51d79ee0f351"
+      "bytes": 61530257,
+      "sha256": "62ab0b788f2bac8ec8159f6e62ef4730c73f17302e904bf871b90f95130693cf"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61526313,
-      "sha256": "2c1a114f2f0870836f0985a3e37598896db9de25c0ff18c8ba331286b9d00d09"
+      "bytes": 61526355,
+      "sha256": "4ca4127e3a30bc9b549f9f58759fe00038da87ae124a381273d9a3869c625797"
     }
   },
   "source_corrections": {
@@ -51,6 +51,18 @@
       ],
       "no_observed_target_expected_values": true,
       "prior_implementations_verified_from_frozen_prefix_source": true
+    },
+    "explicit_public_return_types": {
+      "function_bodies_and_full_expected_metadata_unchanged": true,
+      "functions": [
+        "controlled_count_entry_v1.local_parent_adjust_inventory_impl",
+        "controlled_count_entry_v1.local_parent_adjust_inventory",
+        "public.receive_inventory",
+        "public.adjust_inventory",
+        "public.record_patient_treatment",
+        "public.record_anesthesia_drug_administration"
+      ],
+      "only_composite_return_type_schema_qualified": true
     },
     "record_review_ledger": {
       "changes": [

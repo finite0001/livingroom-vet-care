@@ -197,7 +197,8 @@ class BusinessInstallation(installation.Installation):
         save(self.evidence, "genuine-Auth-source-defaults", m.auth.effective_defaults(runtime))
         auth_before = m.auth.initial(runtime)
         sequence_before = runtime.selected_query("sequence-before", m.sequence.SQL)
-        m.sequence.initial(sequence_before, auth_before)
+        serial_source = runtime.selected_query("sequence-prerequisite", m.sequence.prerequisite_sql())
+        m.sequence.initial(sequence_before, auth_before, serial_source)
         rows_before = self.rows("before-business-permanent-rows")
         status = installation.decode(runtime.command(["supabase", "status", "--workdir", str(self.project), "-o", "json"]).stdout)
         if status["API_URL"] != "http://127.0.0.1:64661":

@@ -10894,7 +10894,7 @@ begin
  perform controlled_count_entry_v1.local_parent_stock_writer_enter_impl(p_writer,p_source_id);return;
 end $$;
 ALTER FUNCTION controlled_count_entry_v1.local_parent_stock_writer_enter(text,uuid) OWNER TO postgres; REVOKE ALL ON FUNCTION controlled_count_entry_v1.local_parent_stock_writer_enter(text,uuid) FROM PUBLIC,anon,authenticated,service_role; GRANT EXECUTE ON FUNCTION controlled_count_entry_v1.local_parent_stock_writer_enter(text,uuid) TO postgres;
-CREATE FUNCTION controlled_count_entry_v1.local_parent_adjust_inventory_impl(p_id uuid, p_lot_id uuid, p_quantity numeric, p_reason text) RETURNS inventory_movements LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+CREATE FUNCTION controlled_count_entry_v1.local_parent_adjust_inventory_impl(p_id uuid, p_lot_id uuid, p_quantity numeric, p_reason text) RETURNS public.inventory_movements LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 declare actor uuid:=public.clinical_require_staff(); result public.inventory_movements;
 begin
  perform controlled_count_entry_v1.local_parent_stock_writer_enter('adjust_inventory',p_id);
@@ -10911,7 +10911,7 @@ begin
  insert into public.inventory_movements(id,lot_id,quantity,kind,reason,created_by) values(p_id,p_lot_id,p_quantity,'adjust',p_reason,actor) returning * into result; return result;
 end $$;
 ALTER FUNCTION controlled_count_entry_v1.local_parent_adjust_inventory_impl(uuid,uuid,numeric,text) OWNER TO postgres; REVOKE ALL ON FUNCTION controlled_count_entry_v1.local_parent_adjust_inventory_impl(uuid,uuid,numeric,text) FROM PUBLIC,anon,authenticated,service_role; GRANT EXECUTE ON FUNCTION controlled_count_entry_v1.local_parent_adjust_inventory_impl(uuid,uuid,numeric,text) TO postgres;
-CREATE FUNCTION controlled_count_entry_v1.local_parent_adjust_inventory(p_id uuid, p_lot_id uuid, p_quantity numeric, p_reason text) RETURNS inventory_movements LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path TO 'pg_catalog', 'public', 'controlled_count_v1', 'controlled_count_entry_v1', 'pg_temp' SET TIME ZONE 'UTC' SET datestyle TO 'ISO,YMD' SET intervalstyle TO 'postgres' SET extra_float_digits TO 3 AS $$
+CREATE FUNCTION controlled_count_entry_v1.local_parent_adjust_inventory(p_id uuid, p_lot_id uuid, p_quantity numeric, p_reason text) RETURNS public.inventory_movements LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path TO 'pg_catalog', 'public', 'controlled_count_v1', 'controlled_count_entry_v1', 'pg_temp' SET TIME ZONE 'UTC' SET datestyle TO 'ISO,YMD' SET intervalstyle TO 'postgres' SET extra_float_digits TO 3 AS $$
 begin
  perform controlled_count_entry_v1.local_parent_context_required(p_id,'parent');
  perform controlled_count_entry_v1.before_canonical_writer('adjust_inventory',p_id);
@@ -10944,7 +10944,7 @@ begin
  -- and new full count-hold check; this prefix never means 'no holds'.
 end $$;
 ALTER FUNCTION controlled_count_entry_v1.before_canonical_writer(text,uuid) OWNER TO postgres; REVOKE ALL ON FUNCTION controlled_count_entry_v1.before_canonical_writer(text,uuid) FROM PUBLIC,anon,authenticated,service_role; GRANT EXECUTE ON FUNCTION controlled_count_entry_v1.before_canonical_writer(text,uuid) TO postgres;
-CREATE OR REPLACE FUNCTION public.receive_inventory(p_id uuid, p_lot_id uuid, p_product_id uuid, p_lot_number text, p_expires_on date, p_location text, p_quantity numeric, p_reason text) RETURNS inventory_movements LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+CREATE OR REPLACE FUNCTION public.receive_inventory(p_id uuid, p_lot_id uuid, p_product_id uuid, p_lot_number text, p_expires_on date, p_location text, p_quantity numeric, p_reason text) RETURNS public.inventory_movements LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 begin
  perform controlled_count_entry_v1.before_writer_receive_inventory(p_id,p_lot_id,p_product_id,p_lot_number,p_expires_on,p_location,p_quantity,p_reason);
  return controlled_count_entry_v1.parent_impl_receive_inventory(p_id,p_lot_id,p_product_id,p_lot_number,p_expires_on,p_location,p_quantity,p_reason);
@@ -10973,7 +10973,7 @@ begin
  return result;
 end $$;
 ALTER FUNCTION controlled_count_entry_v1.parent_impl_receive_inventory(uuid,uuid,uuid,text,date,text,numeric,text) OWNER TO postgres; REVOKE ALL ON FUNCTION controlled_count_entry_v1.parent_impl_receive_inventory(uuid,uuid,uuid,text,date,text,numeric,text) FROM PUBLIC,anon,authenticated,service_role; GRANT EXECUTE ON FUNCTION controlled_count_entry_v1.parent_impl_receive_inventory(uuid,uuid,uuid,text,date,text,numeric,text) TO postgres;
-CREATE OR REPLACE FUNCTION public.adjust_inventory(p_id uuid, p_lot_id uuid, p_quantity numeric, p_reason text) RETURNS inventory_movements LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+CREATE OR REPLACE FUNCTION public.adjust_inventory(p_id uuid, p_lot_id uuid, p_quantity numeric, p_reason text) RETURNS public.inventory_movements LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 begin
  perform controlled_count_entry_v1.before_writer_adjust_inventory(p_id,p_lot_id,p_quantity,p_reason);
  return controlled_count_entry_v1.parent_impl_adjust_inventory(p_id,p_lot_id,p_quantity,p_reason);
@@ -10997,7 +10997,7 @@ begin
  insert into public.inventory_movements(id,lot_id,quantity,kind,reason,created_by) values(p_id,p_lot_id,p_quantity,'adjust',p_reason,actor) returning * into result; return result;
 end $$;
 ALTER FUNCTION controlled_count_entry_v1.parent_impl_adjust_inventory(uuid,uuid,numeric,text) OWNER TO postgres; REVOKE ALL ON FUNCTION controlled_count_entry_v1.parent_impl_adjust_inventory(uuid,uuid,numeric,text) FROM PUBLIC,anon,authenticated,service_role; GRANT EXECUTE ON FUNCTION controlled_count_entry_v1.parent_impl_adjust_inventory(uuid,uuid,numeric,text) TO postgres;
-CREATE OR REPLACE FUNCTION public.record_patient_treatment(p_id uuid, p_request jsonb) RETURNS patient_treatments LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+CREATE OR REPLACE FUNCTION public.record_patient_treatment(p_id uuid, p_request jsonb) RETURNS public.patient_treatments LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 begin
  perform controlled_count_entry_v1.before_writer_record_patient_treatment(p_id,p_request);
  return controlled_count_entry_v1.parent_impl_record_patient_treatment(p_id,p_request);
@@ -11167,7 +11167,7 @@ declare a uuid:=public.clinical_require_staff();o public.native_return_operation
  return jsonb_build_object('version',2,'id',o.id,'actor_id',o.actor_id,'request',o.request,'request_hash',o.request_hash,'result',o.result,'created_at',o.created_at);
 end $$;
 ALTER FUNCTION controlled_count_entry_v1.parent_impl_record_native_dispense_return_v2(uuid,jsonb) OWNER TO postgres; REVOKE ALL ON FUNCTION controlled_count_entry_v1.parent_impl_record_native_dispense_return_v2(uuid,jsonb) FROM PUBLIC,anon,authenticated,service_role; GRANT EXECUTE ON FUNCTION controlled_count_entry_v1.parent_impl_record_native_dispense_return_v2(uuid,jsonb) TO postgres;
-CREATE OR REPLACE FUNCTION public.record_anesthesia_drug_administration(p_id uuid, p_record_id uuid, p_pet_id uuid, p_request jsonb) RETURNS patient_treatments LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+CREATE OR REPLACE FUNCTION public.record_anesthesia_drug_administration(p_id uuid, p_record_id uuid, p_pet_id uuid, p_request jsonb) RETURNS public.patient_treatments LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 begin
  perform controlled_count_entry_v1.before_writer_record_anesthesia_drug_administration(p_id,p_record_id,p_pet_id,p_request);
  return controlled_count_entry_v1.parent_impl_record_anesthesia_drug_administration(p_id,p_record_id,p_pet_id,p_request);

@@ -16,7 +16,8 @@ declare r record;v jsonb;answer jsonb:='{}';begin
 select pg_temp.scalar_sequence_states();"""
 
 
-def initial(states,auth):
+def initial(states,auth,prerequisite):
+    if prerequisite!=PREREQUISITE or type(prerequisite['config']['cache'])is not int:raise ValueError('Exact source native bigint serial prerequisite differs')
     if any(auth[k]!=[]for k in auth)or states.get(NAME)!={'last_value':1,'is_called':False}:raise ValueError('Fresh empty genuine-Auth fixture required')
     return states
 
@@ -29,3 +30,22 @@ def final(before,after,grants,clinical=False):
         wanted[name]={'last_value':1,'is_called':True}
     if after!=wanted:raise ValueError('Only source-declared genuine password grants and optional anesthesia birth may allocate sequences')
     return dict(password_grants=grants,anesthesia_birth=int(clinical),all_other_sequences_exact=True)
+
+
+def prerequisite_sql():
+ # Fixed names only; the auto dependency must resolve to the actual id column.
+ # No sequence nextval/setval is evaluated by this SELECT or its type preflight.
+ return """select jsonb_build_object(
+ 'owner',pg_catalog.pg_get_userbyid(s.relowner),
+ 'kind',s.relkind,'id_type',pg_catalog.format_type(a.atttypid,a.atttypmod),
+ 'id_not_null',a.attnotnull,'id_default',pg_catalog.pg_get_expr(d.adbin,d.adrelid),
+ 'owned_by_id',(select count(*)=1 and bool_and(p.refobjid=t.oid and p.refobjsubid=a.attnum and p.deptype='a')
+ from pg_catalog.pg_depend p where p.classid='pg_catalog.pg_class'::regclass and p.objid=s.oid
+ and p.objsubid=0 and p.refclassid='pg_catalog.pg_class'::regclass and p.deptype in('a','i')),
+ 'config',jsonb_build_object('type',pg_catalog.format_type(q.seqtypid,null),'start',q.seqstart,
+ 'increment',q.seqincrement,'min',q.seqmin,'max',q.seqmax,'cache',q.seqcache,'cycle',q.seqcycle))
+ from pg_catalog.pg_class s join pg_catalog.pg_sequence q on q.seqrelid=s.oid
+ cross join pg_catalog.pg_class t join pg_catalog.pg_attribute a on a.attrelid=t.oid
+ join pg_catalog.pg_attrdef d on d.adrelid=t.oid and d.adnum=a.attnum
+ where s.oid='auth.refresh_tokens_id_seq'::regclass and t.oid='auth.refresh_tokens'::regclass
+ and a.attname='id'and a.attnum>0 and not a.attisdropped;"""

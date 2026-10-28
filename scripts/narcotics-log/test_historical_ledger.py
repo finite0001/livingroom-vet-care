@@ -51,6 +51,15 @@ class HistoricalLedgerTests(unittest.TestCase):
             self.assertIsNotNone(body, signature)
             self.assertEqual(hashlib.sha256(body[2].encode()).hexdigest(), current["properties"]["functions"][signature]["body_sha256"])
 
+    def test_public_composite_returns_resolve_under_catalog_only_ddl_path(self):
+        statements = split_reviewed_statements((ROOT / "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql").read_text())
+        names = ("controlled_count_entry_v1.local_parent_adjust_inventory_impl", "controlled_count_entry_v1.local_parent_adjust_inventory",
+                 "public.receive_inventory", "public.adjust_inventory", "public.record_patient_treatment", "public.record_anesthesia_drug_administration")
+        for name in names:
+            selected = [value for value in statements if re.match(r"create(?: or replace)? function " + re.escape(name) + r"\(", value, re.I)]
+            self.assertEqual(len(selected), 1, name)
+            self.assertRegex(selected[0], r"RETURNS public\.(?:inventory_movements|patient_treatments)\b")
+
     def test_all_preflight_and_postcheck_rows_match_frozen_source(self):
         old = json.loads((CANDIDATE / "secondary_review_expected_205_ledger.json").read_bytes())
         expected = {row["version"]: row for row in old["ledger"]}

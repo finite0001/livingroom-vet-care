@@ -115,4 +115,7 @@ def validate(runtime,before,users,extra_sessions):
  for table,count in counts.items():
   part=value[table]
   if type(part)is not dict or set(part)!={'actual','valid'}or any(type(part[key])is not int or part[key]!=count for key in ('actual','valid')):raise ValueError('Source-derived Auth side effects differ: '+table)
+ ordered=read_result(runtime.query("select coalesce(jsonb_agg(jsonb_build_object('id',id,'user_id',user_id,'session_id',session_id)order by id),'[]'::jsonb)from auth.refresh_tokens;"))
+ wanted=[dict(id=index+1,user_id=actor['id'],session_id=actor['session_id'])for index,actor in enumerate(users+extra_sessions)]
+ if ordered!=wanted or any(type(row.get('id'))is not int for row in ordered):raise ValueError('Source-ordered genuine session/serial binding differs')
  return value
