@@ -97,8 +97,8 @@
       "sha256": "b91319397fa3b57e01342581abefbf2bc22407fea93e9dd32e704b4ba3808a5c"
     },
     "http_transport.py": {
-      "bytes": 11288,
-      "sha256": "ebd771536d10131c6a9643b8889ff75330a676f8e3148cd38d464b37f7f778fa"
+      "bytes": 11766,
+      "sha256": "d0c0ac155f5ecb7a2a0a1a8697f6d8ca99c559aae64efec0e64a47505d3e68c8"
     },
     "identity_bootstrap.py": {
       "bytes": 1372,

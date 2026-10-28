@@ -76,7 +76,14 @@ class Http:
   return status,value
  def rpc(self,name,payload,user,expected=200):
   status,value=self.post('/rest/v1/rpc/'+name,payload,user['token'])
-  if status!=expected:raise ValueError('Unexpected fixed RPC status: '+name+' '+str(status))
+  if status!=expected:
+   # Only a fixed RPC error projection leaves the private evidence folder.
+   # Request bodies, Authorization headers and Auth responses never do.
+   if type(value)is dict:
+    fields={key:value.get(key)for key in('code','message','details','hint')}
+    if all(item is None or type(item)is str for item in fields.values()):
+     save(self.folder,'rpc-failure',dict(rpc=name,status=status,error={key:item[:4096]if type(item)is str else None for key,item in fields.items()}))
+   raise ValueError('Unexpected fixed RPC status: '+name+' '+str(status))
   return value
 
 

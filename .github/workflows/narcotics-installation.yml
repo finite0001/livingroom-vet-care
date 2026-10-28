@@ -137,12 +137,12 @@ jobs:
       - if: matrix.profile == 'browser_lost_finalize'
         run: npx playwright install --with-deps chromium
       - run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
-      - name: Trace commissioning failure in a disposable instrumented database
-        if: matrix.profile == 'commission_all'
+      - name: Trace stock preparation failure in a disposable instrumented database
+        if: matrix.profile == 'ordinary_none'
         continue-on-error: true
         run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local
       - name: Retain only the synthetic native error before normal acceptance
-        if: always() && matrix.profile == 'commission_all'
+        if: always() && matrix.profile == 'ordinary_none'
         uses: actions/upload-artifact@v4
         with:
           name: narcotics-engineering-native-error
@@ -162,6 +162,7 @@ jobs:
           if-no-files-found: ignore
           path: |
             /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/rpc-failure.json
             /tmp/lrv-narcotics-install-*/*-failure.txt
             /tmp/lrv-narcotics-install-*/*-permanent-rows.json
             /tmp/lrv-narcotics-install-*/genuine-Auth-complete-effects.json

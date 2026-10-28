@@ -1,4 +1,4 @@
-"""Disposable engineering-only unmasking of one failing commissioning API.
+"""Disposable engineering-only unmasking of the failing stock preparation API.
 
 This cannot grant business acceptance. It uses actual local GoTrue and HTTP,
 never fabricated claims, and always refuses a passing rehearsal result.
@@ -16,13 +16,13 @@ import business_rehearsal as business
 
 class Diagnosis(business.BusinessInstallation):
     def __init__(self, *args):
-        super().__init__(*args, profile="commission_all")
-        self.result.update(kind="narcotics-commissioning-engineering-only-v1", engineering_only=True)
+        super().__init__(*args, profile="ordinary_none")
+        self.result.update(kind="narcotics-stock-preparation-engineering-only-v1", engineering_only=True)
 
     def after_installation(self, runtime):
         root = business.installation.ROOT
         raw = business.installation.prefix.regular(root / "supabase/migrations" / business.installation.prefix.FORWARD[1]).decode()
-        marker = "CREATE FUNCTION public.execute_controlled_stock_administration_v1("
+        marker = "CREATE FUNCTION public.prepare_managed_stock_intent_v1("
         if raw.count(marker) != 1:
             raise ValueError("Exactly one source commissioning API required")
         start = raw.index(marker)
@@ -30,10 +30,10 @@ class Diagnosis(business.BusinessInstallation):
         end = raw.index("$$;", body_start)
         body = raw[body_start:end]
         static = json.loads((business.HERE / "module-expected.json").read_text())
-        expected = static["properties"]["functions"]["public.execute_controlled_stock_administration_v1(jsonb)"]["body_sha256"]
+        expected = static["properties"]["functions"]["public.prepare_managed_stock_intent_v1(jsonb)"]["body_sha256"]
         if hashlib.sha256(body.encode()).hexdigest() != expected:
             raise ValueError("Original uninstrumented source API hash differs")
-        original = "raise exception 'stock_administration_request_failed'using errcode='P0001',detail='',hint='';"
+        original = "raise exception 'stock_entry_request_failed'using errcode='P0001',detail='',hint='';"
         if body.count(original) != 1 or body.count("exception when others or query_canceled or assert_failure then") != 1:
             raise ValueError("Exact source exception fence required")
         program = raw[start:body_start].replace("CREATE FUNCTION", "CREATE OR REPLACE FUNCTION", 1)
@@ -50,7 +50,7 @@ class Diagnosis(business.BusinessInstallation):
         # unrelated earlier writer correctly refuses instrumentation. Original
         # 205/206/269 descriptors and all business rows remain untouched.
         expected = business.installation.canonical(self.expected_module).replace("'", "''")
-        path = "ARRAY['properties','functions','public.execute_controlled_stock_administration_v1(jsonb)','body_sha256']"
+        path = "ARRAY['properties','functions','public.prepare_managed_stock_intent_v1(jsonb)','body_sha256']"
         bind = """ALTER TABLE controlled_count_v1.descriptor DISABLE TRIGGER count_history_immutable;
 DO $engineering_source_binding$ DECLARE changed integer;BEGIN
  UPDATE controlled_count_v1.descriptor d SET
@@ -66,7 +66,7 @@ ALTER TABLE controlled_count_v1.descriptor ENABLE TRIGGER count_history_immutabl
         runtime.raw_query("engineering-only-unmask-one-api", "BEGIN;" + program + bind + "COMMIT;")
         checked = runtime.selected_query("engineering-instrumentation-verified",
             "select jsonb_build_object('source_body_matches',encode(sha256(convert_to(prosrc,'UTF8')),'hex')='" + wanted + "')"
-            "from pg_proc where oid='public.execute_controlled_stock_administration_v1(jsonb)'::regprocedure;")
+            "from pg_proc where oid='public.prepare_managed_stock_intent_v1(jsonb)'::regprocedure;")
         if checked != {"source_body_matches": True}:
             raise ValueError("Engineering-only source instrumentation did not persist")
 
@@ -77,7 +77,7 @@ ALTER TABLE controlled_count_v1.descriptor ENABLE TRIGGER count_history_immutabl
             transcript = self.evidence / "http-transcript.json"
             if transcript.is_file():
                 calls = json.loads(transcript.read_text())
-                if calls and calls[-1]["path"] == "/rest/v1/rpc/execute_controlled_stock_administration_v1" and 400 <= calls[-1]["status"] <= 599:
+                if calls and calls[-1]["path"] == "/rest/v1/rpc/prepare_managed_stock_intent_v1" and 400 <= calls[-1]["status"] <= 599:
                     response = business.installation.prefix.regular(self.evidence / f"http-{len(calls):03d}-response.json", 2097152)
                     if hashlib.sha256(response).hexdigest() != calls[-1]["response_sha256"]:
                         raise ValueError("Original diagnostic response changed")
