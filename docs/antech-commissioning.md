@@ -2,7 +2,7 @@
 
 Antech is the selected lab provider. A production adapter is not implemented or commissioned by this document. The existing [native lab-work workflow](lab-work.md) supports staff-entered orders, due dates, accession references, result dates, same-patient private documents and preserved corrections. Staff can use that workflow while integration requirements are resolved; it does not place an Antech order or retrieve an Antech result automatically.
 
-The practice owner confirmed that Antech has not yet assigned an account representative or onboarding contact. Obtaining that contact and the supported custom-practice-software integration contract remains pending. No outreach has been sent.
+**October 27 update:** Susan introduced Dave to Jennifer Woodmansee, an Antech technical product manager, on October 26. Dave confirmed that integration access is not yet available. Before Living Room Vet project closeout, check for the promised Antech documentation, NDA/onboarding information and authorized test access; if these have not arrived, follow up with Jennifer and record the next action in the [owner closeout checkpoint](launch-owner-action-checklist.md#before-project-closeout-antech-follow-up). Reference-lab ordering/results and imaging or possible EKG specialist-review submissions remain pending vendor contract/access and implementation acceptance.
 
 ## Official public evidence reviewed 2026-09-12
 
