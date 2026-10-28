@@ -191,7 +191,7 @@
     "byte_once/base49-root.sql": "ea05b24f7fba4895280049dd02e18eb6b49835a8ad34ab2811a6fc8974af7af2",
     "byte_once/pb50-private-cores.sql": "1b881adb63610469e70f6f262172f9acde178221bd42d5b331a1f4e7e91069f3",
     "byte_once/pb50-root.sql": "f5efde6addd696ef5437026e8f7db68d641b5d68ecbbccbbfd649d7738d24f91",
-    "history-read/private-cores.sql": "72d054b6773849a560f07ef5ea3a2f31ff8feea3833a093e007a6c2d9eb1d7e9",
+    "history-read/private-cores.sql": "e6f9d65a75aa5f4ce0e316df338bc9bea63bcb4fcaa0e742021156f70ef54f31",
     "history-read/root.sql": "9f39988ac7e69dbc6e795d90d140e3db8af9ea94429a2ec33f7282bb537db3fd"
   },
   "trigger_addendum_sha256": "6b4f17e0cdc891405a66a0f2ef461dd47e38e1a94534394cc033f482a8c17744",
@@ -10674,7 +10674,7 @@
           "search_path=pg_catalog, controlled_count_v1",
           "TimeZone=UTC"
         ],
-        "body_sha256": "742923ca75a7a41dad4f7f44a50d3a324d809ef0f6ee812965a561210c61b77f",
+        "body_sha256": "6cb9ededafef1b7bd8df61bfd37b3b69daefd76bada3d67dadaabc9616fa4167",
         "acl": [
           {
             "grantor": "postgres",
@@ -11083,7 +11083,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "e795524b70183e73b6dfecf88869204c01bfe0a54b08a82ca436973c882016ad",
+        "body_sha256": "f3828cacfe6ac656d81664b4f5800129423ced719b724efeff8a4bb02488f166",
         "acl": [
           {
             "grantor": "postgres",
@@ -38214,7 +38214,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "c840d8210baa6ed295862c01ab1d5c79885b1be3f38241be84e44eeb5cfb3a7f",
+        "body_sha256": "df34bc780c3d4804e1a306df9a4d88c1404236d2e0e5f1ad08d2e028211f3a18",
         "acl": [
           {
             "grantor": "postgres",
@@ -38495,7 +38495,7 @@
           "search_path=pg_catalog, controlled_count_v1",
           "TimeZone=UTC"
         ],
-        "body_sha256": "955f990300bcf939d06f04fbef1786148573a4da81d4cb644e5161340837dbaf",
+        "body_sha256": "225b6c55030fbb7e85ac747847026f85cd01b1c647dc2db55cb12331194ad417",
         "acl": [
           {
             "grantor": "postgres",

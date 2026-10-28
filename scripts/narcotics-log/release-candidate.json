@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61509413,
-      "sha256": "28a58fe8f061c62bb286dd9137e600b6893551a6aa0068bd1f693971bd5a50f6"
+      "bytes": 61518660,
+      "sha256": "fa3ac614b1f904ca0a76f82c794f3d61116d4c0c1891040bd959cf8af7157a1c"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61505511,
-      "sha256": "32e71a93a886b5cc0cd5f818866f5c518a1ab9140bc49557e5ec54424cdf12ec"
+      "bytes": 61514758,
+      "sha256": "b29a77a2b8278ee9dd5313a67d7081b3b01bc99123fbbf1a61b1ba9a4bf6c172"
     }
   },
   "source_corrections": {
@@ -290,6 +290,43 @@
       ],
       "no_observed_target_expected_values": true,
       "reason": "Before any current function installation, verify original205 and original206 metadata against their independently frozen source. Preserve the separate final current-source metadata checks."
+    },
+    "snapshot_validation_deduplication": {
+      "all_deadlines_unchanged": true,
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_v1.readcore_saved_count_children(text,jsonb,jsonb,jsonb,jsonb)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "df34bc780c3d4804e1a306df9a4d88c1404236d2e0e5f1ad08d2e028211f3a18",
+          "new_expression": " -- saved_result_graph('cycle',...) above has just validated this complete\n -- immutable snapshot under the held frontier. Read the exact same document,\n -- then bind both its identifier and recomputed digest to that validated cycle.\n select s.document into strict snapshot_doc from controlled_count_v1.snapshots s\n where s.snapshot_id=(cycle_doc#>>'{body,snapshot_id}')::uuid;\n if snapshot_doc->'id'is distinct from cycle_doc#>'{body,snapshot_id}'\n or snapshot_doc->'record_hash'is distinct from cycle_doc#>'{body,snapshot_hash}'\n or controlled_count_v1.document_hash(snapshot_doc)is distinct from cycle_doc#>>'{body,snapshot_hash}'then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;",
+          "old_body_sha256": "c840d8210baa6ed295862c01ab1d5c79885b1be3f38241be84e44eeb5cfb3a7f",
+          "old_expression": " snapshot_doc:=controlled_count_v1.readcore_saved_snapshot_document((cycle_doc#>>'{body,snapshot_id}')::uuid);"
+        },
+        "controlled_count_v1.readcore_saved_snapshot_document(uuid)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "225b6c55030fbb7e85ac747847026f85cd01b1c647dc2db55cb12331194ad417",
+          "new_expression": " -- Validate the complete header/value shape here. The immediately following\n -- saved_boundary_manifest validates the SAME immutable PB before return.\n declare p_document jsonb:=r->'document';key_value text;participants jsonb;a jsonb;b jsonb;policy_doc jsonb;\nbegin\n if p_document is null or octet_length(p_document::text)>16777216\n or controlled_count_v1.count_wire_keys(p_document,array['schema_version','domain','id','count_id','product_id','site_id','captured_at','policy','participants','physical_boundary','physical_boundary_hash','unit_manifest','container_manifest','location_ids','record_hash'])is not true\n or p_document->'schema_version'is distinct from '1'::jsonb or(p_document->'schema_version')::text is distinct from '1'\n or p_document->'domain'is distinct from '\"lrv-controlled-count-snapshot-v1\"'::jsonb then\n  raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n foreach key_value in array array['id','count_id','product_id','site_id']loop\n  if controlled_count_v1.count_wire_uuid(p_document->key_value)is not true then raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n end loop;\n if controlled_count_v1.count_wire_time(p_document->'captured_at')is not true then raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n perform controlled_count_v1.saved_require_hash(p_document->'record_hash');perform controlled_count_v1.saved_require_hash(p_document->'physical_boundary_hash');\n if p_document->>'record_hash'is distinct from controlled_count_v1.document_hash(p_document)\n or p_document->>'physical_boundary_hash'is distinct from controlled_count_v1.saved_boundary_hash(p_document->'physical_boundary')then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n\n perform controlled_count_v1.observation_manifest_values(jsonb_build_object('units',p_document->'unit_manifest','containers',p_document->'container_manifest'));\n perform controlled_count_v1.saved_uuid_array_values(p_document->'location_ids',4096);\n policy_doc:=controlled_count_v1.policy_values(p_document->'policy');participants:=p_document->'participants';\n if controlled_count_v1.count_wire_keys(participants,array['actor_a','actor_b'])is not true then raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n a:=controlled_count_v1.actor_values(participants->'actor_a');b:=participants->'actor_b';\n if controlled_count_v1.count_wire_keys(b,array['id','name','live_roles','policy_id','policy_hash'])is not true\n or controlled_count_v1.count_wire_uuid(b->'id')is not true or controlled_count_v1.count_wire_uuid(b->'policy_id')is not true then\n  raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n perform public.controlled_stock_text(b->'name',200,false);perform controlled_count_v1.role_set_values(b->'live_roles',true);perform controlled_count_v1.saved_require_hash(b->'policy_hash');\n if a->'id'=b->'id'or a#>'{current_authorization,capability}'is distinct from '\"observe\"'::jsonb\n or policy_doc->'product_id'is distinct from p_document->'product_id'or policy_doc->'site_id'is distinct from p_document->'site_id'\n or a#>'{current_authorization,product_id}'is distinct from p_document->'product_id'or a#>'{current_authorization,site_id}'is distinct from p_document->'site_id'\n or a#>'{current_authorization,policy_id}'is distinct from policy_doc->'policy_id'or a#>'{current_authorization,policy_hash}'is distinct from policy_doc->'record_hash'\n or b->'policy_id'is distinct from policy_doc->'policy_id'or b->'policy_hash'is distinct from policy_doc->'record_hash'\n or controlled_count_v1.policy_capability_values(policy_doc,a#>'{current_authorization,live_roles}','observe')is not true\n or controlled_count_v1.policy_capability_values(policy_doc,b->'live_roles','observe')is not true\n or(policy_doc->>'recorded_at')::timestamptz>(p_document->>'captured_at')::timestamptz then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n d:=p_document;\nend;",
+          "old_body_sha256": "955f990300bcf939d06f04fbef1786148573a4da81d4cb644e5161340837dbaf",
+          "old_expression": " d:=controlled_count_v1.saved_snapshot_values(r->'document');"
+        },
+        "controlled_count_v1.saved_count_children(text,jsonb,jsonb,jsonb,jsonb)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "f3828cacfe6ac656d81664b4f5800129423ced719b724efeff8a4bb02488f166",
+          "new_expression": " -- saved_result_graph('cycle',...) above has just validated this complete\n -- immutable snapshot under the held frontier. Read the exact same document,\n -- then bind both its identifier and recomputed digest to that validated cycle.\n select s.document into strict snapshot_doc from controlled_count_v1.snapshots s\n where s.snapshot_id=(cycle_doc#>>'{body,snapshot_id}')::uuid;\n if snapshot_doc->'id'is distinct from cycle_doc#>'{body,snapshot_id}'\n or snapshot_doc->'record_hash'is distinct from cycle_doc#>'{body,snapshot_hash}'\n or controlled_count_v1.document_hash(snapshot_doc)is distinct from cycle_doc#>>'{body,snapshot_hash}'then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;",
+          "old_body_sha256": "e795524b70183e73b6dfecf88869204c01bfe0a54b08a82ca436973c882016ad",
+          "old_expression": " snapshot_doc:=controlled_count_v1.saved_snapshot_document((cycle_doc#>>'{body,snapshot_id}')::uuid);"
+        },
+        "controlled_count_v1.saved_snapshot_document(uuid)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "6cb9ededafef1b7bd8df61bfd37b3b69daefd76bada3d67dadaabc9616fa4167",
+          "new_expression": " -- Validate the complete header/value shape here. The immediately following\n -- saved_boundary_manifest validates the SAME immutable PB before return.\n declare p_document jsonb:=r->'document';key_value text;participants jsonb;a jsonb;b jsonb;policy_doc jsonb;\nbegin\n if p_document is null or octet_length(p_document::text)>16777216\n or controlled_count_v1.count_wire_keys(p_document,array['schema_version','domain','id','count_id','product_id','site_id','captured_at','policy','participants','physical_boundary','physical_boundary_hash','unit_manifest','container_manifest','location_ids','record_hash'])is not true\n or p_document->'schema_version'is distinct from '1'::jsonb or(p_document->'schema_version')::text is distinct from '1'\n or p_document->'domain'is distinct from '\"lrv-controlled-count-snapshot-v1\"'::jsonb then\n  raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n foreach key_value in array array['id','count_id','product_id','site_id']loop\n  if controlled_count_v1.count_wire_uuid(p_document->key_value)is not true then raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n end loop;\n if controlled_count_v1.count_wire_time(p_document->'captured_at')is not true then raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n perform controlled_count_v1.saved_require_hash(p_document->'record_hash');perform controlled_count_v1.saved_require_hash(p_document->'physical_boundary_hash');\n if p_document->>'record_hash'is distinct from controlled_count_v1.document_hash(p_document)\n or p_document->>'physical_boundary_hash'is distinct from controlled_count_v1.saved_boundary_hash(p_document->'physical_boundary')then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n\n perform controlled_count_v1.observation_manifest_values(jsonb_build_object('units',p_document->'unit_manifest','containers',p_document->'container_manifest'));\n perform controlled_count_v1.saved_uuid_array_values(p_document->'location_ids',4096);\n policy_doc:=controlled_count_v1.policy_values(p_document->'policy');participants:=p_document->'participants';\n if controlled_count_v1.count_wire_keys(participants,array['actor_a','actor_b'])is not true then raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n a:=controlled_count_v1.actor_values(participants->'actor_a');b:=participants->'actor_b';\n if controlled_count_v1.count_wire_keys(b,array['id','name','live_roles','policy_id','policy_hash'])is not true\n or controlled_count_v1.count_wire_uuid(b->'id')is not true or controlled_count_v1.count_wire_uuid(b->'policy_id')is not true then\n  raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n perform public.controlled_stock_text(b->'name',200,false);perform controlled_count_v1.role_set_values(b->'live_roles',true);perform controlled_count_v1.saved_require_hash(b->'policy_hash');\n if a->'id'=b->'id'or a#>'{current_authorization,capability}'is distinct from '\"observe\"'::jsonb\n or policy_doc->'product_id'is distinct from p_document->'product_id'or policy_doc->'site_id'is distinct from p_document->'site_id'\n or a#>'{current_authorization,product_id}'is distinct from p_document->'product_id'or a#>'{current_authorization,site_id}'is distinct from p_document->'site_id'\n or a#>'{current_authorization,policy_id}'is distinct from policy_doc->'policy_id'or a#>'{current_authorization,policy_hash}'is distinct from policy_doc->'record_hash'\n or b->'policy_id'is distinct from policy_doc->'policy_id'or b->'policy_hash'is distinct from policy_doc->'record_hash'\n or controlled_count_v1.policy_capability_values(policy_doc,a#>'{current_authorization,live_roles}','observe')is not true\n or controlled_count_v1.policy_capability_values(policy_doc,b->'live_roles','observe')is not true\n or(policy_doc->>'recorded_at')::timestamptz>(p_document->>'captured_at')::timestamptz then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n d:=p_document;\nend;",
+          "old_body_sha256": "742923ca75a7a41dad4f7f44a50d3a324d809ef0f6ee812965a561210c61b77f",
+          "old_expression": " d:=controlled_count_v1.saved_snapshot_values(r->'document');"
+        }
+      },
+      "only_four_function_body_hashes_and_one_derived_source_hash": true,
+      "real_Auth_verification_pending": true
     },
     "staff_sql_expression_repairs": {
       "complete_CLI_file_inverse": true,
