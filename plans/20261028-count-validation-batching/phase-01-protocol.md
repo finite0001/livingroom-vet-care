@@ -197,3 +197,43 @@ Read-only predecessor closure evidence is preserved in
 `docs/controlled-drugs/context-scan-dominance-source-20261028.json`; the pure
 query delta has its own exact source inverse. New normal/negative native and
 clean-runner acceptance remains required.
+
+
+## Final graph scheduling refinement (October 28)
+
+CI still exceeded the unchanged eight-second budget immediately after storing a
+saved reconciliation closure. Independent reviews traced five redundant complete
+graph walks. Assign those checks to the existing mandatory product flush:
+
+- Keep BOTH original full v3 checks in `store_saved_operation_closure` and its
+  saved-closure BEFORE INSERT guard. All live authorization, exact context/scope,
+  policy and closure grammar checks in that guard remain unchanged.
+- Immediately after storage, the management dispatcher checks the newly stored
+  closure and the fresh frontier instead of repeating v3 a third time.
+- Closing UPDATE/DELETE guards retain current header/principal, actual raw context,
+  STRICT operation/result reads and every action/actor/session/product/site/request/
+  scope/nonce/policy binding. Their complete graph walks move to mandatory forcing.
+- Deferred operation/closure callbacks keep full validated closure checks and the
+  fresh frontier. Only their saved-state v3 repetition moves to the product flush.
+  Policy publication and abandoned-closure branches are unchanged.
+
+Every saved operation was inserted after fresh context birth, through the unchanged
+fact guard and immediate pending collector. A pending flush cannot pass before its
+saved closure exists: complete product history validates every registry and its
+required original closure. A later fact write enqueues fresh mandatory work.
+Saved-closure insertion requires that actual operating context and fully validates
+v3 before accepting the row. Finishing excludes fact writes. Pending forcing and
+all structural/FK callbacks remain before context deletion, followed by original
+ALL IMMEDIATE. No absence/presence test of the queue grants authority or skips a
+check; no successful validation is stored as a certificate.
+
+Full product history still inventories actual registry roots AND independent result
+roots, including malformed product claims and orphan/misbound rows. Source inverse
+proofs must show only these exact substitutions. Normal real-Auth correction,
+restore and forced-final-validator rollback must pass on the composed source.
+
+The all-schema predecessor call-graph review is preserved in
+`docs/controlled-drugs/saved-graph-source-review-20261028.json`: 299 source-pinned
+functions, including public and entry helpers. It records the unchanged origin
+guards' current database-role checks explicitly. This is source evidence with
+stated parser/resolution limitations, not native Auth or release acceptance.

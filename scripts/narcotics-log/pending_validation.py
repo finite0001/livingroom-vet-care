@@ -125,7 +125,13 @@ def build(nodes):
  perform controlled_count_entry_v1.assert_read_frontier();
  IF NOT EXISTS(SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname='narcotics_recovery_v1')THEN
  perform controlled_count_entry_v1.require_bound_module();END IF;"""
-    change('controlled_count_v1.dispatch_count_management_mutation(text,jsonb)', [(old, new)])
+    dispatch_graph = " perform controlled_count_v1.validate_operation_graph((q->>'operation_id')::uuid);"
+    dispatch_closure = """ -- Store and its unchanged BEFORE INSERT guard both fully checked v3.
+ -- Check the newly stored closure now; final product forcing checks ALL graphs.
+ perform controlled_count_v1.operation_closure_required((q->>'operation_id')::uuid);
+ perform controlled_count_entry_v1.assert_read_frontier();"""
+    change('controlled_count_v1.dispatch_count_management_mutation(text,jsonb)',
+           [(old, new), (dispatch_graph, dispatch_closure)])
     parent_signature = 'controlled_count_v1.reconciliation_parent_source_required(jsonb,text)'
     parent_source = body(nodes[parent_signature])[1]
     if sha(parent_source) != '0b6cc89f3ee5129087ef9421ee98acd2d2e087fcf596689451f217fc53b993a2':
@@ -145,7 +151,17 @@ end """
     change(closing_signature, [
         (before_parent, before_parent.replace(';\n', ';return;\n', 1)),
         (after_parent, after_parent.replace(';\n', ';return;\n', 1)),
+        ("  perform controlled_count_v1.validate_operation_graph((scope_value->>'outer_operation_id')::uuid);\n",
+         "  -- The mandatory guarded product flush checks this complete graph.\n"),
+        ("  -- The unchanged validator above has just checked this complete immutable\n  -- result, registry, children, cause and closure under the same held frontier.",
+         "  -- Retain the actual result and every context/operation/scope binding.\n  -- Complete graph/closure validation is mandatory before context deletion."),
         (global_tail, queued_tail)])
+    change('controlled_count_v1.operation_closure_deferred()', [(
+        " if c->>'state'='saved'then perform controlled_count_v1.validate_operation_graph_v3(NEW.operation_id);\n perform controlled_count_entry_v1.assert_read_frontier();end if;",
+        " -- The unconditional pending-product guard checks every saved graph.\n if c->>'state'='saved'then perform controlled_count_entry_v1.assert_read_frontier();end if;")])
+    change(ENTRY + 'finish_count_context()', [(
+        " -- The BEFORE UPDATE source guard validates the complete immutable operation\n -- and result/cause/membership graph BEFORE this phase can become finishing.",
+        " -- The BEFORE UPDATE source guard retains current authority and exact\n -- operation/result bindings. Mandatory forcing below checks the COMPLETE\n -- graph, saved closures and live membership BEFORE context deletion.")])
     # Reuse only PURE policy grammar/hash already established by the closed
     # invocation-local constructors. Exact row/cache/input bytes still agree.
     policy_signature = 'controlled_count_v1.history_scan_policy_values(jsonb,jsonb)'
@@ -179,7 +195,12 @@ end """
             parent_stages_keep_their_complete_scan=True,
             only_immediately_dominated_outer_parent_scans_removed=True,
             closing_product_scan_required_by_guarded_pending_delete=True,
-            original_operation_context_result_principal_checks_unchanged=True),
+            original_operation_context_result_principal_bindings_unchanged=True,
+            closing_graph_checks_assigned_to_mandatory_product_flush=True,
+            saved_closure_deferred_graph_assigned_to_mandatory_product_flush=True,
+            dispatcher_post_store_checks_new_closure_and_fresh_frontier=True,
+            both_original_pre_publication_v3_checks_retained=True,
+            policy_publication_and_abandoned_closure_lanes_unchanged=True),
         policy_pure_hash_reuse=dict(
             source_function=policy_signature, first_arm_only=True,
             exact_current_row_cache_input_text_and_scope_bindings_retained=True,

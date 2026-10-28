@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61925872,
-      "sha256": "724a4746fb8e5c18445752ec5e2e81219f8e4e76e8dc05a7cc1cde85cb4d80b1"
+      "bytes": 61926102,
+      "sha256": "aedf5d8cb68925bc83a952030c0b7afc26f4ba4a31c68677cf291e112558b160"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61921970,
-      "sha256": "1efba3a8586ce84b0cd0883a789f148a23a69494895ead0216d89e25bddc37a4"
+      "bytes": 61922200,
+      "sha256": "e1fca151f66e34f8003428c899b89f6b120ef1b68b475df34e31820dbd8f5c36"
     }
   },
   "source_corrections": {
@@ -332,6 +332,17 @@
           ],
           "whole_body_inverse": true
         },
+        "controlled_count_entry_v1.finish_count_context()": {
+          "new_body_sha256": "9a308a0944cce5bcc7b562255d1368bd13e6cf48d32a448b366276bd2be3b7a6",
+          "original_body_sha256": "43fcb59f869a91739de79b876c95613d5a16b11bfe4efe2bb89e3de180f5b13a",
+          "replacements": [
+            [
+              " -- The BEFORE UPDATE source guard validates the complete immutable operation\n -- and result/cause/membership graph BEFORE this phase can become finishing.",
+              " -- The BEFORE UPDATE source guard retains current authority and exact\n -- operation/result bindings. Mandatory forcing below checks the COMPLETE\n -- graph, saved closures and live membership BEFORE context deletion."
+            ]
+          ],
+          "whole_body_inverse": true
+        },
         "controlled_count_entry_v1.force_count_structural_checks()": {
           "new_body_sha256": "daa6d2e73eb9a0023fdf8fd402e64372d358575893fd832cb27c3c2f550df22b",
           "original_body_sha256": "b4ad5f3d110def83dbcbc5b2613550cd8449fe94a5a09d76286fb2fe4ca9564e",
@@ -421,18 +432,22 @@
           "whole_body_inverse": true
         },
         "controlled_count_v1.dispatch_count_management_mutation(text,jsonb)": {
-          "new_body_sha256": "6476487716775949b05bba5c6abb7aa61e13b2cdfcee31d3c786172bb55f6458",
+          "new_body_sha256": "d0062eeca6bb6a779f9c480dcb7d64f66e7ddce200b9dd69814884ca4b395602",
           "original_body_sha256": "3b0d05122719f55abc0959a369b8fc0cdd7324d23d7dc04a280b33de0aadd6c3",
           "replacements": [
             [
               " perform controlled_count_entry_v1.acquire_static_relation_frontier();\n -- Exactly one whole metadata check, after real held frontier and before user/current-principal/saved reads.\n perform controlled_count_entry_v1.assert_read_frontier();\n perform controlled_count_entry_v1.require_bound_module();",
               " perform controlled_count_entry_v1.acquire_static_relation_frontier();\n -- The sealed recovery post-check just checked full metadata when209 exists.\n -- Its admission lock also excludes concurrent supported209 installation.\n perform controlled_count_entry_v1.assert_read_frontier();\n IF NOT EXISTS(SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname='narcotics_recovery_v1')THEN\n perform controlled_count_entry_v1.require_bound_module();END IF;"
+            ],
+            [
+              " perform controlled_count_v1.validate_operation_graph((q->>'operation_id')::uuid);",
+              " -- Store and its unchanged BEFORE INSERT guard both fully checked v3.\n -- Check the newly stored closure now; final product forcing checks ALL graphs.\n perform controlled_count_v1.operation_closure_required((q->>'operation_id')::uuid);\n perform controlled_count_entry_v1.assert_read_frontier();"
             ]
           ],
           "whole_body_inverse": true
         },
         "controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)": {
-          "new_body_sha256": "3a31221bc2da622ee0371d113741c6562d77108d3650ed6fd70780c39d23eee4",
+          "new_body_sha256": "c4deeb3d2ee50cb04c5ea523d848ce1550bda262f1932462c8c66af15bc5b614",
           "original_body_sha256": "5bc404e90e44dce98eb5d4c0ea4b3d0a75c144d1d79039a3feb537f24cb62a74",
           "replacements": [
             [
@@ -442,6 +457,14 @@
             [
               "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'after');\n",
               "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'after');return;\n"
+            ],
+            [
+              "  perform controlled_count_v1.validate_operation_graph((scope_value->>'outer_operation_id')::uuid);\n",
+              "  -- The mandatory guarded product flush checks this complete graph.\n"
+            ],
+            [
+              "  -- The unchanged validator above has just checked this complete immutable\n  -- result, registry, children, cause and closure under the same held frontier.",
+              "  -- Retain the actual result and every context/operation/scope binding.\n  -- Complete graph/closure validation is mandatory before context deletion."
             ],
             [
               " perform controlled_count_v1.product_live_causes((scope_value->>'product_id')::uuid);\nend ",
@@ -457,6 +480,17 @@
             [
               " if exists(\n  select 1 from controlled_count_v1.policies policy_row\n  where policy_row.policy_id::text=p_document->>'policy_id'\n   and(p_validated_documents->('policy_values:'||policy_row.policy_id::text))::text is not distinct from policy_row.document::text\n   and policy_row.document::text is not distinct from p_document::text\n   and p_document->'policy_id'=to_jsonb(policy_row.policy_id)\n   and p_document->'product_id'=to_jsonb(policy_row.product_id)and p_document->'site_id'=to_jsonb(policy_row.site_id)\n   and p_document->>'record_hash'=policy_row.record_hash\n   and controlled_count_v1.document_hash(p_document)=policy_row.record_hash\n",
               " if exists(\n  select 1 from controlled_count_v1.policies policy_row\n  where policy_row.policy_id=CASE WHEN controlled_count_v1.count_wire_uuid(p_document->'policy_id')THEN(p_document->>'policy_id')::uuid ELSE NULL::uuid END\n   and(p_validated_documents->('policy_values:'||policy_row.policy_id::text))::text is not distinct from policy_row.document::text\n   and policy_row.document::text is not distinct from p_document::text\n   and p_document->'policy_id'=to_jsonb(policy_row.policy_id)\n   and p_document->'product_id'=to_jsonb(policy_row.product_id)and p_document->'site_id'=to_jsonb(policy_row.site_id)\n   and p_document->>'record_hash'=policy_row.record_hash\n"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_v1.operation_closure_deferred()": {
+          "new_body_sha256": "e50370b4fab1f3733a5c499d9ebee0b768394f988b19e424774776e62ded34cd",
+          "original_body_sha256": "61ed5748d31678555ca6d93c7844fd8f4372b57cc9660b66466ea9d5b680317c",
+          "replacements": [
+            [
+              " if c->>'state'='saved'then perform controlled_count_v1.validate_operation_graph_v3(NEW.operation_id);\n perform controlled_count_entry_v1.assert_read_frontier();end if;",
+              " -- The unconditional pending-product guard checks every saved graph.\n if c->>'state'='saved'then perform controlled_count_entry_v1.assert_read_frontier();end if;"
             ]
           ],
           "whole_body_inverse": true
@@ -481,6 +515,7 @@
         "controlled_count_entry_v1.assert_static_relation_frontier()",
         "controlled_count_entry_v1.assert_stock_workflow_relation_frontier()",
         "controlled_count_entry_v1.begin_count_context(jsonb)",
+        "controlled_count_entry_v1.finish_count_context()",
         "controlled_count_entry_v1.force_count_structural_checks()",
         "controlled_count_entry_v1.require_bound_module()",
         "controlled_count_entry_v1.resource_origin_catalog_required()",
@@ -493,18 +528,24 @@
         "controlled_count_v1.dispatch_count_management_mutation(text,jsonb)",
         "controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)",
         "controlled_count_v1.history_scan_policy_values(jsonb,jsonb)",
+        "controlled_count_v1.operation_closure_deferred()",
         "controlled_stock_workflow_v1.witness_121_required()"
       ],
       "compiler_inverse_all_seven_artifacts_exact": true,
       "complete_CLI_publication_inverse": true,
       "context_scan_schedule": {
+        "both_original_pre_publication_v3_checks_retained": true,
+        "closing_graph_checks_assigned_to_mandatory_product_flush": true,
         "closing_product_scan_required_by_guarded_pending_delete": true,
+        "dispatcher_post_store_checks_new_closure_and_fresh_frontier": true,
         "only_immediately_dominated_outer_parent_scans_removed": true,
-        "original_operation_context_result_principal_checks_unchanged": true,
+        "original_operation_context_result_principal_bindings_unchanged": true,
         "parent_source_function": "controlled_count_v1.reconciliation_parent_source_required(jsonb,text)",
         "parent_stages_keep_their_complete_scan": true,
+        "policy_publication_and_abandoned_closure_lanes_unchanged": true,
         "predecessor_readonly_closure_sha256": "2c765dae3922ca5032ed4e046d0aad7e1f813f6c0137f0a4d7dfe03913390ccc",
         "reviewed_parent_body_sha256": "0b6cc89f3ee5129087ef9421ee98acd2d2e087fcf596689451f217fc53b993a2",
+        "saved_closure_deferred_graph_assigned_to_mandatory_product_flush": true,
         "source_function": "controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)"
       },
       "current_artifacts": {
@@ -518,15 +559,15 @@
         },
         "expected-module.json": {
           "bytes": 12383153,
-          "sha256": "8871e705e934987aee1a973e96f63c18df3ee6e2d630dfb9145ab0a7bfb53454"
+          "sha256": "ccc6681f8bcf26f160441bcd5f1e0566521bec1ee8f6e79c029994dedb3c2628"
         },
         "install.sql": {
-          "bytes": 61921970,
-          "sha256": "1efba3a8586ce84b0cd0883a789f148a23a69494895ead0216d89e25bddc37a4"
+          "bytes": 61922200,
+          "sha256": "e1fca151f66e34f8003428c899b89f6b120ef1b68b475df34e31820dbd8f5c36"
         },
         "postcheck.sql": {
           "bytes": 31295133,
-          "sha256": "c175e77affcdebf2b7629120986c9a1eaf33af9d66d769fc9d71e6054c3869cc"
+          "sha256": "c7998fa9d3fa9fc3d41cc09ac8c1d98e5400b0130eb08fae97274b12e02cc3a8"
         },
         "preflight.sql": {
           "bytes": 2551471,
@@ -534,7 +575,7 @@
         },
         "source-expected.sql": {
           "bytes": 9163592,
-          "sha256": "3376af224fc0da3428bcae2eb6a99d5b95c742bf118e6ca60703be8a5bfbb635"
+          "sha256": "ce5f5655aa74e54d44ed563887c81a6c0058e8f466a336c512c054821f89b602"
         }
       },
       "fact_tables": [
@@ -697,8 +738,8 @@
           "sha256": "e5664aeb827274b77b765314a18739dc7de10addba39c74d555fb14b922e30e2"
         },
         "pending_validation.py": {
-          "bytes": 13299,
-          "sha256": "9b78c0705b38133da3ff74fd2ea915eeda17dcda2c4f04d52984bc31a7172e8d"
+          "bytes": 15561,
+          "sha256": "7f8d21405c945a28b9742ba7f05cf276500fd0ca24928c44b48b7f191dbebf8e"
         }
       },
       "unchanged_final_ALL_IMMEDIATE": true

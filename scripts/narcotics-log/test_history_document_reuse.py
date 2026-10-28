@@ -1,5 +1,7 @@
 """Offline source-edit controls, not Auth or stock acceptance."""
 import unittest
+import json
+import hashlib
 from pathlib import Path
 import history_document_reuse as source
 
@@ -26,6 +28,15 @@ class HistoricalSourceControls(unittest.TestCase):
         start=sql.index('CREATE OR REPLACE FUNCTION controlled_count_v1.operation_closure_deferred()')
         begin=sql.index(' AS $$',start)+len(' AS $$');end=sql.index('$$;',begin)
         candidate=sql[begin:end]
+        # The final mandatory-work protocol supersedes this predecessor cut.
+        # Recover the complete predecessor from its source-bound exact inverse.
+        manifest=json.loads((Path(__file__).parent/'release-candidate.json').read_text())
+        delta=manifest['source_corrections']['pending_product_validation']['body_inverses']['controlled_count_v1.operation_closure_deferred()']
+        self.assertEqual(hashlib.sha256(candidate.encode()).hexdigest(),delta['new_body_sha256'])
+        for old,new in reversed(delta['replacements']):
+            self.assertEqual(candidate.count(new),1)
+            candidate=candidate.replace(new,old,1)
+        self.assertEqual(hashlib.sha256(candidate.encode()).hexdigest(),delta['original_body_sha256'])
         anchor=""" if c->>'state'='saved'then perform controlled_count_v1.validate_operation_graph_v3(NEW.operation_id);
  perform controlled_count_entry_v1.assert_read_frontier();end if;"""
         self.assertEqual(candidate.count(anchor),1)
