@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61877242,
-      "sha256": "ebf120aa7a28e75f2c0203922d26ee71b9b7f5cf21834c80939d7663f0cfecdd"
+      "bytes": 61878485,
+      "sha256": "def47a0addfe353c098968ab7e59f8bf3720554696532cd80207acaf71123272"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61873340,
-      "sha256": "8e09af61d7edbaa6bbd8d3078f9092ceba2ba8d25847a9b6b9d32bd71c553842"
+      "bytes": 61874583,
+      "sha256": "ef72c79807f7211a4720456d035e74e93e34f51520ecebd62510a00acdcbe2b9"
     }
   },
   "source_corrections": {
@@ -513,6 +513,7 @@
           "signature": "controlled_count_v1.history_execution_graph(uuid)",
           "whole_sql_sha256": "af6d151194983082f391e89f9b5ba7e10ccc6945d63aae74289121c7cfa54b3d"
         },
+        "full_result_registry_children_and_closure_checks_still_required": true,
         "kind": "single-invocation-validated-history-documents-v1",
         "live_causes": {
           "explicit_selected_registry_root_required": true,
@@ -558,6 +559,7 @@
         "root_new_body_sha256": "d0636b9b850f8c381bfffff2d5af00685dad3ae12c5e1cd65beaaf5b9fb7a091",
         "root_original_body_sha256": "55ec2c3b165253179871a6194c2c374d745e778920749182d152d3fb16faa8ce",
         "root_whole_body_inverse": true,
+        "separate_body_grammar_domain_after_full_body_validation": true,
         "snapshot_added_only_after_complete_cycle_validation": true,
         "variants": {
           "controlled_count_v1.closure_values(jsonb,jsonb,jsonb,jsonb)": {
@@ -573,7 +575,7 @@
             "new_signature": "controlled_count_v1.history_scan_historical_boundary_values(jsonb,jsonb)",
             "origin_guard_retained": true,
             "original_body_sha256": "767ee1aa7b389eb4059eeb364bc50b99027c3039b37007541a29ac110123156c",
-            "variant_body_sha256": "bdff8628c38fe507ac617fe1b210bd0d3491f7ce497bb4e959bda2b2562fead1",
+            "variant_body_sha256": "0c37b81a3733c89cd7ae629663996b917657d2381a7e546c347cf345a0054900",
             "whole_body_inverse": true
           },
           "controlled_count_v1.historical_parent_execution_boundaries_values(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)": {
@@ -744,7 +746,7 @@
             "new_signature": "controlled_count_v1.history_scan_saved_result_graph(text,uuid,jsonb)",
             "origin_guard_retained": true,
             "original_body_sha256": "1490dc6bf20a108afd60c33b4a50c94d73bc8e55cc1f07cabb0aa94c217d5931",
-            "variant_body_sha256": "ac4feed14a990d8ac1c72c365c0e09d8fa3db07c678a42d3365f8decc3b819e2",
+            "variant_body_sha256": "3dacbe59d8a16443c24bfc8bc07b1a70d07b649e7559cb8013c1fdd0c9d48977",
             "whole_body_inverse": true
           },
           "controlled_count_v1.readcore_saved_snapshot_document(uuid)": {
@@ -974,8 +976,8 @@
           "sha256": "c3e4751d002d04aeb0cc4c285aa79c59bfcd33a6870a251a21a78057789ef59c"
         },
         "history_document_reuse.py": {
-          "bytes": 64151,
-          "sha256": "72217f446e0f51160e323af705f306d485965d7a1b5da95017b32f2f383277d5"
+          "bytes": 65545,
+          "sha256": "ac490367a76d3a59a7039ffc3b0c2bb13dd700662c207afa58166d9ea769428d"
         },
         "recovery_admission_source.py": {
           "bytes": 10068,

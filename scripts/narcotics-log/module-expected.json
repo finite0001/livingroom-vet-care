@@ -194,7 +194,7 @@
     "forward-fixes/recovery-admission-source.sql": "15c02507e1126613a1d163bd250c1514a99d8f6bd328030a645c03bbc942760e",
     "history-read/private-cores.sql": "8d08144a6ff4f79ba2a0d25f2cb8ab9c65fc48874a2e3f4866a8249e9ddb6600",
     "history-read/root.sql": "9f39988ac7e69dbc6e795d90d140e3db8af9ea94429a2ec33f7282bb537db3fd",
-    "forward-fixes/history-document-reuse.sql": "91e2140653321859fdc536459f2c8030f9e195c8c863b0b9642e61d3b904d50e",
+    "forward-fixes/history-document-reuse.sql": "3327636ef586f8d2e42edaf9718317918af6034e7d8172a198bba038291d75d4",
     "forward-fixes/fresh-frontier-projections.sql": "4c1b4cc5b0e577ac081597e9fa678074ebc55052ca93d5a4f48600ee1a76ae9b"
   },
   "trigger_addendum_sha256": "6b4f17e0cdc891405a66a0f2ef461dd47e38e1a94534394cc033f482a8c17744",
@@ -38946,7 +38946,7 @@
           "IntervalStyle=postgres",
           "extra_float_digits=3"
         ],
-        "body_sha256": "bdff8628c38fe507ac617fe1b210bd0d3491f7ce497bb4e959bda2b2562fead1",
+        "body_sha256": "0c37b81a3733c89cd7ae629663996b917657d2381a7e546c347cf345a0054900",
         "acl": [
           {
             "grantor": "postgres",
@@ -39941,7 +39941,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "ac4feed14a990d8ac1c72c365c0e09d8fa3db07c678a42d3365f8decc3b819e2",
+        "body_sha256": "3dacbe59d8a16443c24bfc8bc07b1a70d07b649e7559cb8013c1fdd0c9d48977",
         "acl": [
           {
             "grantor": "postgres",

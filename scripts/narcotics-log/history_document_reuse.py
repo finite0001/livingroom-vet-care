@@ -280,6 +280,27 @@ REUSE_BLOCK = '''
  end if;
 '''
 
+BODY_GRAMMAR_ANCHOR = "d:=controlled_count_v1.history_scan_saved_body_values(p_kind,r->'document',p_validated_documents);"
+BODY_GRAMMAR_SEED = '''
+if p_kind=any(array['reconciliation_preparation','reconciliation_execution',
+                   'reconciliation_confirmation','cause_resolution'])
+ and p_validated_documents is not null and jsonb_typeof(p_validated_documents)='object'
+ and d->'id'=to_jsonb(p_id) and r->id_key=to_jsonb(p_id)
+ and d::text is not distinct from(r->'document')::text
+ and d->'record_hash'=r->'record_hash'
+ and d->>'record_hash'=controlled_count_v1.document_hash(d)then
+ declare body_grammar_key text:='body_grammar:'||p_kind||':'||p_id::text;
+ begin
+  -- This certifies ONLY completed pure body/PB grammar in this invocation.
+  -- It is NEVER a completed result/registry/closure certificate.
+  if octet_length(p_validated_documents::text)+octet_length(d::text)
+     +octet_length(body_grammar_key)+8<=16777216 then
+   p_validated_documents:=p_validated_documents||jsonb_build_object(body_grammar_key,d);
+  end if;
+ end;
+end if;
+'''
+
 SNAPSHOT_REUSE_BLOCK = '''
  if p_validated_documents ? ('snapshot:'||p_id::text)then
   declare verified_snapshot_document jsonb:=p_validated_documents->('snapshot:'||p_id::text);observed_snapshot_document jsonb;observed_snapshot_row jsonb;
@@ -325,7 +346,7 @@ UNION ALL
 SELECT 1
 FROM jsonb_object_keys(p_validated_documents) AS verified(key)
 JOIN controlled_count_v1.reconciliation_preparations AS reuse_preparation
- ON verified.key='reconciliation_preparation:'||reuse_preparation.preparation_id::text
+ ON verified.key IN('reconciliation_preparation:'||reuse_preparation.preparation_id::text,'body_grammar:reconciliation_preparation:'||reuse_preparation.preparation_id::text)
 WHERE (p_validated_documents->verified.key)::text IS NOT DISTINCT FROM reuse_preparation.document::text
  AND (p_validated_documents->verified.key)->'id'=to_jsonb(reuse_preparation.preparation_id)
  AND (p_validated_documents->verified.key)->>'record_hash'=reuse_preparation.record_hash
@@ -336,7 +357,7 @@ UNION ALL
 SELECT 1
 FROM jsonb_object_keys(p_validated_documents) AS verified(key)
 JOIN controlled_count_v1.reconciliation_executions AS reuse_execution
- ON verified.key='reconciliation_execution:'||reuse_execution.execution_id::text
+ ON verified.key IN('reconciliation_execution:'||reuse_execution.execution_id::text,'body_grammar:reconciliation_execution:'||reuse_execution.execution_id::text)
 WHERE (p_validated_documents->verified.key)::text IS NOT DISTINCT FROM reuse_execution.document::text
  AND (p_validated_documents->verified.key)->'id'=to_jsonb(reuse_execution.execution_id)
  AND (p_validated_documents->verified.key)->>'record_hash'=reuse_execution.record_hash
@@ -348,7 +369,7 @@ UNION ALL
 SELECT 1
 FROM jsonb_object_keys(p_validated_documents) AS verified(key)
 JOIN controlled_count_v1.reconciliation_confirmations AS reuse_confirmation
- ON verified.key='reconciliation_confirmation:'||reuse_confirmation.confirmation_id::text
+ ON verified.key IN('reconciliation_confirmation:'||reuse_confirmation.confirmation_id::text,'body_grammar:reconciliation_confirmation:'||reuse_confirmation.confirmation_id::text)
 WHERE (p_validated_documents->verified.key)::text IS NOT DISTINCT FROM reuse_confirmation.document::text
  AND (p_validated_documents->verified.key)->'id'=to_jsonb(reuse_confirmation.confirmation_id)
  AND (p_validated_documents->verified.key)->>'record_hash'=reuse_confirmation.record_hash
@@ -359,7 +380,7 @@ UNION ALL
 SELECT 1
 FROM jsonb_object_keys(p_validated_documents) AS verified(key)
 JOIN controlled_count_v1.resolutions AS reuse_resolution
- ON verified.key='cause_resolution:'||reuse_resolution.resolution_id::text
+ ON verified.key IN('cause_resolution:'||reuse_resolution.resolution_id::text,'body_grammar:cause_resolution:'||reuse_resolution.resolution_id::text)
 WHERE (p_validated_documents->verified.key)::text IS NOT DISTINCT FROM reuse_resolution.document::text
  AND (p_validated_documents->verified.key)->'id'=to_jsonb(reuse_resolution.resolution_id)
  AND (p_validated_documents->verified.key)->>'record_hash'=reuse_resolution.record_hash

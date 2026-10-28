@@ -17,6 +17,15 @@ import prefix_view
 GUARD_SHA='ed42ffa7835b5e2fc424738de97ceb237f554651c0e0f7facf5a10c8a2e3094a'
 
 
+def failure_class(message):
+    value=message.lower()
+    if any(token in value for token in('toomanyrequests','too many requests','rate limit','rate exceeded','quota','429')):
+        return 'rate_limited'
+    if any(token in value for token in('manifest unknown','manifest not found','not found')):return 'manifest_unavailable'
+    if any(token in value for token in('unauthorized','denied')):return 'registry_authorization'
+    return 'registry_transport'
+
+
 def guard_source():
     path=prefix_view.ROOT/'tests/controlled-drugs/engine/candidate/history_environment.py'
     raw=prefix_view.regular(path)
@@ -74,24 +83,34 @@ def prepare(environment=None,runner=bounded_process.run):
 
     found=verified_tags()
     if found:return dict(kind='approved-ci-postgres-cache-v1',cached=found,database_operations=0)
-    for reference in guard.POSTGRES_REFERENCES:
-        repository=reference.rsplit(':',1)[0]
-        digest_reference=repository+'@'+guard.POSTGRES_INDEX_DIGEST
-        try:result=call(['pull',digest_reference],25)
-        except subprocess.TimeoutExpired:continue
-        if result.returncode:continue
-        image=inspect(digest_reference)
-        immutable=inspect(image['Id'])
-        if immutable['Id']!=image['Id']:raise ValueError('Pulled immutable image changed')
-        guard.assert_bootstrap_image(reference,immutable)
-        # Never overwrite a tag that appeared during the pull.
-        found=verified_tags()
-        if found:return dict(kind='approved-ci-postgres-cache-v1',cached=found,database_operations=0)
-        result=call(['tag',image['Id'],reference])
-        if result.returncode:raise ValueError('Cannot cache the same approved reference')
-        found=verified_tags()
-        if reference not in found:raise ValueError('Approved image cache verification failed')
-        return dict(kind='approved-ci-postgres-cache-v1',cached=found,database_operations=0)
+    for attempt in range(1,4):
+        for reference in guard.POSTGRES_REFERENCES:
+            repository=reference.rsplit(':',1)[0]
+            digest_reference=repository+'@'+guard.POSTGRES_INDEX_DIGEST
+            try:
+                result=call(['pull',digest_reference],25)
+                failure=None if result.returncode==0 else failure_class(result.stderr)
+            except subprocess.TimeoutExpired:failure='pull_timeout'
+            if failure is not None:
+                # Public classification only: never print raw daemon output.
+                print(json.dumps(dict(approved_reference=reference,attempt=attempt,failure=failure)),file=sys.stderr,flush=True)
+                continue
+            image=inspect(digest_reference)
+            immutable=inspect(image['Id'])
+            if immutable['Id']!=image['Id']:raise ValueError('Pulled immutable image changed')
+            guard.assert_bootstrap_image(reference,immutable)
+            # Never overwrite a tag that appeared during the pull.
+            found=verified_tags()
+            if found:return dict(kind='approved-ci-postgres-cache-v1',cached=found,database_operations=0)
+            result=call(['tag',image['Id'],reference])
+            if result.returncode:raise ValueError('Cannot cache the same approved reference')
+            found=verified_tags()
+            if reference not in found:raise ValueError('Approved image cache verification failed')
+            return dict(kind='approved-ci-postgres-cache-v1',cached=found,database_operations=0)
+        if attempt<3:
+            pause=4*attempt
+            if end-time.monotonic()<=pause:raise TimeoutError('Image-cache retry would exceed the original work deadline')
+            time.sleep(pause)
     raise RuntimeError('Approved registries unavailable; image guard remains unchanged')
 
 

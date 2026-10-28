@@ -11,7 +11,7 @@ CREATE FUNCTION pg_temp.boundary_reuse_controls()RETURNS jsonb LANGUAGE plpgsql
 SECURITY INVOKER SET search_path=pg_catalog AS $control$
 DECLARE item record;candidate jsonb;cache jsonb;variant integer;cases integer:=0;boundaries integer:=0;
  kinds text[]:='{}';old_code text;new_code text;old_message text;new_message text;
- reference_boundary jsonb;reference_cache jsonb;
+ reference_boundary jsonb;reference_cache jsonb;base_variant integer;cache_key text;body_domain_cases integer:=0;
 BEGIN
  FOR item IN
   SELECT 'reconciliation_preparation'::text kind,p.preparation_id id,p.document,p.document#>'{body,boundary}' boundary
@@ -29,12 +29,14 @@ BEGIN
   IF boundaries=1 THEN reference_boundary:=item.boundary;
    reference_cache:=jsonb_build_object(item.kind||':'||item.id::text,item.document);END IF;
   IF NOT(item.kind=ANY(kinds))THEN kinds:=array_append(kinds,item.kind);END IF;
-  FOR variant IN 1..5 LOOP
-   candidate:=item.boundary;cache:=jsonb_build_object(item.kind||':'||item.id::text,item.document);
-   IF variant=2 THEN cache:=jsonb_build_object(item.kind||':'||item.id::text,item.document||jsonb_build_object('unreviewed_extra_field',true));
-   ELSIF variant=3 THEN cache:=jsonb_build_object('wrong_kind:'||item.id::text,item.document);
-   ELSIF variant=4 THEN candidate:=candidate||jsonb_build_object('unreviewed_extra_field',true);
-   ELSIF variant=5 THEN candidate:='null'::jsonb;END IF;
+  FOR variant IN 1..10 LOOP
+   base_variant:=1+((variant-1)%5);
+   cache_key:=(CASE WHEN variant<=5 THEN''ELSE'body_grammar:'END)||item.kind||':'||item.id::text;
+   candidate:=item.boundary;cache:=jsonb_build_object(cache_key,item.document);
+   IF base_variant=2 THEN cache:=jsonb_build_object(cache_key,item.document||jsonb_build_object('unreviewed_extra_field',true));
+   ELSIF base_variant=3 THEN cache:=jsonb_build_object('wrong_kind:'||item.id::text,item.document);
+   ELSIF base_variant=4 THEN candidate:=candidate||jsonb_build_object('unreviewed_extra_field',true);
+   ELSIF base_variant=5 THEN candidate:='null'::jsonb;END IF;
    old_code:=NULL;new_code:=NULL;old_message:=NULL;new_message:=NULL;
    BEGIN PERFORM controlled_count_v1.historical_boundary_values(candidate);
    EXCEPTION WHEN query_canceled OR assert_failure THEN RAISE;
@@ -43,9 +45,10 @@ BEGIN
    EXCEPTION WHEN query_canceled OR assert_failure THEN RAISE;
     WHEN OTHERS THEN GET STACKED DIAGNOSTICS new_code=RETURNED_SQLSTATE,new_message=MESSAGE_TEXT;END;
    IF old_code IS DISTINCT FROM new_code OR old_message IS DISTINCT FROM new_message
-    OR(variant<=3 AND old_code IS NOT NULL)OR(variant>=4 AND old_code IS NULL)THEN
+    OR(base_variant<=3 AND old_code IS NOT NULL)OR(base_variant>=4 AND old_code IS NULL)THEN
     RAISE EXCEPTION 'boundary_grammar_reuse_control_failed';END IF;
    cases:=cases+1;
+   IF variant>5 THEN body_domain_cases:=body_domain_cases+1;END IF;
   END LOOP;
  END LOOP;
  IF cardinality(kinds)<>4 OR boundaries<5 THEN RAISE EXCEPTION 'complete_management_boundary_fixture_required';END IF;
@@ -69,7 +72,7 @@ BEGIN
   cases:=cases+1;
  END LOOP;
  RETURN jsonb_build_object('kind','management-boundary-grammar-controls-v1','kinds',cardinality(kinds),
-  'boundaries',boundaries,'cases',cases,'map_and_sql_null_cases',6,'original_and_context_results_exact',true,
+  'boundaries',boundaries,'cases',cases,'map_and_sql_null_cases',6,'body_grammar_cases',body_domain_cases,'original_and_context_results_exact',true,
   'domain_writes',0,'Auth_acceptance',false);
 END$control$;
 SELECT pg_temp.boundary_reuse_controls();

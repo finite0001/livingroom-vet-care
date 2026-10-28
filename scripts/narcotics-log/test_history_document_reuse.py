@@ -5,6 +5,22 @@ import history_document_reuse as source
 
 
 class HistoricalSourceControls(unittest.TestCase):
+    def test_body_grammar_is_separate_from_completed_graph_authority(self):
+        for complete in(source.REUSE_BLOCK,source.SNAPSHOT_REUSE_BLOCK,source.POLICY_REUSE_BLOCK):
+            self.assertNotIn('body_grammar:',complete)
+        seed=source.BODY_GRAMMAR_SEED
+        self.assertIn("'body_grammar:'||p_kind||':'||p_id::text",seed)
+        self.assertIn("d::text is not distinct from(r->'document')::text",seed)
+        self.assertIn("r->id_key=to_jsonb(p_id)",seed)
+        self.assertIn('16777216',seed)
+        self.assertNotIn("'reconciliation_approval'",seed)
+        sql=(Path(__file__).resolve().parents[2]/'supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql').read_text()
+        start=sql.index('CREATE FUNCTION controlled_count_v1.history_scan_saved_result_graph(')
+        begin=sql.index(' AS $$',start)+len(' AS $$');end=sql.index('$$;',begin);body=sql[begin:end]
+        self.assertEqual(body.count(source.BODY_GRAMMAR_SEED),1)
+        self.assertLess(body.index(source.BODY_GRAMMAR_ANCHOR),body.index(source.BODY_GRAMMAR_SEED))
+        self.assertLess(body.index(source.BODY_GRAMMAR_SEED),body.index('history_scan_saved_registry_values('))
+
     def test_saved_closure_cut_preserves_initial_proof_and_non_saved_branches(self):
         sql=(Path(__file__).resolve().parents[2]/'supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql').read_text()
         start=sql.index('CREATE OR REPLACE FUNCTION controlled_count_v1.operation_closure_deferred()')

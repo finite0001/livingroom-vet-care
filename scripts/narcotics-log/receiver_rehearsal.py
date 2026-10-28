@@ -408,7 +408,7 @@ class PopulatedRecovery(operational_release.SourceLedger,business.BusinessInstal
         proof = management.run(receiver_context, self.methods, rr, receiver_folder, rr.selected_query, business.save)
         grammar_controls=rr.selected_query('management-boundary-grammar-controls',
             installation.prefix.regular(HERE/'boundary-reuse-controls.sql').decode())
-        if grammar_controls!=dict(kind='management-boundary-grammar-controls-v1',kinds=4,boundaries=5,cases=31,map_and_sql_null_cases=6,
+        if grammar_controls!=dict(kind='management-boundary-grammar-controls-v1',kinds=4,boundaries=5,cases=56,map_and_sql_null_cases=6,body_grammar_cases=25,
                 original_and_context_results_exact=True,domain_writes=0,Auth_acceptance=False):
             raise ValueError('Complete original/context management-boundary controls required')
         business.save(receiver_folder,'management-boundary-grammar-controls',grammar_controls)

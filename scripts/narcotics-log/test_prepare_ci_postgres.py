@@ -3,6 +3,7 @@ from copy import deepcopy
 import json
 import subprocess
 import unittest
+from unittest.mock import patch
 
 import prepare_ci_postgres as source
 
@@ -66,6 +67,22 @@ class ImageCacheControls(unittest.TestCase):
         self.assertEqual(result['cached'],['ghcr.io/supabase/postgres:17.6.1.171'])
         self.assertEqual(result['database_operations'],0)
         self.assertFalse(any('docker.io/'in arg for c in calls for arg in c))
+
+    def test_transient_registry_failures_retry_within_the_original_deadline(self):
+        failed={'public.ecr.aws/supabase/postgres','ghcr.io/supabase/postgres'}
+        _,calls,_,run=self.fixture(failed_pull=failed)
+        pulls=0
+        def transient(arguments,**options):
+            nonlocal pulls
+            if arguments[1]=='pull':
+                pulls+=1
+                if pulls==3:failed.clear()
+            return run(arguments,**options)
+        with patch.object(source.time,'sleep')as sleep:
+            result=source.prepare(dict(GITHUB_ACTIONS='true',DOCKER_HOST='unix:///test.sock'),transient)
+        self.assertEqual(pulls,3);sleep.assert_called_once_with(4)
+        self.assertEqual(result['cached'],['public.ecr.aws/supabase/postgres:17.6.1.171'])
+        self.assertEqual(source.failure_class('toomanyrequests: Rate exceeded'),'rate_limited')
 
 
 if __name__=='__main__':unittest.main()
