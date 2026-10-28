@@ -197,6 +197,9 @@ class BusinessInstallation(installation.Installation):
     def after_installation(self, runtime):
         """Normal acceptance never instruments the installed application."""
 
+    def after_business(self, context, methods, runtime, proof):
+        """Normal acceptance has no extra diagnostic workload."""
+
     def __init__(self, view, evidence, layout, started, *, profile):
         super().__init__(view, evidence, layout, started)
         self.profile = profile
@@ -230,6 +233,7 @@ class BusinessInstallation(installation.Installation):
         proof = getattr(owner, self.profile)(context, methods, runtime, self.evidence, runtime.selected_query, save)
         if self.profile == "browser_lost_finalize":
             proof["actual_browser"] = m.browser.run(context, m, runtime, save)
+        self.after_business(context, methods, runtime, proof)
         extras = [context["current_actors"][users[1]["id"]]] if self.profile in ("count_agreement", "browser_lost_finalize") else []
         if self.profile == "browser_lost_finalize":
             extras += [context["current_actors"][users[0]["id"]]]

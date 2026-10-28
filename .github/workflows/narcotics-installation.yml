@@ -177,3 +177,36 @@ jobs:
             /tmp/lrv-genuine-count4-v2-*/browser-count-finalize-proof/agreement-after-recovery.png
             /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
             /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log
+
+  register-engineering:
+    needs: forward-installation
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - run: npm ci --ignore-scripts
+      - run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
+      - name: Exercise reports and preserved forms in an owned engineering database
+        continue-on-error: true
+        run: python3 -I -B scripts/narcotics-log/diagnose_register.py --run-synthetic-local
+      - name: Retain bounded source and API diagnostics, never release acceptance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-register-engineering
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/register-source-proof.json
+            /tmp/lrv-narcotics-install-*/register-engineering-proof.json
+            /tmp/lrv-narcotics-install-*/register-engineering-install-stderr.bin
+            /tmp/lrv-narcotics-install-*/rpc-failure.json
+            /tmp/lrv-narcotics-install-*/*-failure.txt
