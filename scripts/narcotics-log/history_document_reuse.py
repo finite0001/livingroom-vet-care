@@ -67,7 +67,9 @@ def qualified_calls(body):
     return {match['name'] for match in CALL.finditer(code_mask(body))}
 
 
-def retarget_calls(body, mapping, *, inverse=False):
+def retarget_calls(body, mapping, *, inverse=False, argument=ARGUMENT):
+    if argument not in ('p_validated_documents','validated_documents'):
+        raise ValueError('Only the declared private document-map identifier is allowed')
     mask = code_mask(body)
     edits = []
     calls = 0
@@ -87,20 +89,178 @@ def retarget_calls(body, mapping, *, inverse=False):
             raise ValueError('Unclosed original source call')
         closing = position - 1
         if inverse:
-            suffix = ',' + ARGUMENT
+            suffix = ',' + argument
             if body[closing - len(suffix):closing] != suffix:
                 raise ValueError('Exact private argument inverse required')
             edits.append((closing - len(suffix), closing, ''))
         else:
             if not body[opening + 1:closing].strip():
                 raise ValueError('Only original nonzero-argument graph helpers are admitted')
-            edits.append((closing, closing, ',' + ARGUMENT))
+            edits.append((closing, closing, ',' + argument))
         edits.append((match.start('name'), match.end('name'), mapping[match['name']]))
         calls += 1
     result = body
     for start, end, replacement in sorted(edits, reverse=True):
         result = result[:start] + replacement + result[end:]
     return result, calls
+
+
+def inline_registry_receipt(parent_body, receipt_body):
+    """Remove only three locally dominated pure receipt-input validations."""
+    call="receipt_value:=controlled_count_v1.saved_public_receipt_values(action_name,request_value,result_value,p_registry->'receipt');"
+    prior="action_value:=controlled_count_v1.saved_action_values(action_name);\n request_value:=controlled_count_v1.saved_original_request_values(action_name,p_registry->'canonical_request');\n result_value:=controlled_count_v1.result_header_values(action_value->>'result_kind',p_result);\n "
+    removed=("action_value:=controlled_count_v1.saved_action_values(p_action);",
+             "request_value:=controlled_count_v1.saved_original_request_values(p_action,p_original_request);",
+             "result_value:=controlled_count_v1.result_header_values(action_value->>'result_kind',p_result);")
+    if parent_body.count(prior+call)!=1 or parent_body.count(call)!=1:
+        raise ValueError('Exact immediately dominating registry input checks required')
+    mask=code_mask(receipt_body);begins=list(re.finditer(r'\bbegin\b',mask,re.I))
+    declaration=r'\s*declare\s+action_value\s+jsonb\s*;\s*request_value\s+jsonb\s*;\s*result_value\s+jsonb\s*;\s*receipt_value\s+jsonb\s*;\s*'
+    if len(begins)!=1 or re.fullmatch(declaration,mask[:begins[0].start()],re.I)is None:
+        raise ValueError('Exact original public receipt locals required')
+    terminal=re.search(r'\breturn\s+receipt_value\s*;\s*end\s*;?\s*$',mask,re.I)
+    if terminal is None or len(re.findall(r'\breturn\b',mask,re.I))!=1:
+        raise ValueError('Only the original terminal receipt return is allowed')
+    remainder=receipt_body[begins[0].end():terminal.start()]
+    # Check order and disallow any intervening executable statement. Comments
+    # documenting the result-header boundary remain in the nested block.
+    positions=[]
+    for statement in removed:
+        if remainder.count(statement)!=1:raise ValueError('Exact duplicate receipt input validator required')
+        positions.append(remainder.index(statement))
+    if positions!=sorted(positions):raise ValueError('Original receipt validation order required')
+    prefix=remainder[:positions[-1]+len(removed[-1])]
+    for statement in removed:prefix=prefix.replace(statement,'',1)
+    if code_mask(prefix).strip():raise ValueError('No executable statements before the receipt checks may be removed')
+    for statement in removed:
+        remainder=re.sub(r'(?m)^[ \t]*'+re.escape(statement)+r'[ \t]*\n','',remainder,count=1)
+        if statement in remainder:raise ValueError('Whole duplicate-validator line required')
+    replacements={'receipt_value':'inline_receipt','p_action':'action_name','p_receipt':"(p_registry->'receipt')"}
+    tokens=list(re.finditer(r'\b(receipt_value|p_action|p_receipt)\b',code_mask(remainder)))
+    changed=remainder
+    for token in reversed(tokens):changed=changed[:token.start()]+replacements[token[0]]+changed[token.end():]
+    restored=changed;offset=0;inverse_tokens=[]
+    for token in tokens:
+        start=token.start()+offset;end=start+len(replacements[token[0]])
+        if changed[start:end]!=replacements[token[0]]:raise ValueError('Exact receipt identifier span required')
+        inverse_tokens.append((start,end,token[0]));offset+=len(replacements[token[0]])-len(token[0])
+    for start,end,original in reversed(inverse_tokens):restored=restored[:start]+original+restored[end:]
+    if restored!=remainder:raise ValueError('Complete receipt identifier inverse required')
+    if re.search(r'\b(p_action|p_original_request|p_result|p_receipt|return)\b',code_mask(changed),re.I):
+        raise ValueError('No unbound receipt input or caller exit allowed')
+    inline='DECLARE inline_receipt jsonb;BEGIN'+changed+'receipt_value:=inline_receipt;END;'
+    after=parent_body.replace(call,inline,1)
+    if after.count(inline)!=1 or after.replace(inline,call,1)!=parent_body:
+        raise ValueError('Whole registry body inverse required')
+    sha=lambda value:__import__('hashlib').sha256(value.encode()).hexdigest()
+    return after,call,inline,dict(original_receipt_body_sha256=sha(receipt_body),
+        removed_duplicate_validators_sha256=sha('\n'.join(removed)),inline_sha256=sha(inline),
+        complete_identifier_substitution_inverse=True,whole_registry_clone_inverse=True)
+
+
+def inline_parent_cell(parent_body, cell_body):
+    """Inline only the pure cell remainder after the same boundary was checked."""
+    prior="perform controlled_count_v1.history_scan_historical_parent_preparation_boundary_values(parent_prep,b->'boundary',p_validated_documents);"
+    call="perform controlled_count_v1.history_scan_historical_parent_preparation_cell_values(parent_prep,b->'boundary',cell_value,p_validated_documents);"
+    duplicate='perform controlled_count_v1.historical_parent_preparation_boundary_values(p_preparation,p_boundary);'
+    if parent_body.count(prior)!=1 or parent_body.count(call)!=1 or cell_body.count(duplicate)!=1:
+        raise ValueError('Exact dominating boundary and original cell helper calls required')
+    start=parent_body.index(prior)+len(prior);end=parent_body.index(call)
+    span=code_mask(parent_body[start:end])
+    if start>end or re.search(r'\b(parent_prep|b)\s*:=|\b(insert|update|delete|truncate|execute|call)\b',span,re.I):
+        raise ValueError('Unchanged parent/boundary and write-free dominance required')
+    masked=code_mask(cell_body)
+    begins=list(re.finditer(r'\bbegin\b',masked,re.I))
+    if len(begins)!=1 or re.fullmatch(r'\s*declare\s+actual_cells\s+uuid\s*\[\s*\]\s*;\s*',masked[:begins[0].start()],re.I)is None:
+        raise ValueError('Exact cell-helper local declaration required')
+    if cell_body[begins[0].end():cell_body.index(duplicate)].strip()or re.search(r'\breturn\b',masked,re.I):
+        raise ValueError('First boundary call and implicit void return required')
+    remainder=re.sub(r'(?m)^[ \t]*'+re.escape(duplicate)+r'[ \t]*\n','',cell_body,count=1)
+    if duplicate in remainder:remainder=cell_body.replace(duplicate,'',1)
+    if qualified_calls(remainder)!={'controlled_count_v1.historical_rows_controlled_stock_cells'}:
+        raise ValueError('Only the exact pure JSON/UUID cell remainder may be inlined')
+    # Change code identifiers only. Quoted JSON keys, the original error and
+    # every filtering/cardinality predicate remain byte-identical.
+    substitutions={'p_preparation':'parent_prep','p_boundary':"(b->'boundary')",'p_cause_cell':'cell_value'}
+    result=remainder
+    tokens=list(re.finditer(r'\b(p_preparation|p_boundary|p_cause_cell)\b',code_mask(remainder)))
+    for match in reversed(tokens):
+        result=result[:match.start()]+substitutions[match[0]]+result[match.end():]
+    positions=[];shift=0
+    for match in tokens:
+        start=match.start()+shift;end=start+len(substitutions[match[0]])
+        if result[start:end]!=substitutions[match[0]]:
+            raise ValueError('Identifier replacement moved outside its exact source token')
+        positions.append((start,end,match[0]));shift+=len(substitutions[match[0]])-len(match[0])
+    restored=result
+    for start,end,original in reversed(positions):restored=restored[:start]+original+restored[end:]
+    if restored!=remainder:raise ValueError('Whole cell-helper identifier substitution inverse required')
+    result=result.lstrip('\n')
+    # A function's outermost END may omit its semicolon; a nested block may
+    # not. Retain every source byte and add only that enclosing delimiter.
+    delimiter_added=not code_mask(result).rstrip().endswith(';')
+    if delimiter_added:result+=';'
+    after=parent_body.replace(call,result,1)
+    if after.count(result)!=1 or after.replace(result,call,1)!=parent_body:
+        raise ValueError('Whole original management clone inverse required')
+    digest=lambda text:__import__('hashlib').sha256(text.encode()).hexdigest()
+    return after,call,result,dict(original_cell_body_sha256=digest(cell_body),
+        exact_cell_remainder_sha256=digest(remainder),dominating_span_sha256=digest(parent_body[start:end]),
+        original_full_boundary_call_retained=True,all_original_cell_predicates_retained=True,
+        nested_block_delimiter_added=delimiter_added,
+        complete_identifier_substitution_inverse=True,
+        helper_configuration_independent_JSON_and_UUID_only=True,whole_management_clone_inverse=True)
+
+
+POLICY_REUSE_BLOCK = '''
+ -- Pure document grammar only: full chains and current authority remain fresh.
+ -- Every entry was validated before it entered this invocation-local map.
+ if jsonb_typeof(p_validated_documents)<>'object'then
+  perform 1 from jsonb_each(p_validated_documents);
+ end if;
+ if exists(
+  select 1 from controlled_count_v1.policies policy_row
+  where policy_row.policy_id::text=p_document->>'policy_id'
+   and(p_validated_documents->('policy_values:'||policy_row.policy_id::text))::text is not distinct from policy_row.document::text
+   and policy_row.document::text is not distinct from p_document::text
+   and p_document->'policy_id'=to_jsonb(policy_row.policy_id)
+   and p_document->'product_id'=to_jsonb(policy_row.product_id)and p_document->'site_id'=to_jsonb(policy_row.site_id)
+   and p_document->>'record_hash'=policy_row.record_hash
+   and controlled_count_v1.document_hash(p_document)=policy_row.record_hash
+  union all
+  select 1 from jsonb_object_keys(p_validated_documents)verified(key)
+  join controlled_count_v1.snapshots snapshot_row on verified.key='snapshot:'||snapshot_row.snapshot_id::text
+  join controlled_count_v1.policies policy_row on(p_validated_documents->verified.key)#>'{policy,policy_id}'=to_jsonb(policy_row.policy_id)
+  where(p_validated_documents->verified.key)::text is not distinct from snapshot_row.document::text
+   and(p_validated_documents->verified.key)->'id'=to_jsonb(snapshot_row.snapshot_id)
+   and(p_validated_documents->verified.key)->>'record_hash'=snapshot_row.record_hash
+   and controlled_count_v1.document_hash(p_validated_documents->verified.key)=snapshot_row.record_hash
+   and((p_validated_documents->verified.key)->'policy')::text is not distinct from policy_row.document::text
+   and((p_validated_documents->verified.key)->'policy')::text is not distinct from p_document::text
+   and p_document->'policy_id'=to_jsonb(policy_row.policy_id)
+   and p_document->'product_id'=to_jsonb(policy_row.product_id)and p_document->'site_id'=to_jsonb(policy_row.site_id)
+   and p_document->>'record_hash'=policy_row.record_hash
+   and controlled_count_v1.document_hash(p_document)=policy_row.record_hash
+ )then return p_document;end if;
+'''
+
+ROOT_POLICY_BEFORE = "  if document_value is null then raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;"
+ROOT_POLICY_AFTER = ROOT_POLICY_BEFORE + '''
+  -- The ORIGINAL complete chain has just validated every selected policy.
+  -- Store only its immutable full documents for pure grammar reuse.
+  for policy_row in select p.*from controlled_count_v1.policies p
+   where p.product_id=p_product and p.site_id=item.site_id order by p.version loop
+   if policy_row.document->'policy_id'is distinct from to_jsonb(policy_row.policy_id)
+   or policy_row.document->'product_id'is distinct from to_jsonb(policy_row.product_id)
+   or policy_row.document->'site_id'is distinct from to_jsonb(policy_row.site_id)
+   or policy_row.document->>'record_hash'is distinct from policy_row.record_hash
+   or controlled_count_v1.document_hash(policy_row.document)is distinct from policy_row.record_hash then
+    raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;
+   memo_key:='policy_values:'||policy_row.policy_id::text;
+   if octet_length(validated_documents::text)+octet_length(policy_row.document::text)+octet_length(memo_key)+8<=16777216 then
+    validated_documents:=validated_documents||jsonb_build_object(memo_key,policy_row.document);
+   end if;
+  end loop;'''
 
 
 REUSE_BLOCK = '''
@@ -193,7 +353,8 @@ ROOT_CALL_AFTER = '''  perform controlled_count_v1.history_scan_validate_operati
   end if;'''
 
 ROOT_EDITS = (
-    ('declare item record;document_value jsonb;', "declare item record;document_value jsonb;validated_documents jsonb:='{}'::jsonb;operation_row jsonb;memo_key text;retained_snapshot_document jsonb;retained_snapshot_row jsonb;"),
+    ('declare item record;document_value jsonb;', "declare item record;document_value jsonb;validated_documents jsonb:='{}'::jsonb;operation_row jsonb;memo_key text;retained_snapshot_document jsonb;retained_snapshot_row jsonb;policy_row record;"),
+    (ROOT_POLICY_BEFORE,ROOT_POLICY_AFTER),
     (' order by o.operation_id loop', ''' order by case o.result_kind when 'policy'then 0 when 'cycle'then 1 when 'statement'then 2 when 'outcome'then 3 when 'cancellation'then 3
  when 'reconciliation_preparation'then 4 when 'reconciliation_approval'then 5 when 'reconciliation_execution'then 6 when 'reconciliation_confirmation'then 7 when 'cause_resolution'then 8 else 99 end,o.operation_id loop'''),
     (ROOT_CALL_BEFORE, ROOT_CALL_AFTER),
@@ -335,8 +496,8 @@ BEGIN
   -- finish before this immutable document becomes available for local reuse.
   PERFORM controlled_count_v1.readcore_operation_closure_required((registry_row->>'operation_id')::uuid);
   memo_key:='reconciliation_preparation:'||(preparation_row->>'preparation_id');
-  IF octet_length(preparation_document::text)+octet_length(memo_key)+8<=16777216 THEN
-   validated_documents:=jsonb_build_object(memo_key,preparation_document);
+  IF octet_length(validated_documents::text)+octet_length(preparation_document::text)+octet_length(memo_key)+8<=16777216 THEN
+   validated_documents:=validated_documents||jsonb_build_object(memo_key,preparation_document);
   END IF;
  EXCEPTION WHEN query_canceled OR assert_failure THEN RAISE;
   WHEN OTHERS THEN validated_documents:='{}'::jsonb;
@@ -447,7 +608,7 @@ BEGIN
   PERFORM controlled_count_v1.readcore_operation_closure_required((registry_row->>'operation_id')::uuid);
   -- Publish neither ancestor until BOTH complete graphs/registry bindings and
   -- original closures are proved. Reuse remains local to this invocation.
-  memo_value:=jsonb_build_object('reconciliation_preparation:'||(preparation_row->>'preparation_id'),preparation_document,
+  memo_value:=validated_documents||jsonb_build_object('reconciliation_preparation:'||(preparation_row->>'preparation_id'),preparation_document,
    'reconciliation_approval:'||(approval_row->>'approval_id'),approval_document);
   IF octet_length(memo_value::text)<=16777216 THEN validated_documents:=memo_value;END IF;
  EXCEPTION WHEN query_canceled OR assert_failure THEN RAISE;
@@ -456,6 +617,56 @@ BEGIN
  RETURN controlled_count_v1.history_scan_saved_result_graph('reconciliation_execution',p_id,validated_documents);
 END $$;
 '''
+
+
+def seed_policy_grammar(row_name):
+    """Validate full policy grammar once; no history/permission result is cached."""
+    if row_name not in ('preparation_row','approval_row','execution_row','resolution_row'):
+        raise ValueError('Fixed source-owned result-row binding required')
+    policy_id="("+row_name+("#>>'{document,policy,id}')"if row_name in('execution_row','resolution_row')else"->>'policy_id')")
+    return '''
+ declare grammar_row controlled_count_v1.policies;grammar_document jsonb;grammar_key text;
+ begin
+  select *into strict grammar_row from controlled_count_v1.policies p where p.policy_id='''+policy_id+'''::uuid;
+  grammar_document:=grammar_row.document;grammar_key:='policy_values:'||grammar_row.policy_id::text;
+  if grammar_document->'policy_id'=to_jsonb(grammar_row.policy_id)
+   and grammar_document->'product_id'=to_jsonb(grammar_row.product_id)and grammar_document->'site_id'=to_jsonb(grammar_row.site_id)
+   and grammar_document->'version'=to_jsonb(grammar_row.version)
+   and grammar_document->>'record_hash'=grammar_row.record_hash
+   and controlled_count_v1.document_hash(grammar_document)=grammar_row.record_hash
+   and(validated_documents->grammar_key)::text is distinct from grammar_document::text then
+   -- This is the complete ORIGINAL pure grammar validator. All subsequent
+   -- complete policy histories, capabilities and live authority still run.
+   perform controlled_count_v1.policy_values(grammar_document);
+   if octet_length(validated_documents::text)+octet_length(grammar_document::text)+octet_length(grammar_key)+8<=16777216 then
+    validated_documents:=validated_documents||jsonb_build_object(grammar_key,grammar_document);
+   end if;
+  end if;
+ exception when query_canceled or assert_failure then raise;
+  when others then null; -- An ineligible seed leaves the full original path.
+ end;
+'''
+
+
+def add_policy_grammar_seed(program,row_name,anchor):
+    if program.count(anchor)!=1:
+        raise ValueError('Exact private helper source-row entry required')
+    return program.replace(anchor,anchor+seed_policy_grammar(row_name),1)
+
+
+def helper_closure_context(program,expected_calls):
+    marker=' AS $$';start=program.index(marker)+len(marker);end=program.index('$$;',start)
+    before=program[start:end]
+    mapping={'controlled_count_v1.readcore_operation_closure_required':'controlled_count_v1.history_scan_operation_closure_required',
+             'controlled_count_v1.saved_registry_values':'controlled_count_v1.history_scan_saved_registry_values'}
+    for name in mapping:
+        if len(re.findall(re.escape(name)+r'\s*\(',code_mask(before)))!=expected_calls:
+            raise ValueError('Exact helper closure and registry call counts required')
+    after,count=retarget_calls(before,mapping,argument='validated_documents')
+    restored,inverse_count=retarget_calls(after,{new:old for old,new in mapping.items()},inverse=True,argument='validated_documents')
+    if count!=2*expected_calls or restored!=before or inverse_count!=count:
+        raise ValueError('Whole helper closure-call context inverse required')
+    return program[:start]+after+program[end:]
 
 
 RESOLUTION_GRAPH_SQL = '''CREATE FUNCTION controlled_count_v1.history_resolution_graph(p_id uuid) RETURNS jsonb
@@ -574,3 +785,45 @@ BEGIN
  RETURN controlled_count_v1.history_scan_saved_result_graph('cause_resolution',p_id,validated_documents);
 END $$;
 '''
+
+PREPARATION_GRAPH_SQL=add_policy_grammar_seed(PREPARATION_GRAPH_SQL,'preparation_row',
+    ' SELECT to_jsonb(p)INTO STRICT preparation_row FROM controlled_count_v1.reconciliation_preparations p WHERE p.preparation_id=p_id;')
+APPROVAL_GRAPH_SQL=add_policy_grammar_seed(APPROVAL_GRAPH_SQL,'approval_row',
+    ' SELECT to_jsonb(a)INTO STRICT approval_row FROM controlled_count_v1.reconciliation_approvals a WHERE a.approval_id=p_id;')
+EXECUTION_GRAPH_SQL=add_policy_grammar_seed(EXECUTION_GRAPH_SQL,'execution_row',
+    ' SELECT to_jsonb(e)INTO STRICT execution_row FROM controlled_count_v1.reconciliation_executions e WHERE e.execution_id=p_id;')
+RESOLUTION_GRAPH_SQL=add_policy_grammar_seed(RESOLUTION_GRAPH_SQL,'resolution_row',
+    ' SELECT to_jsonb(r)INTO STRICT resolution_row FROM controlled_count_v1.resolutions r WHERE r.resolution_id=p_id;')
+
+PREPARATION_GRAPH_SQL=helper_closure_context(PREPARATION_GRAPH_SQL,0)
+APPROVAL_GRAPH_SQL=helper_closure_context(APPROVAL_GRAPH_SQL,1)
+EXECUTION_GRAPH_SQL=helper_closure_context(EXECUTION_GRAPH_SQL,2)
+RESOLUTION_GRAPH_SQL=helper_closure_context(RESOLUTION_GRAPH_SQL,1)
+
+
+def deduplicate_deferred_operation(body):
+    """The final complete product inventory validates the same actual operation."""
+    import hashlib
+    original_hash='f2039746e67cb527d8b82a6b647c1c0f6da65b6c60b9918f9dfb322f2487f88d'
+    if hashlib.sha256(body.encode()).hexdigest()!=original_hash:
+        raise ValueError('Exact original deferred callback source required')
+    old=""" if TG_TABLE_NAME<>'open_causes'then
+  if operation_value is null then raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;
+  perform controlled_count_v1.validate_operation_graph(operation_value);
+  select o.product_id into strict product_value from controlled_count_v1.operations o where o.operation_id=operation_value;
+ end if;"""
+    frontier='perform controlled_count_entry_v1.assert_read_frontier();'
+    child='perform controlled_count_v1.validate_operation_graph(operation_value);'
+    complete='perform controlled_count_v1.product_live_causes(product_value);'
+    new=old.replace(child,frontier,1)
+    if body.count(old)!=1 or body.count(child)!=1 or body.count(frontier)!=1 or body.count(complete)!=1:
+        raise ValueError('Exact deferred operation lookup and complete product history required')
+    after=body.replace(old,new,1)
+    if after.count(new)!=1 or after.replace(new,old,1)!=body:
+        raise ValueError('Whole deferred callback inverse required')
+    if after.count(frontier)!=2 or child in after or after.count(complete)!=1:
+        raise ValueError('Both fresh frontiers and final complete product graph required')
+    return after,dict(original_body_sha256=original_hash,new_body_sha256=hashlib.sha256(after.encode()).hexdigest(),
+        whole_body_inverse=True,actual_operation_lookup_retained=True,complete_final_product_history_unchanged=True,
+        original_callback_frontier_retained=True,removed_only_locally_dominated_child_validation=True,
+        no_cross_trigger_or_persisted_validation=True)

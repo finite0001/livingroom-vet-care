@@ -10,7 +10,7 @@ const hash=raw=>crypto.createHash("sha256").update(raw).digest("hex");
 const pin=raw=>({bytes:raw.length,sha256:hash(raw)});
 const origin=JSON.parse(readRegular(path.join(here,"operational-cli-origin.json")));
 if(origin.kind!=="official-cli-created-operational-migration-v1"||origin.cli_version!=="2.118.0"||origin.migration!=="20261028170038_narcotics_register_exports_and_recovery.sql"||origin.original_created_file_bytes!==0||JSON.stringify(origin.creation_command)!==JSON.stringify(["supabase","migration","new","narcotics_register_exports_and_recovery"]))throw Error("Actual pinned CLI-created209 filename required");
-const sources=["build_operational_module.py","recovery_admission_source.py","sql_framing.py","operational-cli-origin.json","operational-source-proof.json","operational_release.py","frame-operational.mjs","frame-cli.mjs",
+const sources=["build_operational_module.py","recovery_admission_source.py","sql_framing.py","policy-reuse-controls.sql","operational-cli-origin.json","operational-source-proof.json","operational_release.py","frame-operational.mjs","frame-cli.mjs",
   ...["common.sql","register.sql","register-operations.sql","recovery-state.sql","recovery-operations.sql","recovery-inventory.sql","recovery-coordinator.sql","recovery-evidence.sql","recovery-release.sql","recovery-status.sql","metadata.sql","recovery-gateway.sql"].map(name=>"operational-module/"+name)];
 const source_files=Object.fromEntries(sources.map(name=>["scripts/narcotics-log/"+name,pin(readRegular(path.join(here,name)))]));
 const framing=frameSource(readRegular(path.join(root,"supabase/migrations",origin.migration)));

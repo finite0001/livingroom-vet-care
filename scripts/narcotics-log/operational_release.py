@@ -19,6 +19,7 @@ PARSER_SHA='28bcd6a27b93fb7a31c3e20519b5ebb6540737b26e2f333e3f44cb3340327884'
 TYPESCRIPT_SHA='dd17428736a07e1db1a138d8a14295ddb2699ba780ee15038acdd2c6da5373a0'
 SOURCE_NAMES=(
     'build_operational_module.py','recovery_admission_source.py','sql_framing.py',
+    'policy-reuse-controls.sql',
     'operational-cli-origin.json','operational-source-proof.json',
     'operational_release.py','frame-operational.mjs','frame-cli.mjs',
     'operational-module/common.sql','operational-module/register.sql',
@@ -133,6 +134,10 @@ def install(runtime):
     manifest=admit(timeout=runtime.remaining(30))
     runtime.remaining(1)
     expected=expected_ledger(target.operational_prefix_ledger,manifest)
+    controls=runtime.selected_query('historical-policy-grammar-controls',prefix.regular(HERE/'policy-reuse-controls.sql').decode())
+    if controls!=dict(kind='historical-policy-grammar-controls-v1',cases=11,
+            original_and_context_results_exact=True,captured_capability_decisions_recomputed=True,domain_writes=0,Auth_acceptance=False):
+        raise ValueError('Exact original/context policy grammar controls required')
     target.source_runtime=runtime
     owned_ingress(runtime,'stop',phase='upgrade')
     before=observe(runtime,'before-operational209-complete-data')

@@ -170,6 +170,9 @@ class PopulatedRecovery(operational_release.SourceLedger,business.BusinessInstal
         self.source_context, self.methods = context, methods
         self.source_runtime = runtime
 
+    def after_receiver_restore(self,runtime):
+        """Normal acceptance never instruments the restored application."""
+
     def execute(self):
         super().execute()
         source_runtime = self.source_runtime
@@ -232,6 +235,7 @@ class PopulatedRecovery(operational_release.SourceLedger,business.BusinessInstal
             '-U', 'supabase_admin', '-d', 'postgres', '--clean', '--if-exists', '--exit-on-error', '--single-transaction'], timeout=min(30, self.remaining()), env=self.receiver.boot.env, cwd=receiver_folder)
         rr.raw_query("restore-original-witness-check", "BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='5s';\n" + (HERE / "restore-witness-check.sql").read_text() + "\nCOMMIT;")
         operational_release.verify_ledger(rr,self.operational_ledger,'restored-complete209-source-ledger')
+        self.after_receiver_restore(rr)
         try:
             rr.verify_module('restored-full-source-properties')
         except BaseException:

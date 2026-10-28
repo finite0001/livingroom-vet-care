@@ -6,11 +6,29 @@ on:
     paths:
       - 'scripts/narcotics-log/**'
       - 'supabase/migrations/2026102722*.sql'
+      - 'supabase/migrations/20261028170038_narcotics_register_exports_and_recovery.sql'
+      - 'src/hub/features/controlled-drugs/**'
+      - 'src/hub/contexts/**'
+      - 'src/hub/pages/LoginPage.tsx'
+      - 'src/integrations/supabase/client.ts'
+      - 'src/App.tsx'
+      - 'tests/controlled-drugs/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/narcotics-installation.yml'
   pull_request:
     paths:
       - 'scripts/narcotics-log/**'
       - 'supabase/migrations/2026102722*.sql'
+      - 'supabase/migrations/20261028170038_narcotics_register_exports_and_recovery.sql'
+      - 'src/hub/features/controlled-drugs/**'
+      - 'src/hub/contexts/**'
+      - 'src/hub/pages/LoginPage.tsx'
+      - 'src/integrations/supabase/client.ts'
+      - 'src/App.tsx'
+      - 'tests/controlled-drugs/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/narcotics-installation.yml'
 
 permissions:
