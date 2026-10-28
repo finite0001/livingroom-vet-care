@@ -19,6 +19,7 @@ import business_rehearsal as business
 import build_operational_module as operational
 import bounded_archive
 import receiver_auth
+import receiver_reauthentication
 import operational_release
 from diagnose_register import wait_for_owned_rest
 
@@ -78,7 +79,9 @@ def paused_resources(runtime, selected, *, require_stopped=True):
         raise ValueError('Every captured ingress service must actually be stopped')
 
 
-def owned_ingress(runtime, action, *, cleanup=False):
+def owned_ingress(runtime, action, *, cleanup=False, phase='backup'):
+    if action not in('start','stop')or phase not in('backup','upgrade'):
+        raise ValueError('Exact owned ingress action and source phase required')
     runtime.verify()
     expected = {'/supabase_' + name + '_' + runtime.identity for name in ('auth', 'rest', 'storage', 'kong')}
     selected = [key for key, value in runtime.owned_services.items() if value['name'] in expected]
@@ -101,7 +104,7 @@ def owned_ingress(runtime, action, *, cleanup=False):
         paused_resources(runtime, selected)
         if runtime.install.boot.sql(runtime.install.bootstrap_module.DRAIN_SQL) != 't':
             raise ValueError('Owned scheduler no longer drained')
-        active = runtime.selected_query('closed-ingress-client-backends', "SELECT jsonb_build_object('other_clients',count(*))FROM pg_stat_activity WHERE datname=current_database()AND backend_type='client backend'AND pid<>pg_backend_pid();")
+        active = runtime.selected_query('closed-ingress-client-backends-'+phase, "SELECT jsonb_build_object('other_clients',count(*))FROM pg_stat_activity WHERE datname=current_database()AND backend_type='client backend'AND pid<>pg_backend_pid();")
         if active != {'other_clients': 0}:
             raise ValueError('Owned source still has a client backend after ingress closed')
     return selected
@@ -366,6 +369,26 @@ class PopulatedRecovery(operational_release.SourceLedger,business.BusinessInstal
             evidence_hash=evidence['data']['evidence_hash'], acknowledged=True, review_note='Synthetic replacement review after actual receiver restart; exact original file and staff account reviewed again.'))
         if acknowledged['data']['acknowledgment_id'] == first_acknowledged['data']['acknowledgment_id']:
             raise ValueError('Replacement acknowledgment must preserve the original and create a new record')
+        # Complete the unchanged six-grant proof while all six genuine sessions
+        # are still present. Then exercise actual local sign-out and a seventh
+        # password grant using a separate exact-effects validator.
+        auth_proof = receiver_auth.validate(rr, original_auth, users, grants, original['sequences'],
+            observe(rr, 'receiver-six-grant-data')['sequences'], native['boot'], first_epoch['data']['started_at'],
+            rollover=dict(native_boot=restarted_native['boot'], epoch_at=epoch['data']['started_at']))
+        business.save(receiver_folder, 'receiver-six-grant-Auth-effects', auth_proof)
+        signed_out_acknowledged = acknowledged
+        fresh_b,replacement_auth_proof,replacement_auth_state = receiver_reauthentication.logout_and_login(
+            rr,http,original_auth,b,fresh_b,fresh_a)
+        current_status = http.rpc('narcotics_recovery_status_v1', {'p_request': dict(schema_version=1, actor_id=fresh_b['id'])}, fresh_b)
+        if current_status['epoch_id']!=epoch['data']['epoch_id']or current_status['needs_new_epoch']or not current_status['fresh_session']or len(current_status['evidence'])!=1:
+            raise ValueError('Replacement reviewer must keep the same live recovery epoch')
+        retained_ack=current_status['evidence'][0]['acknowledgment']
+        if retained_ack is None or retained_ack['acknowledgment_id']!=signed_out_acknowledged['data']['acknowledgment_id']or retained_ack['record_hash']!=signed_out_acknowledged['data']['acknowledgment_hash']or retained_ack['session_id']==fresh_b['session_id']:
+            raise ValueError('The original signed-out acknowledgment must remain visible and immutable')
+        acknowledged = controls(http, fresh_b, 'acknowledge_evidence', epoch['data'], dict(evidence_id=evidence['data']['evidence_id'],
+            evidence_hash=evidence['data']['evidence_hash'], acknowledged=True, review_note='Synthetic new-session review after actual local sign-out; original evidence reviewed again within the same recovery attempt.'))
+        if acknowledged['data']['acknowledgment_id']in(first_acknowledged['data']['acknowledgment_id'],signed_out_acknowledged['data']['acknowledgment_id']):
+            raise ValueError('Same-epoch replacement must create another immutable acknowledgment')
         class FreshCountTransport:
             def rpc(self, name, payload, user, expected=200):
                 if name == 'start_controlled_count_v1':
@@ -390,6 +413,13 @@ class PopulatedRecovery(operational_release.SourceLedger,business.BusinessInstal
         business.save(receiver_folder, 'actual-original-acknowledgment-refusal', dict(status=code, error=error))
         if code not in (400, 403, 409) or observe(rr, 'after-original-acknowledgment-release') != before_old_ack:
             raise ValueError('Original acknowledgment survived the new epoch or altered retained data')
+        signed_out_ack_request={**old_ack_request,'operation_id':str(__import__('uuid').uuid4()),
+            'data':{**old_ack_request['data'],'acknowledgments':[dict(evidence_id=evidence['data']['evidence_id'],acknowledgment_id=signed_out_acknowledged['data']['acknowledgment_id'])]}}
+        before_signed_out_ack=observe(rr,'before-signed-out-acknowledgment-release')
+        code,error=http.post('/rest/v1/rpc/narcotics_recovery_release_v1',{'p_request':signed_out_ack_request},fresh_a['token'])
+        business.save(receiver_folder,'actual-signed-out-acknowledgment-refusal',dict(status=code,error=error))
+        if code not in(400,403,409)or observe(rr,'after-signed-out-acknowledgment-release')!=before_signed_out_ack:
+            raise ValueError('Signed-out reviewer acknowledgment released recovery or changed retained data')
         released = controls(http, fresh_a, 'release', epoch['data'], dict(agreements=[dict(product_id=ctx['ids']['product'], site_id=ctx['ids']['site'],
             count_id=post['count_id'], outcome_id=post['finalize']['request']['outcome_id'])], acknowledgments=[dict(evidence_id=evidence['data']['evidence_id'], acknowledgment_id=acknowledged['data']['acknowledgment_id'])], history_review_note='Synthetic full restored history and missing-event evidence reviewed; fresh independent agreement after physical reconciliation.'))
         if released['data']['mode'] != 'idle':
@@ -424,14 +454,14 @@ class PopulatedRecovery(operational_release.SourceLedger,business.BusinessInstal
             raise ValueError('Restored old session bypassed permanent controlled-entry fence')
         gateway.reply(pointer, http.rpc('prepare_managed_stock_intent_v1', {'p_request': current_request}, fresh_a), 'prepared', probe_request['legacy_arguments'])
         gateway.reply(pointer, http.rpc('close_managed_stock_intent_v1', {'p_request': pointer}, fresh_a), 'abandoned', probe_request['legacy_arguments'])
-        auth_proof = receiver_auth.validate(rr, original_auth, users, grants, original['sequences'],
-            observe(rr, 'receiver-final-data')['sequences'], native['boot'], first_epoch['data']['started_at'],
-            rollover=dict(native_boot=restarted_native['boot'], epoch_at=epoch['data']['started_at']))
-        business.save(receiver_folder, 'receiver-actual-Auth-effects', auth_proof)
+        if receiver_reauthentication.auth_projection(observe(rr,'receiver-final-data'))!=replacement_auth_state:
+            raise ValueError('Recovery performed an unaccounted Auth operation after replacement login')
+        business.save(receiver_folder, 'receiver-actual-Auth-effects',dict(six_grants=auth_proof,replacement=replacement_auth_proof))
         rr.verify_module('receiver-final-full-source-properties')
         self.result.update(populated_receiver_verified=True, original_complete_rows_and_sequences_restored=True,
-            original_Auth_principals_preserved=True, fresh_real_password_grants=6, actual_variance_reconciliation_and_release=True,
+            original_Auth_principals_preserved=True, fresh_real_password_grants=7, actual_variance_reconciliation_and_release=True,
             actual_active_receiver_restart=True, new_epoch_and_replacement_independent_acknowledgment=True,
+            actual_same_epoch_reviewer_logout_and_acknowledgment_replacement=True,
             late_original_requests_refused=True, archive_bytes=self.archive.length, archive_sha256=self.archive.sha256)
         business.save(receiver_folder, 'populated-recovery-result', self.result)
 
@@ -478,7 +508,7 @@ def main():
     started = time.monotonic()
     layout, pins = business.source_admission()
     operational_release.pin_sources(pins)
-    for path in [HERE / name for name in ('receiver_rehearsal.py', 'receiver_auth.py', 'bounded_archive.py', 'recovery-observation.sql', 'restore-defaults.sql', 'restore-witness-check.sql', 'build_operational_module.py', 'recovery_admission_source.py', 'diagnose_register.py')] + sorted(operational.SOURCE.glob('*.sql')):
+    for path in [HERE / name for name in ('receiver_rehearsal.py', 'receiver_auth.py', 'receiver_reauthentication.py', 'bounded_archive.py', 'recovery-observation.sql', 'restore-defaults.sql', 'restore-witness-check.sql', 'build_operational_module.py', 'recovery_admission_source.py', 'diagnose_register.py')] + sorted(operational.SOURCE.glob('*.sql')):
         pins[str(path.relative_to(installation.ROOT))] = digest(installation.prefix.regular(path))
     if args.check_source:
         print(json.dumps(dict(source_files=len(pins), database_operations=0, ready_for_deployment=False)))

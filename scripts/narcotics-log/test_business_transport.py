@@ -7,6 +7,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "workflows"))
 import http_transport
@@ -72,33 +73,42 @@ class HttpControls(unittest.TestCase):
             folder = Path(directory).resolve()
             folder.chmod(0o700)
             Handler.mode = mode
-            server = Server(("127.0.0.1", 64661), Handler)
+            # A unit control must never listen on the genuine rehearsal port.
+            server = Server(("127.0.0.1", 0), Handler)
+            actual_connection = http_transport.http.client.HTTPConnection
+            def isolated_connection(host, port, **kwargs):
+                self.assertEqual((host, port), ("127.0.0.1", 64661))
+                return actual_connection("127.0.0.1", server.server_port, **kwargs)
             thread = threading.Thread(target=server.serve_forever, kwargs={"poll_interval": .01})
             thread.start()
-            try:
-                transport = http_transport.Http(Runtime(limit), folder, "synthetic-public", "synthetic-admin")
-                if mode == "complete":
-                    status, value = transport.post("/rest/v1/rpc/prepare_managed_stock_intent_v1", {"synthetic": True})
-                    self.assertEqual((status, value), (200, {"saved": True}))
-                    original = transport.raw_response_at(1)
-                    self.assertEqual(original["raw"], b'{"saved":true}')
-                    self.assertEqual(original["response_sha256"], hashlib.sha256(original["raw"]).hexdigest())
-                    (folder / "http-001-response.json").write_bytes(b'{"saved":false}')
-                    with self.assertRaises(ValueError):
-                        transport.raw_response_at(1)
-                else:
-                    started = time.monotonic()
-                    with self.assertRaises((ValueError, TimeoutError, OSError)):
-                        transport.post("/rest/v1/rpc/prepare_managed_stock_intent_v1", {"synthetic": True})
-                    self.assertLess(time.monotonic() - started, 1)
-                    self.assertFalse(transport.calls)
-                    self.assertTrue((folder / "http-001-request.json").exists())
-                    self.assertTrue((folder / "http-001-response.json").exists())
-            finally:
-                server.shutdown()
-                server.server_close()
-                thread.join(timeout=2)
-                self.assertFalse(thread.is_alive())
+            with patch.object(http_transport.http.client, "HTTPConnection", side_effect=isolated_connection):
+                try:
+                    self.exercise_transport(mode, limit, folder)
+                finally:
+                    server.shutdown()
+                    server.server_close()
+                    thread.join(timeout=2)
+                    self.assertFalse(thread.is_alive())
+
+    def exercise_transport(self, mode, limit, folder):
+        transport = http_transport.Http(Runtime(limit), folder, "synthetic-public", "synthetic-admin")
+        if mode == "complete":
+            status, value = transport.post("/rest/v1/rpc/prepare_managed_stock_intent_v1", {"synthetic": True})
+            self.assertEqual((status, value), (200, {"saved": True}))
+            original = transport.raw_response_at(1)
+            self.assertEqual(original["raw"], b'{"saved":true}')
+            self.assertEqual(original["response_sha256"], hashlib.sha256(original["raw"]).hexdigest())
+            (folder / "http-001-response.json").write_bytes(b'{"saved":false}')
+            with self.assertRaises(ValueError):
+                transport.raw_response_at(1)
+        else:
+            started = time.monotonic()
+            with self.assertRaises((ValueError, TimeoutError, OSError)):
+                transport.post("/rest/v1/rpc/prepare_managed_stock_intent_v1", {"synthetic": True})
+            self.assertLess(time.monotonic() - started, 1)
+            self.assertFalse(transport.calls)
+            self.assertTrue((folder / "http-001-request.json").exists())
+            self.assertTrue((folder / "http-001-response.json").exists())
 
     def test_original_private_http_bytes_and_hash_binding(self):
         self.exercise("complete")

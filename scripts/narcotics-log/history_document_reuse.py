@@ -462,7 +462,8 @@ RESOLUTION_GRAPH_SQL = '''CREATE FUNCTION controlled_count_v1.history_resolution
 LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog,controlled_count_v1,pg_temp
 SET timezone='UTC' SET datestyle='ISO,YMD' SET intervalstyle='postgres' SET extra_float_digits=3 AS $$
 DECLARE resolution_row jsonb;post_cycle jsonb;post_outcome jsonb;cycle_document jsonb;snapshot_row jsonb;snapshot_document jsonb;
- cause_row jsonb;source_kind text;source_id uuid;confirmation_row jsonb;confirmation_document jsonb;execution_row jsonb;preparation_row jsonb;approval_row jsonb;
+ cause_row jsonb;source_kind text;source_id uuid;source_row jsonb;source_document jsonb;source_cycle jsonb;
+ confirmation_row jsonb;confirmation_document jsonb;execution_row jsonb;preparation_row jsonb;approval_row jsonb;
  targets jsonb;target jsonb;kind_value text;id_value uuid;retained_row jsonb;document_value jsonb;registry_row jsonb;
  validated_documents jsonb:='{}';memo_key text;stage_value integer;
 BEGIN
@@ -493,7 +494,19 @@ BEGIN
     ELSIF cause_row->'outcome_id'IS DISTINCT FROM'null'::jsonb THEN source_kind:='outcome';source_id:=(cause_row->>'outcome_id')::uuid;
     ELSE source_kind:='cancellation';source_id:=(cause_row->>'cancellation_id')::uuid;END IF;
     PERFORM controlled_count_v1.history_scan_saved_cause_graph((cause_row->>'cause_id')::uuid,validated_documents);
-    targets:=jsonb_build_array(jsonb_build_object('kind',source_kind,'id',source_id));
+    source_row:=controlled_count_v1.readcore_saved_result_row(source_kind,source_id);source_document:=source_row->'document';
+    SELECT to_jsonb(c)INTO STRICT source_cycle FROM controlled_count_v1.cycles c WHERE to_jsonb(c.count_id)=source_row->'count_id';
+    IF source_document#>'{body,count_id}'IS DISTINCT FROM source_cycle->'count_id'
+    OR source_document#>'{body,cycle_hash}'IS DISTINCT FROM source_cycle#>'{document,record_hash}'
+    OR source_document#>'{body,snapshot_id}'IS DISTINCT FROM source_cycle->'snapshot_id'
+    OR source_document#>'{body,snapshot_id}'IS DISTINCT FROM source_cycle#>'{document,body,snapshot_id}'
+    OR source_document#>'{body,snapshot_hash}'IS DISTINCT FROM source_cycle#>'{document,body,snapshot_hash}'THEN
+     RAISE EXCEPTION 'count_source_invalid'using errcode='P0001',detail='',hint='';END IF;
+    -- The completed cause graph also validated its original source cycle and
+    -- snapshot. The final resolution checks both source cells again; retain
+    -- their exact validated ancestors alongside the post-count ancestors.
+    targets:=jsonb_build_array(jsonb_build_object('kind',source_kind,'id',source_id),
+     jsonb_build_object('kind','cycle','id',source_cycle->'count_id'));
    ELSE
     IF resolution_row->'confirmation_id'='null'::jsonb THEN CONTINUE;END IF;
     SELECT to_jsonb(c)INTO STRICT confirmation_row FROM controlled_count_v1.reconciliation_confirmations c WHERE to_jsonb(c.confirmation_id)=resolution_row->'confirmation_id';
@@ -533,11 +546,16 @@ BEGIN
      validated_documents:=validated_documents||jsonb_build_object(memo_key,document_value);
     END IF;
    END LOOP;
-   IF stage_value=1 THEN
-    cycle_document:=(controlled_count_v1.readcore_saved_result_row('cycle',(post_cycle->>'count_id')::uuid))->'document';
-    SELECT to_jsonb(s)INTO STRICT snapshot_row FROM controlled_count_v1.snapshots s WHERE to_jsonb(s.snapshot_id)=post_cycle->'snapshot_id';
+   IF stage_value IN(1,3)THEN
+    IF stage_value=1 THEN cycle_document:=post_cycle->'document';ELSE cycle_document:=source_cycle->'document';END IF;
+    SELECT to_jsonb(s)INTO STRICT snapshot_row FROM controlled_count_v1.snapshots s WHERE to_jsonb(s.snapshot_id)=cycle_document#>'{body,snapshot_id}';
     snapshot_document:=snapshot_row->'document';
     IF snapshot_document->'id'IS DISTINCT FROM cycle_document#>'{body,snapshot_id}'
+    OR snapshot_document->'id'IS DISTINCT FROM snapshot_row->'snapshot_id'
+    OR snapshot_document->'count_id'IS DISTINCT FROM snapshot_row->'count_id'
+    OR snapshot_document->'count_id'IS DISTINCT FROM cycle_document->'id'
+    OR snapshot_document->'product_id'IS DISTINCT FROM cycle_document->'product_id'
+    OR snapshot_document->'site_id'IS DISTINCT FROM cycle_document->'site_id'
     OR snapshot_document->'record_hash'IS DISTINCT FROM cycle_document#>'{body,snapshot_hash}'
     OR snapshot_document->'record_hash'IS DISTINCT FROM snapshot_row->'record_hash'
     OR snapshot_document->>'record_hash'IS DISTINCT FROM controlled_count_v1.document_hash(snapshot_document)THEN

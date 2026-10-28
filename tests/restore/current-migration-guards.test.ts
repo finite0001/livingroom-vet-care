@@ -74,20 +74,28 @@ test("latest migration guards recognize actual ledger queries and exclude other 
   `), ["20261022010000"]);
 });
 
-test("current inventory preserves the exact 206 prefix and names both forward migrations", () => {
+test("current inventory preserves the exact 206 prefix and names all three forward migrations", () => {
   const inventory = readdirSync(new URL("../../supabase/migrations/", import.meta.url))
     .filter((name) => /^\d+_.+\.sql$/.test(name)).sort();
   const candidate = JSON.parse(readFileSync(new URL("../../scripts/narcotics-log/release-candidate.json", import.meta.url), "utf8"));
-  assert.equal(inventory.length, 208);
+  const operational = JSON.parse(readFileSync(new URL("../../scripts/narcotics-log/operational-release.json", import.meta.url), "utf8"));
+  assert.equal(inventory.length, 209);
   assert.equal(candidate.migration_count, 208);
   assert.equal(candidate.prefix_migration_count, 206);
   assert.equal(inventory[205], "20261022010000_controlled_secondary_review_private.sql");
-  assert.deepEqual(inventory.slice(206), ["20261027223535_controlled_record_review_workflows.sql", "20261027223544_narcotics_count_and_stock_workflows.sql"]);
-  assert.deepEqual(Object.keys(candidate.migrations).sort(), inventory.slice(206));
-  for (const name of inventory.slice(206)) {
+  assert.deepEqual(inventory.slice(206), ["20261027223535_controlled_record_review_workflows.sql", "20261027223544_narcotics_count_and_stock_workflows.sql", "20261028170038_narcotics_register_exports_and_recovery.sql"]);
+  assert.deepEqual(Object.keys(candidate.migrations).sort(), inventory.slice(206, 208));
+  assert.equal(operational.kind, "narcotics-operational-cli209-source-v1");
+  assert.equal(operational.prefix_migration_count, 208);
+  assert.equal(operational.migration_count, 209);
+  assert.equal(operational.migration, inventory[208]);
+  for (const name of inventory.slice(206, 208)) {
     const raw = readFileSync(new URL(`../../supabase/migrations/${name}`, import.meta.url));
     assert.deepEqual(candidate.migrations[name], { bytes: raw.length, sha256: createHash("sha256").update(raw).digest("hex") });
   }
+  const raw = readFileSync(new URL(`../../supabase/migrations/${operational.migration}`, import.meta.url));
+  assert.equal(operational.framing.bytes, raw.length);
+  assert.equal(operational.framing.sha256, createHash("sha256").update(raw).digest("hex"));
 });
 
 test("retained scalar ledger guards require historical 206 and its exact version", () => {

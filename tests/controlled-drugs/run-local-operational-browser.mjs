@@ -64,7 +64,10 @@ try {
   assert.equal(new URL(server.wsEndpoint()).hostname, '127.0.0.1');
   browser = await chromium.connect(server.wsEndpoint(), { timeout: remaining() }); context = await browser.newContext({ viewport: { width: 1280, height: 1000 }, serviceWorkers: 'block' });
   const dev = new URL(origin.replace(/^http:/, 'ws:') + '/'); dev.searchParams.set('token', vite.config.webSocketToken);
-  await context.routeWebSocket('**/*', socket => { if (socket.url() === dev.href && ++devSockets <= 2) { socket.close(); return; } blocked.push('unexpected-websocket'); failure = true; socket.close(); });
+  // Vite can attempt initial+direct-fallback sockets for each of the three
+  // explicit document loads. Refuse only this exact tokenized local URL;
+  // never forward it, and reject any different URL or seventh attempt.
+  await context.routeWebSocket('**/*', socket => { if (socket.url() === dev.href && ++devSockets <= 6) { socket.close(); return; } blocked.push('unexpected-websocket'); failure = true; socket.close(); });
   await context.addInitScript(value => { window.__LRV_OPERATIONAL_LOCAL_INPUT__ = value; }, publicInput);
   await context.route('**/*', async route => {
     try {
@@ -136,7 +139,8 @@ try {
   assert.equal(await page.evaluate(key => localStorage.getItem(key), registerKey),formRaw); formReload = true;
   await page.getByRole('button', { name: 'Check original result' }).click(); await expect(page.getByText(/Original file saved: synthetic-original.pdf/)).toBeVisible({ timeout: remaining() });
   assert.equal(await page.evaluate(key => localStorage.getItem(key), registerKey),null);
-  assert.deepEqual(JSON.parse(regular(resolve(folder,calls.find(call => call.rpc === 'read_narcotics_form_operation_v1').request.file),8388608,true)).p_request,formPointer); pointersCleared = true;
+  assert.deepEqual(JSON.parse(regular(resolve(folder,calls.find(call => call.rpc === 'read_narcotics_form_operation_v1').request.file),8388608,true)).p_request,
+    { schema_version: formPointer.schema_version, actor_id: formPointer.actor_id, operation_id: formPointer.operation_id }); pointersCleared = true;
   await page.getByRole('button', { name: 'Create and verify report' }).click();
   const fileEvent = page.waitForEvent('download', { timeout: remaining() }); await page.getByRole('button', { name: 'Synthetic original supplier form · synthetic-original.pdf' }).click();
   const file = await fileEvent, filePath = resolve(folder, 'downloaded-original.pdf'); await file.saveAs(filePath); assert.equal(sha(regular(filePath,2097152)),input.original_form_sha256);

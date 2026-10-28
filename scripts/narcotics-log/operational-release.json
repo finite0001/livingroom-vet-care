@@ -728,8 +728,8 @@
       "sha256": "77be60c3c6a40739276d65197d8e7107d2d9977233d85daac2c5acf07d81d792"
     },
     "scripts/narcotics-log/operational_release.py": {
-      "bytes": 10908,
-      "sha256": "77509b64bc171f57ffffa7ba32c9969e7269e7ea5fdfdb65f8c7959bf75f7f09"
+      "bytes": 10924,
+      "sha256": "42888bba582178a4abbcf3c5161902b59ae4a0a160b25e999189a339f9179431"
     },
     "scripts/narcotics-log/frame-operational.mjs": {
       "bytes": 2761,

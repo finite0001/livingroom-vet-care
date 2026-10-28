@@ -204,7 +204,7 @@ class OperationalBrowser(operational_release.SourceLedger,business.BusinessInsta
         result,actor,folder,deadline=browser(self.context,modules,runtime,before,auth)
         self.owner_end=min(deadline,self.owner_end)if self.owner_end is not None else deadline
         after=observe(runtime,'operational-browser-after')
-        additions={'narcotics_recovery_v1.heads':2,'narcotics_recovery_v1.operations':2,'narcotics_register_v1.operations':3,
+        additions={'narcotics_recovery_v1.heads':2,'narcotics_recovery_v1.operations':2,'narcotics_recovery_v1.arms':1,'narcotics_register_v1.operations':3,
             'narcotics_register_v1.reports':2,'narcotics_register_v1.form_contents':1,'narcotics_register_v1.form_records':1}
         if set(before['relations'])!=set(after['relations']):raise ValueError('Browser changed the retained table inventory')
         for name,old in before['relations'].items():
@@ -255,7 +255,7 @@ def main():
     group.add_argument('--check-source',action='store_true');group.add_argument('--run-synthetic-local',action='store_true');args=parser.parse_args()
     os.umask(0o077);started=time.monotonic();layout,pins=business.source_admission()
     operational_release.pin_sources(pins)
-    for path in [Path(__file__),HERE/'receiver_auth.py',HERE/'bounded_archive.py',HERE/'receiver_rehearsal.py',HERE/'diagnose_register.py',HERE/'recovery-observation.sql',HERE/'build_operational_module.py',HERE/'recovery_admission_source.py',*operational.SOURCE.glob('*.sql')]:
+    for path in [Path(__file__),HERE/'receiver_auth.py',HERE/'receiver_reauthentication.py',HERE/'bounded_archive.py',HERE/'receiver_rehearsal.py',HERE/'diagnose_register.py',HERE/'recovery-observation.sql',HERE/'build_operational_module.py',HERE/'recovery_admission_source.py',*operational.SOURCE.glob('*.sql')]:
         pins[str(path.relative_to(ROOT))]=hashlib.sha256(business.installation.prefix.regular(path)).hexdigest()
     for name,value in sources().items():pins[name]=value['sha256']
     if args.check_source:print(json.dumps(dict(source_files=len(pins),database_operations=0,ready_for_deployment=False)));return

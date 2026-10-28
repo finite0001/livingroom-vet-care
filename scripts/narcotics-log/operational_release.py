@@ -134,7 +134,7 @@ def install(runtime):
     runtime.remaining(1)
     expected=expected_ledger(target.operational_prefix_ledger,manifest)
     target.source_runtime=runtime
-    owned_ingress(runtime,'stop')
+    owned_ingress(runtime,'stop',phase='upgrade')
     before=observe(runtime,'before-operational209-complete-data')
     raw=prefix.regular(ROOT/'supabase/migrations'/MIGRATION)
     destination=target.project/'supabase/migrations'/MIGRATION

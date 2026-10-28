@@ -137,7 +137,13 @@ against that same source expectation before opening its receiver.
 
 The rehearsal also restarts only its captured receiver database, requires a new
 recovery epoch and independent acknowledgment, and rejects earlier sessions and
-the earlier acknowledgment. Complete discrepancy closure and operational browser
+the earlier acknowledgment. After the unchanged six-login proof, it signs the
+second reviewer out through GoTrue, verifies the exact session/token/AMR deletions
+and logout audit, and validates a seventh password login. Counts use that new
+session. Release must reject the signed-out session's retained acknowledgment
+and accept its independently recorded replacement in the same recovery epoch.
+Transport unit controls use OS-assigned ports, never the genuine rehearsal port.
+Complete discrepancy closure and operational browser
 acceptance remain release requirements. These source changes and partial proofs do not
 authorize production installation or certify stock. The production SQL source omits engineering probes and masks internal errors;
 it remains uninstalled until the complete genuine workflows and operational

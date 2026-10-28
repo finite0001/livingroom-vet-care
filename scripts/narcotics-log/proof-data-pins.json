@@ -11,11 +11,11 @@
     },
     "module-expected.json": {
       "bytes": 12347267,
-      "sha256": "e711b9adfce37bcf831bbc289219004c505d0830eb5ea052953dc51138d45cb1"
+      "sha256": "5134f81209aa3a678ec2848ee7e32d2fa372162d8e6c02293239093ffbda6cab"
     },
     "module-source-expected.sql": {
       "bytes": 9135682,
-      "sha256": "afc0d9b922917fb789ecb569c24878f7d62c8069d2c261f5681cd45f0bc72e69"
+      "sha256": "6e46bd87ffd65d2ee45d1fbc77b4cc5a236d2ede8425342982d8456353d6e475"
     },
     "original-row-hashes.sql": {
       "bytes": 1473,

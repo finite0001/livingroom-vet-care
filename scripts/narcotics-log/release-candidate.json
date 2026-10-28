@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61771183,
-      "sha256": "a343f2ec6eba54c34bf8fe7e4cf31909f605bb5074ee8ebef6dca181244dce78"
+      "bytes": 61772784,
+      "sha256": "e5b65254d68a425b75ff4e0123afd31b072d413c7245de65679b19496dedf33e"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61767281,
-      "sha256": "2f655e2501d7f6632a8ae127d2cd57f801a99cc18abccd0af6eaf474834243fd"
+      "bytes": 61768882,
+      "sha256": "fcaa14002d5afec121dd430e8d814366bac8c64cbf4f2337a95a7dabf1865e4d"
     }
   },
   "source_corrections": {
@@ -488,10 +488,10 @@
           "whole_sql_sha256": "429fd5ca30c819f9e45d75b147e19e4d11681e95efbe2bdc6f5b116450ad9044"
         },
         "resolution_helper": {
-          "body_sha256": "c854dc3e94f7e4daa26fde54301317d364f3b13872c62f87d5ced7d3ac5f4c08",
+          "body_sha256": "c292b3855ea4e9c1e34105fc834e457ee591cdaeb05dde2302dcae9c85031333",
           "only_completed_count_cause_and_confirmation_ancestors": true,
           "signature": "controlled_count_v1.history_resolution_graph(uuid)",
-          "whole_sql_sha256": "e027a1140134cfb988e6a408ded8374bea7acfc57fa350942bc9ea879c5fcc68"
+          "whole_sql_sha256": "ad759eb38587595265a52111d4f87170417975bc5903f66a86bcf0570de1754b"
         },
         "reuse_capacity_only_with_full_validation_fallback": true,
         "root_new_body_sha256": "ba723077141417efc5e3be1764981c751c74100ac62d179fc725173d66a03f76",
@@ -775,8 +775,8 @@
           "sha256": "c3e4751d002d04aeb0cc4c285aa79c59bfcd33a6870a251a21a78057789ef59c"
         },
         "history_document_reuse.py": {
-          "bytes": 39195,
-          "sha256": "0d6066f6e2dc6675cc43399c59ca4b2447550a45a7920a5e20e1aea538bdf2a0"
+          "bytes": 40796,
+          "sha256": "4ee624d180fe2b6f9a1da2b6a3b9193f3de2858c1b1bae6133dd35b2251e7704"
         },
         "recovery_admission_source.py": {
           "bytes": 10068,
