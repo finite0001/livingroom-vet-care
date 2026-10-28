@@ -224,6 +224,8 @@ jobs:
             /tmp/lrv-narcotics-install-*/register-engineering-proof.json
             /tmp/lrv-narcotics-install-*/register-native-wire-proof.json
             /tmp/lrv-narcotics-install-*/recovery-permission-engineering-proof.json
+            /tmp/lrv-narcotics-install-*/recovery-boundary-engineering-proof.json
+            /tmp/lrv-narcotics-install-*/recovery-state-engineering-proof.json
             /tmp/lrv-narcotics-install-*/register-engineering-install-stderr.bin
             /tmp/lrv-narcotics-install-*/rpc-failure.json
             /tmp/lrv-narcotics-install-*/*-failure.txt

@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61535755,
-      "sha256": "ec3900d6627185560719806639bab4d39ebe6274f7e09e16513636ccab207dd0"
+      "bytes": 61536288,
+      "sha256": "3c0bea37771646d041de83c032bb5b03846aaf19f53828f19f77ab8ca5ac4839"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61531853,
-      "sha256": "7f9e55176d58a559aecf274c6096b7e21b58df1b132bde59852d34f725676a6f"
+      "bytes": 61532386,
+      "sha256": "cd1bf314d0e6be054c834a75e50b0792ae790a2984199f6ba17c2884644ff845"
     }
   },
   "source_corrections": {
@@ -105,6 +105,22 @@
       "final_function_metadata_and_grants_unchanged": true,
       "pregrant_common_snapshot_projects_the_same_phase": true,
       "public_API_count": 48
+    },
+    "dual_inventory_immutable_result_reuse": {
+      "all_deadlines_unchanged": true,
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_v1.product_count_history_required(uuid)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "55ec2c3b165253179871a6194c2c374d745e778920749182d152d3fb16faa8ce",
+          "new_expression": "  -- The first loop fully validates every selected immutable registry root.\n  -- Keep this independent result inventory so orphan/misbound rows cannot hide.\n  document_value:=(controlled_count_v1.readcore_saved_result_row(item.kind,item.id))->'document';\n  if not exists(select 1 from controlled_count_v1.operations o\n   where to_jsonb(o.operation_id)=document_value->'operation_id'\n   and o.result_kind=item.kind and o.result_id=item.id\n   and(o.product_id=p_product or o.document->'product_id'=to_jsonb(p_product)))then\n   document_value:=controlled_count_v1.readcore_saved_result_graph(item.kind,item.id);\n  end if;",
+          "old_body_sha256": "c47e5d7b90d1a8e7dc37ef647396f894117a00d99988d899e38ec9625c7ffdcf",
+          "old_expression": "  document_value:=controlled_count_v1.readcore_saved_result_graph(item.kind,item.id);"
+        }
+      },
+      "only_one_function_body_hash_metadata_difference": true,
+      "real_Auth_verification_pending": true
     },
     "explicit_native_forward_changes": {
       "all_original_parent_descriptors_preserved": true,

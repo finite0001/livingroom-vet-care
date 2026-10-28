@@ -75,7 +75,7 @@ const publicInput=narcoticsBrowserPublicInput(input),pointerKey=countOperationSt
 const sequence=['list_controlled_count_scopes_v1','discover_controlled_counts_v1','read_controlled_count_v1','finalize_controlled_count_v1','read_controlled_count_operation_closure_v1','discover_controlled_counts_v1','read_controlled_count_v1'];
 let vite,browserServer,browser,context,page,authSession,operationRequest,acceptedReceipt,pointer,closure,firstRead,lastRead;
 let loginReleased=false,authReleased=false,readReleased=false,lostOnce=false,unknownShown=false,storageCleared=false,agreementShown=false,reviewExplicit=false;
-let browserClosed=false,viteClosed=false,authCalls=0,optionsCount=0;const profiles={profiles:0,user_roles:0};const calls=[],profileCalls=[],evidence={},blocked=new Set();
+let browserClosed=false,viteClosed=false,authCalls=0,optionsCount=0,refusedDevClientSockets=0;const profiles={profiles:0,user_roles:0};const calls=[],profileCalls=[],evidence={},blocked=new Set();
 function output(name,value){writeFileSync(resolve(folder,name),JSON.stringify(value,null,2)+'\n',{flag:'wx',mode:0o600});}
 function bytes(name,raw,cap=2097152){assert(Buffer.isBuffer(raw)&&raw.length<=cap);writeFileSync(resolve(folder,name),raw,{flag:'wx',mode:0o600});return{file:name,bytes:raw.length,sha256:sha(raw)};}
 async function snapshot(){return page.evaluate(()=>window.__LRV_NARCOTICS_LOCAL_PROOF__?.snapshot());}
@@ -92,7 +92,13 @@ try{
  output('browser-owner.json',{node_pid:process.pid,browser_pid:browserServer.process().pid,executable:chromium.executablePath(),spawnargs:browserServer.process().spawnargs});
  assert.equal(new URL(browserServer.wsEndpoint()).hostname,'127.0.0.1');browser=await chromium.connect(browserServer.wsEndpoint(),{timeout:remaining()});
  context=await browser.newContext({viewport:{width:1280,height:1000},serviceWorkers:'block'});
- await context.routeWebSocket('**/*',socket=>{blocked.add(new URL(socket.url()).origin);fail();socket.close();});
+ const devSocket=new URL(pageOrigin.replace(/^http:/,'ws:')+'/');devSocket.searchParams.set('token',vite.config.webSocketToken);
+ await context.routeWebSocket('**/*',socket=>{
+  // Vite7 still attempts initial+fallback dev sockets with hmr:false. Refuse
+  // both without forwarding; every unexpected socket remains a hard failure.
+  if(socket.url()===devSocket.href&&++refusedDevClientSockets<=2){socket.close();return;}
+  blocked.add(new URL(socket.url()).origin);fail();socket.close();
+ });
  async function forward(route){remaining();const response=await route.fetch({maxRedirects:0,maxRetries:0,timeout:remaining(15000)});const body=await response.body();remaining();assert(body.length<=2097152);return{response,body,headers:decodedHeaders(response.headers())};}
  await context.route('**/*',async route=>{
   try{
@@ -178,7 +184,7 @@ try{
  try{if(vite){await closeWithin(()=>vite.close(),5000);assert.equal(vite.httpServer.listening,false);}viteClosed=true;}catch{fail();}
  try{assert.equal(verifySources(),sourcesSha);}catch{fail();}
  if(performance.now()>=deadline||authCalls!==1||profiles.profiles<1||profiles.user_roles<1||!authReleased||!readReleased||!reviewExplicit||!lostOnce||!unknownShown||!storageCleared||!agreementShown||!acceptedReceipt||!closure||!lastRead||blocked.size||calls.length!==7||calls.some(c=>c.status!==200))fail();
- output('result.json',{kind:'closed-local-count-finalize-ack-loss-browser-v1',failure_diagnostics:failureDiagnostics,passed:!failure&&browserClosed&&viteClosed,actor_id:input.actorId,session_id:authSession?.sessionId??null,count_id:input.countId,operation_id:operationRequest?.operation_id??null,outcome_id:operationRequest?.outcome_id??null,source_binding_sha256:sourcesSha,auth_calls:authCalls,profile_calls:profileCalls,options_count:optionsCount,calls,auth_phase_released:authReleased,read_phase_released:readReleased,review_both_explicit:reviewExplicit,actual_finalize_200_then_ack_lost_once:lostOnce,unknown_UI_shown:unknownShown,id_only_pointer_retained:!!pointer,saved_closure_observed:!!closure,storage_cleared:storageCleared,agreement_UI_read:agreementShown,blocked_origins:[...blocked].sort(),normal_browser_cleanup:browserClosed,normal_vite_cleanup:viteClosed,decoded_entity_proxy:true,elapsed_seconds:(performance.now()-started)/1000,full_Auth_or_count_kernel_or_browser_or_physical_or_production_acceptance:false});
+ output('result.json',{kind:'closed-local-count-finalize-ack-loss-browser-v1',failure_diagnostics:failureDiagnostics,refused_development_websockets:refusedDevClientSockets,passed:!failure&&browserClosed&&viteClosed,actor_id:input.actorId,session_id:authSession?.sessionId??null,count_id:input.countId,operation_id:operationRequest?.operation_id??null,outcome_id:operationRequest?.outcome_id??null,source_binding_sha256:sourcesSha,auth_calls:authCalls,profile_calls:profileCalls,options_count:optionsCount,calls,auth_phase_released:authReleased,read_phase_released:readReleased,review_both_explicit:reviewExplicit,actual_finalize_200_then_ack_lost_once:lostOnce,unknown_UI_shown:unknownShown,id_only_pointer_retained:!!pointer,saved_closure_observed:!!closure,storage_cleared:storageCleared,agreement_UI_read:agreementShown,blocked_origins:[...blocked].sort(),normal_browser_cleanup:browserClosed,normal_vite_cleanup:viteClosed,decoded_entity_proxy:true,elapsed_seconds:(performance.now()-started)/1000,full_Auth_or_count_kernel_or_browser_or_physical_or_production_acceptance:false});
 }
 function finalCutoff(){if(performance.now()<deadline)return;fail();output('post-persistence-cutoff-failure.json',{passed:false,candidate_result_not_acceptance:true});throw new Error('Original count-browser120s cutoff exceeded');}
 finalCutoff();if(failure)throw new Error('Closed count browser phase failed; private evidence retained');console.log('Closed count browser phase returned; parent source/metadata/Auth/data admission remains required.');finalCutoff();

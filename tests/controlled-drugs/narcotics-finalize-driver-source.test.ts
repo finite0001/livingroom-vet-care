@@ -66,9 +66,10 @@ test('canonical OS temp roots admit Mac aliases and Linux, refuse escapes and sy
 });
 test('V3 driver recovers the exact V2 binding and V1 operative workflow',()=>{
  const diagnostic=JSON.parse(readFileSync(new URL('./narcotics-finalize-diagnostics-inverse.json',import.meta.url),'utf8'));
- assert.equal(hash(source),diagnostic.source_v4_sha256);let sourceV3=source;
+ assert.equal(hash(source),diagnostic.source_v5_sha256);let sourceV3=source, reversed=0;
  for(const change of [...diagnostic.changes].reverse()){
   assert.equal(sourceV3.split(change.after).length-1,1);sourceV3=sourceV3.replace(change.after,change.before);
+  if(++reversed===diagnostic.v5_change_count)assert.equal(hash(sourceV3),diagnostic.source_v4_sha256);
  }
  assert.equal(hash(sourceV3),diagnostic.source_v3_sha256);
  const inverse=JSON.parse(readFileSync(new URL('./narcotics-finalize-portability-inverse.json',import.meta.url),'utf8'));

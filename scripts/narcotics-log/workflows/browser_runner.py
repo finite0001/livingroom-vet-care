@@ -183,7 +183,7 @@ def run(context, modules, runtime, save):
                  "normal_browser_cleanup", "normal_vite_cleanup")
         diagnostic = {key: result.get(key) for key in flags if type(result.get(key)) is bool}
         diagnostic["candidate_not_acceptance"] = True
-        for key in ("auth_calls", "options_count"):
+        for key in ("auth_calls", "options_count", "refused_development_websockets"):
             if type(result.get(key)) is int and 0 <= result[key] <= 100:
                 diagnostic[key] = result[key]
         diagnostic["profile_statuses"] = [{"relation": call.get("relation"), "status": call.get("status")}

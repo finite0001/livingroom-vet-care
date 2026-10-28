@@ -10,20 +10,20 @@
       "sha256": "b78e16427d9a611a46bd4186fba6a16d54c082e9424153abfc04fa9216b0137b"
     },
     "tests/controlled-drugs/narcotics-finalize-diagnostics-inverse.json": {
-      "bytes": 2148,
-      "sha256": "d33c59f9b8a4baa7ae7cc7bb10128f599b3a285ce59a76e62e4a7f4bd1d43e03"
+      "bytes": 3336,
+      "sha256": "9ea906296cc6a2e55a1a60e4566954bf496533f700621c78214dbb8bbdf568d6"
     },
     "tests/controlled-drugs/narcotics-finalize-driver-source.test.ts": {
-      "bytes": 8742,
-      "sha256": "8ad50f6ec348ad92ba38fc307c986b8d9f97356774c9b409cd9a8f508a807b04"
+      "bytes": 8857,
+      "sha256": "427aa614bcb9e2f029d4ccc39ab03f54f010d72f71fc1a5622b943614e7821e6"
     },
     "tests/controlled-drugs/narcotics-finalize-portability-inverse.json": {
       "bytes": 2661,
       "sha256": "a98156576118a021367def963c897a9d32b8d302b55941a5acd79cb96e751490"
     },
     "tests/controlled-drugs/run-local-authenticated-count-finalize.mjs": {
-      "bytes": 23833,
-      "sha256": "72b50a4f60d26b946a2bc5d53d28cf99b559fe29b61352371f09c97260dd1df3"
+      "bytes": 24294,
+      "sha256": "51a58ac68db8a89bc1f0480c7fac9950f817d964b1ae239fe5811892748ff181"
     }
   },
   "kind": "narcotics-genuine-business-source-v1",
@@ -37,8 +37,8 @@
       "sha256": "a7c1a5c1a9bdbf91f694225ed942597c957b65d0e33c91a148bacb8d064d0eba"
     },
     "browser_runner.py": {
-      "bytes": 15950,
-      "sha256": "f292b2d18755e9e31c6c456aade5ff1e68cb7ba8c8c70c1bc96f3478e67cfb5e"
+      "bytes": 15984,
+      "sha256": "4c716861d298460e905dfe1a5e43ae4c8da168436e897924810abc982e18bb4e"
     },
     "count_audit.py": {
       "bytes": 5832,
@@ -101,8 +101,8 @@
       "sha256": "3c43a7d20229f008990bc47940d0a8d4d2a027420b36dbbe8b2c3f1a21c0affe"
     },
     "http_transport.py": {
-      "bytes": 12078,
-      "sha256": "9aa918ade84ea63f0f8adc25472a7ef18af7f81d03506f440679a588b05b47cf"
+      "bytes": 12153,
+      "sha256": "46ea7e8bc7d1091cb1a7b28ed00c680ba48b7668baf921ab229f0c4e8bf26a1d"
     },
     "identity_bootstrap.py": {
       "bytes": 1372,
@@ -117,8 +117,8 @@
       "sha256": "b64e83e13c72deb39c7bbf23d48a1b39d050dacb700ec78fd462e1c9adf60bc0"
     },
     "owner_capture.py": {
-      "bytes": 3207,
-      "sha256": "ec409d05109da2bb046c62e20df2367618ebd238185773083989d865a8050310"
+      "bytes": 3244,
+      "sha256": "f850511d0a40c15cea55719863fcb63e6cce65ca15991f905fe43b7b6390cfa1"
     },
     "parent_effects.py": {
       "bytes": 9290,

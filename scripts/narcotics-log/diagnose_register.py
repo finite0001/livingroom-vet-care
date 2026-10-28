@@ -81,6 +81,15 @@ class RegisterDiagnosis(business.BusinessInstallation):
         if permissions['engineering_only'] is not True or permissions['actual_authenticated_owned_schema_comment'] is not True or permissions['catalog_unchanged_after_rollback'] is not True:
             raise ValueError('Actual authenticated owned-schema permission probe failed')
         business.save(self.evidence, 'recovery-permission-engineering-proof', permissions)
+        state = rpc('recovery-state', 'narcotics_recovery_probe_state_v1', dict(schema_version=1, actor_id=actor['id']))
+        if state != dict(engineering_only=True, actual_Auth_head_transitions=True, stale_head_refused=True, audit_and_catalog_rolled_back=True):
+            raise ValueError('Actual authenticated recovery audit/catalog rollback differs')
+        business.save(self.evidence, 'recovery-state-engineering-proof', state)
+        boundary = rpc('recovery-boundary', 'narcotics_recovery_probe_boundary_v1', scope)
+        independent = methods['full_capture'].capture(runtime, 'recovery-boundary-engineering', methods['full_components'], methods['full_payload'], ids['product'], ids['site'])
+        if boundary != dict(engineering_only=True, physical_classes=50, boundary_sha256=independent['sha256'], utf8_bytes=len(independent['raw'])):
+            raise ValueError('Actual authenticated complete recovery boundary differs from independent original owner bytes')
+        business.save(self.evidence, 'recovery-boundary-engineering-proof', {**boundary, 'independent_owner_bytes_agree': True})
         raw = pdf_fixture(); form_id = new_id()
         form = {**scope, 'operation_id': form_id, 'event_id': context['gateway']['pointer']['operation_id'],
             'kind': 'order_form', 'title': '=Synthetic order form', 'filename': 'synthetic-order-form.pdf',
@@ -143,8 +152,8 @@ class RegisterDiagnosis(business.BusinessInstallation):
                 {**(report if kind == 'report' else form), 'operation_id': operation})
             if rpc(kind + '-closed-read', api, pointer) != closed:
                 raise ValueError('Delayed original changed its terminal closure')
-        counts = runtime.selected_query('register-engineering-exact-counts', "select jsonb_build_object('descriptor',(select count(*)from narcotics_register_v1.descriptor),'operations',(select count(*)from narcotics_register_v1.operations),'reports',(select count(*)from narcotics_register_v1.reports),'contents',(select count(*)from narcotics_register_v1.form_contents),'forms',(select count(*)from narcotics_register_v1.form_records));")
-        if counts != dict(descriptor=1, operations=6, reports=2, contents=2, forms=2):
+        counts = runtime.selected_query('register-engineering-exact-counts', "select jsonb_build_object('descriptor',(select count(*)from narcotics_register_v1.descriptor),'operations',(select count(*)from narcotics_register_v1.operations),'reports',(select count(*)from narcotics_register_v1.reports),'contents',(select count(*)from narcotics_register_v1.form_contents),'forms',(select count(*)from narcotics_register_v1.form_records),'recovery_heads',(select count(*)from narcotics_recovery_v1.heads));")
+        if counts != dict(descriptor=1, operations=6, reports=2, contents=2, forms=2, recovery_heads=1):
             raise ValueError('Exact source-declared new report/form row counts differ')
         business.save(self.evidence, 'register-wire-original-inputs', dict(engineering_only=True, entries=wire_entries))
         checked = business.installation.process.run(['node', '--experimental-strip-types', str(HERE / 'verify-register-native-wire.mjs'), str(self.evidence)],

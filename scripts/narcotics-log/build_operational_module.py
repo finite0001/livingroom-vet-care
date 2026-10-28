@@ -31,6 +31,7 @@ LEAVES = {
     'narcotics_register_v1.require_module()': ('plpgsql', 'v', 'void'),
     'narcotics_register_v1.module_properties(text,text,text,text)': ('plpgsql', 's', 'jsonb'),
     'narcotics_register_v1.hash(text,jsonb)': ('sql', 'i', 'text'),
+    'narcotics_recovery_v1.enter_recovery()': ('plpgsql', 'v', 'void'),
 }
 
 
@@ -85,6 +86,32 @@ LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog,public,con
 SET timezone='UTC' SET datestyle='ISO,YMD' SET intervalstyle='postgres' SET extra_float_digits=3 AS $$''' + body + '$$;\n'
     return program, {'original_body_sha256': wanted, 'copy_body_sha256': sha(body.encode()),
         'whole_body_inverse': True, 'only_removed_statement': check, 'current_authorization_and_projector_unchanged': True}
+
+
+def recovery_boundary_copy():
+    sql = (ROOT / 'supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql').read_text()
+    selected = [statement for statement in split_reviewed_statements(sql)
+                if re.match(r'^CREATE(?: OR REPLACE)? FUNCTION controlled_count_v1\.capture_full_boundary\(', statement, re.I)]
+    if len(selected) != 1:
+        raise ValueError('Exactly one original complete physical collector required')
+    signature = 'controlled_count_v1.capture_full_boundary(uuid,uuid)'
+    original = functions(selected[0] + ';')[signature]['body']
+    wanted = json.loads((HERE / 'module-expected.json').read_text())['properties']['functions'][signature]['body_sha256']
+    if sha(original.encode()) != wanted:
+        raise ValueError('Independent current physical collector source binding required')
+    before = 'perform controlled_count_entry_v1.assert_capture_frontier(p_product,p_site);'
+    after = 'perform narcotics_recovery_v1.capture_guard(p_product,p_site);'
+    if original.count(before) != 2 or after in original:
+        raise ValueError('Both exact original collector guards required')
+    body = original.replace(before, after)
+    if body.replace(after, before) != original or body.count("boundary_value:=boundary_value||jsonb_build_object(") != 50:
+        raise ValueError('Whole PB50 source inverse and all fifty classes required')
+    program = '''CREATE FUNCTION narcotics_recovery_v1.capture_full_boundary(p_product uuid,p_site uuid) RETURNS jsonb
+LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path=pg_catalog,controlled_count_v1,pg_temp
+SET timezone='UTC' SET datestyle='ISO,YMD' SET intervalstyle='postgres' SET extra_float_digits=3 AS $$''' + body + '$$;\n'
+    return program, dict(original_body_sha256=wanted, copy_body_sha256=sha(body.encode()),
+                         whole_body_inverse=True, replaced_guards=2, physical_classes=50,
+                         all_original_columns_caps_and_historical_validation_retained=True)
 
 
 def cold_admission(all_functions):
@@ -150,12 +177,72 @@ def build(register_only=False):
         raise ValueError('Recovery source and full release assembly are not complete')
     apis = dict(REGISTER_APIS)
     apis['narcotics_recovery_probe_permissions_v1'] = 'narcotics_register_v1.probe_recovery_permission(p_request)'
-    names = ('common.sql', 'register.sql', 'register-operations.sql', 'metadata.sql')
+    apis['narcotics_recovery_probe_boundary_v1'] = 'narcotics_recovery_v1.probe_boundary(p_request)'
+    apis['narcotics_recovery_probe_state_v1'] = 'narcotics_recovery_v1.probe_state(p_request)'
+    names = ('common.sql', 'register.sql', 'register-operations.sql', 'recovery-state.sql', 'metadata.sql')
     sources = {name: (SOURCE / name).read_bytes() for name in names}
     public_names = 'ARRAY[' + ','.join(literal(name) for name in sorted(apis)) + ']::text[]'
     private = '\n'.join(raw.decode().replace('__PUBLIC_FACADE_NAMES__', public_names) for raw in sources.values())
     copied, copy_proof = terminal_count_copy()
     private += '\n' + copied
+    boundary_sql, boundary_proof = recovery_boundary_copy()
+    private += '\n' + boundary_sql + '''
+CREATE FUNCTION narcotics_recovery_v1.capture_guard(p_product uuid,p_site uuid) RETURNS void
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $$
+BEGIN
+ PERFORM controlled_count_entry_v1.assert_read_frontier();
+ IF NOT EXISTS(SELECT 1 FROM pg_locks l WHERE l.pid=pg_backend_pid()AND l.locktype='advisory'
+  AND l.database=(SELECT oid FROM pg_database WHERE datname=current_database())AND l.classid=90271190::oid AND l.objid=0::oid AND l.objsubid=2 AND l.mode IN ('ShareLock','ExclusiveLock')AND l.granted)
+ OR NOT EXISTS(SELECT 1 FROM pg_locks l WHERE l.pid=pg_backend_pid()AND l.locktype='advisory'
+  AND l.database=(SELECT oid FROM pg_database WHERE datname=current_database())AND l.classid=90271040::oid AND l.objid=0::oid AND l.objsubid=2 AND l.mode='ExclusiveLock'AND l.granted)
+ OR public.controlled_stock_lock_held('controlled-stock-product:',p_product)IS NOT TRUE THEN
+ RAISE EXCEPTION 'narcotics_recovery_frontier_invalid' USING ERRCODE='42501';END IF;
+ PERFORM narcotics_recovery_v1.require_head();
+ PERFORM narcotics_register_v1.authority(auth.uid(),p_product,p_site);
+END $$;
+CREATE FUNCTION narcotics_recovery_v1.probe_boundary(p_request jsonb) RETURNS jsonb
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $$
+DECLARE actor_value uuid;product_value uuid;site_value uuid;boundary_value jsonb;boundary_text text;authority_value jsonb;
+BEGIN
+ PERFORM narcotics_register_v1.keys(p_request,ARRAY['schema_version','actor_id','product_id','site_id']);
+ IF(p_request->'schema_version')::text IS DISTINCT FROM'1' THEN RAISE EXCEPTION 'narcotics_request_invalid';END IF;
+ actor_value:=narcotics_register_v1.uuid_value(p_request->'actor_id');
+ product_value:=narcotics_register_v1.uuid_value(p_request->'product_id');site_value:=narcotics_register_v1.uuid_value(p_request->'site_id');
+ authority_value:=narcotics_register_v1.authority(actor_value,product_value,site_value);
+ PERFORM public.controlled_stock_product_gate(actor_value,product_value);
+ boundary_value:=narcotics_recovery_v1.capture_full_boundary(product_value,site_value);boundary_text:=boundary_value::text;
+ IF(SELECT count(*)FROM jsonb_object_keys(boundary_value))<>50 OR
+  narcotics_register_v1.authority(actor_value,product_value,site_value)IS DISTINCT FROM authority_value THEN
+ RAISE EXCEPTION 'narcotics_recovery_boundary_invalid';END IF;
+ RETURN jsonb_build_object('engineering_only',true,'physical_classes',50,'boundary_sha256',encode(sha256(convert_to(boundary_text,'UTF8')),'hex'),'utf8_bytes',octet_length(boundary_text));
+END $$;
+'''
+    private += '''
+CREATE FUNCTION narcotics_recovery_v1.probe_state(p_request jsonb) RETURNS jsonb
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $$
+DECLARE actor_value uuid;before_value jsonb;armed_value jsonb;epoch_value jsonb;released_value jsonb;after_value jsonb;stale_refused boolean:=false;
+BEGIN
+ PERFORM narcotics_register_v1.keys(p_request,ARRAY['schema_version','actor_id']);
+ IF(p_request->'schema_version')::text IS DISTINCT FROM'1' THEN RAISE EXCEPTION 'narcotics_request_invalid';END IF;
+ actor_value:=narcotics_register_v1.uuid_value(p_request->'actor_id');PERFORM narcotics_register_v1.identity(actor_value,true);
+ before_value:=narcotics_recovery_v1.require_head();
+ BEGIN
+  armed_value:=narcotics_recovery_v1.append_head('armed',gen_random_uuid(),actor_value,'{"engineering_only":true}'::jsonb,(before_value->>'head_id')::uuid,before_value->>'record_hash');
+  BEGIN
+   PERFORM narcotics_recovery_v1.append_head('source_resumed',gen_random_uuid(),actor_value,'{}'::jsonb,(before_value->>'head_id')::uuid,before_value->>'record_hash');
+  EXCEPTION WHEN SQLSTATE'PT409'THEN stale_refused:=true;END;
+  epoch_value:=narcotics_recovery_v1.append_head('epoch_started',gen_random_uuid(),actor_value,'{"engineering_only":true}'::jsonb,(armed_value->>'head_id')::uuid,armed_value->>'record_hash');
+  released_value:=narcotics_recovery_v1.append_head('released',gen_random_uuid(),actor_value,'{"engineering_only":true}'::jsonb,(epoch_value->>'head_id')::uuid,epoch_value->>'record_hash');
+  IF stale_refused IS NOT TRUE OR armed_value->>'mode'<>'armed'OR epoch_value->'arm_id'IS DISTINCT FROM armed_value->'arm_id'
+   OR epoch_value->'epoch_id'IS DISTINCT FROM epoch_value->'head_id'OR released_value->>'mode'<>'idle'THEN
+   RAISE EXCEPTION 'owned_recovery_state_probe_failed';END IF;
+  RAISE EXCEPTION 'owned_state_probe_rollback' USING ERRCODE='PZ001';
+ EXCEPTION WHEN SQLSTATE'PZ001'THEN NULL;END;
+ after_value:=narcotics_recovery_v1.require_head();
+ IF before_value IS DISTINCT FROM after_value THEN RAISE EXCEPTION 'owned_recovery_state_probe_did_not_rollback';END IF;
+ RETURN jsonb_build_object('engineering_only',true,'actual_Auth_head_transitions',true,'stale_head_refused',stale_refused,'audit_and_catalog_rolled_back',true);
+END $$;
+'''
     # Engineering-only: real Auth exercises owned-schema comment permissions;
     # an exception subtransaction rolls back the exact harmless probe comment.
     # This cannot change the durable recovery mode or grant release acceptance.
@@ -181,7 +268,9 @@ BEGIN
 END $$;
 '''
     admission = cold_admission(functions(private))
-    actual = private + '\n' + '\n'.join(facade(name, call, admission, engineering=register_only) for name, call in apis.items())
+    actual = private + '\n' + '\n'.join(facade(name, call,
+        admission.replace('PERFORM narcotics_register_v1.enter_register();', 'PERFORM narcotics_recovery_v1.enter_recovery();')
+        if name == 'narcotics_recovery_probe_state_v1' else admission, engineering=register_only) for name, call in apis.items())
     actual += table_controls(actual)
     definitions = functions(actual)
     for signature in definitions:
@@ -219,6 +308,14 @@ END $$;
  END IF;
  INSERT INTO narcotics_register_v1.descriptor VALUES(1,expected,narcotics_register_v1.hash('narcotics-operational-module-v1',expected));
 END $operational_source$;
+DO $operational_initial_head$DECLARE id_value uuid:=gen_random_uuid();at_value timestamptz:=clock_timestamp();document_value jsonb;hash_value text;BEGIN
+ document_value:=jsonb_build_object('schema_version',1,'domain','lrv-narcotics-recovery-head-v1','head_id',id_value,
+ 'prior_head_id',NULL,'prior_head_hash',NULL,'kind','installed','mode','idle','arm_id',NULL,'epoch_id',NULL,'actor_id',NULL,'session_id',NULL,
+ 'recorded_at',narcotics_register_v1.utc(at_value),'body',jsonb_build_object('basis','source_installation_only'));
+ hash_value:=narcotics_register_v1.hash('narcotics-recovery-head-v1',document_value);
+ INSERT INTO narcotics_recovery_v1.heads VALUES(id_value,NULL,NULL,'installed','idle',NULL,NULL,NULL,NULL,at_value,document_value,hash_value);
+ EXECUTE format('COMMENT ON SCHEMA narcotics_recovery_v1 IS %L',narcotics_recovery_v1.projection_of(document_value,hash_value)::text);
+END $operational_initial_head$;
 DROP SCHEMA narcotics_register_reference_v1,narcotics_recovery_reference_v1 CASCADE;
 DO $operational_installed$BEGIN
  PERFORM narcotics_register_v1.require_module();
@@ -231,7 +328,7 @@ END $operational_installed$;
         'expected_metadata_origin': 'independent empty source reference DDL; no observed actual target expectations',
         'native_errors_engineering_only': register_only,
         'source_files': {name: {'bytes': len(raw), 'sha256': sha(raw)} for name, raw in sources.items()},
-        'builder_sha256': sha(Path(__file__).read_bytes()), 'terminal_count_copy': copy_proof,
+        'builder_sha256': sha(Path(__file__).read_bytes()), 'terminal_count_copy': copy_proof, 'recovery_boundary_copy': boundary_proof,
         'public_apis': sorted(apis), 'function_signatures': sorted(definitions),
         'sql': {'bytes': len(sql.encode()), 'sha256': sha(sql.encode())}}
     return sql, proof

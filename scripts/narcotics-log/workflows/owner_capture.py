@@ -16,6 +16,7 @@ STAGES = frozenset((
     "writer-dispense-posted-receipt", "writer-pickup-posted-receipt",
     "writer-annotation-posted-receipt", "writer-intake-posted-receipt",
     "writer-discrepancy-posted-receipt",
+    "recovery-boundary-engineering",
 ))
 
 
