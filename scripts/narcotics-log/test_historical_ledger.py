@@ -5,6 +5,7 @@ from pathlib import Path
 import re
 import unittest
 from sql_framing import split_reviewed_statements
+from hosted_history import canonical_forward
 
 ROOT = Path(__file__).resolve().parents[2]
 CANDIDATE = ROOT / "tests/controlled-drugs/engine/candidate"
@@ -20,7 +21,7 @@ GATE = re.compile(
 class HistoricalLedgerTests(unittest.TestCase):
     def test_initial_parent_checks_use_the_original_preinstallation_source(self):
         tail = json.loads((CANDIDATE / "secondary_review_206_statements.json").read_bytes())
-        source = (ROOT / "supabase/migrations/20261027223535_controlled_record_review_workflows.sql").read_text()
+        source = canonical_forward((ROOT / "supabase/migrations/20261027223535_controlled_record_review_workflows.sql").read_bytes()).decode()
         statements = split_reviewed_statements(source)
         for head in ("do $review_parent$", "do $review_installed$"):
             original = next(value for value in tail["statements"] if value.startswith(head))
@@ -82,7 +83,7 @@ class HistoricalLedgerTests(unittest.TestCase):
             "version": "20261022010000", "name": "controlled_secondary_review_private",
             "statements": tail["statements"],
         }
-        source = (ROOT / "supabase/migrations/20261027223535_controlled_record_review_workflows.sql").read_text()
+        source = canonical_forward((ROOT / "supabase/migrations/20261027223535_controlled_record_review_workflows.sql").read_bytes()).decode()
         matches = list(GATE.finditer(source))
         self.assertEqual([match[1] for match in matches], sorted(expected) * 2)
         for match in matches:

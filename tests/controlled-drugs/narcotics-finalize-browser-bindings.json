@@ -274,8 +274,8 @@
       "sha256": "b10987028c0706a4ccde759193b435558d61117e6523b8cbe17b88fb17ca7342"
     },
     "src/hub/features/controlled-drugs/entry/client.ts": {
-      "bytes": 11391,
-      "sha256": "e880abbe1cfa90521febc26e7d8e10d36afd8258e441aa4b173e19eff253a656"
+      "bytes": 11945,
+      "sha256": "2a26537fff80b56e00d6646ea374eb960d68e119683dda81a2472bd719fc92a1"
     },
     "src/hub/features/controlled-drugs/entry/codec.ts": {
       "bytes": 5408,

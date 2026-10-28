@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import {countObservationChoices}from"../../src/hub/features/controlled-drugs/count/count-entry.ts";
 import test from "node:test";
 import {readFileSync}from"node:fs";
-import { createEntryClient, type EntryClient } from "../../src/hub/features/controlled-drugs/entry/client.ts";
+import { createEntryClient, EntryClientError, type EntryClient } from "../../src/hub/features/controlled-drugs/entry/client.ts";
+import { snapshotControlledLegacyIntent } from "../../src/hub/features/controlled-drugs/entry/legacy-intent.ts";
 import { createEntryService, type EntryLock, type EntryStorage } from "../../src/hub/features/controlled-drugs/entry/service.ts";
 import { ControlledStockWriteError, installControlledStockWriteHandler, invokeControlledStockWriter } from "../../src/hub/features/controlled-drugs/entry/gateway.ts";
 import { sameReviewIdentity, type ReviewIdentity } from "../../src/hub/features/controlled-drugs/record-review/raw-rpc.ts";
@@ -15,6 +16,16 @@ const entryFixture=()=>entryFixtureFromBytes(readFileSync(new URL("./record-revi
 const config={projectRef:"a".repeat(20),url:`https://${"a".repeat(20)}.supabase.co`,publishableKey:"sb_publishable_synthetic"};
 function memory(){const values=new Map<string,string>();return{values,getItem:(key:string)=>values.get(key)??null,setItem:(key:string,value:string)=>{values.set(key,value);},removeItem:(key:string)=>{values.delete(key);}};}
 const lock:EntryLock={async exclusive(_key,work){return work();}};
+test("only the exact definitive clinical-alert rejection exposes its fixed review instruction",async()=>{
+ const f=entryFixture(),auth=sessions(f.identity),message="Patient alerts changed; reload and review the current alerts before recording treatment";
+ for(const writer of ["record_patient_treatment","record_anesthesia_drug_administration","adjust_inventory"] as const){
+  const intent=writer==="adjust_inventory"?f.snapshot:snapshotControlledLegacyIntent(writer,{p_id:f.pointer.operation_id,p_request:{},...(writer==="record_anesthesia_drug_administration"?{p_record_id:f.identity.actorId,p_pet_id:f.identity.actorId}:{})});
+  for(const [status,code,text]of [[409,"PT409",message],[400,"PT409",message],[409,"23514",message],[500,"PT409",message],[409,"PT409","Untrusted server detail"]] as const){
+   const client=createEntryClient(config,auth.source,async()=>new Response(JSON.stringify({code,message:text,details:null,hint:null}),{status,headers:{"Content-Type":"application/json"}}));
+   await assert.rejects(client.legacy(intent,f.identity),error=>error instanceof EntryClientError&&error.definitive===(status<500)&&error.message.includes("Patient alerts changed")===(writer!=="adjust_inventory"&&status===409&&code==="PT409"&&text===message));
+  }
+ }
+});
 function sessions(initial:ReviewIdentity){let identity:ReviewIdentity|null=initial;const source:ReviewStaffSessionSource={getSnapshot:()=>identity,subscribe:()=>()=>{},isCurrent:other=>sameReviewIdentity(identity,other),async current(){return identity?{...identity,accessToken:"synthetic.actual.token"}:null;}};return{source,set(value:ReviewIdentity|null){identity=value;}};}
 test("actual gateway→coordinator→raw HTTP client prepares, reviews then executes once; callback precedes ID cleanup",async()=>{
  const f=entryFixture(),auth=sessions(f.identity),storage=memory(),calls:string[]=[],bodies:string[]=[];let inspected=false,prepared=false;

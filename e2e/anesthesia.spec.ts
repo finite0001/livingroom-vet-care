@@ -104,7 +104,7 @@ async function fixture(page: Page) {
   if(path==='/rest/v1/patient_treatments')return route.fulfill({json:state.treatments});
   if(path==='/rest/v1/rpc/record_anesthesia_drug_administration') {
    const body=route.request().postDataJSON();state.drugCalls.push(body);
-   const r=body.p_request;const row={id:body.p_id,pet_id:petId,product_id:'77777777-7777-4777-8777-777777777771',lot_id:r.lot_id,invoice_id:r.invoice_id,kind:'medication',historical:false,product_name:'Synthetic induction agent',manufacturer:'Synthetic',lot_number:'ANES-1',expires_on:'2999-01-01',quantity:r.quantity,dose:r.dose,route:r.route,site:r.site,veterinarian:r.veterinarian,veterinarian_license:r.veterinarian_license,administered_at:r.administered_at,next_due_on:null,source:`Anesthesia record ${body.p_record_id}`,request:r,created_by:staffId,created_at:'2026-01-02T17:30:00Z'};
+   const r=body.p_request;const row={id:body.p_id,pet_id:petId,product_id:'77777777-7777-4777-8777-777777777771',lot_id:r.lot_id,invoice_id:r.invoice_id,kind:'medication',historical:false,product_name:'Synthetic induction agent',manufacturer:'Synthetic',lot_number:'ANES-1',expires_on:'2999-01-01',quantity:r.quantity,dose:r.dose,route:r.route,site:r.site,veterinarian:r.veterinarian,veterinarian_license:r.veterinarian_license,administered_at:r.administered_at,next_due_on:null,source:`Anesthesia record ${body.p_record_id}`,request:{...r,pet_id:petId,source:`Anesthesia record ${body.p_record_id}`},created_by:staffId,created_at:'2026-01-02T17:30:00Z'};
    state.treatments.push(row);return route.fulfill({json:row});
   }
   if(path==='/rest/v1/rpc/add_anesthesia_record_addendum') {

@@ -47,7 +47,7 @@ def source_admission():
             raise ValueError("Authenticated browser source changed: " + name)
         pins[name] = installation.sha(raw)
     binding_name = "tests/controlled-drugs/narcotics-finalize-browser-bindings.json"
-    if pins[binding_name] != "1b875b3065009870d287ed40669511d717146687f599c8358d7c60544e93910c":
+    if pins[binding_name] != "fa3282a22c9864a979b778979d975ae1cb037d9930fedf55cd19dadeb4992d92":
         raise ValueError("Independently frozen146 frontend source binding required")
     binding = installation.decode(installation.prefix.regular(installation.ROOT / binding_name))
     if len(binding["files"]) != 146:

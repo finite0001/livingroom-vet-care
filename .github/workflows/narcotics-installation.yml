@@ -78,6 +78,41 @@ jobs:
             /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
             /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log
 
+  authored-history-installation:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - run: npm ci --ignore-scripts
+      - name: Verify exact source receipt variants
+        run: |
+          python3 -I -B scripts/narcotics-log/hosted_history.py --check-source
+          node scripts/narcotics-log/frame-hosted-history.mjs --write-candidate
+          node scripts/narcotics-log/frame-cli.mjs --write-candidate
+          python3 -I -B scripts/narcotics-log/hosted_rehearsal.py --check-source
+      - name: Rehearse authored history and complete CLI installation
+        run: python3 -I -B scripts/narcotics-log/hosted_rehearsal.py --run-synthetic-local
+      - name: Retain scoped installation diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-authored-history-installation
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/*-failure.txt
+            /tmp/lrv-narcotics-install-*/forward-ledger.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log
+
   genuine-business:
     needs: forward-installation
     runs-on: ubuntu-24.04-arm

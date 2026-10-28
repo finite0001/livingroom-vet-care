@@ -33,7 +33,7 @@ function regular(path,cap,privateFile=false){
  }finally{closeSync(fd);}
 }
 function verifySources(){
- const raw=regular(resolve(root,'tests/controlled-drugs/narcotics-finalize-browser-bindings.json'),65536);assert.equal(sha(raw),'1b875b3065009870d287ed40669511d717146687f599c8358d7c60544e93910c');
+ const raw=regular(resolve(root,'tests/controlled-drugs/narcotics-finalize-browser-bindings.json'),65536);assert.equal(sha(raw),'fa3282a22c9864a979b778979d975ae1cb037d9930fedf55cd19dadeb4992d92');
  const binding=JSON.parse(raw);assert.equal(binding.kind,'fixed-narcotics-authenticated-finalize-browser-source-bindings-v1');assert.equal(Object.keys(binding.files).length,146);
  for(const[name,wanted]of Object.entries(binding.files)){assert(!name.startsWith('/')&&!name.split('/').includes('..'));const path=resolve(root,name);assert(path.startsWith(root));const data=regular(path,2*1024*1024);assert.equal(data.length,wanted.bytes);assert.equal(sha(data),wanted.sha256);}
  return sha(raw);

@@ -220,6 +220,34 @@ FROM supabase_migrations.schema_migrations;ROLLBACK;
             raise ValueError("Complete current CLI ledger differs from source framing")
         self.result["complete_source_derived208_ledger"] = True
 
+    def prepare_migrations(self, migrations):
+        for path in sorted((self.view / "supabase/migrations").glob("*.sql")):
+            shutil.copyfile(path, migrations / path.name)
+        self.project_pins = {Path(name).name: wanted for name, wanted in prefix.canonical206(self.view).items()}
+        self.project_sources()
+
+    def bootstrap_prefix(self, bootstrap):
+        self.boot = bootstrap.Bootstrap(self.view, self.project, 206,
+            "realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor",
+            False, self.evidence / "bootstrap", self.runner)
+        self.boot.execute()
+        self.result["unchanged_canonical206_bootstrap"] = True
+        # The unchanged 420-second bootstrap phase has finished. Subsequent
+        # forward operations use this new rehearsal's original work deadline.
+        self.boot.deadline = self.phase_end
+        admission = bootstrap.admission(self.view)
+        from secondary_review_ledger import load_frozen
+        rows = load_frozen(self.view / prefix.CANDIDATE)["ledger"]
+        binding = admission["binding206"]
+        rows += [{"version": binding["version"], "name": binding["name"], "statements": binding["expected_statements"]}]
+        expected = []
+        for row in rows:
+            native = json.dumps(row["statements"], ensure_ascii=False, separators=(", ", ": ")).encode("utf-8")
+            expected.append({"version": row["version"], "name": row["name"],
+                             "statement_count": len(row["statements"]),
+                             "postgres_array_sha256": sha(native), "postgres_array_bytes": len(native)})
+        return expected
+
     def execute(self):
         for port in (64660, 64661, 64662, 64664):
             with socket.socket() as sock:
@@ -230,10 +258,7 @@ FROM supabase_migrations.schema_migrations;ROLLBACK;
                 sock.bind(("127.0.0.1", port))
         migrations = self.project / "supabase/migrations"
         migrations.mkdir(mode=0o700, parents=True)
-        for path in sorted((self.view / "supabase/migrations").glob("*.sql")):
-            shutil.copyfile(path, migrations / path.name)
-        self.project_pins = {Path(name).name: wanted for name, wanted in prefix.canonical206(self.view).items()}
-        self.project_sources()
+        self.prepare_migrations(migrations)
         (self.project / "supabase/config.toml").write_text(f'''project_id = "{self.identity}"
 [api]
 port = 64661
@@ -256,25 +281,7 @@ enabled = true
 enabled = false
 ''')
         bootstrap = load("_narcotics_original_bootstrap", self.view / "scripts/owned_canonical_bootstrap.py")
-        self.boot = bootstrap.Bootstrap(self.view, self.project, 206,
-            "realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor",
-            False, self.evidence / "bootstrap", self.runner)
-        self.boot.execute()
-        self.result["unchanged_canonical206_bootstrap"] = True
-        # The unchanged 420-second bootstrap phase has finished. Subsequent
-        # forward operations use this new rehearsal's original work deadline.
-        self.boot.deadline = self.phase_end
-        admission = bootstrap.admission(self.view)
-        from secondary_review_ledger import load_frozen
-        rows = load_frozen(self.view / prefix.CANDIDATE)["ledger"]
-        binding = admission["binding206"]
-        rows += [{"version": binding["version"], "name": binding["name"], "statements": binding["expected_statements"]}]
-        expected = []
-        for row in rows:
-            native = json.dumps(row["statements"], ensure_ascii=False, separators=(", ", ": ")).encode("utf-8")
-            expected.append({"version": row["version"], "name": row["name"],
-                             "statement_count": len(row["statements"]),
-                             "postgres_array_sha256": sha(native), "postgres_array_bytes": len(native)})
+        expected = self.bootstrap_prefix(bootstrap)
         original = self.rows("before207-permanent-rows")
         common = decode(prefix.regular(HERE / "common-expected.json"))
         for index, name in enumerate(prefix.FORWARD):

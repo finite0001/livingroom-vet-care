@@ -5,5 +5,17 @@
   "old_block": "const folder=resolve(process.argv[2]);assert.equal(realpathSync(folder),folder);assert.equal(basename(folder),'browser-count-finalize-proof');\nconst parent=dirname(folder);assert.match(parent,/^\\/private\\/tmp\\/lrv-genuine-count4-v2-[A-Za-z0-9_-]+$/);\nfor(const dir of[folder,parent]){const s=lstatSync(dir);assert(s.isDirectory()&&!s.isSymbolicLink()&&s.uid===process.getuid()&&(s.mode&0o077)===0);}\n",
   "new_block": "function proofFolder(supplied){\n const requested=resolve(supplied),requestedParent=dirname(requested),requestedRoot=dirname(requestedParent);\n const tempRoots=[resolve(tmpdir()),resolve('/tmp')];\n const canonicalRoots=new Set(tempRoots.map(p=>realpathSync(p)));\n assert(new Set([...tempRoots,...canonicalRoots]).has(requestedRoot));\n assert.equal(basename(requested),'browser-count-finalize-proof');\n assert.match(basename(requestedParent),/^lrv-genuine-count4-v2-[A-Za-z0-9_-]+$/);\n for(const dir of[requested,requestedParent]){const s=lstatSync(dir);assert(s.isDirectory()&&!s.isSymbolicLink()&&s.uid===process.getuid()&&(s.mode&0o077)===0);}\n const canonical=realpathSync(requested),canonicalParent=dirname(canonical);\n assert.equal(basename(canonical),'browser-count-finalize-proof');\n assert.equal(basename(canonicalParent),basename(requestedParent));\n assert(canonicalRoots.has(dirname(canonicalParent)));\n return canonical;\n}\nconst folder=proofFolder(process.argv[2]);\n",
   "added_import": "import{tmpdir}from'node:os';",
-  "scope": "Only OS temporary-root parent validation; operative workflow otherwise byte-exact inverse."
+  "scope": "V2 OS temp validation plus V3 exact clinical-error source binding; operative browser workflow, Auth and budgets otherwise unchanged.",
+  "source_v3_driver_sha256": "1d6bbeeef1ed1dadc1212c1d1b7c56d633306b0ba5b24637bccbe53e5be4f3a5",
+  "clinical_error_binding_change": {
+    "old_manifest_sha256": "1b875b3065009870d287ed40669511d717146687f599c8358d7c60544e93910c",
+    "new_manifest_sha256": "fa3282a22c9864a979b778979d975ae1cb037d9930fedf55cd19dadeb4992d92",
+    "original_file_pins": {
+      "src/hub/features/controlled-drugs/entry/client.ts": {
+        "bytes": 11391,
+        "sha256": "e880abbe1cfa90521febc26e7d8e10d36afd8258e441aa4b173e19eff253a656"
+      }
+    },
+    "reason": "Preserve the exact definitive stale patient-alert rejection across the stock gateway; rerun the unchanged authenticated workflow against the complete updated frontend source."
+  }
 }

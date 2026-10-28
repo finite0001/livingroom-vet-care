@@ -79,3 +79,32 @@ owner bootstrap. Medication setup, opening stock, review policies and physical
 counts use the real application APIs. Each profile gets a fresh database and
 the same original time limits. These jobs retain full private transport evidence
 locally; uploaded diagnostics omit passwords, tokens and raw Auth responses.
+
+## Existing hosted history
+
+Some original migrations were recorded as their complete authored SQL rather
+than the CLI's statement vector. `hosted_history.py` derives those finite forms
+from the unchanged original source. The separate 206 source variant and the
+forward 207 gates accept those exact forms. Their complete inverses recover the
+original SQL, and every original quoted canonical ledger row stays unchanged.
+No existing ledger row is updated, deleted or replaced.
+
+The authored-history rehearsal starts with the unchanged zero-project bootstrap,
+pauses the scheduler, and constructs original204 history once in its fresh local
+database. The official CLI then applies original205, the reviewed206 source
+variant and both forward migrations. It uses the same downstream complete
+metadata, ledger, original-row preservation and cleanup checks as the clean CLI
+rehearsal, with the same time limits. This is installation evidence only.
+
+```sh
+python3 -I -B scripts/narcotics-log/hosted_history.py --check-source
+node scripts/narcotics-log/frame-hosted-history.mjs --write-candidate
+node scripts/narcotics-log/frame-cli.mjs --write-candidate
+python3 -I -B scripts/narcotics-log/hosted_rehearsal.py --run-synthetic-local
+```
+
+The authenticated browser proof binds all 146 frontend source files. Its V3
+binding includes the clinical-alert rejection fix; a source inverse recovers the
+complete previous binding and the original operative browser workflow. The
+mocked legacy screen suite uses a separate Vite transport fixture, without
+changing the production connection rules or the genuine Auth proof.

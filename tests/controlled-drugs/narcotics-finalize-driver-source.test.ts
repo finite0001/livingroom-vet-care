@@ -64,10 +64,17 @@ test('canonical OS temp roots admit Mac aliases and Linux, refuse escapes and sy
  for(const leaf of [`/tmp/${run}`,`/tmp/${run}/${proof}`])assert.throws(()=>model('/tmp',{},`/tmp/${run}/${proof}`,leaf));
  assert.throws(()=>model('/tmp',{['/tmp/'+run]:'/outside/'+run},`/tmp/${run}/${proof}`));
 });
-test('V2 operative driver has exact V1 inverse except OS temp import and validation block',()=>{
+test('V3 driver recovers the exact V2 binding and V1 operative workflow',()=>{
  const inverse=JSON.parse(readFileSync(new URL('./narcotics-finalize-portability-inverse.json',import.meta.url),'utf8'));
- const restored=source.replace('\n'+inverse.added_import,'').replace(inverse.new_block,inverse.old_block);
+ const change=inverse.clinical_error_binding_change;
+ const v2=source.replace(change.new_manifest_sha256,change.old_manifest_sha256);
+ assert.equal(hash(v2),inverse.source_v2_driver_sha256);
+ const restored=v2.replace('\n'+inverse.added_import,'').replace(inverse.new_block,inverse.old_block);
  const crypto=requireCryptoForInverse();
- assert.equal(crypto(restored),inverse.source_v1_driver_sha256);assert.equal(crypto(source),inverse.source_v2_driver_sha256);
+ assert.equal(crypto(restored),inverse.source_v1_driver_sha256);assert.equal(crypto(source),inverse.source_v3_driver_sha256);
+ const binding=JSON.parse(readFileSync(new URL('./narcotics-finalize-browser-bindings.json',import.meta.url),'utf8'));
+ assert.deepEqual(Object.keys(change.original_file_pins),['src/hub/features/controlled-drugs/entry/client.ts']);
+ for(const[name,pin]of Object.entries(change.original_file_pins))binding.files[name]=pin;
+ assert.equal(hash(JSON.stringify(binding,null,2)+'\n'),change.old_manifest_sha256);
  function requireCryptoForInverse(){return (text:string)=>{assert.equal(typeof text,'string');return hash(text);};}
 });

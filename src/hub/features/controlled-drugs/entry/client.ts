@@ -13,9 +13,11 @@ import {admitGlobalSavedEntry}from"./saved-result.ts";
 import { parseRecorderWitnessStatus, type RecorderWitnessStatus } from "../witness/schema.ts";
 const configuration=z.object({projectRef:z.string().regex(/^[a-z]{20}$/),url:z.string().url(),publishableKey:z.string().regex(/^sb_publishable_[A-Za-z0-9_-]+$/).max(4096)}).strict().refine(v=>v.url===`https://${v.projectRef}.supabase.co`);
 const routes={probe:"probe_controlled_stock_intent_v1",prepare:"prepare_managed_stock_intent_v1",read:"read_managed_stock_intent_v1",execute:"execute_managed_stock_intent_v1",close:"close_managed_stock_intent_v1"}as const;
+const clinicalAlertsChanged="Patient alerts changed; reload and review the current alerts before recording treatment";
+const rejectionSchema=z.object({code:z.string().max(32),message:z.string().max(4000).optional()});
 export class EntryClientError extends Error {
   readonly definitive:boolean;
-  constructor(definitive=false){super(definitive?"The original entry was rejected. Review its values and current evidence.":"The entry result is unconfirmed. Check its original operation before continuing.");this.name="EntryClientError";this.definitive=definitive;}
+  constructor(definitive=false,clinicalRejection=false){super(definitive?(clinicalRejection?clinicalAlertsChanged:"The original entry was rejected. Review its values and current evidence."):"The entry result is unconfirmed. Check its original operation before continuing.");this.name="EntryClientError";this.definitive=definitive;}
 }
 export interface EntryClient {
  probe(intent:ControlledLegacyIntent,identity:ReviewIdentity):Promise<EntryProbe>;
@@ -44,13 +46,13 @@ function bindLegacy(raw:ExactJson,intent:ControlledLegacyIntent,actorId:string):
  }
  return raw;
 }
-async function errorCode(response:Response,signal:AbortSignal,deadline:number):Promise<string|null>{
+async function errorCode(response:Response,signal:AbortSignal,deadline:number):Promise<z.infer<typeof rejectionSchema>|null>{
  if(!/^application\/json(?:\s*;|\s*$)/i.test(response.headers.get("content-type")??"")){void response.body?.cancel().catch(()=>{});return null;}
  const reader=response.body?.getReader();if(!reader)return null;let size=0;const raw=new Uint8Array(65536);
  try{
   for(;;){if(signal.aborted||performance.now()>=deadline)throw new EntryClientError();const{value,done}=await reader.read();if(signal.aborted||performance.now()>=deadline)throw new EntryClientError();if(done)break;if(value.byteLength>raw.length-size)throw new EntryClientError();raw.set(value,size);size+=value.byteLength;}
   const object=entryObject(decodeAdministrationJson(raw.subarray(0,size)));
-  return typeof object.code==="string"?object.code:null;
+  const parsed=rejectionSchema.safeParse(object);return parsed.success?parsed.data:null;
  }catch{void reader.cancel().catch(()=>{});return null;}finally{reader.releaseLock();}
 }
 export function createEntryClient(configInput:ReviewRpcConfig,sessions:ReviewSessionSource,fetcher:typeof fetch=globalThis.fetch):EntryClient {
@@ -62,7 +64,8 @@ export function createEntryClient(configInput:ReviewRpcConfig,sessions:ReviewSes
    check();const session=await sessions.current();check();
    if(!session||!sameReviewIdentity(session,identity)||!/^[-A-Za-z0-9_]+\.[-A-Za-z0-9_]+\.[-A-Za-z0-9_]+$/.test(session.accessToken)||session.accessToken.length>16384)throw new EntryClientError();
    const response=await fetcher(`${config.url}/rest/v1/rpc/${name}`,{method:"POST",mode:"cors",credentials:"omit",redirect:"error",cache:"no-store",signal:abort.signal,headers:{apikey:config.publishableKey,Authorization:`Bearer ${session.accessToken}`,"Content-Type":"application/json",Accept:"application/json"},body:requestBody});check();
-   if(!response.ok){const code=await errorCode(response,abort.signal,deadline);check();const known=definitive&&response.status>=400&&response.status<500&&code!==null&&["23514","23503","23502","23505","42501","PT409","22P02","22003","22007","22008","42883","PGRST202"].includes(code);throw new EntryClientError(known);}
+   if(!response.ok){const error=await errorCode(response,abort.signal,deadline);check();const known=definitive&&response.status>=400&&response.status<500&&error!==null&&["23514","23503","23502","23505","42501","PT409","22P02","22003","22007","22008","42883","PGRST202"].includes(error.code);
+    const clinical=known&&response.status===409&&error?.code==="PT409"&&error.message===clinicalAlertsChanged&&(name==="record_patient_treatment"||name==="record_anesthesia_drug_administration");throw new EntryClientError(known,clinical);}
    const raw=await readEntryResponse(response,abort.signal,deadline);check();return raw;
   };
   const work=async()=>{if(before){await before((name,requestBody)=>request(name,requestBody,false));check();}const raw=await request(rpc,body,allowDefinitive);check();const value=await admit(raw,pointer=>request("read_managed_stock_intent_authorization_v1",entryRequestBody(pointer,8192),false));check();return value;};
