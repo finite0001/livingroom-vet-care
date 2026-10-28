@@ -9,8 +9,8 @@
       "sha256": "0f1330e8b9bb77043e5ed878492b6d2dfa35e2ca5c288fb6ca92df72476b92af"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61508169,
-      "sha256": "3b465646b62f4006b2a0f7b7b03b35577ba9d32536fbba5fedf95a8595f22b3b"
+      "bytes": 61508280,
+      "sha256": "d040fa03f3292f3305130918a0ce8957222ec022a1f7e9fb7500843d43c46fbf"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61504267,
-      "sha256": "d880484e2cdaef346cf82f870b912250b452f5dc33a8952853fc45363d5b1ff8"
+      "bytes": 61504378,
+      "sha256": "a545bf6c7f53417f857f1917fca8643197324fd8ac679299268a85f4a075a220"
     }
   },
   "source_corrections": {
@@ -82,6 +82,16 @@
         "public.record_anesthesia_drug_administration"
       ],
       "only_composite_return_type_schema_qualified": true
+    },
+    "publication_relation_tail": {
+      "actual_real_Auth_verification_pending": true,
+      "complete_source_inverse": true,
+      "metadata_lock_or_admission_cache_used": false,
+      "new_body_sha256": "efc2dd100268f0ebac61243919b40cb15d4449034f6278a31449f3babdeb749e",
+      "old_body_sha256": "f22adc79ded6691eee34c6177eb5cd1c3023a46384364e5f970c2e2c74413222",
+      "original_advisory_FK_and_after_wait_principal_checks_unchanged": true,
+      "original_relation_tail_acquired_before_assertion": true,
+      "signature": "controlled_stock_workflow_v1.review_publication_locks(jsonb)"
     },
     "record_review_ledger": {
       "changes": [

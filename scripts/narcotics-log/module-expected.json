@@ -27550,7 +27550,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_review_v3, controlled_stock_workflow_v1, pg_temp"
         ],
-        "body_sha256": "f22adc79ded6691eee34c6177eb5cd1c3023a46384364e5f970c2e2c74413222",
+        "body_sha256": "efc2dd100268f0ebac61243919b40cb15d4449034f6278a31449f3babdeb749e",
         "acl": [
           {
             "grantor": "postgres",
