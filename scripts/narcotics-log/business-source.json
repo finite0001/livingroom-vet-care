@@ -24,8 +24,8 @@
   },
   "kind": "narcotics-genuine-business-source-v1",
   "runner": {
-    "bytes": 15625,
-    "sha256": "037ad85c725117182e2aec7497f4d1da984150b961fb6c602e4f9d4aba9dff17"
+    "bytes": 16041,
+    "sha256": "d56062025539c022c21344de11c51e616aa56d92d82d869daff580b762ffe8df"
   },
   "workflows": {
     "auth_effects.py": {
@@ -33,8 +33,12 @@
       "sha256": "a784721ff46362a3550256d3ed5c5927c4b719d1a24550bcfe056efdfc5b475e"
     },
     "browser_runner.py": {
-      "bytes": 12154,
-      "sha256": "334bdc8595a8e24859c3b0b0d499595cfb6b7f5a0b8d057e95a6aa58b317f96d"
+      "bytes": 13353,
+      "sha256": "0121ae260f1b99543545852e165bd1fcb091560679008e3eb3cdb6874fb83809"
+    },
+    "count_audit.py": {
+      "bytes": 5413,
+      "sha256": "fe9b44c128ff76919a9cbd7eb9c1e633e9aca2382107c1e2d3dc56ead932b808"
     },
     "full121_boundary_evidence.py": {
       "bytes": 2487,

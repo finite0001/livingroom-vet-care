@@ -49,6 +49,7 @@ def load(name, path):
 prefix = load("_narcotics_prefix", HERE / "prefix_view.py")
 process = load("_narcotics_process", HERE / "bounded_process.py")
 framing = load("_narcotics_sql_framing", HERE / "sql_framing.py")
+expectations = load("_narcotics_source_expectations", HERE / "source_expectations.py")
 
 
 def sha(raw):
@@ -79,7 +80,7 @@ def source_admission():
     candidate = decode(prefix.regular(HERE / "release-candidate.json"))
     layout = decode(prefix.regular(HERE / "cli-framing.json"))
     data = decode(prefix.regular(HERE / "proof-data-pins.json"))
-    required_data = {"original-row-hashes.sql", "module-capture.sql", "module-expected.json", "common-expected.json"}
+    required_data = {"original-row-hashes.sql", "module-capture.sql", "module-expected.json", "module-source-expected.sql", "common-expected.json"}
     if data.get("kind") != "narcotics-installation-source-data-v1" or data.get("execution_admitted") is not False or set(data.get("files", {})) != required_data:
         raise ValueError("Exact source-only proof data inventory required")
     if candidate["migration_count"] != 208 or candidate["prefix_migration_count"] != 206:
@@ -112,7 +113,7 @@ def source_admission():
         pins[str((HERE / name).relative_to(ROOT))] = sha(raw)
     for name in ("install_rehearsal.py", "prefix_view.py", "bounded_process.py",
                  "sql_framing.py", "frame-cli.mjs", "release-candidate.json",
-                 "cli-framing.json", "proof-data-pins.json"):
+                 "cli-framing.json", "proof-data-pins.json", "source_expectations.py"):
         pins[str((HERE / name).relative_to(ROOT))] = sha(prefix.regular(HERE / name))
     prefix.canonical206(ROOT)
     return candidate, layout, pins
@@ -150,6 +151,7 @@ class Installation:
         self.identity = "lrv_narcotics_" + uuid.uuid4().hex[:16]
         self.boot = None
         self.project_pins = None
+        self.expected_module = None
         self.result = {"kind": "narcotics-forward-installation-only-v1", "passed": False,
                        "application_Auth_verified": False, "count_business_verified": False,
                        "all_ten_writers_verified": False, "authenticated_browser_verified": False,
@@ -304,8 +306,11 @@ enabled = false
             expected.append({"version": version, "name": title,
                              **{key: framed[key] for key in ("statement_count", "postgres_array_sha256", "postgres_array_bytes")}})
         self.ledger(expected)
+        static = decode(prefix.regular(HERE / "module-expected.json"))
+        self.expected_module = expectations.validate(static, self.query("complete-source-expected-properties", (HERE / "module-source-expected.sql").read_text()))
+        self.result["complete_independent_source_reference_properties"] = True
         captured = self.query("full-module-properties", (HERE / "module-capture.sql").read_text())
-        wanted = decode(prefix.regular(HERE / "module-expected.json"))
+        wanted = self.expected_module
         if captured["reference_absent"] is not True or canonical(captured["properties"]) != canonical(wanted["properties"]):
             raise ValueError("Complete final source properties differ")
         if canonical(captured["descriptor"]["definition"]) != canonical(wanted):

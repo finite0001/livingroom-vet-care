@@ -13,6 +13,7 @@ import tempfile
 import time
 
 import full121_effects as effects
+import full121_count_pair as pair
 
 
 def private_json(path, cap=262144):
@@ -166,6 +167,24 @@ def run(context, modules, runtime, save):
         if time.monotonic() >= deadline:
             raise TimeoutError("Original browser120 includes parent evidence checks")
         context["current_actors"][sdk["id"]] = sdk
+        call = result["calls"][3]
+        if call["rpc"] != "finalize_controlled_count_v1":
+            raise ValueError("Exact original browser finalize call required")
+        original = {}
+        for name in ("request", "response"):
+            ref = call[name]
+            if ref["file"] != "rpc-4-" + name + ".json":
+                raise ValueError("Fixed original browser finalize file required")
+            raw = private_json(folder / ref["file"], 2097152)
+            if len(raw) != ref["bytes"] or hashlib.sha256(raw).hexdigest() != ref["sha256"]:
+                raise ValueError("Original browser finalize bytes changed")
+            original[name] = runtime.decode(raw)
+        request = original["request"]["p_request"]
+        receipt = pair.receipt("finalize", request, original["response"])
+        if request["operation_id"] != result["operation_id"] or request["outcome_id"] != result["outcome_id"]:
+            raise ValueError("Original browser finalization result differs")
+        context["browser_finalization"] = {"request": request, "receipt": receipt}
+        context["count"]["agreement"]["finalize"] = context["browser_finalization"]
         save(runtime.folder, "authenticated-browser-proof", result)
         failed = False
         return result

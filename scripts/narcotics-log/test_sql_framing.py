@@ -23,6 +23,7 @@ class SqlFramingTests(unittest.TestCase):
 
     def test_only_named_public_trigger_and_transient_reference_drops(self):
         allowed = (
+            "DROP FUNCTION pg_temp.count_source_relink_fk(regclass,text,regclass);",
             "DROP TRIGGER controlled_stock_consistency ON public.controlled_stock_execution_contexts;",
             "DROP SCHEMA controlled_count_fixture_reference_v1 CASCADE;",
             "DROP POLICY IF EXISTS \"Old policy\" ON count_ordinary_relation_reference_v1.profiles;",
@@ -31,6 +32,8 @@ class SqlFramingTests(unittest.TestCase):
         for sql in allowed:
             self.assertGreater(framing.audit_cli_statements(sql), 0)
         for sql in ("DROP TRIGGER another ON public.controlled_stock_execution_contexts;",
+                    "DROP FUNCTION public.count_source_relink_fk(regclass,text,regclass);",
+                    "DROP FUNCTION pg_temp.count_source_relink_fk(uuid,text,regclass);",
                     "DROP POLICY x ON public.profiles;", "DROP SCHEMA public CASCADE;",
                     "SET LOCAL role='postgres';", "SET CONSTRAINTS ALL DEFERRED;"):
             with self.assertRaises(AssertionError, msg=sql):

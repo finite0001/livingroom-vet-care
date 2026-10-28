@@ -9,8 +9,8 @@
       "sha256": "0f1330e8b9bb77043e5ed878492b6d2dfa35e2ca5c288fb6ca92df72476b92af"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61525317,
-      "sha256": "c27d4b008bb7f503296a91d4a7fbbe398b7c1f55330d524e221c36aab7c44cc5"
+      "bytes": 61508169,
+      "sha256": "3b465646b62f4006b2a0f7b7b03b35577ba9d32536fbba5fedf95a8595f22b3b"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61521415,
-      "sha256": "2ff8d2fb97e404692b7abb74571c05ca06663ad8f201a7be471b577d17aa975e"
+      "bytes": 61504267,
+      "sha256": "d880484e2cdaef346cf82f870b912250b452f5dc33a8952853fc45363d5b1ff8"
     }
   },
   "source_corrections": {
@@ -40,6 +40,19 @@
       "no_current269_function_body_changed": true,
       "reason": "The common269 forward migration preserves existing original205/206 parents. Three native-patch digests belonged to the experimental typed parent; those implementation changes must be installed explicitly later, while historical rows stay unchanged.",
       "source_original206_wrapper_sha256": "adf45e10d25935486aadbc126c6b8282d38def119dc344bfe4935bb690d4b036"
+    },
+    "complete_reference_schema": {
+      "FK_registration_metadata_preserves_all_fields_with_identical_projected_identity_order_and_schema_groups": true,
+      "all_current_context_projections_use_source_created12_column_reference": true,
+      "complete_expected_metadata_from_independent_empty_source_references": true,
+      "historical_FK_RESTRICT_chronology_from": "20260930120000_linkage_integrity.sql",
+      "observed_target_properties_used_as_expectations": false,
+      "original_SQL_syntax_retained": [
+        "TRIM",
+        "AT TIME ZONE"
+      ],
+      "same_pretty_deparser_for_publication_checks": true,
+      "seven_search_paths_emit_three_actual_identifiers": true
     },
     "deferred_staff_grants": {
       "authenticated_execute_granted_only_after_full_source_property_check": true,

@@ -22,6 +22,8 @@ def _audit_words(words):
         assert len(words) >= 3 and words[1] == 'LOCAL' and words[2] in SETTINGS, 'Only declared transaction-local settings allowed'
         return True
     if first == 'DROP':
+        if words == ['DROP','FUNCTION','PG_TEMP','COUNT_SOURCE_RELINK_FK','REGCLASS','TEXT','REGCLASS']:
+            return True  # Exact temporary source-reference FK chronology helper.
         if len(words) == 4 and words[1] == 'SCHEMA' and words[2] in TRANSIENT_SCHEMAS and words[3] == 'CASCADE':
             return True
         if words == ['DROP','TRIGGER','CONTROLLED_STOCK_CONSISTENCY','ON','PUBLIC','CONTROLLED_STOCK_EXECUTION_CONTEXTS']:

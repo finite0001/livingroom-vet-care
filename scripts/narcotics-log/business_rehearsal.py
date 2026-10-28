@@ -67,10 +67,10 @@ def modules():
     # constructor override, old Runtime or arbitrary caller SQL is imported.
     sys.path.insert(0, str(WORKFLOWS))
     import auth_effects, identity_bootstrap, http_transport, owner_capture, sequence_effects, rest_defaults
-    import full121_profiles, wc_profiles, browser_runner
+    import full121_profiles, wc_profiles, browser_runner, count_audit
     return SimpleNamespace(auth=auth_effects, identity=identity_bootstrap,
         transport=http_transport, capture=owner_capture, sequence=sequence_effects,
-        profiles=full121_profiles, writers=wc_profiles, rest=rest_defaults, browser=browser_runner)
+        profiles=full121_profiles, writers=wc_profiles, rest=rest_defaults, browser=browser_runner, count_audit=count_audit)
 
 
 class Runtime:
@@ -148,7 +148,11 @@ class Runtime:
 
     def verify_module(self, label):
         captured = self.install.query(label, (HERE / "module-capture.sql").read_text())
-        wanted = self.decode(installation.prefix.regular(HERE / "module-expected.json"))
+        # Expected DATA comes from the pinned literal/source-reference program.
+        # Actual metadata is queried again for every call to this method.
+        wanted = self.install.expected_module
+        if wanted is None:
+            raise ValueError("Complete independently source-created expectations required")
         if captured["reference_absent"] is not True or installation.canonical(captured["properties"]) != installation.canonical(wanted["properties"]) or installation.canonical(captured["descriptor"]["definition"]) != installation.canonical(wanted):
             raise ValueError("Complete installed source properties changed: " + label)
 
@@ -249,6 +253,8 @@ class BusinessInstallation(installation.Installation):
             extras += [context["current_actors"][users[0]["id"]]]
         auth = m.auth.validate(runtime, auth_before, users, extras)
         save(self.evidence, "genuine-Auth-complete-effects", auth)
+        if "count" in context:
+            save(self.evidence, "original-count-attribution", m.count_audit.verify(context, runtime.selected_query))
         sequence_after = runtime.selected_query("sequence-after", m.sequence.SQL)
         save(self.evidence, "sequence-source-effects", m.sequence.final(sequence_before, sequence_after, 2 + len(extras)))
         rows_after = self.rows("after-business-permanent-rows")
