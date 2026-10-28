@@ -141,10 +141,10 @@ jobs:
         if: matrix.profile == 'clinical'
         continue-on-error: true
         run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local --target clinical-execute
-      - name: Trace count start failure in a disposable instrumented database
+      - name: Trace count finalization failure in a disposable instrumented database
         if: matrix.profile == 'count_agreement'
         continue-on-error: true
-        run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local --target count-start
+        run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local --target count-finalize
       - name: Retain only the synthetic native error before normal acceptance
         if: always() && (matrix.profile == 'clinical' || matrix.profile == 'count_agreement')
         uses: actions/upload-artifact@v4

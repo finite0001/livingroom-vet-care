@@ -16,9 +16,9 @@ import business_rehearsal as business
 TARGETS = {
     "clinical-execute": ("clinical", "execute_managed_stock_intent_v1", (
         ("public.execute_managed_stock_intent_v1(jsonb)", "stock_entry_request_failed", False),)),
-    "count-start": ("count_agreement", "start_controlled_count_v1", (
+    "count-finalize": ("count_agreement", "finalize_controlled_count_v1", (
         ("controlled_count_v1.dispatch_count_mutation(text,jsonb)", "count_request_failed", False),
-        ("public.start_controlled_count_v1(jsonb)", "count_request_failed", True))),
+        ("public.finalize_controlled_count_v1(jsonb)", "count_request_failed", True))),
 }
 
 
