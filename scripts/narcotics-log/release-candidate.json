@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61508331,
-      "sha256": "28d86646cae86eb080bb7719c66f3aa3dfba8a6b076996b169331c511fdfab75"
+      "bytes": 61508433,
+      "sha256": "a089db7bbf284b173320feae95586ed1821f275419984225307c57f6720d8719"
     }
   },
   "prefix_migration_count": 206,
@@ -21,11 +21,34 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61504429,
-      "sha256": "51dcc499e9ea1f3215b7825c77138c3616189bbb8df4ce791aee8239813dc7c5"
+      "bytes": 61504531,
+      "sha256": "ada7d9816c2a42f4ff307f96320e5c76d3511e630507d1b1bb0240fbf8a4ec15"
     }
   },
   "source_corrections": {
+    "clinical_and_frontier_repairs": {
+      "all_deadlines_unchanged": true,
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_entry_v1.assert_shared_product_relation_frontier()": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "f5b4bda9754b2f68138725cbb3e2f69e61853e6a5754519a0948c13414c33825",
+          "new_expression": "\ndeclare seen bigint;unique_seen bigint;valid boolean;advisory_valid boolean;\nbegin\n perform controlled_count_entry_v1.shared_product_resource_origin_catalog_required();\n -- A fresh complete backend lock snapshot for THIS invocation, never a\n -- remembered certificate. Transaction locks remain held until transaction end.\n WITH held AS MATERIALIZED (\n  select l.* from pg_catalog.pg_locks l\n  where l.pid=pg_catalog.pg_backend_pid()and l.database=(select oid from pg_catalog.pg_database where datname=pg_catalog.current_database())and l.granted\n ),resolved AS MATERIALIZED (\n  select p.*,c.oid as relation_oid,c.relkind,c.relispartition\n  from controlled_count_entry_v1.shared_product_relation_plan_values()p\n  left join pg_catalog.pg_namespace n on n.nspname=p.schema_name\n  left join pg_catalog.pg_class c on c.relnamespace=n.oid and c.relname=p.relation_name\n )\n select count(*),count(distinct r.relation_oid),\n coalesce(bool_and(r.relation_oid is not null and r.relkind='r'and not r.relispartition\n  and exists(select 1 from held l where l.locktype='relation'and l.relation=r.relation_oid and l.mode=r.held_mode)),false),\n exists(select 1 from held l where l.locktype='advisory'and l.classid=90271040::oid and l.objid=0::oid and l.objsubid=2 and l.mode='ShareLock')\n into seen,unique_seen,valid,advisory_valid from resolved r;\n if seen<>121 or unique_seen<>121 or valid is not true or advisory_valid is not true then\n  raise exception 'count_frontier_invalid'using errcode='P0001',detail='',hint='';end if;\nend ",
+          "old_body_sha256": "c92a8bc4a94491c26b1aab2a2a759b4ed9415feaaf732beb471c719c94a73544",
+          "old_expression": "\ndeclare r record;seen integer:=0;\nbegin\n perform controlled_count_entry_v1.shared_product_resource_origin_catalog_required();\n if not exists(select 1 from pg_catalog.pg_locks l where l.locktype='advisory'\n and l.pid=pg_catalog.pg_backend_pid()and l.database=(select oid from pg_catalog.pg_database where datname=pg_catalog.current_database())\n and l.classid=90271040::oid and l.objid=0::oid and l.objsubid=2\n and l.mode='ShareLock'and l.granted)then\n  raise exception 'count_frontier_invalid'using errcode='P0001',detail='',hint='';end if;\n for r in select p.*,c.oid as relation_oid,c.relkind,c.relispartition\n from controlled_count_entry_v1.shared_product_relation_plan_values()p\n left join pg_catalog.pg_namespace n on n.nspname=p.schema_name\n left join pg_catalog.pg_class c on c.relnamespace=n.oid and c.relname=p.relation_name loop\n  seen:=seen+1;\n  if r.relation_oid is null or r.relkind<>'r'or r.relispartition\n  or not exists(select 1 from pg_catalog.pg_locks l where l.locktype='relation'\n   and l.pid=pg_catalog.pg_backend_pid()and l.database=(select oid from pg_catalog.pg_database where datname=pg_catalog.current_database())\n   and l.relation=r.relation_oid and l.mode=r.held_mode and l.granted)then\n   raise exception 'count_frontier_invalid'using errcode='P0001',detail='',hint='';end if;\n end loop;\n if seen<>121 then raise exception 'count_frontier_invalid'using errcode='P0001',detail='',hint='';end if;\nend "
+        },
+        "controlled_count_entry_v1.parent_impl_record_anesthesia_drug_administration(uuid,uuid,uuid,jsonb)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "bf69ca74958cde50ce77619eb0e084c437d3d5d622849fc3643e29b08c4c7ce3",
+          "new_expression": "perform controlled_count_entry_v1.before_canonical_writer('record_anesthesia_drug_administration',p_id);",
+          "old_body_sha256": "ad1f76d9c31c36e62e7e41ba18f256867560cf48dce158f9afcbe158fcca054d",
+          "old_expression": "perform controlled_count_entry_v1.before_canonical_writer('record_patient_treatment',p_id);"
+        }
+      },
+      "only_two_function_body_hash_metadata_differences": true,
+      "real_Auth_verification_pending": true
+    },
     "common_original_parent_seals": {
       "digest_inverse": {
         "1411567762a09f129c480fd2fdd04a96485a05d2f9b26a17148ca49c0b0cc3eb": "f9d2a7b449fe08797e32109a9bf598709f1d3312f81ae3f94b6be24a4db73130",

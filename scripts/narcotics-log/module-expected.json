@@ -20105,7 +20105,7 @@
         "configuration": [
           "search_path=public"
         ],
-        "body_sha256": "ad1f76d9c31c36e62e7e41ba18f256867560cf48dce158f9afcbe158fcca054d",
+        "body_sha256": "bf69ca74958cde50ce77619eb0e084c437d3d5d622849fc3643e29b08c4c7ce3",
         "acl": [
           {
             "grantor": "postgres",
@@ -22711,7 +22711,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_entry_v1, pg_temp"
         ],
-        "body_sha256": "c92a8bc4a94491c26b1aab2a2a759b4ed9415feaaf732beb471c719c94a73544",
+        "body_sha256": "f5b4bda9754b2f68138725cbb3e2f69e61853e6a5754519a0948c13414c33825",
         "acl": [
           {
             "grantor": "postgres",
