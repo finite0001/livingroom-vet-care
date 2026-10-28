@@ -10,7 +10,7 @@
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
       "bytes": 61508280,
-      "sha256": "cba070a2fa0b136ae2f2dcee22637bb7de555284d7d994e4626f125feef5abd2"
+      "sha256": "80b08f6fe06ee6bbbe520cb9f6ce2aa7fd10aca8c5f00f5db8083518d6494d98"
     }
   },
   "prefix_migration_count": 206,
@@ -22,7 +22,7 @@
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
       "bytes": 61504378,
-      "sha256": "d8ae82ebeca69c6b3ec245e335186c0f2dc8d1fb212d44609b26b856ee0184f5"
+      "sha256": "85828a9e4d755b3dc56e51cb56e0e0f1d2fa93823f6114421e712f937801923a"
     }
   },
   "source_corrections": {
@@ -110,6 +110,40 @@
     "immutable_review_manifests": {
       "actual_real_Auth_verification_pending": true,
       "all_other_branches_unchanged": true,
+      "complete_current_source_projections": [
+        {
+          "new_source_sha256": "389ed8487c2de0bc0a357c6f7c06711bc6712dc23af895d726bab0e439199ce4",
+          "old_source_sha256": "f5a42b2beb58dc694ba59b422ee15214aecf341768ee5816de9c4c06eb4708d4",
+          "path": [
+            "private206",
+            "functions",
+            "controlled_review.required()",
+            "source"
+          ]
+        },
+        {
+          "new_source_sha256": "a1e293b0f2b13c1461b1db1da0188f767ec7ea9246c828a9001b76072151134c",
+          "old_source_sha256": "804e94c295542d9aa94b0200535734416a49a8a8fab299966ec0b2d626bd167c",
+          "path": [
+            "original269",
+            "functions",
+            "controlled_review_v3.required()",
+            "source"
+          ]
+        },
+        {
+          "new_source_sha256": "389ed8487c2de0bc0a357c6f7c06711bc6712dc23af895d726bab0e439199ce4",
+          "old_source_sha256": "f5a42b2beb58dc694ba59b422ee15214aecf341768ee5816de9c4c06eb4708d4",
+          "path": [
+            "original269",
+            "parents",
+            "private206",
+            "functions",
+            "controlled_review.required()",
+            "source"
+          ]
+        }
+      ],
       "complete_source_inverse": true,
       "existing_descriptor_rows_rewritten": false,
       "functions": {

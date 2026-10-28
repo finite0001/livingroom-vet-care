@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import sys
 import time
@@ -42,6 +43,14 @@ def initial_source(root):
                 + literal(row["version"]) + "," + literal(row["name"]) + ",ARRAY[" + literal(receipt) + "]::text[]);"]
         expected.append({"version": row["version"], "name": row["name"], **history.array_pin([receipt])})
     return ("\n".join(sql) + "\n").encode(), rows, expected
+
+
+def engine_table_effects(root):
+    source = history.prefix.regular(Path(root) / "supabase/migrations/20261020151157_controlled_stock_private_engine.sql").decode()
+    names = re.findall(r"^create table (public\.[a-z_]+)\(", source, re.M | re.I)
+    if len(names) != 21 or len(set(names)) != 21 or "public.controlled_stock_engine_manifests" not in names:
+        raise ValueError("Complete original205 source-declared new table inventory required")
+    return {name: int(name == "public.controlled_stock_engine_manifests") for name in names}
 
 
 class HostedHistoryInstallation(installation.Installation):
@@ -96,9 +105,10 @@ class HostedHistoryInstallation(installation.Installation):
                 expected.append({"version": "20261022010000", "name": "controlled_secondary_review_private",
                                  **{key: framed[key] for key in ("statement_count", "postgres_array_sha256", "postgres_array_bytes")}})
         common = installation.decode(history.prefix.regular(installation.HERE / "common-expected.json"))
-        added = {"controlled_review." + name: int(name == "descriptor") for name in common["parents"]["private206"]["relations"]}
+        added = {**engine_table_effects(self.view),
+                 **{"controlled_review." + name: int(name == "descriptor") for name in common["parents"]["private206"]["relations"]}}
         installation.preserve(before, self.rows("authored206-permanent-rows"),
-            {"supabase_migrations.schema_migrations": 2, "public.controlled_stock_engine_manifests": 1}, added)
+            {"supabase_migrations.schema_migrations": 2}, added)
         self.result["original204_rows_preserved_with_source_declared_appends"] = True
         self.result["historical_ledger_rows_rewritten"] = False
         self.boot.sql(bootstrap.SAFE_SQL)
@@ -127,7 +137,8 @@ def main():
             pins[str(path.relative_to(installation.ROOT))] = installation.sha(history.prefix.regular(path))
     if args.check_source:
         program, _, expected = initial_source(installation.ROOT)
-        print(json.dumps({"database_operations": 0, "original_authored_receipts": len(expected), "initial_source_bytes": len(program)}))
+        print(json.dumps({"database_operations": 0, "original_authored_receipts": len(expected), "initial_source_bytes": len(program),
+                          "original205_new_tables": len(engine_table_effects(installation.ROOT))}))
         return
     installation.execute_owned(layout, pins, started, HostedHistoryInstallation)
 

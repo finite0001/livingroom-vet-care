@@ -62,6 +62,10 @@ def verify_admissions(context, proof, query):
 
 
 def expected(profile, grants):
+    if profile == "record_review_signing":
+        result = expected("ordinary_none", grants)
+        result.update({"controlled_review_v3." + name: 1 for name in ("operation_claims", "preparations", "decisions", "obligations")})
+        return result
     result = commissioning_parent_additions(grants)
 
     def add(count, *names):

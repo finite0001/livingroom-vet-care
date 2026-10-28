@@ -121,7 +121,7 @@ jobs:
       fail-fast: false
       matrix:
         profile: [commission_all, count_agreement, browser_lost_finalize,
-                  ordinary_none, independent_witness, variance_reconciliation,
+                  ordinary_none, record_review_signing, independent_witness, variance_reconciliation,
                   scalars, clinical, native_pickup_annotation, native_return_v1,
                   native_return_v2_discrepancy]
     steps:

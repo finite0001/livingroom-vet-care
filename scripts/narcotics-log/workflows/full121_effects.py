@@ -10,6 +10,7 @@ def source_counts():
  return sql.read('select jsonb_build_object('+','.join(pieces)+');')
 
 def expected(profile,phase='complete'):
+ if profile=='record_review_signing':return expected('ordinary_none',phase)
  if profile not in('commission_all','count_agreement','ordinary_none','independent_witness','variance_reconciliation','browser_lost_finalize'):raise ValueError('Finite profile only')
  out={key:0 for key in COUNT_TABLES+PARENT_TABLES};out.update(descriptor=1,journal=21,witness_operations=0)
  if profile in('count_agreement','variance_reconciliation','browser_lost_finalize'):out.update(policies=2,operation_closures=3)

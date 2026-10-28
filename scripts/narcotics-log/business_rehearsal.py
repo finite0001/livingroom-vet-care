@@ -241,7 +241,7 @@ class BusinessInstallation(installation.Installation):
         save(self.evidence, "sequence-source-effects", m.sequence.final(sequence_before, sequence_after, 2 + len(extras), clinical=self.profile == "clinical"))
         rows_after = self.rows("after-business-permanent-rows")
         additions = m.parent_effects.expected(self.profile, 2 + len(extras))
-        if self.profile in m.writers.PROFILE_WRITERS or self.profile in ("ordinary_none", "independent_witness", "variance_reconciliation"):
+        if self.profile in m.writers.PROFILE_WRITERS or self.profile in ("ordinary_none", "record_review_signing", "independent_witness", "variance_reconciliation"):
             admissions = m.parent_effects.verify_admissions(context, proof, runtime.selected_query)
             save(self.evidence, "source-writer-admissions", admissions)
             additions["public.stock_writer_admissions"] = admissions["source_bound_admissions"]
@@ -252,6 +252,7 @@ class BusinessInstallation(installation.Installation):
             source_sequences_verified=True, business_profile_verified=True,
             count_business_verified=self.profile in ("count_agreement", "browser_lost_finalize", "variance_reconciliation"),
             authenticated_browser_verified=self.profile == "browser_lost_finalize")
+        self.result["independent_record_review_signing_verified"] = self.profile == "record_review_signing"
         if self.profile in m.writers.PROFILE_WRITERS:
             self.result["representative_writers_verified"] = list(m.writers.PROFILE_WRITERS[self.profile])
 
@@ -262,7 +263,7 @@ def main():
     mode.add_argument("--check-source", action="store_true")
     mode.add_argument("--run-synthetic-local", action="store_true")
     parser.add_argument("--profile", choices=("commission_all", "count_agreement", "browser_lost_finalize",
-        "ordinary_none", "independent_witness", "variance_reconciliation",
+        "ordinary_none", "record_review_signing", "independent_witness", "variance_reconciliation",
         "scalars", "clinical", "native_pickup_annotation", "native_return_v1", "native_return_v2_discrepancy"), required=True)
     args = parser.parse_args()
     os.umask(0o077)
