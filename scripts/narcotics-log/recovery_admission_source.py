@@ -63,7 +63,7 @@ def seal(definitions, signatures):
  OR p.procost<>100 OR p.prorows<>0 OR l.lanname<>'plpgsql'OR p.provolatile<>'v'
  OR format_type(p.prorettype,NULL)<>e.result_type OR p.proconfig IS DISTINCT FROM ARRAY['search_path=pg_catalog']::text[]
  OR encode(sha256(convert_to(p.prosrc,'UTF8')),'hex')<>e.body_hash
- OR EXISTS(SELECT 1 FROM(VALUES('anon'),('authenticated'),('service_role'))r(role_name)WHERE has_function_privilege(r.role_name,p.oid,'EXECUTE')))THEN
+ OR EXISTS(SELECT 1 FROM(VALUES('anon'),('authenticated'),('service_role'))recovery_sealed_role(role_name)WHERE has_function_privilege(recovery_sealed_role.role_name,p.oid,'EXECUTE')))THEN
  RAISE EXCEPTION 'narcotics_recovery_source_invalid' USING ERRCODE='42501',DETAIL='',HINT='';END IF;
 '''
 

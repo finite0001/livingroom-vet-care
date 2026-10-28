@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61641345,
-      "sha256": "199755e99fd4b02f28db28641b2d9285b9b5f9788785103380e99d36384c24ed"
+      "bytes": 61641459,
+      "sha256": "70e3ff6da38d599e39e37345c8b8d002cbdccf26ff15c5043b4cd5485031eac6"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61637443,
-      "sha256": "3804170a0157525247b0a1918e2bf3dddb4a570baadda90334f8124c1aa4a331"
+      "bytes": 61637557,
+      "sha256": "e887999faa6197abf41064937e02ff5c82168e9ffc2ae25989c355baa5e1b4ea"
     }
   },
   "source_corrections": {
@@ -531,13 +531,13 @@
         "frontier_body_inverses": {
           "controlled_count_entry_v1.acquire_shared_product_relation_frontier()": {
             "complete_source_inverse": true,
-            "new_body_sha256": "ee4c0877bb26e3c45b4c7eceb35fe9f55e8eae6bcf563775db15e8a6a39cbdb9",
+            "new_body_sha256": "9ac85bae51fb5d9a6827b555f849a0d4277639d37441cb1a084f26af45af785e",
             "old_body_sha256": "518f6f8ad485874f4025a7141e2cd50b325dc37a9d36002885438708c1bb5c76",
             "post_frontier_exits": 2
           },
           "controlled_count_entry_v1.acquire_stock_workflow_relation_frontier()": {
             "complete_source_inverse": true,
-            "new_body_sha256": "14741bba7be3d1d858689a6fb77aff64b2552768bfc52aea8d63df7676e98dfd",
+            "new_body_sha256": "a9f61ca18941b8adab48ed075345571c53155d18bffc008b64a4a1905c0199db",
             "old_body_sha256": "41c8d742734fbd8e393e2776091c71e9cb05b87abbcb238eb1d5d6bbbe131edc",
             "post_frontier_exits": 2
           }
@@ -549,7 +549,7 @@
         ],
         "pre_frontier_reads": "catalogs and pg_locks only",
         "register_source_sha256": "fc1ca494ad6857de797db24208349ed051b6a3f5ae29b8775001f9f028f68d24",
-        "source_program_sha256": "d3a48999b32108c0cb2f7d6a744cbf06ea08266ea1069d340cce2a803fbe8bd9",
+        "source_program_sha256": "17c7396a52d64c9e3abdcbfdceb87bbc8a62f738896900c3561639f7a5294786",
         "whole_catalog_projection_inverse": true
       },
       "source_tools": {
@@ -562,8 +562,8 @@
           "sha256": "9472ae4537f9ac0cb991db8032abbf1c45509cb2374a5ea95e1cf265e883a49d"
         },
         "recovery_admission_source.py": {
-          "bytes": 9307,
-          "sha256": "a2d597d51ab255e306ef87ad638ea47a3467d6cdc24e981c831e79916b5f094c"
+          "bytes": 9345,
+          "sha256": "cbea60b92078c1d78b31f6ceedb7723bf1dec6fe2cf1769cdbac1f0fe24a06a8"
         }
       }
     },
