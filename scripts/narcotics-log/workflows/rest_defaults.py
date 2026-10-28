@@ -4,6 +4,9 @@ from pathlib import Path
 import urllib.parse
 
 EXPECTED_REST_IMAGE='public.ecr.aws/supabase/postgrest:v16.3'
+# The pinned CLI falls back to its official GHCR mirror when ECR throttles.
+# These are exact registry-qualified aliases of the same pinned release.
+REST_IMAGES=frozenset((EXPECTED_REST_IMAGE,'ghcr.io/supabase/postgrest:v16.3'))
 
 EXPECTED_ENV={'PGRST_DB_SCHEMAS':'public,graphql_public','PGRST_DB_EXTRA_SEARCH_PATH':'public,extensions','PGRST_DB_ANON_ROLE':'anon',
  'PGRST_DB_CONFIG':None,'PGRST_DB_PRE_REQUEST':None,'PGRST_DB_PRE_CONFIG':None,'PGRST_DB_ROOT_SPEC':None}
@@ -23,7 +26,8 @@ def effective_defaults(runtime):
  rows=json.loads(result.stdout)
  if len(rows)!=1:raise ValueError('Owned REST inspection differs')
  row=rows[0]
- if row['Id']!=candidates[0]or row['Config']['Image']!=EXPECTED_REST_IMAGE:raise ValueError('Source-declared REST image differs')
+ if row['Id']!=candidates[0]:raise ValueError('Captured owned REST container changed')
+ if row['Config']['Image']not in REST_IMAGES:raise ValueError('Source-declared REST image differs: actual '+str(row['Config']['Image'])[:160])
  labels=row['Config']['Labels']
  if labels.get('com.supabase.cli.project')!=runtime.identity or Path(labels.get('com.supabase.cli.workdir','')).resolve()!=runtime.project.resolve():raise ValueError('Owned REST labels differ')
  env={}

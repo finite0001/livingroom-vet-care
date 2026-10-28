@@ -8,6 +8,7 @@ from datetime import datetime,timezone
 from pathlib import Path
 TABLES=('users','identities','sessions','refresh_tokens','mfa_amr_claims','audit_log_entries')
 IMAGE='public.ecr.aws/supabase/gotrue:v2.197.0'
+IMAGES=frozenset((IMAGE,'ghcr.io/supabase/gotrue:v2.197.0'))
 EXPECTED_ENV={'GOTRUE_JWT_AUD':'authenticated','GOTRUE_JWT_DEFAULT_GROUP_NAME':'authenticated','GOTRUE_EXTERNAL_EMAIL_ENABLED':'true',
  'GOTRUE_AUDIT_LOG_DISABLE_POSTGRES':None,'GOTRUE_SECURITY_REFRESH_TOKEN_ALGORITHM_VERSION':None,'GOTRUE_DB_NAMESPACE':None}
 INITIAL_SQL="do $auth_bound$begin "+''.join("if(select count(*)from auth."+t+")>10000 then raise exception 'Auth observation cap exceeded';end if;"for t in TABLES)+"end$auth_bound$;\nselect jsonb_build_object("+','.join("'"+t+"',(select coalesce(jsonb_agg(id::text order by id::text collate \"C\"),'[]')from auth."+t+')'for t in TABLES)+');'
@@ -24,14 +25,14 @@ def effective_defaults(runtime):
  rows=json.loads(runtime.command(['docker','inspect',candidates[0]]).stdout)
  if len(rows)!=1:raise ValueError('One owned GoTrue inspection required')
  row=rows[0];labels=row['Config']['Labels']
- if row['Id']!=candidates[0]or row['Config']['Image']!=IMAGE or labels.get('com.supabase.cli.project')!=runtime.identity or Path(labels.get('com.supabase.cli.workdir','')).resolve()!=runtime.project.resolve():raise ValueError('Source-declared GoTrue image/project differs')
+ if row['Id']!=candidates[0]or row['Config']['Image']not in IMAGES or labels.get('com.supabase.cli.project')!=runtime.identity or Path(labels.get('com.supabase.cli.workdir','')).resolve()!=runtime.project.resolve():raise ValueError('Source-declared GoTrue image/project differs')
  env={}
  for item in row['Config']['Env']:
   key,sep,value=item.partition('=')
   if not sep or key in env:raise ValueError('Exact GoTrue environment required')
   env[key]=value
  if {key:env.get(key)for key in EXPECTED_ENV}!=EXPECTED_ENV or any(key.startswith('GOTRUE_HOOK_')for key in env):raise ValueError('Source-derived Auth write-path defaults differ')
- return dict(image=IMAGE,defaults=EXPECTED_ENV,hooks_absent=True,source_commit='4eee58f296d9698a1c2c0ae14d7a0b379c7622d3',global_closure_security_certification=False)
+ return dict(image=row['Config']['Image'],defaults=EXPECTED_ENV,hooks_absent=True,source_commit='4eee58f296d9698a1c2c0ae14d7a0b379c7622d3',global_closure_security_certification=False)
 
 def read_result(text):
  lines=[line for line in text.splitlines()if line.strip()]

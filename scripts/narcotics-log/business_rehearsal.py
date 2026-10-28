@@ -67,10 +67,10 @@ def modules():
     # constructor override, old Runtime or arbitrary caller SQL is imported.
     sys.path.insert(0, str(WORKFLOWS))
     import auth_effects, identity_bootstrap, http_transport, owner_capture, sequence_effects, rest_defaults
-    import full121_profiles, wc_profiles, browser_runner, count_audit
+    import full121_profiles, wc_profiles, browser_runner, count_audit, parent_effects
     return SimpleNamespace(auth=auth_effects, identity=identity_bootstrap,
         transport=http_transport, capture=owner_capture, sequence=sequence_effects,
-        profiles=full121_profiles, writers=wc_profiles, rest=rest_defaults, browser=browser_runner, count_audit=count_audit)
+        profiles=full121_profiles, writers=wc_profiles, rest=rest_defaults, browser=browser_runner, count_audit=count_audit, parent_effects=parent_effects)
 
 
 class Runtime:
@@ -191,29 +191,6 @@ def http_module_uuid(value):
     return value
 
 
-def commissioning_parent_additions(grants):
-    result = {}
-    def add(count, *tables):
-        for table in tables:
-            if table in result:
-                raise ValueError("Duplicate prospective relation effect")
-            result[table] = count
-    add(2, "auth.users", "auth.identities", "public.profiles")
-    add(grants, "auth.sessions", "auth.refresh_tokens", "auth.mfa_amr_claims")
-    add(2 + grants, "auth.audit_log_entries")
-    add(3, "public.user_roles", "public.audit_logs", "public.controlled_stock_state_events")
-    add(2, "public.controlled_stock_policy_versions", "public.controlled_stock_policy_sites")
-    add(7, "controlled_review_v3.configuration", "controlled_review_v3.publications")
-    add(1, "public.catalog_products", "public.inventory_lots", "public.inventory_movements",
-        "public.stock_movement_sources", "public.stock_writer_admissions",
-        "public.controlled_draft_entries", "public.controlled_draft_versions",
-        "public.controlled_draft_reviews", "public.controlled_draft_actions",
-        "public.controlled_stock_sites", "public.controlled_stock_locations",
-        "public.controlled_stock_states", "public.controlled_stock_openings",
-        "public.controlled_stock_opening_movements", "public.controlled_stock_containers",
-        "public.controlled_stock_container_heads", "public.controlled_stock_cells",
-        "public.controlled_stock_positions")
-    return result
 
 
 class BusinessInstallation(installation.Installation):
@@ -249,7 +226,8 @@ class BusinessInstallation(installation.Installation):
         context = {"users": users, "ids": {}, "http": http, "public_anon_key": status["ANON_KEY"], "auth_before": auth_before}
         methods = {"password_b": password_b, "full_capture": m.capture,
                    "full_components": None, "full_payload": None}
-        proof = getattr(m.profiles, self.profile)(context, methods, runtime, self.evidence, runtime.selected_query, save)
+        owner = m.writers if self.profile in m.writers.PROFILE_WRITERS else m.profiles
+        proof = getattr(owner, self.profile)(context, methods, runtime, self.evidence, runtime.selected_query, save)
         if self.profile == "browser_lost_finalize":
             proof["actual_browser"] = m.browser.run(context, m, runtime, save)
         extras = [context["current_actors"][users[1]["id"]]] if self.profile in ("count_agreement", "browser_lost_finalize") else []
@@ -260,9 +238,14 @@ class BusinessInstallation(installation.Installation):
         if "count" in context:
             save(self.evidence, "original-count-attribution", m.count_audit.verify(context, runtime.selected_query))
         sequence_after = runtime.selected_query("sequence-after", m.sequence.SQL)
-        save(self.evidence, "sequence-source-effects", m.sequence.final(sequence_before, sequence_after, 2 + len(extras)))
+        save(self.evidence, "sequence-source-effects", m.sequence.final(sequence_before, sequence_after, 2 + len(extras), clinical=self.profile == "clinical"))
         rows_after = self.rows("after-business-permanent-rows")
-        installation.preserve(rows_before, rows_after, commissioning_parent_additions(2 + len(extras)))
+        additions = m.parent_effects.expected(self.profile, 2 + len(extras))
+        if self.profile in m.writers.PROFILE_WRITERS:
+            admissions = m.parent_effects.verify_admissions(context, proof, runtime.selected_query)
+            save(self.evidence, "source-writer-admissions", admissions)
+            additions["public.stock_writer_admissions"] = admissions["source_bound_admissions"]
+        installation.preserve(rows_before, rows_after, additions)
         runtime.verify_module("after-business-module-properties")
         save(self.evidence, "genuine-business-profile", proof)
         self.result.update(application_Auth_verified=True, original_parent_rows_verified=True,
@@ -276,7 +259,8 @@ def main():
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--check-source", action="store_true")
     mode.add_argument("--run-synthetic-local", action="store_true")
-    parser.add_argument("--profile", choices=("commission_all", "count_agreement", "browser_lost_finalize"), required=True)
+    parser.add_argument("--profile", choices=("commission_all", "count_agreement", "browser_lost_finalize",
+        "scalars", "clinical", "native_pickup_annotation", "native_return_v1", "native_return_v2_discrepancy"), required=True)
     args = parser.parse_args()
     os.umask(0o077)
     started = time.monotonic()

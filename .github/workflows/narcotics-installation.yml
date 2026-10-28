@@ -105,6 +105,14 @@ jobs:
         if: matrix.profile == 'commission_all'
         continue-on-error: true
         run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local
+      - name: Retain only the synthetic native error before normal acceptance
+        if: always() && matrix.profile == 'commission_all'
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-engineering-native-error
+          retention-days: 7
+          if-no-files-found: ignore
+          path: /tmp/lrv-narcotics-install-*/diagnostic-native-failure.txt
       - name: Admit fixed genuine business sources
         run: python3 -I -B scripts/narcotics-log/business_rehearsal.py --check-source --profile ${{ matrix.profile }}
       - name: Verify real staff accounts, business effects and normal cleanup

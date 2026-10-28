@@ -24,13 +24,13 @@
   },
   "kind": "narcotics-genuine-business-source-v1",
   "runner": {
-    "bytes": 16203,
-    "sha256": "9635e5b893043d9202d90205c17d03e115cc3e4627088e213728449eff747b9d"
+    "bytes": 15403,
+    "sha256": "5fe5e137c0dd120e3e6926c03f228dfe29a2440bd80a5d92b474d21f1341a34d"
   },
   "workflows": {
     "auth_effects.py": {
-      "bytes": 11760,
-      "sha256": "a784721ff46362a3550256d3ed5c5927c4b719d1a24550bcfe056efdfc5b475e"
+      "bytes": 11844,
+      "sha256": "a7c1a5c1a9bdbf91f694225ed942597c957b65d0e33c91a148bacb8d064d0eba"
     },
     "browser_runner.py": {
       "bytes": 13353,
@@ -112,9 +112,13 @@
       "bytes": 3207,
       "sha256": "ec409d05109da2bb046c62e20df2367618ebd238185773083989d865a8050310"
     },
+    "parent_effects.py": {
+      "bytes": 7630,
+      "sha256": "b9ccc64f23fd9533f5838ded6fcef5c4a770d36506849b0ad419e1d64f3295dc"
+    },
     "rest_defaults.py": {
-      "bytes": 2988,
-      "sha256": "e1c18f5dfc55d0ddced16d2ff6b3afc6d2c72b13d038d3eeffb65bca8d9140f4"
+      "bytes": 3317,
+      "sha256": "5850bd53b04c75ebd918bdf5b15f87083d5ac422bd639ae55e3a68b7596b5af6"
     },
     "sequence_effects.py": {
       "bytes": 3583,
