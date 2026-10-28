@@ -5,8 +5,8 @@
   "migration_count": 208,
   "migrations": {
     "20261027223535_controlled_record_review_workflows.sql": {
-      "bytes": 36657928,
-      "sha256": "7c34e365bb8cd3d703431dade2f173c2ae9c3ea00e5a31e85f7ce763c0a72959"
+      "bytes": 36650350,
+      "sha256": "5db36bd968f5f82f8dec1db6d0d59947ef9eca31920a88bf1231d2cbe6455664"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
       "bytes": 61500657,
@@ -25,7 +25,75 @@
       "sha256": "c24391bf1fdc5105684fef3abcc59aa1c779d11e5edf0a6c412db60754f667a2"
     }
   },
-  "transaction_owner": "official CLI; only outer BEGIN/COMMIT removed; advisory installation fence added",
+  "source_corrections": {
+    "record_review_ledger": {
+      "changes": [
+        {
+          "prior_gate_sha256": "717ae7e520876c332dbf02ba92a06298a2d5983f2964135cabd81166a88a9c52",
+          "statement_differences": [
+            40
+          ],
+          "version": "20260916072509"
+        },
+        {
+          "prior_gate_sha256": "ceac3bf151c24641543e17b66c269030c9a7cef746731dff7cdfa66539c10661",
+          "statement_differences": [
+            66,
+            67,
+            89,
+            91
+          ],
+          "version": "20261020151157"
+        },
+        {
+          "prior_gate_sha256": "327ee244a8d017a577245be260109bbd0d95c13d8f08de4b4b3b562d2d361a15",
+          "statement_differences": [
+            121,
+            206,
+            207,
+            299,
+            300,
+            301
+          ],
+          "version": "20261022010000"
+        },
+        {
+          "prior_gate_sha256": "717ae7e520876c332dbf02ba92a06298a2d5983f2964135cabd81166a88a9c52",
+          "statement_differences": [
+            40
+          ],
+          "version": "20260916072509"
+        },
+        {
+          "prior_gate_sha256": "ceac3bf151c24641543e17b66c269030c9a7cef746731dff7cdfa66539c10661",
+          "statement_differences": [
+            66,
+            67,
+            89,
+            91
+          ],
+          "version": "20261020151157"
+        },
+        {
+          "prior_gate_sha256": "327ee244a8d017a577245be260109bbd0d95c13d8f08de4b4b3b562d2d361a15",
+          "statement_differences": [
+            121,
+            206,
+            207,
+            299,
+            300,
+            301
+          ],
+          "version": "20261022010000"
+        }
+      ],
+      "frozen_205_ledger_sha256": "d776a51d37530600aaf69258eacdd8de433b192cc191bbd95ef0736d95c96fd4",
+      "frozen_206_statements_file_sha256": "43736e52a08780b95edb7ef5594e8b98a7080634ce56dbd9180d2fc46d22618e",
+      "no_observed_target_expected_values": true,
+      "reason": "Previous native UUID source rewrites also changed quoted historical ledger oracles. Restore only six top-level comparisons to the independently frozen original206 statement vectors; preserve current native implementations and full metadata expectations."
+    }
+  },
+  "transaction_owner": "official CLI; outer BEGIN/COMMIT removed; advisory installation fence added; exact historical ledger literals restored from independent source pins",
   "verification_pending": [
     "authenticated whole-count closure",
     "full121 business profiles",
