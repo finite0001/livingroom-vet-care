@@ -5,6 +5,22 @@ import history_document_reuse as source
 
 
 class HistoricalSourceControls(unittest.TestCase):
+    def test_saved_closure_cut_preserves_initial_proof_and_non_saved_branches(self):
+        sql=(Path(__file__).resolve().parents[2]/'supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql').read_text()
+        start=sql.index('CREATE OR REPLACE FUNCTION controlled_count_v1.operation_closure_deferred()')
+        begin=sql.index(' AS $$',start)+len(' AS $$');end=sql.index('$$;',begin)
+        candidate=sql[begin:end]
+        anchor=""" if c->>'state'='saved'then perform controlled_count_v1.validate_operation_graph_v3(NEW.operation_id);
+ perform controlled_count_entry_v1.assert_read_frontier();end if;"""
+        self.assertEqual(candidate.count(anchor),1)
+        before=candidate.replace(anchor," if c->>'state'='saved'then perform controlled_count_v1.validate_operation_graph(NEW.operation_id);end if;",1)
+        after,proof=source.deduplicate_saved_closure(before)
+        self.assertEqual(after,candidate)
+        self.assertIn('c:=controlled_count_v1.validated_operation_closure(NEW.operation_id);',after)
+        self.assertIn('validated_policy_operation_closure(NEW.operation_id);return null;',after)
+        self.assertTrue(proof['whole_body_inverse'])
+        with self.assertRaises(ValueError):source.deduplicate_saved_closure(before.replace("c->>'state'='saved'","c->>'state'='abandoned'"))
+
     def test_deferred_child_cut_preserves_the_exact_original_callback(self):
         sql=(Path(__file__).resolve().parents[2]/'supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql').read_text()
         start=sql.index('CREATE FUNCTION controlled_count_v1.count_graph_deferred()')

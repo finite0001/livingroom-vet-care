@@ -19,7 +19,7 @@ PARSER_SHA='28bcd6a27b93fb7a31c3e20519b5ebb6540737b26e2f333e3f44cb3340327884'
 TYPESCRIPT_SHA='dd17428736a07e1db1a138d8a14295ddb2699ba780ee15038acdd2c6da5373a0'
 SOURCE_NAMES=(
     'build_operational_module.py','recovery_admission_source.py','sql_framing.py',
-    'policy-reuse-controls.sql',
+    'policy-reuse-controls.sql','boundary-reuse-controls.sql',
     'operational-cli-origin.json','operational-source-proof.json',
     'operational_release.py','frame-operational.mjs','frame-cli.mjs',
     'operational-module/common.sql','operational-module/register.sql',

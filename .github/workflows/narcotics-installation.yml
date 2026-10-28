@@ -68,6 +68,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
       - run: npm ci --ignore-scripts
       - name: Verify process containment and framing controls
         run: |
@@ -108,6 +110,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
       - run: npm ci --ignore-scripts
       - name: Verify exact source receipt variants
         run: |
@@ -137,6 +141,7 @@ jobs:
     timeout-minutes: 20
     strategy:
       fail-fast: false
+      max-parallel: 3
       matrix:
         profile: [commission_all, count_agreement, browser_lost_finalize,
                   ordinary_none, record_review_signing, independent_witness, variance_reconciliation,
@@ -151,6 +156,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
       - run: npm ci --ignore-scripts
       - if: matrix.profile == 'browser_lost_finalize'
         run: npx playwright install --with-deps chromium
@@ -224,6 +231,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
       - run: npm ci --ignore-scripts
       - run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
       - name: Exercise reports and preserved forms in an owned engineering database
@@ -264,6 +273,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
       - run: npm ci --ignore-scripts
       - run: npx playwright install --with-deps chromium
       - run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
@@ -301,6 +312,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
       - run: npm ci --ignore-scripts
       - run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
       - name: Verify complete populated recovery using original Auth principals

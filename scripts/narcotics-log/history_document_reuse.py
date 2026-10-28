@@ -298,24 +298,73 @@ SNAPSHOT_REUSE_BLOCK = '''
 '''
 
 BOUNDARY_VALIDATION_BEFORE = ' perform controlled_count_v1.historical_boundary_values(p_boundary);'
-BOUNDARY_VALIDATION_AFTER = ''' -- Only earlier completed graph roots can supply these original documents.
+BOUNDARY_VALIDATION_AFTER = '''
+ if p_validated_documents is not null and jsonb_typeof(p_validated_documents)is distinct from 'object'then
+  perform *from jsonb_each(p_validated_documents);
+ end if;
+ -- Only earlier completed graph roots can supply these original documents.
  -- Both branches reread the actual immutable source row and bind exact bytes.
  if not exists(
-  select 1 from jsonb_each(p_validated_documents)verified
+  select 1 from jsonb_object_keys(p_validated_documents)as verified(key)
   join controlled_count_v1.snapshots snapshot_row on verified.key='snapshot:'||snapshot_row.snapshot_id::text
-  where verified.value::text is not distinct from snapshot_row.document::text
-   and verified.value->'id'=to_jsonb(snapshot_row.snapshot_id)
-   and verified.value->>'record_hash'=snapshot_row.record_hash
-   and controlled_count_v1.document_hash(verified.value)=snapshot_row.record_hash
-   and(verified.value->'physical_boundary')::text is not distinct from p_boundary::text
+  where (p_validated_documents->verified.key)::text is not distinct from snapshot_row.document::text
+   and (p_validated_documents->verified.key)->'id'=to_jsonb(snapshot_row.snapshot_id)
+   and (p_validated_documents->verified.key)->>'record_hash'=snapshot_row.record_hash
+   and controlled_count_v1.document_hash((p_validated_documents->verified.key))=snapshot_row.record_hash
+   and((p_validated_documents->verified.key)->'physical_boundary')::text is not distinct from p_boundary::text
   union all
-  select 1 from jsonb_each(p_validated_documents)verified
+  select 1 from jsonb_object_keys(p_validated_documents)as verified(key)
   join controlled_count_v1.outcomes outcome_row on verified.key='outcome:'||outcome_row.outcome_id::text
-  where verified.value::text is not distinct from outcome_row.document::text
-   and verified.value->'id'=to_jsonb(outcome_row.outcome_id)
-   and verified.value->>'record_hash'=outcome_row.record_hash
-   and controlled_count_v1.document_hash(verified.value)=outcome_row.record_hash
-   and(verified.value#>'{body,boundary_observation,boundary}')::text is not distinct from p_boundary::text
+  where (p_validated_documents->verified.key)::text is not distinct from outcome_row.document::text
+   and (p_validated_documents->verified.key)->'id'=to_jsonb(outcome_row.outcome_id)
+   and (p_validated_documents->verified.key)->>'record_hash'=outcome_row.record_hash
+   and controlled_count_v1.document_hash((p_validated_documents->verified.key))=outcome_row.record_hash
+   and((p_validated_documents->verified.key)#>'{body,boundary_observation,boundary}')::text is not distinct from p_boundary::text
+
+UNION ALL
+SELECT 1
+FROM jsonb_object_keys(p_validated_documents) AS verified(key)
+JOIN controlled_count_v1.reconciliation_preparations AS reuse_preparation
+ ON verified.key='reconciliation_preparation:'||reuse_preparation.preparation_id::text
+WHERE (p_validated_documents->verified.key)::text IS NOT DISTINCT FROM reuse_preparation.document::text
+ AND (p_validated_documents->verified.key)->'id'=to_jsonb(reuse_preparation.preparation_id)
+ AND (p_validated_documents->verified.key)->>'record_hash'=reuse_preparation.record_hash
+ AND controlled_count_v1.document_hash(p_validated_documents->verified.key)=reuse_preparation.record_hash
+ AND ((p_validated_documents->verified.key)#>'{body,boundary}')::text IS NOT DISTINCT FROM p_boundary::text
+
+UNION ALL
+SELECT 1
+FROM jsonb_object_keys(p_validated_documents) AS verified(key)
+JOIN controlled_count_v1.reconciliation_executions AS reuse_execution
+ ON verified.key='reconciliation_execution:'||reuse_execution.execution_id::text
+WHERE (p_validated_documents->verified.key)::text IS NOT DISTINCT FROM reuse_execution.document::text
+ AND (p_validated_documents->verified.key)->'id'=to_jsonb(reuse_execution.execution_id)
+ AND (p_validated_documents->verified.key)->>'record_hash'=reuse_execution.record_hash
+ AND controlled_count_v1.document_hash(p_validated_documents->verified.key)=reuse_execution.record_hash
+ AND (((p_validated_documents->verified.key)#>'{body,before_boundary}')::text IS NOT DISTINCT FROM p_boundary::text
+   OR ((p_validated_documents->verified.key)#>'{body,after_boundary}')::text IS NOT DISTINCT FROM p_boundary::text)
+
+UNION ALL
+SELECT 1
+FROM jsonb_object_keys(p_validated_documents) AS verified(key)
+JOIN controlled_count_v1.reconciliation_confirmations AS reuse_confirmation
+ ON verified.key='reconciliation_confirmation:'||reuse_confirmation.confirmation_id::text
+WHERE (p_validated_documents->verified.key)::text IS NOT DISTINCT FROM reuse_confirmation.document::text
+ AND (p_validated_documents->verified.key)->'id'=to_jsonb(reuse_confirmation.confirmation_id)
+ AND (p_validated_documents->verified.key)->>'record_hash'=reuse_confirmation.record_hash
+ AND controlled_count_v1.document_hash(p_validated_documents->verified.key)=reuse_confirmation.record_hash
+ AND ((p_validated_documents->verified.key)#>'{body,post_boundary}')::text IS NOT DISTINCT FROM p_boundary::text
+
+UNION ALL
+SELECT 1
+FROM jsonb_object_keys(p_validated_documents) AS verified(key)
+JOIN controlled_count_v1.resolutions AS reuse_resolution
+ ON verified.key='cause_resolution:'||reuse_resolution.resolution_id::text
+WHERE (p_validated_documents->verified.key)::text IS NOT DISTINCT FROM reuse_resolution.document::text
+ AND (p_validated_documents->verified.key)->'id'=to_jsonb(reuse_resolution.resolution_id)
+ AND (p_validated_documents->verified.key)->>'record_hash'=reuse_resolution.record_hash
+ AND controlled_count_v1.document_hash(p_validated_documents->verified.key)=reuse_resolution.record_hash
+ AND ((p_validated_documents->verified.key)#>'{body,current_boundary}')::text IS NOT DISTINCT FROM p_boundary::text
  )then
   perform controlled_count_v1.historical_boundary_values(p_boundary);
  end if;'''
@@ -827,3 +876,23 @@ def deduplicate_deferred_operation(body):
         whole_body_inverse=True,actual_operation_lookup_retained=True,complete_final_product_history_unchanged=True,
         original_callback_frontier_retained=True,removed_only_locally_dominated_child_validation=True,
         no_cross_trigger_or_persisted_validation=True)
+
+
+def deduplicate_saved_closure(body):
+    """Keep the first full closure proof and the complete result graph."""
+    import hashlib
+    original_hash='00c711e956a4ca8c55ea394b7da22a8f68baf9352769d0f09521ec0c0d955b79'
+    if hashlib.sha256(body.encode()).hexdigest()!=original_hash:
+        raise ValueError('Exact original saved-closure callback required')
+    old=""" c:=controlled_count_v1.validated_operation_closure(NEW.operation_id);
+ if c->>'state'='saved'then perform controlled_count_v1.validate_operation_graph(NEW.operation_id);end if;"""
+    new=""" c:=controlled_count_v1.validated_operation_closure(NEW.operation_id);
+ if c->>'state'='saved'then perform controlled_count_v1.validate_operation_graph_v3(NEW.operation_id);
+ perform controlled_count_entry_v1.assert_read_frontier();end if;"""
+    if body.count(old)!=1:raise ValueError('Full actual closure must immediately dominate saved result graph')
+    after=body.replace(old,new,1)
+    if after.count(new)!=1 or after.replace(new,old,1)!=body:
+        raise ValueError('Whole saved-closure callback inverse required')
+    return after,dict(original_body_sha256=original_hash,new_body_sha256=hashlib.sha256(after.encode()).hexdigest(),
+        whole_body_inverse=True,initial_actual_closure_proof_retained=True,complete_result_registry_graph_retained=True,
+        fresh_frontier_retained=True,policy_and_abandoned_branches_unchanged=True,no_cross_trigger_validation=True)

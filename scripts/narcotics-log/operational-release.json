@@ -723,6 +723,10 @@
       "bytes": 4067,
       "sha256": "bb1ff6c011d25109dad930491700d74ad091fa3b349d071bff3a394d55fdaf22"
     },
+    "scripts/narcotics-log/boundary-reuse-controls.sql": {
+      "bytes": 5045,
+      "sha256": "8a5f485d3d2773b7003d1ed5b3eb87bcaa8444e0fb730f55eaf5e404341d77cf"
+    },
     "scripts/narcotics-log/operational-cli-origin.json": {
       "bytes": 322,
       "sha256": "e4a555ba4575bd407069fcc99f070dc152071e95aa7a119f74842482fe1ea493"
@@ -732,12 +736,12 @@
       "sha256": "77be60c3c6a40739276d65197d8e7107d2d9977233d85daac2c5acf07d81d792"
     },
     "scripts/narcotics-log/operational_release.py": {
-      "bytes": 11388,
-      "sha256": "527fedc41190f5b9454725f6cedbb7c9021809275c2a47ba9b9b40e0f65ae592"
+      "bytes": 11418,
+      "sha256": "52996e50d871f3dc14c913a34695fa87eba6c54118dbef90dcea7e96d7010c01"
     },
     "scripts/narcotics-log/frame-operational.mjs": {
-      "bytes": 2789,
-      "sha256": "bc154e44b66789aa95cc44971d718a89e89fa149c22a9df3686558d0b0cf0548"
+      "bytes": 2819,
+      "sha256": "4457cdb48cf66d0038c1c4f2cf9f4bd3ca512d281bda02522171db0a0787f7a9"
     },
     "scripts/narcotics-log/frame-cli.mjs": {
       "bytes": 7624,
