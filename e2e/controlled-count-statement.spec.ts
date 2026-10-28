@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+test.use({ timezoneId: "America/Los_Angeles" });
+
 async function fill(page: Page) {
   await page.getByLabel("When did you observe the stock?").fill("2026-10-26T12:30:15");
   await page.getByLabel("Was this container present?").selectOption("present");

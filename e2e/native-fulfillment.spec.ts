@@ -2,6 +2,7 @@ import { upgradeReturnPrint } from "../tests/prescriptions/reconciliation-fixtur
 import type { NativePrescriptionPrintV3 } from "../supabase/functions/_shared/native-dispense-returns";
 import { replayNativeReturnQuantities } from "../supabase/functions/_shared/native-return-quantity-replay";
 import { test, expect, type Page } from "@playwright/test";
+import { unmanagedStockProbe } from "./helpers/unmanaged-stock";
 import {
   actor,
   pet,
@@ -63,7 +64,7 @@ async function fixture(
   };
   const exp = Math.floor(Date.now() / 1000) + 3600;
   const session = {
-    access_token: `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({ sub: actor, exp, role: "authenticated", aud: "authenticated" })).toString("base64url")}.synthetic`,
+    access_token: `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({ sub: actor, session_id: "99999999-9999-4999-8999-999999999999", exp, role: "authenticated", aud: "authenticated" })).toString("base64url")}.synthetic`,
     refresh_token: "synthetic",
     token_type: "bearer",
     expires_in: 3600,
@@ -153,6 +154,8 @@ async function fixture(
       name = path.split("/").at(-1);
     const input =
       r.request().method() === "POST" ? r.request().postDataJSON() : {};
+    if (name === "probe_controlled_stock_intent_v1")
+      return r.fulfill({ contentType: "application/json", body: unmanagedStockProbe(input, "80000000-0000-4000-8000-000000000001") });
     if (path === "/auth/v1/token") return r.fulfill({ json: session });
     if (path === "/auth/v1/user") return r.fulfill({ json: user });
     if (path === "/rest/v1/profiles")

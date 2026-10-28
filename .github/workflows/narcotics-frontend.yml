@@ -36,5 +36,6 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npx playwright install --with-deps chromium
+      - name: Check stock gateway regressions first
+        run: npx playwright test e2e/anesthesia.spec.ts e2e/inventory.spec.ts e2e/native-fulfillment.spec.ts e2e/native-return-reconciliation.spec.ts e2e/controlled-count-statement.spec.ts
       - run: npm run test:e2e
-

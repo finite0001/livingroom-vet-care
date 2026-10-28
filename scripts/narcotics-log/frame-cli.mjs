@@ -64,7 +64,7 @@ function arrayHashes(statements) {
   return { compact_array_sha256: compact.digest("hex"), postgres_array_sha256: postgres.digest("hex"), postgres_array_bytes: bytes };
 }
 
-function derive() {
+function officialParser() {
   const rawProvenance = readRegular(path.join(vendor, "provenance.json"));
   if (digest(rawProvenance) !== provenanceSha) throw Error("Pinned CLI provenance required");
   const provenance = JSON.parse(utf8(rawProvenance));
@@ -92,7 +92,25 @@ function derive() {
     return module.exports;
   }
   const splitter = load("sql-split");
-  const parser = load("migration-file", splitter);
+  return load("migration-file", splitter);
+}
+
+function frameWithParser(raw, parser) {
+  if (!Buffer.isBuffer(raw) || raw.length === 0 || raw.length > sourceCap) throw Error("Bounded UTF-8 SQL source bytes required");
+  const body = utf8(raw);
+  if (body.includes("\0")) throw Error("NUL in SQL source refused");
+  const parsed = parser.parseMigrationContent(body);
+  const statements = Array.from(parsed.statements);
+  if (parsed.transactionMode !== "transactional" || statements.length === 0 || statements.length > 5000 || statements.some(s => typeof s !== "string" || !s)) throw Error("Bounded transactional CLI framing required");
+  return { bytes: raw.length, sha256: digest(raw), statement_count: statements.length, ...arrayHashes(statements), statement_sha256s: statements.map(digest) };
+}
+
+function frameSource(raw) {
+  return frameWithParser(raw, officialParser());
+}
+
+function derive() {
+  const parser = officialParser();
   const candidate = JSON.parse(utf8(readRegular(path.join(root, "scripts/narcotics-log/release-candidate.json"))));
   if (Object.keys(candidate.migrations).sort().join("\n") !== filenames.join("\n")) throw Error("Exact two forward files required");
   const migrations = {};
@@ -100,12 +118,7 @@ function derive() {
     const raw = readRegular(path.join(root, "supabase/migrations", name));
     const pin = candidate.migrations[name];
     if (pin.bytes !== raw.length || pin.sha256 !== digest(raw)) throw Error("Forward candidate bytes changed");
-    const body = utf8(raw);
-    if (body.includes("\0")) throw Error("NUL in SQL source refused");
-    const parsed = parser.parseMigrationContent(body);
-    const statements = Array.from(parsed.statements);
-    if (parsed.transactionMode !== "transactional" || statements.length === 0 || statements.length > 5000 || statements.some(s => typeof s !== "string" || !s)) throw Error("Bounded transactional CLI framing required");
-    migrations[name] = { ...pin, statement_count: statements.length, ...arrayHashes(statements), statement_sha256s: statements.map(digest) };
+    migrations[name] = frameWithParser(raw, parser);
   }
   return { kind: "narcotics-official-cli-framing-candidate-v1", cli_version: "2.118.0", parser_provenance_sha256: provenanceSha, typescript_sha256: typescriptSha, migrations, database_operations: 0 };
 }
@@ -123,5 +136,5 @@ function main() {
   console.log(JSON.stringify({ database_operations: 0, migrations: Object.fromEntries(Object.entries(result.migrations).map(([name, data]) => [name, { bytes: data.bytes, statements: data.statement_count, postgres_array_sha256: data.postgres_array_sha256 }])) }));
 }
 
-export { arrayHashes };
+export { arrayHashes, frameSource, readRegular };
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();
