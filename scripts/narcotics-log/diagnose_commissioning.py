@@ -1,4 +1,4 @@
-"""Disposable engineering-only unmasking of the failing stock preparation API.
+"""Disposable engineering-only tracing of fixed count/clinical API failures.
 
 This cannot grant business acceptance. It uses actual local GoTrue and HTTP,
 never fabricated claims, and always refuses a passing rehearsal result.
@@ -14,70 +14,85 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import business_rehearsal as business
 
 TARGETS = {
-    "stock-prepare": ("ordinary_none", "prepare_managed_stock_intent_v1", "stock_entry_request_failed"),
-    "count-policy": ("count_agreement", "publish_controlled_count_policy_v1", "count_request_failed"),
+    "clinical-execute": ("clinical", "execute_managed_stock_intent_v1", (
+        ("public.execute_managed_stock_intent_v1(jsonb)", "stock_entry_request_failed", False),)),
+    "count-start": ("count_agreement", "start_controlled_count_v1", (
+        ("controlled_count_v1.dispatch_count_mutation(text,jsonb)", "count_request_failed", False),
+        ("public.start_controlled_count_v1(jsonb)", "count_request_failed", True))),
 }
+
+
+def instrument(raw, static, signature, failure, rethrow):
+    name = signature.split("(", 1)[0]
+    import re
+    matches = list(re.finditer(r"CREATE(?: OR REPLACE)? FUNCTION " + re.escape(name) + r"\(", raw))
+    if len(matches) != 1:
+        raise ValueError("Exactly one fixed diagnostic function required")
+    start = matches[0].start()
+    body_start = raw.index(" AS $$", start) + len(" AS $$")
+    end = raw.index("$$;", body_start)
+    body = raw[body_start:end]
+    expected = static["properties"]["functions"][signature]["body_sha256"]
+    if hashlib.sha256(body.encode()).hexdigest() != expected:
+        raise ValueError("Original uninstrumented source API hash differs")
+    original = "raise exception '" + failure + "'using errcode='P0001',detail='',hint='';"
+    if body.count(original) != 1 or body.count("exception when others or query_canceled or assert_failure then") != 1:
+        raise ValueError("Exact source exception fence required")
+    if rethrow:
+        changed = body.replace(original, "RAISE;", 1)
+    else:
+        if body.count("declare q jsonb;") != 1:
+            raise ValueError("Exact diagnostic declaration anchor required")
+        changed = body.replace("declare q jsonb;", "declare diagnostic_native_context text;q jsonb;", 1)
+        changed = changed.replace(original,
+            "GET STACKED DIAGNOSTICS diagnostic_native_context = PG_EXCEPTION_CONTEXT;"
+            "RAISE EXCEPTION USING ERRCODE=SQLSTATE,MESSAGE=SQLERRM,DETAIL=diagnostic_native_context,HINT='';", 1)
+    header = raw[start:body_start].replace("CREATE FUNCTION", "CREATE OR REPLACE FUNCTION", 1)
+    return header + changed + "$$;", hashlib.sha256(changed.encode()).hexdigest()
+
 
 
 class Diagnosis(business.BusinessInstallation):
     def __init__(self, *args, target):
         self.target = target
-        profile, self.api, self.failure = TARGETS[target]
+        profile, self.api, self.functions = TARGETS[target]
         super().__init__(*args, profile=profile)
         self.result.update(kind="narcotics-fixed-api-engineering-only-v1", engineering_only=True, diagnostic_target=target)
 
     def after_installation(self, runtime):
         root = business.installation.ROOT
         raw = business.installation.prefix.regular(root / "supabase/migrations" / business.installation.prefix.FORWARD[1]).decode()
-        declaration = "CREATE OR REPLACE FUNCTION" if self.target == "stock-prepare" else "CREATE FUNCTION"
-        marker = declaration + " public." + self.api + "("
-        if raw.count(marker) != 1:
-            raise ValueError("Exactly one source commissioning API required")
-        start = raw.index(marker)
-        body_start = raw.index(" AS $$", start) + len(" AS $$")
-        end = raw.index("$$;", body_start)
-        body = raw[body_start:end]
         static = json.loads((business.HERE / "module-expected.json").read_text())
-        signature = "public." + self.api + "(jsonb)"
-        expected = static["properties"]["functions"][signature]["body_sha256"]
-        if hashlib.sha256(body.encode()).hexdigest() != expected:
-            raise ValueError("Original uninstrumented source API hash differs")
-        original = "raise exception '" + self.failure + "'using errcode='P0001',detail='',hint='';"
-        if body.count(original) != 1 or body.count("exception when others or query_canceled or assert_failure then") != 1:
-            raise ValueError("Exact source exception fence required")
-        program = raw[start:body_start].replace("CREATE FUNCTION", "CREATE OR REPLACE FUNCTION", 1)
-        if body.count("declare q jsonb;") != 1:
-            raise ValueError("Exact diagnostic declaration anchor required")
-        instrumented = body.replace("declare q jsonb;", "declare diagnostic_native_context text;q jsonb;", 1)
-        instrumented = instrumented.replace(original,
-            "GET STACKED DIAGNOSTICS diagnostic_native_context = PG_EXCEPTION_CONTEXT;"
-            "RAISE EXCEPTION USING ERRCODE=SQLSTATE,MESSAGE=SQLERRM,DETAIL=diagnostic_native_context,HINT='';", 1)
-        program += instrumented + "$$;"
-        wanted = hashlib.sha256(instrumented.encode()).hexdigest()
-        # Ingress verifies the entire source module. Declare this one
-        # engineering body in its NEW fixture descriptor as well; otherwise an
-        # unrelated earlier writer correctly refuses instrumentation. Original
-        # 205/206/269 descriptors and all business rows remain untouched.
+        programs = []
+        changed_definition = json.loads(business.installation.canonical(self.expected_module))
+        wanted = {}
+        for signature, failure, rethrow in self.functions:
+            program, digest = instrument(raw, static, signature, failure, rethrow)
+            programs.append(program)
+            changed_definition["properties"]["functions"][signature]["body_sha256"] = digest
+            wanted[signature] = digest
         expected = business.installation.canonical(self.expected_module).replace("'", "''")
-        path = "ARRAY['properties','functions','" + signature + "','body_sha256']"
+        changed = business.installation.canonical(changed_definition).replace("'", "''")
+        # Only this NEW descriptor in this owned engineering database changes.
+        # Original sealed descriptors and all business rows remain untouched.
         bind = """ALTER TABLE controlled_count_v1.descriptor DISABLE TRIGGER count_history_immutable;
 DO $engineering_source_binding$ DECLARE changed integer;BEGIN
- UPDATE controlled_count_v1.descriptor d SET
- definition=jsonb_set(d.definition,""" + path + ",to_jsonb('" + wanted + "'::text),false)," + """
+ UPDATE controlled_count_v1.descriptor d SET definition='""" + changed + """'::jsonb,
  definition_hash=encode(sha256(convert_to(jsonb_build_object('domain','lrv.count.local_fixture.module.v1',
- 'definition',jsonb_set(d.definition,""" + path + ",to_jsonb('" + wanted + "'::text),false))::text,'UTF8')),'hex')" + " WHERE d.revision=1 AND d.definition='" + expected + "'::jsonb;" + """
+ 'definition','""" + changed + """'::jsonb)::text,'UTF8')),'hex')
+ WHERE d.revision=1 AND d.definition='""" + expected + """'::jsonb;
  GET DIAGNOSTICS changed=ROW_COUNT;
  IF changed<>1 THEN RAISE EXCEPTION 'engineering_source_binding_refused';END IF;
 END$engineering_source_binding$;
 ALTER TABLE controlled_count_v1.descriptor ENABLE TRIGGER count_history_immutable;
 """
-        # Deliberate diagnostic DDL is committed only in this owned fixture.
-        runtime.raw_query("engineering-only-unmask-one-api", "BEGIN;" + program + bind + "COMMIT;")
-        checked = runtime.selected_query("engineering-instrumentation-verified",
-            "select jsonb_build_object('source_body_matches',encode(sha256(convert_to(prosrc,'UTF8')),'hex')='" + wanted + "')"
-            "from pg_proc where oid='" + signature + "'::regprocedure;")
-        if checked != {"source_body_matches": True}:
-            raise ValueError("Engineering-only source instrumentation did not persist")
+        runtime.raw_query("engineering-only-unmask-fixed-api", "BEGIN;" + "\n".join(programs) + bind + "COMMIT;")
+        for index, (signature, digest) in enumerate(wanted.items()):
+            checked = runtime.selected_query("engineering-instrumentation-verified-" + str(index),
+                "select jsonb_build_object('source_body_matches',encode(sha256(convert_to(prosrc,'UTF8')),'hex')='" + digest + "')"
+                "from pg_proc where oid='" + signature + "'::regprocedure;")
+            if checked != {"source_body_matches": True}:
+                raise ValueError("Engineering-only source instrumentation did not persist")
 
     def execute(self):
         try:

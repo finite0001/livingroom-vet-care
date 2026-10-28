@@ -27,7 +27,7 @@ def run(ctx,m,runtime,folder,query,save):
   if name not in RPCS:raise ValueError('Fixed C2 API required')
   runtime.remaining(1);r=http.rpc(name,{'p_request':q},user);save(folder,'witness-'+label,r);steps.append(dict(label=label,rpc=name,actor_id=user['id'],session_id=user['session_id']));return r
  scope=dict(schema_version=1,actor_id=a['id'],product_id=ids['product'],site_id=ids['site'])
- current=rpc('current-policy','read_current_stock_policy_v1',scope)['data'];policy=deepcopy(current['policy']);policy['permissions']['adjust_inventory']['witness']='c2_required';policy['review_reference']=v.NOTE+' Explicit independent witness scenario.'
+ current=rpc('current-policy','read_current_stock_policy_v1',scope,a)['data'];policy=deepcopy(current['policy']);policy['permissions']['adjust_inventory']['witness']='c2_required';policy['review_reference']=v.NOTE+' Explicit independent witness scenario.'
  pp=v.pointer('stock_policy',a['id'],v.uid(),ids['product'],ids['site']);pq={**pp,'definition':dict(draft_version_id=current['current_draft_version_id'],expected_policy_version_id=current['policy_version_id'],policy=policy,reason=v.NOTE)}
  prepared_policy=v.verify_admin(rpc('policy-prepare','prepare_controlled_stock_administration_v1',pq,a),pp,pq,'prepared')
  saved_policy=v.verify_admin(rpc('policy-execute','execute_controlled_stock_administration_v1',pp,a),pp,pq,'saved')

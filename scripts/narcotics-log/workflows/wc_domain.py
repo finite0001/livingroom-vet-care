@@ -35,7 +35,7 @@ def prescription(ctx,runtime,folder,query,save):
  ctx['writer_domain']=deepcopy(d);return d
 
 def authorization_recovery(ctx,runtime,folder,save,proof,domain):
- r=rpc(ctx,runtime,folder,save,'owned-authorization','read_managed_stock_intent_authorization_v1',dict(p_request=proof['pointer']))
+ r=rpc(ctx,runtime,folder,save,'owned-authorization-'+proof['pointer']['operation_id'],'read_managed_stock_intent_authorization_v1',dict(p_request=proof['pointer']))
  # This wrapper returns the original complete document or SQL NULL directly.
  if r is None or r['id']!=domain['authorization']or r['pet_id']!=domain['pet']:raise ValueError('Actual owned original authorization document differs')
  return r

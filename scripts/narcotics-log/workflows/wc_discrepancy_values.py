@@ -35,10 +35,11 @@ def native_state(index,value,d,lot,original_actor,allocation=None,intake_head=No
  digest(value['authorization_hash']);digest(value['dispense_document_hash'])
  R=(None,0)if index==0 else(d['intake'],1)if index<4 else(d['retract_intake'],2)
  require_head(value['head'],*R)
- disc_events={0:(None,0),1:(None,0),2:(d['report_a'],1),3:(d['note_a'],2),4:(d['note_a'],2),5:(d['resolve_a'],3),6:(d['report_b'],4),7:(d['confirm_b'],5)}
+ # A bounded prefix needs only its own already-declared operation IDs.
+ disc_key,disc_version={0:(None,0),1:(None,0),2:('report_a',1),3:('note_a',2),4:('note_a',2),5:('resolve_a',3),6:('report_b',4),7:('confirm_b',5)}[index]
  ds=value['discrepancies']
  if type(ds)is not dict or set(ds)!={'version','head','open_case_count','held_lot_ids','cases'}or type(ds['version'])is not int or ds['version']!=1:raise ValueError('Actual complete discrepancy snapshot required')
- require_head(ds['head'],*disc_events[index])
+ require_head(ds['head'],None if disc_key is None else d[disc_key],disc_version)
  rows=value['allocations']
  if type(rows)is not list or len(rows)!=1 or rows[0].get('lot_id')!=uid(lot)or rows[0].get('dispensed_quantity')!='2.000':raise ValueError('Actual singular original allocation2 required')
  a=uid(rows[0]['allocation_id'])

@@ -102,8 +102,11 @@ def expected(profile, grants):
                 "native_dispense_correction_events", "native_dispense_correction_operations", "stock_correction_sources")
             add(4, "audit_logs")
         else:
+            # allocation_context deliberately keeps returned medicine in the
+            # existing prepared package; intake creates a held cell, not a
+            # third package or a second mutable head for that package.
             add(1, "native_return_events", "native_return_operations", "stock_custody_sources",
-                "controlled_stock_containers", "controlled_stock_container_heads", "controlled_stock_cells", "controlled_stock_positions")
+                "controlled_stock_cells", "controlled_stock_positions")
             add(2, "audit_logs")
             if profile == "native_return_v2_discrepancy":
                 add(1, "native_return_discrepancy_events", "native_return_discrepancy_operations", "stock_discrepancy_sources")
