@@ -194,10 +194,11 @@ class OperationalBrowser(business.BusinessInstallation):
 
     def after_business(self,context,methods,runtime,proof):
         self.context=context
+        self.profile_runtime=runtime
 
     def execute(self):
         super().execute()
-        runtime=business.Runtime(self);modules=business.modules()
+        runtime=self.profile_runtime;modules=business.modules()
         runtime.raw_query('operational-browser-gateway','BEGIN;\n'+(operational.SOURCE/'recovery-gateway.sql').read_text()+'\nCOMMIT;')
         modules.rest.effective_defaults(runtime,recovery=True)
         before=observe(runtime,'operational-browser-before');auth=receiver_auth.capture(runtime,'operational-browser-before-Auth')

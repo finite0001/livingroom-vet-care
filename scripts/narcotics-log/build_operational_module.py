@@ -41,6 +41,14 @@ RECOVERY_APIS = {
     'narcotics_recovery_close_operation_v1': 'narcotics_recovery_v1.close_operation(p_request)',
     'narcotics_recovery_status_v1': 'narcotics_recovery_v1.status(p_request)',
 }
+ENGINEERING_APIS = {
+    'narcotics_recovery_probe_permissions_v1': 'narcotics_register_v1.probe_recovery_permission(p_request)',
+    'narcotics_recovery_probe_boundary_v1': 'narcotics_recovery_v1.probe_boundary(p_request)',
+    'narcotics_recovery_probe_state_v1': 'narcotics_recovery_v1.probe_state(p_request)',
+    'narcotics_recovery_probe_gate_v1': 'narcotics_recovery_v1.probe_gate(p_request)',
+}
+ENGINEERING_PRIVATE = {'narcotics_register_v1.probe_recovery_permission', 'narcotics_recovery_v1.probe_boundary',
+                       'narcotics_recovery_v1.probe_state', 'narcotics_recovery_v1.probe_gate'}
 HOOK = 'narcotics_recovery_admission_v1'
 LEAVES = {
     'narcotics_register_v1.enter_register()': ('plpgsql', 'v', 'void'),
@@ -190,18 +198,16 @@ def table_controls(program):
 
 
 def build(register_only=False):
-    if not register_only:
-        raise ValueError('Recovery source and full release assembly are not complete')
     apis = {**REGISTER_APIS, **RECOVERY_APIS}
-    apis['narcotics_recovery_probe_permissions_v1'] = 'narcotics_register_v1.probe_recovery_permission(p_request)'
-    apis['narcotics_recovery_probe_boundary_v1'] = 'narcotics_recovery_v1.probe_boundary(p_request)'
-    apis['narcotics_recovery_probe_state_v1'] = 'narcotics_recovery_v1.probe_state(p_request)'
-    apis['narcotics_recovery_probe_gate_v1'] = 'narcotics_recovery_v1.probe_gate(p_request)'
+    if register_only:
+        apis.update(ENGINEERING_APIS)
     names = ('common.sql', 'register.sql', 'register-operations.sql', 'recovery-state.sql',
              'recovery-operations.sql', 'recovery-inventory.sql', 'recovery-coordinator.sql',
              'recovery-evidence.sql', 'recovery-release.sql', 'recovery-status.sql', 'metadata.sql')
     sources = {name: (SOURCE / name).read_bytes() for name in names}
-    public_names = 'ARRAY[' + ','.join(literal(name) for name in sorted((*apis, HOOK))) + ']::text[]'
+    # Keep the reflective leaf byte-identical across source modes. Its closed
+    # name set also detects any forbidden engineering facade added to a release.
+    public_names = 'ARRAY[' + ','.join(literal(name) for name in sorted((*REGISTER_APIS, *RECOVERY_APIS, *ENGINEERING_APIS, HOOK))) + ']::text[]'
     private = '\n'.join(raw.decode().replace('__PUBLIC_FACADE_NAMES__', public_names) for raw in sources.values())
     copied, copy_proof = terminal_count_copy()
     private += '\n' + copied
@@ -310,6 +316,16 @@ BEGIN
  RETURN jsonb_build_object('engineering_only',true,'actual_authenticated_owned_schema_comment',true,'catalog_unchanged_after_rollback',true,'postgres_attributes',attributes);
 END $$;
 '''
+    if not register_only:
+        retained=[];removed=set()
+        for statement in split_reviewed_statements(private):
+            match=re.match(r'^CREATE FUNCTION ([a-z0-9_]+\.[a-z0-9_]+)\(',statement,re.I)
+            if match and match[1] in ENGINEERING_PRIVATE:
+                if match[1] in removed:raise ValueError('Unique engineering helper required')
+                removed.add(match[1])
+            else:retained.append(statement+';')
+        if removed!=ENGINEERING_PRIVATE:raise ValueError('All four engineering helpers must be omitted from release source')
+        private='\n'.join(retained)+'\n'
     admission = cold_admission(functions(private))
     actual = private + '\n' + '\n'.join(facade(name, call,
         admission.replace('PERFORM narcotics_register_v1.enter_register();', 'PERFORM narcotics_recovery_v1.enter_recovery();')
@@ -384,7 +400,7 @@ END $operational_installed$;
 '''
     prefix = "SET LOCAL lock_timeout='5s';SET LOCAL statement_timeout='30s';SET LOCAL client_min_messages='warning';SET LOCAL quote_all_identifiers=false;SET LOCAL TimeZone='UTC';SET LOCAL DateStyle='ISO,YMD';SET LOCAL IntervalStyle='postgres';SET LOCAL extra_float_digits=3;\nSELECT pg_advisory_xact_lock(90271190,0);\nSELECT pg_advisory_xact_lock(90271040,0);\nDO $operational_parent$BEGIN PERFORM controlled_count_entry_v1.require_bound_module();END $operational_parent$;\n"
     sql = prefix + actual + reference + tail
-    proof = {'kind': 'narcotics-operational-source-draft-v1', 'engineering_only': True, 'ready_for_deployment': False,
+    proof = {'kind': 'narcotics-operational-source-v1', 'engineering_only': register_only, 'ready_for_deployment': False,
         'expected_metadata_origin': 'independent empty source reference DDL; no observed actual target expectations',
         'native_errors_engineering_only': register_only,
         'source_files': {name: {'bytes': len(raw), 'sha256': sha(raw)} for name, raw in sources.items()},
@@ -396,13 +412,15 @@ END $operational_installed$;
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--register-only-engineering', action='store_true')
+    mode=parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument('--register-only-engineering', action='store_true')
+    mode.add_argument('--release-source', action='store_true')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    if not args.register_only_engineering or not args.output.is_absolute() or args.output.exists():
-        parser.error('Explicit engineering-only source output in a fresh absolute directory required')
-    sql, proof = build(register_only=True)
+    if not args.output.is_absolute() or args.output.exists():
+        parser.error('Explicit source mode and fresh absolute output directory required')
+    sql, proof = build(register_only=args.register_only_engineering)
     args.output.mkdir(mode=0o700)
     (args.output / 'install.sql').write_text(sql)
     (args.output / 'source-proof.json').write_text(json.dumps(proof, sort_keys=True, indent=2) + '\n')
-    print(json.dumps({'engineering_only': True, 'database_operations': 0, 'sql': proof['sql'], 'public_apis': proof['public_apis']}))
+    print(json.dumps({'engineering_only': args.register_only_engineering, 'database_operations': 0, 'sql': proof['sql'], 'public_apis': proof['public_apis']}))

@@ -131,5 +131,6 @@ The rehearsal also restarts only its captured receiver database, requires a new
 recovery epoch and independent acknowledgment, and rejects earlier sessions and
 the earlier acknowledgment. An eight-second reconciliation execution failure
 still blocks full acceptance. These source changes and partial proofs do not
-authorize production installation or certify stock. Production assembly remains
-disabled until the complete genuine workflows and operational browser pass.
+authorize production installation or certify stock. The production SQL source omits engineering probes and masks internal errors;
+it remains uninstalled until the complete genuine workflows and operational
+browser pass.

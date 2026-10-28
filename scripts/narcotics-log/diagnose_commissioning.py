@@ -29,8 +29,12 @@ TARGETS['variance-execute'] = ('variance_reconciliation', 'execute_controlled_co
     ('controlled_count_v1.dispatch_count_management_mutation(text,jsonb)', 'count_request_failed', False),
     ('public.execute_controlled_count_reconciliation_v1(jsonb)', 'count_request_failed', True)))
 
+TARGETS['variance-resolve'] = ('variance_reconciliation', 'resolve_controlled_count_cause_v1', (
+    ('controlled_count_v1.dispatch_count_management_mutation(text,jsonb)', 'count_request_failed', False),
+    ('public.resolve_controlled_count_cause_v1(jsonb)', 'count_request_failed', True)))
 
-def instrument(raw, static, signature, failure, rethrow, *, track_execute_only=False):
+
+def instrument(raw, static, signature, failure, rethrow, *, tracked_action=None):
     name = signature.split("(", 1)[0]
     import re
     matches = list(re.finditer(r"CREATE(?: OR REPLACE)? FUNCTION " + re.escape(name) + r"\(", raw))
@@ -59,7 +63,7 @@ def instrument(raw, static, signature, failure, rethrow, *, track_execute_only=F
             anchor = "begin\n perform controlled_count_entry_v1.count_entry_budget_required();"
             if changed.count(anchor) != 1:
                 raise ValueError("Exact finalization profiling anchor required")
-            tracked = "p_action='reconciliation_execute'" if track_execute_only else "p_action=ANY(ARRAY['reconciliation_prepare','reconciliation_execute','finalize'])"
+            tracked = "p_action='"+tracked_action+"'" if tracked_action else "p_action=ANY(ARRAY['reconciliation_prepare','reconciliation_execute','finalize'])"
             changed = changed.replace(anchor,
                 "begin\n if " + tracked + "then perform pg_catalog.set_config('track_functions','all',true);end if;\n"
                 " perform controlled_count_entry_v1.count_entry_budget_required();", 1)
@@ -81,7 +85,7 @@ class Diagnosis(business.BusinessInstallation):
 
     def after_installation(self, runtime):
         self.diagnostic_runtime = runtime
-        if self.target in ("count-finalize", "variance-finalize", "variance-prepare", "variance-execute"):
+        if self.target in ("count-finalize", "variance-finalize", "variance-prepare", "variance-execute", "variance-resolve"):
             # Only this disposable diagnostic grants the database owner access
             # to timing instrumentation; no staff or application role changes.
             self.boot.sql("GRANT SET ON PARAMETER track_functions TO postgres;"
@@ -98,7 +102,7 @@ class Diagnosis(business.BusinessInstallation):
         changed_definition = json.loads(business.installation.canonical(self.expected_module))
         wanted = {}
         for signature, failure, rethrow in self.functions:
-            program, digest = instrument(raw, static, signature, failure, rethrow, track_execute_only=self.target == "variance-execute")
+            program, digest = instrument(raw, static, signature, failure, rethrow, tracked_action={"variance-execute":"reconciliation_execute","variance-resolve":"cause_resolve"}.get(self.target))
             programs.append(program)
             changed_definition["properties"]["functions"][signature]["body_sha256"] = digest
             wanted[signature] = digest
@@ -143,7 +147,7 @@ ALTER TABLE controlled_count_v1.descriptor ENABLE TRIGGER count_history_immutabl
                         stream.write(response)
             raise
         finally:
-            if self.target in ("count-finalize", "variance-finalize", "variance-prepare", "variance-execute") and hasattr(self, "diagnostic_runtime"):
+            if self.target in ("count-finalize", "variance-finalize", "variance-prepare", "variance-execute", "variance-resolve") and hasattr(self, "diagnostic_runtime"):
                 try:
                     costs = self.diagnostic_runtime.selected_query("engineering-function-costs", """
 select jsonb_build_object('engineering_only',true,'scope','fixed API nested user functions; SQL inlining may omit individual functions',

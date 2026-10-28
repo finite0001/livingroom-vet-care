@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61758822,
-      "sha256": "892b03dc663ea2e096b2386313c7c64381647ac42d1aca143493d2e863c01e1c"
+      "bytes": 61759178,
+      "sha256": "c89d48aaf82e8f16dfbc3e0db385a8f6ce356c06d3fee8fe30bbd9ee6522f6eb"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61754920,
-      "sha256": "b6ccbd1eed09f895a5702556bc0f484a7760cc1156cdacd83121b1fb36752beb"
+      "bytes": 61755276,
+      "sha256": "c6f617aa8e8a2458bd2ee7724182fc67606a2ad565afc50195efa787ee6719b0"
     }
   },
   "source_corrections": {
@@ -368,6 +368,55 @@
       "compiler_inverse_all_seven_artifacts_exact": true,
       "complete_CLI_publication_inverse": true,
       "existing_historical_rows_rewritten": false,
+      "frontier": {
+        "controlled_count_entry_v1.assert_shared_product_relation_frontier()": {
+          "all_121_resolved_relation_and_mode_checks_and_exact_advisory_check_retained": true,
+          "distinct_relation_mode_projection_prevents_join_multiplicity": true,
+          "new_body_sha256": "e7a71c22b6f43b7a7aee796ebfeb64052918fa03dbf6bc3d3e8270c59016cf3b",
+          "original_body_sha256": "f5b4bda9754b2f68138725cbb3e2f69e61853e6a5754519a0948c13414c33825",
+          "same_single_current_lock_snapshot": true,
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.resource_origin_catalog_required()": {
+          "new_body_sha256": "551dc6289a4fa4ac51e7e364d1827f796780b89393906f4d33eabfd96fac9569",
+          "original_body_sha256": "7ab954d155333083d1270a7e3d3b10a1982177ea8e1bcf703e64727905081bb6",
+          "original_plan_seal_and_all_current_privilege_checks_retained": true,
+          "plan": {
+            "complete_VALUES_AST_inverse": true,
+            "distinct_namespace_projection_exact": true,
+            "namespaces": [
+              "auth",
+              "controlled_count_v1",
+              "controlled_review",
+              "controlled_review_v3",
+              "public"
+            ],
+            "plan_body_sha256": "1551a3b7336ad185560a2e26437aedf978fd120d69b38ed3cd71b0d11dd80016",
+            "rows": 110
+          },
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.shared_product_resource_origin_catalog_required()": {
+          "new_body_sha256": "61df99601271695831d732b0ff8ce0331af33bf31ab44cd926de8ff0b485a59e",
+          "original_body_sha256": "938f06f24df93e354d0720babb1730dfc21218a24aa82eb7b31f5718867f733e",
+          "original_plan_seal_and_all_current_privilege_checks_retained": true,
+          "plan": {
+            "complete_VALUES_AST_inverse": true,
+            "distinct_namespace_projection_exact": true,
+            "namespaces": [
+              "auth",
+              "controlled_count_v1",
+              "controlled_review",
+              "controlled_review_v3",
+              "controlled_stock_workflow_v1",
+              "public"
+            ],
+            "plan_body_sha256": "ceae957e4a7d29bcb2b120933816c4789b69529010a1e3654772131cd63185ed",
+            "rows": 121
+          },
+          "whole_body_inverse": true
+        }
+      },
       "history": {
         "actual_result_document_reread_and_exactly_bound": true,
         "all_fifty_boundary_classes_validated_before_any_exact_byte_reuse": true,
@@ -606,7 +655,7 @@
           }
         }
       },
-      "only_twenty_six_private_functions_and_seven_body_hashes_added": true,
+      "only_twenty_six_private_functions_and_ten_body_hashes_added": true,
       "original_relation_frontiers_and_current_authority_preserved": true,
       "real_Auth_verification_pending": true,
       "recovery": {
@@ -712,8 +761,12 @@
       },
       "source_tools": {
         "build_operational_module.py": {
-          "bytes": 31064,
-          "sha256": "a1c73a3e5c440cdeadea81ea273ce780d47874e5bc75ceac5204fb173a999d0c"
+          "bytes": 32163,
+          "sha256": "a53fb3c5cc162fb7868c3247d692e6ff8415906fde93a9b411b43b101e4e0ef3"
+        },
+        "frontier_projection.py": {
+          "bytes": 6418,
+          "sha256": "c3e4751d002d04aeb0cc4c285aa79c59bfcd33a6870a251a21a78057789ef59c"
         },
         "history_document_reuse.py": {
           "bytes": 30329,
