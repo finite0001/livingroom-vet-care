@@ -156,6 +156,18 @@ def run(context, modules, runtime, save):
                         key.fileobj.close()
         code = process.wait(timeout=min(1, max(.001, deadline - time.monotonic())))
         result = runtime.decode(private_json(folder / "result.json"))
+        # Retain only fixed phase flags/statuses for a failed genuine browser
+        # attempt. Never upload input, passwords, tokens, raw Auth or RPC bodies.
+        flags = ("passed", "auth_phase_released", "read_phase_released", "review_both_explicit",
+                 "actual_finalize_200_then_ack_lost_once", "unknown_UI_shown", "id_only_pointer_retained",
+                 "saved_closure_observed", "storage_cleared", "agreement_UI_read",
+                 "normal_browser_cleanup", "normal_vite_cleanup")
+        diagnostic = {key: result.get(key) for key in flags if type(result.get(key)) is bool}
+        diagnostic["candidate_not_acceptance"] = True
+        diagnostic["rpc_statuses"] = [{"rpc": call.get("rpc"), "status": call.get("status")}
+            for call in result.get("calls", []) if type(call) is dict
+            and call.get("rpc") in pair.RPCS and type(call.get("status")) is int]
+        save(runtime.folder, "browser-candidate-diagnostic", diagnostic)
         if code != 0 or result["passed"] is not True or released != {"auth-phase", "read-phase"} or sdk is None or chrome is None or result["session_id"] != sdk["session_id"]:
             raise ValueError("Complete actual browser signing/recovery phase failed")
         state = process_state(chrome["pid"])

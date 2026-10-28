@@ -155,6 +155,20 @@ jobs:
           path: |
             /tmp/lrv-narcotics-install-*/diagnostic-native-failure-*.txt
             /tmp/lrv-narcotics-install-*/diagnostic-function-costs.json
+      - name: Trace variance finalization in a separate owned engineering database
+        if: matrix.profile == 'variance_reconciliation'
+        continue-on-error: true
+        run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local --target variance-finalize
+      - name: Retain bounded variance native error and timing
+        if: always() && matrix.profile == 'variance_reconciliation'
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-engineering-variance-finalize
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/diagnostic-native-failure-variance-finalize.txt
+            /tmp/lrv-narcotics-install-*/diagnostic-function-costs.json
       - name: Admit fixed genuine business sources
         run: python3 -I -B scripts/narcotics-log/business_rehearsal.py --check-source --profile ${{ matrix.profile }}
       - name: Verify real staff accounts, business effects and normal cleanup
@@ -174,6 +188,7 @@ jobs:
             /tmp/lrv-narcotics-install-*/genuine-Auth-complete-effects.json
             /tmp/lrv-narcotics-install-*/sequence-source-effects.json
             /tmp/lrv-narcotics-install-*/authenticated-browser-proof.json
+            /tmp/lrv-narcotics-install-*/browser-candidate-diagnostic.json
             /tmp/lrv-genuine-count4-v2-*/browser-count-finalize-proof/agreement-after-recovery.png
             /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
             /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log
@@ -207,6 +222,7 @@ jobs:
             /tmp/lrv-narcotics-install-*/result.json
             /tmp/lrv-narcotics-install-*/register-source-proof.json
             /tmp/lrv-narcotics-install-*/register-engineering-proof.json
+            /tmp/lrv-narcotics-install-*/recovery-permission-engineering-proof.json
             /tmp/lrv-narcotics-install-*/register-engineering-install-stderr.bin
             /tmp/lrv-narcotics-install-*/rpc-failure.json
             /tmp/lrv-narcotics-install-*/*-failure.txt

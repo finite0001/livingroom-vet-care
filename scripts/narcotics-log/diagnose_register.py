@@ -65,6 +65,10 @@ class RegisterDiagnosis(business.BusinessInstallation):
         instant = datetime.fromisoformat(current.replace('Z', '+00:00')).astimezone(timezone.utc)
         utc = lambda value: value.isoformat(timespec='milliseconds').replace('+00:00', 'Z')
         scope = dict(schema_version=1, actor_id=actor['id'], product_id=ids['product'], site_id=ids['site'])
+        permissions = rpc('self-role-permission', 'narcotics_recovery_probe_permissions_v1', dict(schema_version=1, actor_id=actor['id']))
+        if permissions['engineering_only'] is not True or permissions['actual_authenticated_self_role_setting'] is not True or permissions['catalog_unchanged_after_rollback'] is not True:
+            raise ValueError('Actual authenticated self-role permission probe failed')
+        business.save(self.evidence, 'recovery-permission-engineering-proof', permissions)
         raw = pdf_fixture(); form_id = new_id()
         form = {**scope, 'operation_id': form_id, 'event_id': context['gateway']['pointer']['operation_id'],
             'kind': 'order_form', 'title': '=Synthetic order form', 'filename': 'synthetic-order-form.pdf',
@@ -106,6 +110,15 @@ class RegisterDiagnosis(business.BusinessInstallation):
         later = rpc('create-later-report', 'create_narcotics_register_v1', {**report, 'operation_id': new_id()})
         if {item['form_id'] for item in json.loads(later['data']['dataset_text'])['supporting_forms']} != {form_id, second['operation_id']}:
             raise ValueError('New report omitted later preserved evidence')
+        listing = {key: value for key, value in scope.items() if key != 'operation_id'}
+        listing.update(after_operation_id=None, page_size=1)
+        first_page = rpc('report-first-page', 'list_narcotics_registers_v1', listing)
+        if first_page['actor_id'] != actor['id'] or first_page['product_id'] != ids['product'] or first_page['site_id'] != ids['site'] or first_page['has_more'] is not True or len(first_page['items']) != 1 or first_page['next_operation_id'] != first_page['items'][0]['operation_id']:
+            raise ValueError('Exact bounded saved report page differs')
+        second_page = rpc('report-second-page', 'list_narcotics_registers_v1', {**listing, 'after_operation_id': first_page['next_operation_id']})
+        if second_page['has_more'] is not False or second_page['next_operation_id'] is not None or len(second_page['items']) != 1 or {item['operation_id'] for item in first_page['items'] + second_page['items']} != {report['operation_id'], later['operation_id']}:
+            raise ValueError('Saved report pagination omitted or duplicated an original')
+        refuse('other-actor-report-list', 'list_narcotics_registers_v1', {**listing, 'actor_id': other['id']}, other)
         for kind in ('report', 'form'):
             operation = new_id(); pointer = dict(schema_version=1, actor_id=actor['id'], operation_id=operation)
             api = 'read_narcotics_register_v1' if kind == 'report' else 'read_narcotics_form_operation_v1'

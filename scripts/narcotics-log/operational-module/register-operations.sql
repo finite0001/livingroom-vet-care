@@ -1,3 +1,28 @@
+CREATE FUNCTION narcotics_register_v1.list_reports(p_request jsonb) RETURNS jsonb
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $$
+DECLARE actor_value uuid;product_value uuid;site_value uuid;cursor_value uuid;cursor_time timestamptz;page_value integer;
+ row_value record;items jsonb:='[]'::jsonb;more_value boolean:=false;last_id uuid;authority_value jsonb;
+BEGIN
+ PERFORM narcotics_register_v1.keys(p_request,ARRAY['schema_version','actor_id','product_id','site_id','after_operation_id','page_size']);
+ IF (p_request->'schema_version')::text IS DISTINCT FROM '1' OR jsonb_typeof(p_request->'page_size')IS DISTINCT FROM'number' THEN RAISE EXCEPTION 'narcotics_request_invalid' USING ERRCODE='22023';END IF;
+ page_value:=(p_request->>'page_size')::integer;
+ IF page_value NOT BETWEEN 1 AND 50 OR to_jsonb(page_value)IS DISTINCT FROM p_request->'page_size' THEN RAISE EXCEPTION 'narcotics_request_invalid' USING ERRCODE='22023';END IF;
+ actor_value:=narcotics_register_v1.uuid_value(p_request->'actor_id');product_value:=narcotics_register_v1.uuid_value(p_request->'product_id');site_value:=narcotics_register_v1.uuid_value(p_request->'site_id');
+ IF p_request->'after_operation_id'<>'null'::jsonb THEN cursor_value:=narcotics_register_v1.uuid_value(p_request->'after_operation_id');END IF;
+ PERFORM controlled_count_entry_v1.assert_shared_product_relation_frontier();authority_value:=narcotics_register_v1.authority(actor_value,product_value,site_value);
+ IF cursor_value IS NOT NULL THEN
+  SELECT o.recorded_at INTO STRICT cursor_time FROM narcotics_register_v1.operations o WHERE o.operation_id=cursor_value AND o.actor_id=actor_value AND o.product_id=product_value AND o.site_id=site_value AND o.kind='report' AND o.state='saved';
+ END IF;
+ FOR row_value IN SELECT o.operation_id,o.recorded_at,o.original_request,r.captured_at FROM narcotics_register_v1.operations o JOIN narcotics_register_v1.reports r ON r.report_id=o.operation_id
+  WHERE o.actor_id=actor_value AND o.product_id=product_value AND o.site_id=site_value AND o.kind='report' AND o.state='saved'
+  AND(cursor_value IS NULL OR(o.recorded_at,o.operation_id)<(cursor_time,cursor_value)) ORDER BY o.recorded_at DESC,o.operation_id DESC LIMIT page_value+1 LOOP
+  IF jsonb_array_length(items)=page_value THEN more_value:=true;EXIT;END IF;
+  items:=items||jsonb_build_array(jsonb_build_object('operation_id',row_value.operation_id,'recorded_at',narcotics_register_v1.utc(row_value.recorded_at),'captured_at',narcotics_register_v1.utc(row_value.captured_at),
+   'from_at',row_value.original_request->'from_at','to_at',row_value.original_request->'to_at'));last_id:=row_value.operation_id;
+ END LOOP;
+ IF narcotics_register_v1.authority(actor_value,product_value,site_value)IS DISTINCT FROM authority_value THEN RAISE EXCEPTION 'narcotics_access_denied' USING ERRCODE='42501';END IF;
+ RETURN jsonb_build_object('schema_version',1,'actor_id',actor_value,'product_id',product_value,'site_id',site_value,'items',items,'has_more',more_value,'next_operation_id',CASE WHEN more_value THEN last_id ELSE NULL END);
+END $$;
 CREATE FUNCTION narcotics_register_v1.result_of(p_operation uuid,p_actor uuid,p_kind text) RETURNS jsonb
 LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $$
 DECLARE operation_value narcotics_register_v1.operations;report_value narcotics_register_v1.reports;

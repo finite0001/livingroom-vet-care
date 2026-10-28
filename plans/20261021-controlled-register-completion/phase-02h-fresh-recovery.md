@@ -12,9 +12,15 @@ Public fixed `narcotics_recovery_*_v1` facades; actual current ADMIN and configu
 source authority, current real sessions, exact operation recovery. No owner
 clinical seeding, fake claims, caller skip flag, or old record replacement.
 
-One PostgREST pre-request gate runs before the main query. Dedicated admission
+One PostgREST pre-request gate runs before the main query. The same catalog-only
+admission also runs first in BOTH current source frontier acquisition helpers
+(shared121 and exclusive stock-workflow121), before old practice locks or user
+relations. This protects physical writers even when a PostgREST instance has no
+hook or has stale configuration. Source/root checks remain after actual121.
+Installation precedes any controlled-stock activation, or drains old API work
+under an approved rollout; NOTIFY cannot retire an already-running old call. Dedicated admission
 advisory key precedes every stock/count lock: shared ordinary requests, exclusive
-arm/source-resume/release endpoints. Read the mode from raw global authenticator
+arm/source-resume/release endpoints. Read the mode from raw global postgres
 `pg_db_role_setting.setconfig` only: `narcotics_recovery.mode=idle:<head_uuid>` or
 `armed:<arm_uuid>:<head_uuid>`. A monotonic immutable head/hash binds every
 transition expected_head_id/hash, preventing delayed commands across an idle/armed/idle cycle. Never trust current_setting for this value. Owner-only lifecycle
@@ -62,8 +68,17 @@ refuse. No shared-to-exclusive upgrade, no new ID substituted for an uncertain s
 - Missing-history evidence preserves original supplied bytes/references with real
   staff attribution and distinct second-user acknowledgment of the exact digest.
   Do not pretend a staff-reported document is an authentic lost server record.
+- On the fresh receiver, a real administrator begins a recovery epoch bound to
+  actual receiver boot, server clock, current arm and current head/hash. The
+  receiver boot differs from the arm's source boot. A dedicated start wrapper
+  requires both count ID and operation ID absent, calls the unchanged count-start
+  API, validates the complete new graph/receipt, and appends its epoch marker in
+  the same transaction. Exact marked retries recover the original; unmarked old
+  cycles cannot be relabeled. Do not compare tuple xmin with the top transaction
+  ID: PL/pgSQL exception handlers may create subtransactions.
 - Release only after fresh independent real Auth sessions and physical statements
-  recorded/observed after both arm and actual receiver boot. Actual associated
+  recorded/observed after the current epoch. Require the wrapper's actual current
+  epoch/boot marker for every count; do not trust caller timestamps or flags. Actual associated
   auth.sessions.created_at must also be after receiver boot/arm. Require actual
   receiver boot strictly after the bound server backup capture instant; a receiver
   started before the backup is not this accepted restore. Every captured scope
@@ -83,8 +98,10 @@ stock-state or unrelated investigation holds.
 
 Version rest_defaults to require exact `pgrst.db_pre_request` and valid protected
 mode projection; reject every other existing forbidden setting. Initial hook
-registration uses reviewed ALTER ROLE plus config reload. Mode reads raw catalog,
-so changes do not depend on a config reload reaching all pooled connections.
+registration uses reviewed ALTER ROLE plus config reload. The custom mode belongs to the postgres role itself: an authenticated definer
+can change its own ordinary custom setting without broad role-admin grants.
+The supported pgrst.db_pre_request setting stays on authenticator. Verify native
+permissions before acceptance. Mode reads raw catalog, so changes do not depend on a config reload reaching all pooled connections.
 Preserve default API scopes/search_path. Test actual runtime hook enforcement.
 
 Fresh source and receiver owned clusters/volumes, same original600/work540/cleanup55,

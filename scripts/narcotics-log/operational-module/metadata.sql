@@ -31,7 +31,7 @@ BEGIN
   'body_sha256',encode(sha256(convert_to(replace(replace(p.prosrc,p_register,p_canonical_register),p_recovery,p_canonical_recovery),'UTF8')),'hex'),
   'acl',(SELECT coalesce(jsonb_agg(jsonb_build_object('grantor',pg_get_userbyid(a.grantor),'grantee',CASE WHEN a.grantee=0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee)END,'privilege',a.privilege_type,'grantable',a.is_grantable) ORDER BY a.grantee,a.privilege_type),'[]'::jsonb) FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner)))a)) ORDER BY n.nspname,p.proname,oidvectortypes(p.proargtypes)),'{}'::jsonb)
  FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace JOIN pg_language l ON l.oid=p.prolang
- WHERE n.nspname IN(p_register,p_recovery) OR(NOT reference_value AND n.nspname='public' AND p.proname ~ '^(create_narcotics_|read_narcotics_|close_narcotics_|preserve_narcotics_|download_narcotics_|narcotics_recovery_)')))
+ WHERE n.nspname IN(p_register,p_recovery) OR(NOT reference_value AND n.nspname='public' AND p.proname ~ '^(list_narcotics_|create_narcotics_|read_narcotics_|close_narcotics_|preserve_narcotics_|download_narcotics_|narcotics_recovery_)')))
  INTO result;
  RETURN replace(replace(result::text,p_register,p_canonical_register),p_recovery,p_canonical_recovery)::jsonb;
 END $$;

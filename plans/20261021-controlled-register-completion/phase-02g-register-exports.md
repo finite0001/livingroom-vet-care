@@ -38,9 +38,11 @@ capture-at-export display. Never invent absent historical facts.
   from the movement interval. Include registered-site/scope forms present at
   capture even when older than from, plus event-linked forms for included events.
   Later-added evidence never changes an existing report snapshot.
-- <=250 product events before site filtering; <=512 cells; <=32 relevant terminal
-  counts; <=4MiB dataset; <=8MiB response. Capacity/ambiguous provenance refuses
-  completely and asks for a shorter period. No truncated success.
+- <=250 complete retained product events before site filtering (all historical
+  inputs to balances are validated, including opening-only periods); <=512 cells; <=32 relevant terminal
+  counts; <=4MiB dataset; <=8MiB response. Capacity/ambiguous provenance refuses completely. A shorter period can reduce
+  report size; exceeding the complete-history safety bound requires administrator
+  review and is not fixed by silently omitting earlier events. No truncated success.
 - Each cell gets exact decimal opening/running/closing quantities; channels and
   custody remain separate. Zero-line events remain visible. Exclude cells born
   after cutoff. Require proven site membership, never silently omit ambiguity.

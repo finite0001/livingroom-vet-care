@@ -20,6 +20,7 @@ TARGETS = {
         ("controlled_count_v1.dispatch_count_mutation(text,jsonb)", "count_request_failed", False),
         ("public.finalize_controlled_count_v1(jsonb)", "count_request_failed", True))),
 }
+TARGETS['variance-finalize'] = ('variance_reconciliation', *TARGETS['count-finalize'][1:])
 
 
 def instrument(raw, static, signature, failure, rethrow):
@@ -72,7 +73,7 @@ class Diagnosis(business.BusinessInstallation):
 
     def after_installation(self, runtime):
         self.diagnostic_runtime = runtime
-        if self.target == "count-finalize":
+        if self.target in ("count-finalize", "variance-finalize"):
             # Only this disposable diagnostic grants the database owner access
             # to timing instrumentation; no staff or application role changes.
             self.boot.sql("GRANT SET ON PARAMETER track_functions TO postgres;"
@@ -134,7 +135,7 @@ ALTER TABLE controlled_count_v1.descriptor ENABLE TRIGGER count_history_immutabl
                         stream.write(response)
             raise
         finally:
-            if self.target == "count-finalize" and hasattr(self, "diagnostic_runtime"):
+            if self.target in ("count-finalize", "variance-finalize") and hasattr(self, "diagnostic_runtime"):
                 try:
                     costs = self.diagnostic_runtime.selected_query("engineering-function-costs", """
 select jsonb_build_object('engineering_only',true,'scope','finalization nested user functions; SQL inlining may omit individual functions',

@@ -14701,7 +14701,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1, pg_temp"
         ],
-        "body_sha256": "fe79f60c6a98655f5a237361959228d4a8d94ab84b271e0d500f1df4b087c1e5",
+        "body_sha256": "3cf48d5e4ebe1651f962083bdedfda1f0c2e4405cf9b8ae50093840dd37bbbee",
         "acl": [
           {
             "grantor": "postgres",
@@ -17349,7 +17349,7 @@
           "IntervalStyle=postgres",
           "extra_float_digits=3"
         ],
-        "body_sha256": "5f61231697d10f80505c14a15c0ad4c3ce2d72b764251724b0bcc2fa673d08be",
+        "body_sha256": "f2039746e67cb527d8b82a6b647c1c0f6da65b6c60b9918f9dfb322f2487f88d",
         "acl": [
           {
             "grantor": "postgres",

@@ -109,7 +109,12 @@ BEGIN
   -- Capture its immutable original evidence; pending witnesses are excluded.
   FOR witness_value IN SELECT w.* FROM controlled_stock_workflow_v1.witness_operations w
    WHERE w.parent_action_id=event_value.id AND w.stage='saved' ORDER BY w.operation_id LOOP
-   witness_text:=to_jsonb(witness_value)::text;
+   -- Preserve the original public receipt/request and saved attribution. The
+   -- private nonce and private preparation are not part of an exported receipt.
+   witness_text:=jsonb_build_object('schema_version',1,'operation_id',witness_value.operation_id,'stage','saved',
+    'actor_id',witness_value.actor_id,'actor_name',witness_value.name,'recorder_id',witness_value.recorder_id,'recorder_name',witness_value.recorder_name,
+    'parent_action_id',witness_value.parent_action_id,'writer',witness_value.writer,'product_id',witness_value.product_id,'event_kind',witness_value.event_kind,
+    'recorded_at',narcotics_register_v1.utc(witness_value.recorded_at),'preparation_digest',witness_value.preparation_digest,'request',witness_value.request,'receipt',witness_value.receipt)::text;
    witnesses_value:=witnesses_value||jsonb_build_array(jsonb_build_object('operation_id',witness_value.operation_id,
     'record_hash',witness_value.record_hash,'document_text',witness_text,'document_hash',encode(sha256(convert_to(witness_text,'UTF8')),'hex')));
   END LOOP;
@@ -132,7 +137,7 @@ BEGIN
   END IF;
   events_value:=events_value||jsonb_build_array(jsonb_build_object('event_id',event_value.id,'sequence',event_value.sequence::text,'writer',event_value.writer,'event_kind',event_value.event_kind,
    'actor_id',event_value.actor_id,'actor_name',event_value.actor_name,'observed_at',narcotics_register_v1.utc(event_value.observed_at),'recorded_at',narcotics_register_v1.utc(event_value.recorded_at),
-   'basis',event_value.basis,'note',event_value.note,'record_hash',event_value.record_hash,'lines',lines_value,'custody_text',transitions_value::text,
+   'basis',event_value.basis,'note',event_value.note,'record_hash',event_value.record_hash,'secondary_review_required',event_value.secondary_review_required,'lines',lines_value,'custody_text',transitions_value::text,
    'source_packet_text',packet_text,'source_packet_hash',encode(sha256(convert_to(packet_text,'UTF8')),'hex'),
    'review_history_text',review_text,'review_history_hash',encode(sha256(convert_to(review_text,'UTF8')),'hex'),
    'saved_witnesses',witnesses_value,'current_display',display_value));

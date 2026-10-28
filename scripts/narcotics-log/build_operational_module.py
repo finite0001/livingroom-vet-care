@@ -18,6 +18,7 @@ REFERENCE_RECOVERY = 'narcotics_recovery_reference_v1'
 MIGRATION = '20261028044922_narcotics_register_exports_and_recovery.sql'
 SOURCE = HERE / 'operational-module'
 REGISTER_APIS = {
+    'list_narcotics_registers_v1': "narcotics_register_v1.list_reports(p_request)",
     'create_narcotics_register_v1': "narcotics_register_v1.create_report(p_request)",
     'read_narcotics_register_v1': "narcotics_register_v1.read_operation(p_request,'report')",
     'close_narcotics_register_operation_v1': "narcotics_register_v1.close_operation(p_request)",
@@ -147,19 +148,45 @@ def table_controls(program):
 def build(register_only=False):
     if not register_only:
         raise ValueError('Recovery source and full release assembly are not complete')
+    apis = dict(REGISTER_APIS)
+    apis['narcotics_recovery_probe_permissions_v1'] = 'narcotics_register_v1.probe_recovery_permission(p_request)'
     names = ('common.sql', 'register.sql', 'register-operations.sql', 'metadata.sql')
     sources = {name: (SOURCE / name).read_bytes() for name in names}
-    public_names = 'ARRAY[' + ','.join(literal(name) for name in sorted(REGISTER_APIS)) + ']::text[]'
+    public_names = 'ARRAY[' + ','.join(literal(name) for name in sorted(apis)) + ']::text[]'
     private = '\n'.join(raw.decode().replace('__PUBLIC_FACADE_NAMES__', public_names) for raw in sources.values())
     copied, copy_proof = terminal_count_copy()
     private += '\n' + copied
+    # Engineering-only: real Auth exercises self-role permissions, and an
+    # exception subtransaction rolls back the exact harmless probe setting.
+    # This cannot change the durable recovery mode or grant release acceptance.
+    private += '''
+CREATE FUNCTION narcotics_register_v1.probe_recovery_permission(p_request jsonb) RETURNS jsonb
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $$
+DECLARE actor_value uuid;before_value jsonb;after_value jsonb;observed boolean:=false;attributes jsonb;
+BEGIN
+ PERFORM narcotics_register_v1.keys(p_request,ARRAY['schema_version','actor_id']);
+ IF(p_request->'schema_version')::text IS DISTINCT FROM'1' THEN RAISE EXCEPTION 'narcotics_request_invalid';END IF;
+ actor_value:=narcotics_register_v1.uuid_value(p_request->'actor_id');
+ PERFORM narcotics_register_v1.identity(actor_value,true);
+ SELECT to_jsonb(s.setconfig)INTO before_value FROM pg_db_role_setting s WHERE s.setrole='postgres'::regrole AND s.setdatabase=0;
+ SELECT jsonb_build_object('superuser',r.rolsuper,'createrole',r.rolcreaterole,'can_login',r.rolcanlogin)INTO STRICT attributes FROM pg_roles r WHERE r.rolname='postgres';
+ BEGIN
+  ALTER ROLE postgres SET narcotics_recovery.permission_probe='owned_engineering_probe';
+  observed:=EXISTS(SELECT 1 FROM pg_db_role_setting s CROSS JOIN LATERAL unnest(s.setconfig)v WHERE s.setrole='postgres'::regrole AND s.setdatabase=0 AND v='narcotics_recovery.permission_probe=owned_engineering_probe');
+  RAISE EXCEPTION 'owned_probe_rollback' USING ERRCODE='PZ001';
+ EXCEPTION WHEN SQLSTATE'PZ001' THEN NULL;END;
+ SELECT to_jsonb(s.setconfig)INTO after_value FROM pg_db_role_setting s WHERE s.setrole='postgres'::regrole AND s.setdatabase=0;
+ IF observed IS NOT TRUE OR before_value IS DISTINCT FROM after_value THEN RAISE EXCEPTION 'owned_probe_did_not_rollback';END IF;
+ RETURN jsonb_build_object('engineering_only',true,'actual_authenticated_self_role_setting',true,'catalog_unchanged_after_rollback',true,'postgres_attributes',attributes);
+END $$;
+'''
     admission = cold_admission(functions(private))
-    actual = private + '\n' + '\n'.join(facade(name, call, admission, engineering=register_only) for name, call in REGISTER_APIS.items())
+    actual = private + '\n' + '\n'.join(facade(name, call, admission, engineering=register_only) for name, call in apis.items())
     actual += table_controls(actual)
     definitions = functions(actual)
     for signature in definitions:
         actual += 'ALTER FUNCTION ' + signature + ' OWNER TO postgres;\nREVOKE ALL ON FUNCTION ' + signature + ' FROM PUBLIC,anon,authenticated,service_role;\n'
-    for name in REGISTER_APIS:
+    for name in apis:
         actual += 'GRANT EXECUTE ON FUNCTION public.' + name + '(jsonb) TO authenticated;\n'
     reference = actual.replace(REGISTER + '.', REFERENCE_REGISTER + '.').replace(RECOVERY + '.', REFERENCE_RECOVERY + '.')
     # Schema literals in reflective helper bodies are normalized by its explicit
@@ -171,7 +198,7 @@ def build(register_only=False):
     # Literal public callback names inside function bodies remain unchanged.
     chunks = []
     for statement in split_reviewed_statements(reference):
-        for name in REGISTER_APIS:
+        for name in apis:
             statement = re.sub(r'^(CREATE FUNCTION|ALTER FUNCTION|REVOKE ALL ON FUNCTION|GRANT EXECUTE ON FUNCTION) public\.' + re.escape(name) + r'\(', r'\1 ' + REFERENCE_REGISTER + '.' + name + '(', statement)
         chunks.append(statement + ';')
     reference = '\n'.join(chunks) + '\n'
@@ -205,7 +232,7 @@ END $operational_installed$;
         'native_errors_engineering_only': register_only,
         'source_files': {name: {'bytes': len(raw), 'sha256': sha(raw)} for name, raw in sources.items()},
         'builder_sha256': sha(Path(__file__).read_bytes()), 'terminal_count_copy': copy_proof,
-        'public_apis': sorted(REGISTER_APIS), 'function_signatures': sorted(definitions),
+        'public_apis': sorted(apis), 'function_signatures': sorted(definitions),
         'sql': {'bytes': len(sql.encode()), 'sha256': sha(sql.encode())}}
     return sql, proof
 
