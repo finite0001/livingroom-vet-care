@@ -120,6 +120,46 @@ REUSE_BLOCK = '''
  end if;
 '''
 
+SNAPSHOT_REUSE_BLOCK = '''
+ if p_validated_documents ? ('snapshot:'||p_id::text)then
+  declare verified_snapshot_document jsonb:=p_validated_documents->('snapshot:'||p_id::text);observed_snapshot_document jsonb;observed_snapshot_row jsonb;
+  begin
+   select to_jsonb(s)into strict observed_snapshot_row from controlled_count_v1.snapshots s where s.snapshot_id=p_id;
+   observed_snapshot_document:=observed_snapshot_row->'document';
+   if jsonb_typeof(verified_snapshot_document)is distinct from 'object'
+   or verified_snapshot_document->'id'is distinct from to_jsonb(p_id)
+   or verified_snapshot_document::text is distinct from observed_snapshot_document::text
+   or verified_snapshot_document->'record_hash'is distinct from observed_snapshot_row->'record_hash'
+   or verified_snapshot_document->>'record_hash'is distinct from controlled_count_v1.document_hash(verified_snapshot_document)then
+    raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;
+   return verified_snapshot_document;
+  end;
+ end if;
+'''
+
+BOUNDARY_VALIDATION_BEFORE = ' perform controlled_count_v1.historical_boundary_values(p_boundary);'
+BOUNDARY_VALIDATION_AFTER = ''' -- Only earlier completed graph roots can supply these original documents.
+ -- Both branches reread the actual immutable source row and bind exact bytes.
+ if not exists(
+  select 1 from jsonb_each(p_validated_documents)verified
+  join controlled_count_v1.snapshots snapshot_row on verified.key='snapshot:'||snapshot_row.snapshot_id::text
+  where verified.value::text is not distinct from snapshot_row.document::text
+   and verified.value->'id'=to_jsonb(snapshot_row.snapshot_id)
+   and verified.value->>'record_hash'=snapshot_row.record_hash
+   and controlled_count_v1.document_hash(verified.value)=snapshot_row.record_hash
+   and(verified.value->'physical_boundary')::text is not distinct from p_boundary::text
+  union all
+  select 1 from jsonb_each(p_validated_documents)verified
+  join controlled_count_v1.outcomes outcome_row on verified.key='outcome:'||outcome_row.outcome_id::text
+  where verified.value::text is not distinct from outcome_row.document::text
+   and verified.value->'id'=to_jsonb(outcome_row.outcome_id)
+   and verified.value->>'record_hash'=outcome_row.record_hash
+   and controlled_count_v1.document_hash(verified.value)=outcome_row.record_hash
+   and(verified.value#>'{body,boundary_observation,boundary}')::text is not distinct from p_boundary::text
+ )then
+  perform controlled_count_v1.historical_boundary_values(p_boundary);
+ end if;'''
+
 ROOT_CALL_BEFORE = '  perform controlled_count_v1.readcore_validate_operation_graph(item.operation_id);'
 ROOT_CALL_AFTER = '''  perform controlled_count_v1.history_scan_validate_operation_graph(item.operation_id,validated_documents);
   -- Only a COMPLETED whole operation/result/registry/closure validation adds
@@ -133,10 +173,25 @@ ROOT_CALL_AFTER = '''  perform controlled_count_v1.history_scan_validate_operati
    if octet_length(validated_documents::text)+octet_length(document_value::text)+octet_length(memo_key)+8<=16777216 then
     validated_documents:=validated_documents||jsonb_build_object(memo_key,document_value);
    end if;
+   if operation_row->>'result_kind'='cycle'then
+    -- The completed cycle graph also fully validated this exact snapshot.
+    select to_jsonb(s)into strict retained_snapshot_row from controlled_count_v1.snapshots s
+     where s.snapshot_id=(document_value#>>'{body,snapshot_id}')::uuid;
+    retained_snapshot_document:=retained_snapshot_row->'document';
+    if retained_snapshot_document->'id'is distinct from document_value#>'{body,snapshot_id}'
+    or retained_snapshot_document->'record_hash'is distinct from document_value#>'{body,snapshot_hash}'
+    or retained_snapshot_document->'record_hash'is distinct from retained_snapshot_row->'record_hash'
+    or controlled_count_v1.document_hash(retained_snapshot_document)is distinct from document_value#>>'{body,snapshot_hash}'then
+     raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;
+    memo_key:='snapshot:'||(retained_snapshot_document->>'id');
+    if octet_length(validated_documents::text)+octet_length(retained_snapshot_document::text)+octet_length(memo_key)+8<=16777216 then
+     validated_documents:=validated_documents||jsonb_build_object(memo_key,retained_snapshot_document);
+    end if;
+   end if;
   end if;'''
 
 ROOT_EDITS = (
-    ('declare item record;document_value jsonb;', "declare item record;document_value jsonb;validated_documents jsonb:='{}'::jsonb;operation_row jsonb;memo_key text;"),
+    ('declare item record;document_value jsonb;', "declare item record;document_value jsonb;validated_documents jsonb:='{}'::jsonb;operation_row jsonb;memo_key text;retained_snapshot_document jsonb;retained_snapshot_row jsonb;"),
     (' order by o.operation_id loop', ''' order by case o.result_kind when 'policy'then 0 when 'cycle'then 1 when 'statement'then 2 when 'outcome'then 3 when 'cancellation'then 3
  when 'reconciliation_preparation'then 4 when 'reconciliation_approval'then 5 when 'reconciliation_execution'then 6 when 'reconciliation_confirmation'then 7 when 'cause_resolution'then 8 else 99 end,o.operation_id loop'''),
     (ROOT_CALL_BEFORE, ROOT_CALL_AFTER),

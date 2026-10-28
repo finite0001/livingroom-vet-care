@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61641459,
-      "sha256": "70e3ff6da38d599e39e37345c8b8d002cbdccf26ff15c5043b4cd5485031eac6"
+      "bytes": 61660972,
+      "sha256": "06b82ed633f3ff9c076998beb855705453f7aa7e19db97f453ce46598cd2df71"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61637557,
-      "sha256": "e887999faa6197abf41064937e02ff5c82168e9ffc2ae25989c355baa5e1b4ea"
+      "bytes": 61657070,
+      "sha256": "7b82e51317db3d59e2ca650d7dd11c7f4275e5e14a10a5446c4d2c93fc92a4d1"
     }
   },
   "source_corrections": {
@@ -367,25 +367,28 @@
       "candidate_artifacts_exact": true,
       "compiler_inverse_all_seven_artifacts_exact": true,
       "complete_CLI_publication_inverse": true,
+      "each_variant_old_and_new_hashes_match_independent_source": true,
       "existing_historical_rows_rewritten": false,
       "history": {
         "actual_result_document_reread_and_exactly_bound": true,
+        "all_fifty_boundary_classes_validated_before_any_exact_byte_reuse": true,
         "both_root_inventories_retained": true,
         "kind": "single-invocation-validated-history-documents-v1",
         "map_added_only_after_complete_operation_and_closure_validation": true,
         "no_persisted_or_caller_supplied_certificate": true,
         "origin_and_current_authority_unchanged": true,
         "reuse_capacity_only_with_full_validation_fallback": true,
-        "root_new_body_sha256": "126275733155b8af879c515cbb65e38ae4acd5a8186499ff01af5f6b628cda5d",
+        "root_new_body_sha256": "ba723077141417efc5e3be1764981c751c74100ac62d179fc725173d66a03f76",
         "root_original_body_sha256": "55ec2c3b165253179871a6194c2c374d745e778920749182d152d3fb16faa8ce",
         "root_whole_body_inverse": true,
+        "snapshot_added_only_after_complete_cycle_validation": true,
         "variants": {
           "controlled_count_v1.readcore_saved_available_cause_cell(jsonb,jsonb,uuid,uuid)": {
-            "changed_private_callee_references": 2,
+            "changed_private_callee_references": 4,
             "new_signature": "controlled_count_v1.history_scan_saved_available_cause_cell(jsonb,jsonb,uuid,uuid,jsonb)",
             "origin_guard_retained": true,
             "original_body_sha256": "1f7b0a699cd60be227ac8020c5f6e46e8503b0e09e8b3caf679d3def38c6e83f",
-            "variant_body_sha256": "ac4417df2be882b4523b3b9aaf6f2373c229a61da25f5e78fb24675c6e728c8e",
+            "variant_body_sha256": "0238758b161f6ed2a99d8284f618790a10d2ef67833be7a8ea72373610966e3c",
             "whole_body_inverse": true
           },
           "controlled_count_v1.readcore_saved_cause_graph(uuid)": {
@@ -397,19 +400,19 @@
             "whole_body_inverse": true
           },
           "controlled_count_v1.readcore_saved_clean_count_observations(uuid)": {
-            "changed_private_callee_references": 2,
+            "changed_private_callee_references": 3,
             "new_signature": "controlled_count_v1.history_scan_saved_clean_count_observations(uuid,jsonb)",
             "origin_guard_retained": true,
             "original_body_sha256": "782eddc3f8b6e872c80da9585577a1ba35aac92dfe9bb706957c8caabcf1f3c8",
-            "variant_body_sha256": "38caf75ea451ed9cc96f7644b4346587dcd65ef75e9891de69e558d10c786677",
+            "variant_body_sha256": "c3692b7c901b5e022775b275f12f083146b5afa3b92300901bbf06c8922e844c",
             "whole_body_inverse": true
           },
           "controlled_count_v1.readcore_saved_count_children(text,jsonb,jsonb,jsonb,jsonb)": {
-            "changed_private_callee_references": 1,
+            "changed_private_callee_references": 2,
             "new_signature": "controlled_count_v1.history_scan_saved_count_children(text,jsonb,jsonb,jsonb,jsonb,jsonb)",
             "origin_guard_retained": true,
             "original_body_sha256": "296cd87e380653b04a34b851a732cd43f66717dd55d54aee8333e81aee48672f",
-            "variant_body_sha256": "0f4fe09f9cfac17e9741b5bb22450e36a111936ecd194c51678bf9970d6f7a21",
+            "variant_body_sha256": "6ae8ae6ddd737637481316df52253a541ccabc403c382c068f6ab966a4a8f3ab",
             "whole_body_inverse": true
           },
           "controlled_count_v1.readcore_saved_management_children(text,jsonb,jsonb,jsonb,jsonb)": {
@@ -421,11 +424,11 @@
             "whole_body_inverse": true
           },
           "controlled_count_v1.readcore_saved_resolution_children(jsonb,jsonb,jsonb,jsonb)": {
-            "changed_private_callee_references": 12,
+            "changed_private_callee_references": 13,
             "new_signature": "controlled_count_v1.history_scan_saved_resolution_children(jsonb,jsonb,jsonb,jsonb,jsonb)",
             "origin_guard_retained": true,
             "original_body_sha256": "6d34fddf1250f18cf8a84af739ff2db53717f31cdec746469cd36b1a15f1929c",
-            "variant_body_sha256": "194c51af3e129827ac75069128fe570e3405232f3bd13b5d4f90e84f93ab5137",
+            "variant_body_sha256": "a596ec4ad59fdd322385c8842289395b88c007c3e8a5254dd1c5e3993877826e",
             "whole_body_inverse": true
           },
           "controlled_count_v1.readcore_saved_result_graph(text,uuid)": {
@@ -434,6 +437,14 @@
             "origin_guard_retained": true,
             "original_body_sha256": "1490dc6bf20a108afd60c33b4a50c94d73bc8e55cc1f07cabb0aa94c217d5931",
             "variant_body_sha256": "563503f60e12150e8698601504782b01c022e0e20cd8c863aeb3a59dc8a2692f",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_snapshot_document(uuid)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_saved_snapshot_document(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "225b6c55030fbb7e85ac747847026f85cd01b1c647dc2db55cb12331194ad417",
+            "variant_body_sha256": "c5b418d8d6b9a3606de50cdb52036e57402496410b78b4f73179cbbb87694d50",
             "whole_body_inverse": true
           },
           "controlled_count_v1.readcore_validate_operation_graph(uuid)": {
@@ -451,10 +462,18 @@
             "original_body_sha256": "178a5cff978022cea722a4aec0045b2375905c49478d61fd1b226775a3c63fe9",
             "variant_body_sha256": "e08c3d7da0e5671a8da126171ab1fe62cc9d296bbc522495ca51da7c8f940b9e",
             "whole_body_inverse": true
+          },
+          "controlled_count_v1.saved_boundary_manifest(jsonb,uuid)": {
+            "changed_private_callee_references": 0,
+            "new_signature": "controlled_count_v1.history_scan_saved_boundary_manifest(jsonb,uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "6a49c7a8e31d9ea9e0458068c3cea36f172ceaf6ed9e22101dbbcb626f441abd",
+            "variant_body_sha256": "dbabc2d1385ce5b896480c0549f73d06da482683607c6c12a837c09ed0e89ce8",
+            "whole_body_inverse": true
           }
         }
       },
-      "only_twelve_private_functions_and_four_body_hashes_added": true,
+      "only_fourteen_private_functions_and_four_body_hashes_added": true,
       "original_relation_frontiers_and_current_authority_preserved": true,
       "real_Auth_verification_pending": true,
       "recovery": {
@@ -558,14 +577,15 @@
           "sha256": "41782f9dc1f9db4a950f1bc275f4053154d401116def0128d248546b0bf2a07b"
         },
         "history_document_reuse.py": {
-          "bytes": 6794,
-          "sha256": "9472ae4537f9ac0cb991db8032abbf1c45509cb2374a5ea95e1cf265e883a49d"
+          "bytes": 10595,
+          "sha256": "89b1b797c89e0946b3deb1ee8a667f4fd4c5ab0e677850a522ce981582d274d3"
         },
         "recovery_admission_source.py": {
           "bytes": 9345,
           "sha256": "cbea60b92078c1d78b31f6ceedb7723bf1dec6fe2cf1769cdbac1f0fe24a06a8"
         }
-      }
+      },
+      "variant_headers_equal_original_plus_one_private_argument": true
     },
     "snapshot_validation_deduplication": {
       "all_deadlines_unchanged": true,
