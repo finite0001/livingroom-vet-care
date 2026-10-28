@@ -37,8 +37,8 @@
       "sha256": "a7c1a5c1a9bdbf91f694225ed942597c957b65d0e33c91a148bacb8d064d0eba"
     },
     "browser_runner.py": {
-      "bytes": 15705,
-      "sha256": "d1d9fca5427033803891ec404a174b509be1122719cc6773ca08a9a40d5ea830"
+      "bytes": 15950,
+      "sha256": "f292b2d18755e9e31c6c456aade5ff1e68cb7ba8c8c70c1bc96f3478e67cfb5e"
     },
     "count_audit.py": {
       "bytes": 5832,

@@ -16,6 +16,25 @@ import full121_effects as effects
 import full121_count_pair as pair
 
 
+def safe_failure_diagnostics(value):
+    """Closed nonsecret projection; optional fields may be absent on failures."""
+    result = []
+    if type(value) is not list:
+        return result
+    for item in value[:8]:
+        if type(item) is not dict or item.get("phase") not in ("route", "page", "workflow"):
+            continue
+        if item.get("error_name") not in ("Error", "AssertionError", "TimeoutError", "TypeError", "ReferenceError", "SyntaxError", "Other"):
+            continue
+        safe = {"phase": item["phase"], "error_name": item["error_name"]}
+        for key in ("driver_line", "driver_column", "actual_integer", "expected_integer"):
+            maximum = 100000 if key.startswith("driver_") else 599
+            if key in item and (item[key] is None or type(item[key]) is int and 0 <= item[key] <= maximum):
+                safe[key] = item[key]
+        result.append(safe)
+    return result
+
+
 def private_json(path, cap=262144):
     path = Path(path)
     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
@@ -172,17 +191,7 @@ def run(context, modules, runtime, save):
             and call.get("relation") in ("profiles", "user_roles") and type(call.get("status")) is int]
         if type(result.get("blocked_origins")) is list:
             diagnostic["blocked_origin_count"] = len(result["blocked_origins"])
-        diagnostic["failure_diagnostics"] = []
-        for item in result.get("failure_diagnostics", [])[:8]:
-            if type(item) is not dict or item.get("phase") not in ("route", "page", "workflow"):
-                continue
-            if item.get("error_name") not in ("Error", "AssertionError", "TimeoutError", "TypeError", "ReferenceError", "SyntaxError", "Other"):
-                continue
-            safe = {"phase": item["phase"], "error_name": item["error_name"]}
-            for key in ("driver_line", "driver_column", "actual_integer", "expected_integer"):
-                if item.get(key) is None or type(item.get(key)) is int and 0 <= item[key] <= 100000:
-                    safe[key] = item[key]
-            diagnostic["failure_diagnostics"].append(safe)
+        diagnostic["failure_diagnostics"] = safe_failure_diagnostics(result.get("failure_diagnostics"))
         diagnostic["rpc_statuses"] = [{"rpc": call.get("rpc"), "status": call.get("status")}
             for call in result.get("calls", []) if type(call) is dict
             and call.get("rpc") in pair.RPCS and type(call.get("status")) is int]

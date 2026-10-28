@@ -1,0 +1,17 @@
+@page narcotics-register {
+  size: landscape;
+  margin: 12mm;
+}
+@media print {
+  body:has(> [data-narcotics-print-root]) > :not([data-narcotics-print-root]) {
+    display: none !important;
+  }
+  [data-narcotics-print-root] {
+    page: narcotics-register;
+    display: block;
+  }
+  .narcotics-register-report thead { display: table-header-group; }
+  .narcotics-register-report tr,
+  .narcotics-register-event { break-inside: avoid; }
+  .narcotics-register-report .overflow-x-auto { overflow: visible; }
+}

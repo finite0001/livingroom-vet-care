@@ -11,6 +11,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parent / "workflows"))
 import http_transport
 import owner_capture
+import browser_runner
 
 
 class Server(ThreadingHTTPServer):
@@ -56,6 +57,16 @@ class Runtime:
 
 
 class HttpControls(unittest.TestCase):
+    def test_browser_error_projection_handles_absent_fields_without_exposing_messages(self):
+        error = {"phase": "page", "error_name": "TypeError", "driver_line": None,
+                 "message": "private message", "stack": "private stack", "actual_integer": True}
+        self.assertEqual(browser_runner.safe_failure_diagnostics([error]),
+                         [{"phase": "page", "error_name": "TypeError", "driver_line": None}])
+        error.update(phase="route", driver_line=120, actual_integer=401, expected_integer=200)
+        self.assertEqual(browser_runner.safe_failure_diagnostics([error])[0]["actual_integer"], 401)
+        self.assertEqual(browser_runner.safe_failure_diagnostics(None), [])
+        self.assertEqual(browser_runner.safe_failure_diagnostics([{"phase": "secret", "error_name": "Error"}]), [])
+
     def exercise(self, mode, limit=2):
         with tempfile.TemporaryDirectory(prefix="lrv-wire-control-") as directory:
             folder = Path(directory).resolve()

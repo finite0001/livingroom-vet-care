@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61535586,
-      "sha256": "eb5ec87db4885aa64c2471f8d1bbee5f13ca96987b8fc68e8502ae00d2330be8"
+      "bytes": 61535755,
+      "sha256": "ec3900d6627185560719806639bab4d39ebe6274f7e09e16513636ccab207dd0"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61531684,
-      "sha256": "e84ee17471ee5d33b3ca4decf7c011c325593846fae9568898c56f293b4e16e7"
+      "bytes": 61531853,
+      "sha256": "7f9e55176d58a559aecf274c6096b7e21b58df1b132bde59852d34f725676a6f"
     }
   },
   "source_corrections": {
@@ -128,6 +128,22 @@
         "public.record_anesthesia_drug_administration"
       ],
       "only_composite_return_type_schema_qualified": true
+    },
+    "finishing_immutable_result_reuse": {
+      "all_deadlines_unchanged": true,
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "5bc404e90e44dce98eb5d4c0ea4b3d0a75c144d1d79039a3feb537f24cb62a74",
+          "new_expression": "  -- The unchanged validator above has just checked this complete immutable\n  -- result, registry, children, cause and closure under the same held frontier.\n  result_value:=(controlled_count_v1.saved_result_row(operation_value->>'result_kind',(operation_value->>'result_id')::uuid))->'document';",
+          "old_body_sha256": "9bd42d96ef104f7569538879ba14abc494f5aa0e8ac422cf5257b0758cd726ed",
+          "old_expression": "  result_value:=controlled_count_v1.saved_result_graph(operation_value->>'result_kind',(operation_value->>'result_id')::uuid);"
+        }
+      },
+      "only_one_function_body_hash_metadata_difference": true,
+      "real_Auth_verification_pending": true
     },
     "historical_transport_receipts": {
       "actual_hosted_history_rehearsal_pending": true,

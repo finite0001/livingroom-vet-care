@@ -52,9 +52,21 @@ class RegisterDiagnosis(business.BusinessInstallation):
 
     def after_business(self, context, methods, runtime, proof):
         http = context['http']; actor, other = context['users']; ids = context['ids']
+        wire_entries = []
         def rpc(label, name, request):
             result = http.rpc(name, {'p_request': request}, actor)
             business.save(self.evidence, 'register-' + label, result)
+            selected = {'preserve-form': 'form', 'download-form': 'download', 'create-report': 'report',
+                        'create-later-report': 'later_report', 'report-first-page': 'first_page', 'report-second-page': 'second_page'}
+            if label in selected:
+                call = http.calls[-1]
+                if call['path'] != '/rest/v1/rpc/' + name or call['status'] != 200 or call['admin_identity_creation'] is not False:
+                    raise ValueError('Original authenticated operational response required')
+                item = dict(kind=selected[label], request=request,
+                            response=dict(file=f'http-{len(http.calls):03d}-response.json', bytes=call['bytes'], sha256=call['response_sha256']))
+                if label == 'download-form':
+                    item['document_hash'] = saved_form['data']['document_hash']
+                wire_entries.append(item)
             return result
         def refuse(label, name, request, user=actor):
             status, result = http.post('/rest/v1/rpc/' + name, {'p_request': request}, user['token'])
@@ -134,9 +146,15 @@ class RegisterDiagnosis(business.BusinessInstallation):
         counts = runtime.selected_query('register-engineering-exact-counts', "select jsonb_build_object('descriptor',(select count(*)from narcotics_register_v1.descriptor),'operations',(select count(*)from narcotics_register_v1.operations),'reports',(select count(*)from narcotics_register_v1.reports),'contents',(select count(*)from narcotics_register_v1.form_contents),'forms',(select count(*)from narcotics_register_v1.form_records));")
         if counts != dict(descriptor=1, operations=6, reports=2, contents=2, forms=2):
             raise ValueError('Exact source-declared new report/form row counts differ')
+        business.save(self.evidence, 'register-wire-original-inputs', dict(engineering_only=True, entries=wire_entries))
+        checked = business.installation.process.run(['node', '--experimental-strip-types', str(HERE / 'verify-register-native-wire.mjs'), str(self.evidence)],
+            cwd=business.installation.ROOT, timeout=runtime.remaining(10), stdout_cap=4096, stderr_cap=65536, check=True)
+        wire_proof = business.installation.decode(checked.stdout)
+        business.save(self.evidence, 'register-native-wire-proof', wire_proof)
         business.save(self.evidence, 'register-engineering-proof', {'engineering_only': True, 'original_file_sha256': digest(raw),
             'actual_binary_recovery': True, 'immutable_report_recovery': True, 'later_evidence_does_not_rewrite_snapshot': True,
-            'formula_safe_csv': True, 'late_mutations_permanently_refused': True, 'new_row_counts': counts})
+            'formula_safe_csv': True, 'late_mutations_permanently_refused': True, 'new_row_counts': counts,
+            'actual_staff_wire_verifier': wire_proof})
 
     def execute(self):
         try:
@@ -152,7 +170,8 @@ if __name__ == '__main__':
         raise ValueError('Explicit owned synthetic engineering run required')
     os.umask(0o077); started = time.monotonic()
     layout, pins = business.source_admission()
-    paths = [Path(__file__).resolve(), HERE / 'build_operational_module.py', *sorted(source.SOURCE.glob('*.sql'))]
+    paths = [Path(__file__).resolve(), HERE / 'build_operational_module.py', HERE / 'verify-register-native-wire.mjs',
+             *sorted(source.SOURCE.glob('*.sql')), *sorted((business.installation.ROOT / 'src/hub/features/controlled-drugs/register').glob('*.ts'))]
     for path in paths:
         pins[str(path.relative_to(business.installation.ROOT))] = digest(business.installation.prefix.regular(path))
     business.installation.execute_owned(layout, pins, started, RegisterDiagnosis)
