@@ -206,6 +206,9 @@ PREPARATION_ENTRY = '''
  if p_kind='reconciliation_approval'then
   return controlled_count_v1.history_approval_graph(p_id);
  end if;
+ if p_kind='reconciliation_execution'then
+  return controlled_count_v1.history_execution_graph(p_id);
+ end if;
 '''
 
 # The ordinary graph retains its original complete frontier assertion before
@@ -388,3 +391,65 @@ LIVE_RESOLUTION_REUSE = '''   declare retained_resolution_row jsonb;retained_res
     else resolution_doc:=controlled_count_v1.readcore_saved_result_graph('cause_resolution',resolution_value);end if;
    end;'''
 LIVE_CAUSE_EDITS = ((LIVE_CAUSE_ORIGINAL, LIVE_CAUSE_REUSE), (LIVE_RESOLUTION_ORIGINAL, LIVE_RESOLUTION_REUSE))
+
+
+EXECUTION_GRAPH_SQL = '''CREATE FUNCTION controlled_count_v1.history_execution_graph(p_id uuid) RETURNS jsonb
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog,controlled_count_v1,pg_temp
+SET timezone='UTC' SET datestyle='ISO,YMD' SET intervalstyle='postgres' SET extra_float_digits=3 AS $$
+DECLARE execution_row jsonb;approval_row jsonb;preparation_row jsonb;approval_document jsonb;preparation_document jsonb;
+ registry_row jsonb;validated_documents jsonb:='{}';memo_value jsonb;
+BEGIN
+ PERFORM controlled_count_entry_v1.resource_origin_catalog_required();
+ PERFORM controlled_count_entry_v1.assert_read_frontier();
+ SELECT to_jsonb(e)INTO STRICT execution_row FROM controlled_count_v1.reconciliation_executions e WHERE e.execution_id=p_id;
+ BEGIN
+  SELECT to_jsonb(a)INTO STRICT approval_row FROM controlled_count_v1.reconciliation_approvals a
+   WHERE to_jsonb(a.approval_id)=execution_row->'approval_id';
+  -- Complete approval validation also completes its exact preparation graph.
+  -- No current authorization, live effects or execution boundary is reused.
+  approval_document:=controlled_count_v1.history_approval_graph((approval_row->>'approval_id')::uuid);
+  SELECT to_jsonb(p)INTO STRICT preparation_row FROM controlled_count_v1.reconciliation_preparations p
+   WHERE to_jsonb(p.preparation_id)=execution_row->'preparation_id';
+  preparation_document:=preparation_row->'document';
+  IF approval_row->'preparation_id'IS DISTINCT FROM preparation_row->'preparation_id'
+  OR approval_document#>'{body,preparation_id}'IS DISTINCT FROM preparation_row->'preparation_id'
+  OR approval_document#>'{body,preparation_hash}'IS DISTINCT FROM preparation_row->'record_hash'
+  OR approval_document::text IS DISTINCT FROM(approval_row->'document')::text
+  OR approval_document->'id'IS DISTINCT FROM approval_row->'approval_id'
+  OR approval_document->'record_hash'IS DISTINCT FROM approval_row->'record_hash'
+  OR approval_document->>'record_hash'IS DISTINCT FROM controlled_count_v1.document_hash(approval_document)
+  OR preparation_document->'id'IS DISTINCT FROM preparation_row->'preparation_id'
+  OR preparation_document->'record_hash'IS DISTINCT FROM preparation_row->'record_hash'
+  OR preparation_document->>'record_hash'IS DISTINCT FROM controlled_count_v1.document_hash(preparation_document)THEN
+   RAISE EXCEPTION 'count_source_invalid'using errcode='P0001',detail='',hint='';END IF;
+  SELECT to_jsonb(o)INTO STRICT registry_row FROM controlled_count_v1.operations o WHERE to_jsonb(o.operation_id)=preparation_row->'operation_id';
+  PERFORM controlled_count_v1.saved_registry_values(registry_row,preparation_document);
+  IF preparation_document->'operation_id'IS DISTINCT FROM registry_row->'operation_id'
+  OR registry_row->>'result_kind'IS DISTINCT FROM'reconciliation_preparation'
+  OR registry_row->'result_id'IS DISTINCT FROM preparation_row->'preparation_id'
+  OR registry_row->'product_id'IS DISTINCT FROM preparation_row->'product_id'
+  OR registry_row->'site_id'IS DISTINCT FROM preparation_row->'site_id'THEN
+   RAISE EXCEPTION 'count_source_invalid'using errcode='P0001',detail='',hint='';END IF;
+  PERFORM controlled_count_v1.readcore_operation_closure_required((registry_row->>'operation_id')::uuid);
+  SELECT to_jsonb(o)INTO STRICT registry_row FROM controlled_count_v1.operations o WHERE to_jsonb(o.operation_id)=approval_row->'operation_id';
+  PERFORM controlled_count_v1.saved_registry_values(registry_row,approval_document);
+  IF approval_document->'operation_id'IS DISTINCT FROM registry_row->'operation_id'
+  OR registry_row->>'result_kind'IS DISTINCT FROM'reconciliation_approval'
+  OR registry_row->'result_id'IS DISTINCT FROM approval_row->'approval_id'
+  OR registry_row->'product_id'IS DISTINCT FROM approval_document->'product_id'
+  OR registry_row->'site_id'IS DISTINCT FROM approval_document->'site_id'
+  OR registry_row->'product_id'IS DISTINCT FROM preparation_row->'product_id'
+  OR registry_row->'site_id'IS DISTINCT FROM preparation_row->'site_id'THEN
+   RAISE EXCEPTION 'count_source_invalid'using errcode='P0001',detail='',hint='';END IF;
+  PERFORM controlled_count_v1.readcore_operation_closure_required((registry_row->>'operation_id')::uuid);
+  -- Publish neither ancestor until BOTH complete graphs/registry bindings and
+  -- original closures are proved. Reuse remains local to this invocation.
+  memo_value:=jsonb_build_object('reconciliation_preparation:'||(preparation_row->>'preparation_id'),preparation_document,
+   'reconciliation_approval:'||(approval_row->>'approval_id'),approval_document);
+  IF octet_length(memo_value::text)<=16777216 THEN validated_documents:=memo_value;END IF;
+ EXCEPTION WHEN query_canceled OR assert_failure THEN RAISE;
+  WHEN OTHERS THEN validated_documents:='{}'::jsonb;
+ END;
+ RETURN controlled_count_v1.history_scan_saved_result_graph('reconciliation_execution',p_id,validated_documents);
+END $$;
+'''

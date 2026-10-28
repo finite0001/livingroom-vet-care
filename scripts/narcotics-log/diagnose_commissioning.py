@@ -30,7 +30,7 @@ TARGETS['variance-execute'] = ('variance_reconciliation', 'execute_controlled_co
     ('public.execute_controlled_count_reconciliation_v1(jsonb)', 'count_request_failed', True)))
 
 
-def instrument(raw, static, signature, failure, rethrow):
+def instrument(raw, static, signature, failure, rethrow, *, track_execute_only=False):
     name = signature.split("(", 1)[0]
     import re
     matches = list(re.finditer(r"CREATE(?: OR REPLACE)? FUNCTION " + re.escape(name) + r"\(", raw))
@@ -59,8 +59,9 @@ def instrument(raw, static, signature, failure, rethrow):
             anchor = "begin\n perform controlled_count_entry_v1.count_entry_budget_required();"
             if changed.count(anchor) != 1:
                 raise ValueError("Exact finalization profiling anchor required")
+            tracked = "p_action='reconciliation_execute'" if track_execute_only else "p_action=ANY(ARRAY['reconciliation_prepare','reconciliation_execute','finalize'])"
             changed = changed.replace(anchor,
-                "begin\n if p_action=ANY(ARRAY['reconciliation_prepare','reconciliation_execute','finalize'])then perform pg_catalog.set_config('track_functions','all',true);end if;\n"
+                "begin\n if " + tracked + "then perform pg_catalog.set_config('track_functions','all',true);end if;\n"
                 " perform controlled_count_entry_v1.count_entry_budget_required();", 1)
             changed = changed.replace(
                 "GET STACKED DIAGNOSTICS diagnostic_native_context = PG_EXCEPTION_CONTEXT;",
@@ -97,7 +98,7 @@ class Diagnosis(business.BusinessInstallation):
         changed_definition = json.loads(business.installation.canonical(self.expected_module))
         wanted = {}
         for signature, failure, rethrow in self.functions:
-            program, digest = instrument(raw, static, signature, failure, rethrow)
+            program, digest = instrument(raw, static, signature, failure, rethrow, track_execute_only=self.target == "variance-execute")
             programs.append(program)
             changed_definition["properties"]["functions"][signature]["body_sha256"] = digest
             wanted[signature] = digest

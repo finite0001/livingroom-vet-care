@@ -1,6 +1,7 @@
 /** Synthetic presentation only. No Auth server, JWT, database or physical stock. */
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import "../../src/index.css";
 import { RegisterWorkspace } from "../../src/hub/features/controlled-drugs/register/RegisterWorkspace";
 import { createRegisterOperations } from "../../src/hub/features/controlled-drugs/register/operation-controller";
@@ -49,4 +50,4 @@ function Fixture() {
     {active && identity ? <RegisterWorkspace sessions={sessions} identity={identity} client={client} operations={operations} productId={id(4)} siteId={id(5)} /> : <p role="status">Synthetic presentation identity cleared.</p>}
   </main>;
 }
-createRoot(document.getElementById("root")!).render(<Fixture />);
+createRoot(document.getElementById("root")!).render(<RouterProvider router={createMemoryRouter([{ path: "*", element: <Fixture /> }])} />);

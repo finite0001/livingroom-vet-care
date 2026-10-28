@@ -108,3 +108,28 @@ binding includes the clinical-alert rejection fix; a source inverse recovers the
 complete previous binding and the original operative browser workflow. The
 mocked legacy screen suite uses a separate Vite transport fixture, without
 changing the production connection rules or the genuine Auth proof.
+
+## Draft operational completion
+
+The candidate includes staff routes for recovery, register exports and original
+supporting files. `operational_browser.py` adds a separate Linux real-SDK-login
+job for these workspaces. It preserves the frozen 146-file count proof, binds
+the operational frontend source, reloads after deliberately lost arm/form
+responses, and verifies ID-only recovery without another save. Its original
+120-second browser limit includes browser cleanup and final parent admission;
+the owning database retains the original 600/540/55-second limits.
+
+`receiver_rehearsal.py` restores an untouched native archive into a separate
+empty owned database. Before restore it removes only empty-receiver schema-local
+creator defaults; archived permissions then replay normally. With ingress still
+closed, `restore-witness-check.sql` accepts only the exact original witness CHECK
+or PostgreSQL 17's known flattened BETWEEN spelling, and recreates that one
+constraint using its frozen original source. The unchanged metadata seals and
+complete original rows, sequences and Auth comparisons must then pass.
+
+The rehearsal also restarts only its captured receiver database, requires a new
+recovery epoch and independent acknowledgment, and rejects earlier sessions and
+the earlier acknowledgment. An eight-second reconciliation execution failure
+still blocks full acceptance. These source changes and partial proofs do not
+authorize production installation or certify stock. Production assembly remains
+disabled until the complete genuine workflows and operational browser pass.

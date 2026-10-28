@@ -52,6 +52,9 @@ const InventoryPage = lazy(() => import("./hub/features/inventory/InventoryPage"
 const RecordReviewScopeChooser = lazy(() => import("./hub/features/controlled-drugs/record-review/RecordReviewScopeChooser").then(module => ({ default: module.RecordReviewScopeChooser })));
 const RecordReviewPage = lazy(() => import("./hub/features/controlled-drugs/record-review/RecordReviewPage").then(module => ({ default: module.RecordReviewPage })));
 const NarcoticsLogPage = lazy(() => import("./hub/features/controlled-drugs/count/NarcoticsLogPage").then(module => ({ default: module.NarcoticsLogPage })));
+const NarcoticsRegisterPage = lazy(() => import("./hub/features/controlled-drugs/register/RegisterPage").then(module => ({ default: module.RegisterPage })));
+const NarcoticsRecoveryPage = lazy(() => import("./hub/features/controlled-drugs/recovery/RecoveryPage").then(module => ({ default: module.RecoveryPage })));
+const NarcoticsOperationalBoundary = lazy(() => import("./hub/features/controlled-drugs/recovery/NarcoticsOperationalBoundary").then(module => ({ default: module.NarcoticsOperationalBoundary })));
 const ControlledStockWitnessPage = lazy(() => import("./hub/features/controlled-drugs/witness/WitnessWorkspace"));
 const NarcoticsAdministrationPage = lazy(() => import("./hub/features/controlled-drugs/administration/AdministrationPage").then(module => ({ default: module.AdministrationPage })));
 const OutboxRetryPage = lazy(() => import("@/hub/features/outbox-retry/OutboxRetryPage"));
@@ -133,6 +136,9 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub/appointments" element={<Navigate to="/hub/schedule" replace />} />
                   <Route path="/hub/deliveries" element={<DeliveriesPage />} />
                   <Route path="/hub/inventory" element={<InventoryPage />} />
+                  <Route path="/hub/inventory/narcotics/recovery/*" element={<NarcoticsRecoveryPage />} />
+                  <Route path="/hub/inventory/narcotics/reports/*" element={<NarcoticsRegisterPage />} />
+                  <Route element={<NarcoticsOperationalBoundary />}>
                   <Route path="/hub/inventory/narcotics/records" element={<RecordReviewScopeChooser />} />
                   <Route path="/hub/inventory/narcotics/records/:productId/exceptions" element={<RecordReviewPage exceptions />} />
                   <Route path="/hub/inventory/narcotics" element={<NarcoticsLogPage />} />
@@ -142,6 +148,7 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub/inventory/narcotics/:productId/:siteId/settings" element={<NarcoticsLogPage view="settings" />} />
                   <Route path="/hub/inventory/narcotics/:productId/:siteId/records/:eventKind" element={<RecordReviewPage />} />
                   <Route path="/hub/inventory/narcotics/:productId/:siteId/corrections" element={<NarcoticsLogPage view="corrections" />} />
+                  </Route>
                   <Route path="/hub/clients" element={<ClientsPage />} />
                   <Route path="/hub/whogot/source/:eventType/:id" element={<WhogotSourcePage />} />
                   <Route path="/hub/whogot" element={<WhogotPage />} />

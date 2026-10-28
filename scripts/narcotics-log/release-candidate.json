@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61750672,
-      "sha256": "c36f3707f380c5a3997f6073564e987519d6ac813244432236384e58ebb8a678"
+      "bytes": 61758822,
+      "sha256": "892b03dc663ea2e096b2386313c7c64381647ac42d1aca143493d2e863c01e1c"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61746770,
-      "sha256": "5cbd5cfa4a8ef5b22704c08cf007a4d1e99536e7a09a6911c5fd3542c110b416"
+      "bytes": 61754920,
+      "sha256": "b6ccbd1eed09f895a5702556bc0f484a7760cc1156cdacd83121b1fb36752beb"
     }
   },
   "source_corrections": {
@@ -399,6 +399,12 @@
           "controlled_count_v1.saved_cause_category",
           "controlled_count_v1.saved_cause_row_values"
         ],
+        "execution_helper": {
+          "body_sha256": "fcd595c7890b5f9e125e81eb2943add0184e5f819bab42ec151149d642bbe957",
+          "completed_approval_and_preparation_graphs_registry_and_closures_before_reuse": true,
+          "signature": "controlled_count_v1.history_execution_graph(uuid)",
+          "whole_sql_sha256": "10df483ab1703c5463498581d0f88f82525d13fa30ede8d260aab98ef00a3aba"
+        },
         "kind": "single-invocation-validated-history-documents-v1",
         "live_causes": {
           "explicit_selected_registry_root_required": true,
@@ -412,7 +418,7 @@
         "map_added_only_after_complete_operation_and_closure_validation": true,
         "no_persisted_or_caller_supplied_certificate": true,
         "ordinary_preparation_entry": {
-          "new_body_sha256": "dc3f81ec2b9bd70d394a297133f60e04bf0191b92ff58db6d49bc6ba5694fd5a",
+          "new_body_sha256": "678a689ebf818b062a972814b1ae374c6486cf65311d5d0f14c1da5d07f10c34",
           "original_body_sha256": "adddd0c05f6b46bb5f4f199a4c70f5908712ce23fa727bff51634162960c15f8",
           "original_full_frontier_retained": true,
           "signature": "controlled_count_v1.saved_result_graph(text,uuid)",
@@ -420,7 +426,7 @@
         },
         "origin_and_current_authority_unchanged": true,
         "preparation_entry": {
-          "new_body_sha256": "51ee9a89f73c5768212352ceeae6b1d1006374168ef8299e60f40ce7471be295",
+          "new_body_sha256": "e3170cc6124d1c23a0f64c03da0192443f834c16c21c99820737f9b6a0d6c7e9",
           "original_body_sha256": "1490dc6bf20a108afd60c33b4a50c94d73bc8e55cc1f07cabb0aa94c217d5931",
           "signature": "controlled_count_v1.readcore_saved_result_graph(text,uuid)",
           "whole_body_inverse": true
@@ -600,7 +606,7 @@
           }
         }
       },
-      "only_twenty_five_private_functions_and_seven_body_hashes_added": true,
+      "only_twenty_six_private_functions_and_seven_body_hashes_added": true,
       "original_relation_frontiers_and_current_authority_preserved": true,
       "real_Auth_verification_pending": true,
       "recovery": {
@@ -710,8 +716,8 @@
           "sha256": "a1c73a3e5c440cdeadea81ea273ce780d47874e5bc75ceac5204fb173a999d0c"
         },
         "history_document_reuse.py": {
-          "bytes": 25312,
-          "sha256": "56440cd8b3d5e5febdf9e31e5bac15516be40da3e37706996d3348ffa61092e8"
+          "bytes": 30329,
+          "sha256": "28b0c23c15bdcd5f5454ee731615bf466a3263f14f984631321b4f28f118a0a3"
         },
         "recovery_admission_source.py": {
           "bytes": 10068,

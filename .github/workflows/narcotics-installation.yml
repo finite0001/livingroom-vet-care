@@ -233,6 +233,43 @@ jobs:
             /tmp/lrv-narcotics-install-*/rpc-failure.json
             /tmp/lrv-narcotics-install-*/*-failure.txt
 
+  operational-staff-browser:
+    needs: forward-installation
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
+      - name: Admit original operational frontend and backend sources
+        run: python3 -I -B scripts/narcotics-log/operational_browser.py --check-source
+      - name: Verify real staff login and interrupted operational saves
+        run: python3 -I -B scripts/narcotics-log/operational_browser.py --run-synthetic-local
+      - name: Retain bounded results without credentials or session tokens
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-operational-staff-browser
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/primary-failure.txt
+            /tmp/lrv-narcotics-install-*/cleanup-failure.txt
+            /tmp/lrv-narcotics-install-*/source-failure.txt
+            /tmp/lrv-narcotics-install-*/authenticated-operational-browser-proof.json
+            /tmp/lrv-narcotics-install-*/operational-browser-failure.json
+            /tmp/lrv-operational-browser-*/operational-browser-proof/result.json
+            /tmp/lrv-operational-browser-*/operational-browser-proof/actual-operational-workspace.png
+
   populated-recovery:
     needs: forward-installation
     runs-on: ubuntu-24.04-arm

@@ -11,6 +11,7 @@ import type { RegisterOperations } from "./operation-controller.ts";
 import { parseRegisterPointer, registerFormMetadata, type RegisterDataset, type RegisterListReply, type RegisterReply, type RegisterReportSaved } from "./schema.ts";
 import { parseRegisterDataset, registerSha } from "./wire.ts";
 import { RegisterReport } from "./RegisterReport";
+import { useUnsavedChanges } from "../../clinical/use-unsaved-changes";
 import "./register-print.css";
 
 interface RegisterWorkspaceProps {
@@ -35,6 +36,7 @@ export function RegisterWorkspace({ sessions, identity, client, operations, prod
   const [kind, setKind] = useState("supplier_receipt"), [title, setTitle] = useState(""), [obtained, setObtained] = useState(() => utcInput(Date.now())), [eventId, setEventId] = useState("");
   const [file, setFile] = useState<File | null>(null); const running = useRef(false), alive = useRef(true), fileInput = useRef<HTMLInputElement>(null);
   const [history, setHistory] = useState<RegisterListReply | null>(null);
+  const guard = useUnsavedChanges(!!file || title !== "" || eventId !== "", "Your supporting-file draft has not been recorded. Pending saves remain recoverable.");
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const current = () => alive.current && sessions.isCurrent(identity);
   let pending = false, storageError = false;
@@ -49,7 +51,11 @@ export function RegisterWorkspace({ sessions, identity, client, operations, prod
     return () => { cancelAnimationFrame(frame); window.removeEventListener("afterprint", finish); };
   }, [identity, printing, sessions]);
   function accept(result: RegisterReply) {
+    if (result.state === "saved" && (result.request_metadata.product_id !== productId || result.request_metadata.site_id !== siteId)) {
+      setMessage("The original result was verified for another medication or site. Open that medication to view it."); return;
+    }
     setReply(result);
+    if (result.state === "saved" && result.kind === "form") { setFile(null); setTitle(""); setEventId(""); if (fileInput.current) fileInput.current.value = ""; }
     if (result.state === "saved" && result.kind === "report") { setReport(result); setDataset(parseRegisterDataset(result.data.dataset_text)); setEventId(""); }
     setMessage(result.state === "saved" ? "Saved and verified." : result.state === "abandoned" ? "The original operation is permanently closed. You can start another." : "No saved result is visible yet. Keep checking, or permanently close this operation before starting another.");
   }
@@ -72,7 +78,7 @@ export function RegisterWorkspace({ sessions, identity, client, operations, prod
     if (bytes.length !== file.size) throw new Error("The selected file changed. Choose it again.");
     const chunks: string[] = []; for (let index = 0; index < bytes.length; index += 4096) chunks.push(String.fromCharCode(...bytes.subarray(index, index + 4096)));
     const result = await operations.save("form", { ...metadata, base64: btoa(chunks.join("")) }, identity);
-    if (current()) { accept(result); setFile(null); if (fileInput.current) fileInput.current.value = ""; }
+    if (current()) accept(result);
   }
   async function recover(mode: "read" | "close") { const result = await operations.recover(mode, identity); if (current()) accept(result); }
   async function historyPage(after: string | null = null) {
@@ -94,7 +100,7 @@ export function RegisterWorkspace({ sessions, identity, client, operations, prod
     const bytes = new TextEncoder().encode(text); if (await registerSha(bytes) !== expected) throw new Error("The report bytes could not be verified.");
     if (current()) download(bytes, format === "csv" ? "text/csv;charset=utf-8" : "application/json;charset=utf-8", `narcotics-schedule-${dataset.schedule}-${dataset.report_id}.${format}`);
   }
-  return <section className="space-y-6" aria-label="Register exports and supporting files">
+  return <section className="space-y-6" aria-label="Register exports and supporting files">{guard}
     <header className="space-y-2"><h2 className="font-display text-xl">Register exports and supporting files</h2><p className="text-sm text-muted-foreground">Create a separate report for each medication, registered site and schedule. Administrator audit access is required.</p></header>
     {storageError && <p role="alert" className="text-destructive">Browser recovery storage could not be read. Ask an administrator to review it before saving.</p>}
     {pending && <section className="space-y-3 rounded-xl border p-4"><h3 className="font-medium">An earlier save needs recovery</h3><p className="text-sm">Check its original result. Permanently closing it prevents a delayed request from saving later.</p>
@@ -108,20 +114,20 @@ export function RegisterWorkspace({ sessions, identity, client, operations, prod
     </section>
     <form className="space-y-4 rounded-xl border p-4" onSubmit={event => { event.preventDefault(); void work(create); }}>
       <h3 className="font-display text-lg">Create a register report</h3><div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2"><Label htmlFor="register-from">From (UTC)</Label><Input className="min-h-11" id="register-from" type="datetime-local" step="1" value={from} onChange={event => setFrom(event.target.value)} required disabled={busy} /></div>
-        <div className="space-y-2"><Label htmlFor="register-until">Until (UTC, end excluded)</Label><Input className="min-h-11" id="register-until" type="datetime-local" step="1" value={until} onChange={event => setUntil(event.target.value)} required disabled={busy} /></div>
+        <div className="space-y-2"><Label htmlFor="register-from">From (UTC)</Label><Input className="min-h-11" id="register-from" type="datetime-local" step="1" value={from} onChange={event => setFrom(event.target.value)} required disabled={busy || pending || storageError} /></div>
+        <div className="space-y-2"><Label htmlFor="register-until">Until (UTC, end excluded)</Label><Input className="min-h-11" id="register-until" type="datetime-local" step="1" value={until} onChange={event => setUntil(event.target.value)} required disabled={busy || pending || storageError} /></div>
       </div><p className="text-sm text-muted-foreground">Maximum period: 31 days. Evidence that exceeds the export limit requires administrator review; it is never silently omitted.</p>
       <Button className="min-h-11" type="submit" disabled={busy || pending || storageError}>{busy ? "Working…" : "Create and verify report"}</Button>
     </form>
     <form className="space-y-4 rounded-xl border p-4" onSubmit={event => { event.preventDefault(); void work(preserve); }}>
       <h3 className="font-display text-lg">Preserve a supporting original</h3><p className="text-sm text-muted-foreground">Save a supplier receipt, registration or order form. Existing report snapshots stay unchanged; create a new report to include later files.</p>
-      <div className="grid gap-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="register-kind">Document kind</Label><select id="register-kind" className="min-h-11 w-full rounded-md border bg-background px-3 text-sm" value={kind} onChange={event => setKind(event.target.value)} disabled={busy}>
+      <div className="grid gap-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="register-kind">Document kind</Label><select id="register-kind" className="min-h-11 w-full rounded-md border bg-background px-3 text-sm" value={kind} onChange={event => setKind(event.target.value)} disabled={busy || pending || storageError}>
         <option value="supplier_receipt">Supplier receipt</option><option value="registration">Registration</option><option value="order_form">Order form</option><option value="other">Other supporting file</option>
-      </select></div><div className="space-y-2"><Label htmlFor="register-title">Title</Label><Input className="min-h-11" id="register-title" value={title} maxLength={200} onChange={event => setTitle(event.target.value)} required disabled={busy} /></div>
-      <div className="space-y-2"><Label htmlFor="register-obtained">Obtained at (UTC, staff reported)</Label><Input className="min-h-11" id="register-obtained" type="datetime-local" step="1" value={obtained} onChange={event => setObtained(event.target.value)} required disabled={busy} /></div>
-      <div className="space-y-2"><Label htmlFor="register-event">Related movement</Label><select id="register-event" className="min-h-11 w-full rounded-md border bg-background px-3 text-sm" value={eventId} onChange={event => setEventId(event.target.value)} disabled={busy}><option value="">Medication and site document</option>
+      </select></div><div className="space-y-2"><Label htmlFor="register-title">Title</Label><Input className="min-h-11" id="register-title" value={title} maxLength={200} onChange={event => setTitle(event.target.value)} required disabled={busy || pending || storageError} /></div>
+      <div className="space-y-2"><Label htmlFor="register-obtained">Obtained at (UTC, staff reported)</Label><Input className="min-h-11" id="register-obtained" type="datetime-local" step="1" value={obtained} onChange={event => setObtained(event.target.value)} required disabled={busy || pending || storageError} /></div>
+      <div className="space-y-2"><Label htmlFor="register-event">Related movement</Label><select id="register-event" className="min-h-11 w-full rounded-md border bg-background px-3 text-sm" value={eventId} onChange={event => setEventId(event.target.value)} disabled={busy || pending || storageError}><option value="">Medication and site document</option>
         {dataset?.events.map(event => <option key={event.event_id} value={event.event_id}>#{event.sequence} · {event.event_kind.replace(/_/g, " ")} · {event.recorded_at}</option>)}</select></div></div>
-      <div className="space-y-2"><Label htmlFor="register-file">Original PDF, PNG or JPEG (up to 2 MiB)</Label><Input className="min-h-11" ref={fileInput} id="register-file" type="file" accept="application/pdf,image/png,image/jpeg" onChange={event => setFile(event.target.files?.[0] ?? null)} required disabled={busy} /></div>
+      <div className="space-y-2"><Label htmlFor="register-file">Original PDF, PNG or JPEG (up to 2 MiB)</Label><Input className="min-h-11" ref={fileInput} id="register-file" type="file" accept="application/pdf,image/png,image/jpeg" onChange={event => setFile(event.target.files?.[0] ?? null)} required disabled={busy || pending || storageError} /></div>
       <Button type="submit" className="min-h-11" disabled={busy || pending || storageError}>Preserve original file</Button>
     </form>
     {message && <p role="status" className="whitespace-pre-wrap break-words">{message}</p>}
