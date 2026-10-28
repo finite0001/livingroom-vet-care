@@ -1,0 +1,199 @@
+{
+  "argument": "Only policy grammar/hash is reused. All five source-owned key writers validate original complete policy grammar before insertion. Exact map/input text identity therefore reproduces original pure result without any table lookup. No claim is made for arbitrary owner-forged private map input. Full current policy history and capabilities stay outside this pure shortcut.",
+  "fast_condition_requirements": [
+    "Existing wrong-map-type jsonb_each guard runs first",
+    "Input object",
+    "Canonical nonzero policy UUID",
+    "Presence of policy_values:<canonical UUID>",
+    "Exact map-value/input text identity",
+    "Explicit key expression: policy_values prefix concatenated with parenthesized p_document->>policy_id text extraction"
+  ],
+  "kind": "lrv-policy-pure-grammar-map-source-evidence-v1",
+  "policy_key_writers": [
+    {
+      "body_sha256": "e101212a478b6620478bec58c32608ae4dd651a1006500d3de6b689148362aab",
+      "identifier": "controlled_count_v1.history_approval_graph",
+      "key_lines": [
+        {
+          "body_line": 10,
+          "source": "grammar_document:=grammar_row.document;grammar_key:='policy_values:'||grammar_row.policy_id::text;"
+        }
+      ],
+      "original_validator_lines": [
+        {
+          "body_line": 19,
+          "source": "perform controlled_count_v1.policy_values(grammar_document);"
+        }
+      ],
+      "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+      "source_line": 24688
+    },
+    {
+      "body_sha256": "24e47c13dd72dcfec8ffc00919f375b600728ef1083111e05198efc9fd87f680",
+      "identifier": "controlled_count_v1.history_execution_graph",
+      "key_lines": [
+        {
+          "body_line": 11,
+          "source": "grammar_document:=grammar_row.document;grammar_key:='policy_values:'||grammar_row.policy_id::text;"
+        }
+      ],
+      "original_validator_lines": [
+        {
+          "body_line": 20,
+          "source": "perform controlled_count_v1.policy_values(grammar_document);"
+        }
+      ],
+      "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+      "source_line": 24744
+    },
+    {
+      "body_sha256": "af18c29d9af0579fab41e27e6b2514f4564b235a9eac6afdb03612aa7177a9f2",
+      "identifier": "controlled_count_v1.history_preparation_graph",
+      "key_lines": [
+        {
+          "body_line": 11,
+          "source": "grammar_document:=grammar_row.document;grammar_key:='policy_values:'||grammar_row.policy_id::text;"
+        }
+      ],
+      "original_validator_lines": [
+        {
+          "body_line": 20,
+          "source": "perform controlled_count_v1.policy_values(grammar_document);"
+        }
+      ],
+      "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+      "source_line": 24582
+    },
+    {
+      "body_sha256": "0fd17fae2b7931d335f98ab0c1d400fa0fd2b314faf73919a17c3c4a4c9ff023",
+      "identifier": "controlled_count_v1.history_resolution_graph",
+      "key_lines": [
+        {
+          "body_line": 14,
+          "source": "grammar_document:=grammar_row.document;grammar_key:='policy_values:'||grammar_row.policy_id::text;"
+        }
+      ],
+      "original_validator_lines": [
+        {
+          "body_line": 23,
+          "source": "perform controlled_count_v1.policy_values(grammar_document);"
+        }
+      ],
+      "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+      "source_line": 24823
+    },
+    {
+      "body_sha256": "d0636b9b850f8c381bfffff2d5af00685dad3ae12c5e1cd65beaaf5b9fb7a091",
+      "identifier": "controlled_count_v1.product_count_history_required",
+      "key_lines": [
+        {
+          "body_line": 27,
+          "source": "memo_key:='policy_values:'||policy_row.policy_id::text;"
+        }
+      ],
+      "original_validator_lines": [
+        {
+          "body_line": 15,
+          "source": "document_value:=controlled_count_v1.policy_history(p_product,item.site_id);"
+        }
+      ],
+      "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+      "source_line": 7404
+    }
+  ],
+  "pure_policy_values_closure": {
+    "forbidden_token_matches": [],
+    "functions": [
+      {
+        "all_schema_qualified_calls": [
+          "controlled_count_v1.count_wire_keys",
+          "controlled_count_v1.principal_values",
+          "public.controlled_stock_text"
+        ],
+        "body_sha256": "38d9bc47ad35d424d4c29023fe4e2e45498c387e8112b6c1bd6299350c7d3485",
+        "identifier": "controlled_count_v1.actor_values",
+        "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+        "source_line": 4983
+      },
+      {
+        "all_schema_qualified_calls": [],
+        "body_sha256": "1a68d1ebf4c679a6c9b7a04c922b200b1afc1c37b6e80c962d583fcb0ee6333c",
+        "identifier": "controlled_count_v1.count_wire_keys",
+        "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+        "source_line": 3514
+      },
+      {
+        "all_schema_qualified_calls": [],
+        "body_sha256": "bf17e77baea48066b60b33c046663174edaa0934fba1d079b23127c4d7e358a5",
+        "identifier": "controlled_count_v1.count_wire_text",
+        "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+        "source_line": 3522
+      },
+      {
+        "all_schema_qualified_calls": [],
+        "body_sha256": "e103d081ef4a1145c816c2ee67b9c937e5fa82643e0b15548330d94f8cb31fe6",
+        "identifier": "controlled_count_v1.count_wire_time",
+        "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+        "source_line": 3534
+      },
+      {
+        "all_schema_qualified_calls": [],
+        "body_sha256": "094ce6ee3937a96fc32d0a500e617b4f1f26294cd1f57de99fce01561e4acdcc",
+        "identifier": "controlled_count_v1.count_wire_uuid",
+        "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+        "source_line": 25178
+      },
+      {
+        "all_schema_qualified_calls": [],
+        "body_sha256": "096e4fa544068cb18e900d495b4b789f2202b4942e2b9cad041087619a30651e",
+        "identifier": "controlled_count_v1.document_hash",
+        "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+        "source_line": 5059
+      },
+      {
+        "all_schema_qualified_calls": [
+          "controlled_count_v1.actor_values",
+          "controlled_count_v1.count_wire_keys",
+          "controlled_count_v1.count_wire_text",
+          "controlled_count_v1.count_wire_time",
+          "controlled_count_v1.count_wire_uuid",
+          "controlled_count_v1.document_hash",
+          "controlled_count_v1.role_set_values"
+        ],
+        "body_sha256": "b0f720b6b541eecb7067128dc5f0f14cc47b4bfaec82bd4845ac46b5d1b31b31",
+        "identifier": "controlled_count_v1.policy_values",
+        "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+        "source_line": 4992
+      },
+      {
+        "all_schema_qualified_calls": [
+          "controlled_count_v1.count_wire_keys",
+          "controlled_count_v1.count_wire_uuid",
+          "controlled_count_v1.role_set_values"
+        ],
+        "body_sha256": "c09aa684c1e229f5ca7ecda2042a6a220b60a0f14788bce6cc34d3802bcb9c09",
+        "identifier": "controlled_count_v1.principal_values",
+        "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+        "source_line": 4961
+      },
+      {
+        "all_schema_qualified_calls": [],
+        "body_sha256": "f714a307ff3b0bb57a3ffde1ea88eac6358662f84c14aa8f4142418c5bd99262",
+        "identifier": "controlled_count_v1.role_set_values",
+        "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+        "source_line": 4947
+      }
+    ],
+    "unresolved_external": [
+      "public.controlled_stock_text"
+    ]
+  },
+  "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+  "source_sha256": "aedf5d8cb68925bc83a952030c0b7afc26f4ba4a31c68677cf291e112558b160",
+  "unchanged_required": [
+    "Snapshot-only source arm",
+    "Complete original policy_values fallback",
+    "All five map constructors",
+    "All public request signatures and private ACLs"
+  ]
+}

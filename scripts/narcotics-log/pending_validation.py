@@ -138,6 +138,16 @@ def build(nodes):
         raise ValueError('Reviewed read-only parent source closure required')
     if re.search(r'\breturn\b|\bexception\s+when\b', code_mask(parent_source), re.I):
         raise ValueError('Parent scan must dominate every successful stage completion')
+    parent_pair_before = """ prep:=controlled_count_v1.saved_result_graph('reconciliation_preparation',(p_scope#>>'{parent_exception,preparation_id}')::uuid);
+ approval:=controlled_count_v1.saved_result_graph('reconciliation_approval',(p_scope#>>'{parent_exception,approval_id}')::uuid);"""
+    parent_pair_after = """ -- A completed approval graph fully validates its exact preparation.
+ approval:=controlled_count_v1.saved_result_graph('reconciliation_approval',(p_scope#>>'{parent_exception,approval_id}')::uuid);
+ prep:=(controlled_count_v1.saved_result_row('reconciliation_preparation',(p_scope#>>'{parent_exception,preparation_id}')::uuid))->'document';
+ IF prep->'id'IS DISTINCT FROM p_scope#>'{parent_exception,preparation_id}'
+ OR approval#>'{body,preparation_id}'IS DISTINCT FROM prep->'id'THEN
+  prep:=controlled_count_v1.saved_result_graph('reconciliation_preparation',(p_scope#>>'{parent_exception,preparation_id}')::uuid);
+ END IF;"""
+    change(parent_signature, [(parent_pair_before, parent_pair_after)])
     closing_signature = 'controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)'
     before_parent = "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'before');\n"
     after_parent = "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'after');\n"
@@ -163,21 +173,27 @@ end """
         " -- The BEFORE UPDATE source guard validates the complete immutable operation\n -- and result/cause/membership graph BEFORE this phase can become finishing.",
         " -- The BEFORE UPDATE source guard retains current authority and exact\n -- operation/result bindings. Mandatory forcing below checks the COMPLETE\n -- graph, saved closures and live membership BEFORE context deletion.")])
     # Reuse only PURE policy grammar/hash already established by the closed
-    # invocation-local constructors. Exact row/cache/input bytes still agree.
+    # invocation-local constructors. Exact validated cache/input bytes agree.
     policy_signature = 'controlled_count_v1.history_scan_policy_values(jsonb,jsonb)'
     policy_before = body(nodes[policy_signature])[1]
     arm_start = policy_before.index(' if exists(\n  select 1 from controlled_count_v1.policies policy_row')
     arm_end = policy_before.index('  union all\n', arm_start)
     old_arm = policy_before[arm_start:arm_end]
-    hash_check = '   and controlled_count_v1.document_hash(p_document)=policy_row.record_hash\n'
-    lookup = "where policy_row.policy_id::text=p_document->>'policy_id'"
-    indexed = "where policy_row.policy_id=CASE WHEN controlled_count_v1.count_wire_uuid(p_document->'policy_id')THEN(p_document->>'policy_id')::uuid ELSE NULL::uuid END"
-    if old_arm.count(hash_check) != 1 or old_arm.count(lookup) != 1:
-        raise ValueError('One exact admitted policy-cache arm required')
-    new_arm = old_arm.replace(hash_check, '', 1).replace(lookup, indexed, 1)
-    policy_node = change(policy_signature, [(old_arm, new_arm)])
+    policy_key = "('policy_values:'||(p_document->>'policy_id'))"
+    fast_policy = """ -- Reuse PURE grammar only for this exact already validated input.
+ -- All five closed constructors validate ORIGINAL policy_values before seeding.
+ IF jsonb_typeof(p_document)='object'
+ AND controlled_count_v1.count_wire_uuid(p_document->'policy_id')IS TRUE
+ AND p_validated_documents ? """ + policy_key + """
+ AND(p_validated_documents->""" + policy_key + """)::text IS NOT DISTINCT FROM p_document::text
+ THEN RETURN p_document;END IF;
+ if exists(
+"""
+    old_policy_cut = old_arm + '  union all\n'
+    policy_node = change(policy_signature, [(old_policy_cut, fast_policy)])
     policy_after = body(policy_node)[1]
-    if policy_after.split('  union all\n', 1)[1] != policy_before.split('  union all\n', 1)[1]:
+    snapshot_anchor = '  select 1 from jsonb_object_keys(p_validated_documents)verified(key)'
+    if policy_after.split(snapshot_anchor, 1)[1] != policy_before.split(snapshot_anchor, 1)[1]:
         raise ValueError('Snapshot-cache hash and complete original fallback must remain exact')
     change('controlled_count_v1.count_graph_deferred()', [(OLD_GLOBAL, NEW_GLOBAL)])
     return changed, dict(
@@ -200,15 +216,22 @@ end """
             saved_closure_deferred_graph_assigned_to_mandatory_product_flush=True,
             dispatcher_post_store_checks_new_closure_and_fresh_frontier=True,
             both_original_pre_publication_v3_checks_retained=True,
-            policy_publication_and_abandoned_closure_lanes_unchanged=True),
+            policy_publication_and_abandoned_closure_lanes_unchanged=True,
+            parent_preparation_reuse=dict(
+                full_approval_graph_retained=True, actual_preparation_row_reread=True,
+                exact_scope_and_approval_child_id_binding=True,
+                mismatch_keeps_original_full_preparation_graph=True,
+                all_current_principal_policy_clock_and_product_checks_unchanged=True)),
         policy_pure_hash_reuse=dict(
             source_function=policy_signature, first_arm_only=True,
-            exact_current_row_cache_input_text_and_scope_bindings_retained=True,
+            exact_original_validated_cache_and_input_text_required=True,
+            object_canonical_uuid_and_key_presence_required=True,
+            first_arm_has_no_table_or_current_authority_semantics=True,
             snapshot_arm_and_original_fallback_byte_identical=True,
             constructors='original policy_history followed by root seeding; four helpers call original policy_values before seeding',
             admitted_private_source_owned_maps_only=True,
             arbitrary_owner_supplied_private_input_equivalence_claimed=False,
-            indexed_uuid_lookup_has_guarded_cast=True),
+            original_policy_row_chain_and_current_authority_checks_unchanged=True),
         immediate_metadata_dominance=dict(
             dispatcher='controlled_count_v1.dispatch_count_management_mutation(text,jsonb)',
             present_branch_full_check=ENTRY + 'recovery_post_frontier_required()',

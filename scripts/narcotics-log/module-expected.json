@@ -15042,7 +15042,7 @@
           "IntervalStyle=postgres",
           "extra_float_digits=3"
         ],
-        "body_sha256": "0b6cc89f3ee5129087ef9421ee98acd2d2e087fcf596689451f217fc53b993a2",
+        "body_sha256": "54b96e1cec4352dd4e7122df871a9e565865e2b423e6fefb9700585a8cc999fc",
         "acl": [
           {
             "grantor": "postgres",
@@ -39460,7 +39460,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "0f57cfc1b2925c28ea8d84883e07e50ee8d158a23b90c4415eb798458a7bf75d",
+        "body_sha256": "f6b9381a0d3c1a799dc303e18767847bcdb8b22bfcf799383fd8db5b22b331c7",
         "acl": [
           {
             "grantor": "postgres",

@@ -22,7 +22,7 @@ BEGIN
  -- grammar validator independently certifies the full document before caching.
  original_value:=controlled_count_v1.policy_values(actual.document);
  cache:=jsonb_build_object('policy_values:'||actual.policy_id::text,original_value);
- FOR variant IN 1..17 LOOP
+ FOR variant IN 1..23 LOOP
   candidate:=original_value;selected_cache:=cache;
   IF variant IN(2,3)THEN
    candidate:=candidate||jsonb_build_object('unreviewed_extra_field',true);
@@ -44,6 +44,13 @@ BEGIN
   ELSIF variant=15 THEN candidate:=jsonb_set(candidate,'{policy_id}',to_jsonb(upper(actual.policy_id::text)));
   ELSIF variant=16 THEN candidate:=jsonb_set(candidate,'{policy_id}','1');
   ELSIF variant=17 THEN candidate:=NULL;
+  ELSIF variant=18 THEN selected_cache:=NULL;
+  ELSIF variant=19 THEN selected_cache:=jsonb_build_object('policy_values:'||actual.policy_id::text,'null'::jsonb);
+  ELSIF variant=20 THEN selected_cache:=jsonb_build_object('unrelated',original_value);
+  ELSIF variant=21 THEN candidate:='"not-a-policy"'::jsonb;
+  ELSIF variant=22 THEN candidate:='[]'::jsonb;
+  ELSIF variant=23 THEN
+   selected_cache:=cache||jsonb_build_object('policy_values:00000000-0000-0000-0000-000000000001',original_value);
   END IF;
   roles_value:=CASE WHEN variant=10 THEN'[]'::jsonb ELSE original_value->'reader_roles'END;
   old_code:=NULL;new_code:=NULL;old_message:=NULL;new_message:=NULL;old_result:=NULL;new_result:=NULL;

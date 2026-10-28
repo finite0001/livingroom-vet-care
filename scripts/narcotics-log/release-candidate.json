@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61926102,
-      "sha256": "aedf5d8cb68925bc83a952030c0b7afc26f4ba4a31c68677cf291e112558b160"
+      "bytes": 61926295,
+      "sha256": "ae24cba4111209980429d00924a9a5309a7787690bac13947680c14f82025257"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61922200,
-      "sha256": "e1fca151f66e34f8003428c899b89f6b120ef1b68b475df34e31820dbd8f5c36"
+      "bytes": 61922393,
+      "sha256": "de1dc50e4c059ef37f73b56626a21f3ce7b7f75fb3ff0a49958d61fefe11410a"
     }
   },
   "source_corrections": {
@@ -474,12 +474,12 @@
           "whole_body_inverse": true
         },
         "controlled_count_v1.history_scan_policy_values(jsonb,jsonb)": {
-          "new_body_sha256": "0f57cfc1b2925c28ea8d84883e07e50ee8d158a23b90c4415eb798458a7bf75d",
+          "new_body_sha256": "f6b9381a0d3c1a799dc303e18767847bcdb8b22bfcf799383fd8db5b22b331c7",
           "original_body_sha256": "522068bfce948fbec1d5900e297c9f64e0d3ed849ecc979d0eb57d04d536196d",
           "replacements": [
             [
-              " if exists(\n  select 1 from controlled_count_v1.policies policy_row\n  where policy_row.policy_id::text=p_document->>'policy_id'\n   and(p_validated_documents->('policy_values:'||policy_row.policy_id::text))::text is not distinct from policy_row.document::text\n   and policy_row.document::text is not distinct from p_document::text\n   and p_document->'policy_id'=to_jsonb(policy_row.policy_id)\n   and p_document->'product_id'=to_jsonb(policy_row.product_id)and p_document->'site_id'=to_jsonb(policy_row.site_id)\n   and p_document->>'record_hash'=policy_row.record_hash\n   and controlled_count_v1.document_hash(p_document)=policy_row.record_hash\n",
-              " if exists(\n  select 1 from controlled_count_v1.policies policy_row\n  where policy_row.policy_id=CASE WHEN controlled_count_v1.count_wire_uuid(p_document->'policy_id')THEN(p_document->>'policy_id')::uuid ELSE NULL::uuid END\n   and(p_validated_documents->('policy_values:'||policy_row.policy_id::text))::text is not distinct from policy_row.document::text\n   and policy_row.document::text is not distinct from p_document::text\n   and p_document->'policy_id'=to_jsonb(policy_row.policy_id)\n   and p_document->'product_id'=to_jsonb(policy_row.product_id)and p_document->'site_id'=to_jsonb(policy_row.site_id)\n   and p_document->>'record_hash'=policy_row.record_hash\n"
+              " if exists(\n  select 1 from controlled_count_v1.policies policy_row\n  where policy_row.policy_id::text=p_document->>'policy_id'\n   and(p_validated_documents->('policy_values:'||policy_row.policy_id::text))::text is not distinct from policy_row.document::text\n   and policy_row.document::text is not distinct from p_document::text\n   and p_document->'policy_id'=to_jsonb(policy_row.policy_id)\n   and p_document->'product_id'=to_jsonb(policy_row.product_id)and p_document->'site_id'=to_jsonb(policy_row.site_id)\n   and p_document->>'record_hash'=policy_row.record_hash\n   and controlled_count_v1.document_hash(p_document)=policy_row.record_hash\n  union all\n",
+              " -- Reuse PURE grammar only for this exact already validated input.\n -- All five closed constructors validate ORIGINAL policy_values before seeding.\n IF jsonb_typeof(p_document)='object'\n AND controlled_count_v1.count_wire_uuid(p_document->'policy_id')IS TRUE\n AND p_validated_documents ? ('policy_values:'||(p_document->>'policy_id'))\n AND(p_validated_documents->('policy_values:'||(p_document->>'policy_id')))::text IS NOT DISTINCT FROM p_document::text\n THEN RETURN p_document;END IF;\n if exists(\n"
             ]
           ],
           "whole_body_inverse": true
@@ -491,6 +491,17 @@
             [
               " if c->>'state'='saved'then perform controlled_count_v1.validate_operation_graph_v3(NEW.operation_id);\n perform controlled_count_entry_v1.assert_read_frontier();end if;",
               " -- The unconditional pending-product guard checks every saved graph.\n if c->>'state'='saved'then perform controlled_count_entry_v1.assert_read_frontier();end if;"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_v1.reconciliation_parent_source_required(jsonb,text)": {
+          "new_body_sha256": "54b96e1cec4352dd4e7122df871a9e565865e2b423e6fefb9700585a8cc999fc",
+          "original_body_sha256": "0b6cc89f3ee5129087ef9421ee98acd2d2e087fcf596689451f217fc53b993a2",
+          "replacements": [
+            [
+              " prep:=controlled_count_v1.saved_result_graph('reconciliation_preparation',(p_scope#>>'{parent_exception,preparation_id}')::uuid);\n approval:=controlled_count_v1.saved_result_graph('reconciliation_approval',(p_scope#>>'{parent_exception,approval_id}')::uuid);",
+              " -- A completed approval graph fully validates its exact preparation.\n approval:=controlled_count_v1.saved_result_graph('reconciliation_approval',(p_scope#>>'{parent_exception,approval_id}')::uuid);\n prep:=(controlled_count_v1.saved_result_row('reconciliation_preparation',(p_scope#>>'{parent_exception,preparation_id}')::uuid))->'document';\n IF prep->'id'IS DISTINCT FROM p_scope#>'{parent_exception,preparation_id}'\n OR approval#>'{body,preparation_id}'IS DISTINCT FROM prep->'id'THEN\n  prep:=controlled_count_v1.saved_result_graph('reconciliation_preparation',(p_scope#>>'{parent_exception,preparation_id}')::uuid);\n END IF;"
             ]
           ],
           "whole_body_inverse": true
@@ -529,6 +540,7 @@
         "controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)",
         "controlled_count_v1.history_scan_policy_values(jsonb,jsonb)",
         "controlled_count_v1.operation_closure_deferred()",
+        "controlled_count_v1.reconciliation_parent_source_required(jsonb,text)",
         "controlled_stock_workflow_v1.witness_121_required()"
       ],
       "compiler_inverse_all_seven_artifacts_exact": true,
@@ -540,6 +552,13 @@
         "dispatcher_post_store_checks_new_closure_and_fresh_frontier": true,
         "only_immediately_dominated_outer_parent_scans_removed": true,
         "original_operation_context_result_principal_bindings_unchanged": true,
+        "parent_preparation_reuse": {
+          "actual_preparation_row_reread": true,
+          "all_current_principal_policy_clock_and_product_checks_unchanged": true,
+          "exact_scope_and_approval_child_id_binding": true,
+          "full_approval_graph_retained": true,
+          "mismatch_keeps_original_full_preparation_graph": true
+        },
         "parent_source_function": "controlled_count_v1.reconciliation_parent_source_required(jsonb,text)",
         "parent_stages_keep_their_complete_scan": true,
         "policy_publication_and_abandoned_closure_lanes_unchanged": true,
@@ -559,15 +578,15 @@
         },
         "expected-module.json": {
           "bytes": 12383153,
-          "sha256": "ccc6681f8bcf26f160441bcd5f1e0566521bec1ee8f6e79c029994dedb3c2628"
+          "sha256": "4c3ca2fffe7d3bc40d04c293be3a4d9224db55cb4f771d55433aff6e4d03e522"
         },
         "install.sql": {
-          "bytes": 61922200,
-          "sha256": "e1fca151f66e34f8003428c899b89f6b120ef1b68b475df34e31820dbd8f5c36"
+          "bytes": 61922393,
+          "sha256": "de1dc50e4c059ef37f73b56626a21f3ce7b7f75fb3ff0a49958d61fefe11410a"
         },
         "postcheck.sql": {
           "bytes": 31295133,
-          "sha256": "c7998fa9d3fa9fc3d41cc09ac8c1d98e5400b0130eb08fae97274b12e02cc3a8"
+          "sha256": "ad63f62b762a83531f0ca49d8d4c94d7a90e27b93425347e8160bf77d325a7d5"
         },
         "preflight.sql": {
           "bytes": 2551471,
@@ -575,7 +594,7 @@
         },
         "source-expected.sql": {
           "bytes": 9163592,
-          "sha256": "ce5f5655aa74e54d44ed563887c81a6c0058e8f466a336c512c054821f89b602"
+          "sha256": "6d7aed419765648d7ed2f0d88ceac1b01ae353ffe965221b0c94663a7680070e"
         }
       },
       "fact_tables": [
@@ -692,9 +711,11 @@
         "admitted_private_source_owned_maps_only": true,
         "arbitrary_owner_supplied_private_input_equivalence_claimed": false,
         "constructors": "original policy_history followed by root seeding; four helpers call original policy_values before seeding",
-        "exact_current_row_cache_input_text_and_scope_bindings_retained": true,
+        "exact_original_validated_cache_and_input_text_required": true,
+        "first_arm_has_no_table_or_current_authority_semantics": true,
         "first_arm_only": true,
-        "indexed_uuid_lookup_has_guarded_cast": true,
+        "object_canonical_uuid_and_key_presence_required": true,
+        "original_policy_row_chain_and_current_authority_checks_unchanged": true,
         "snapshot_arm_and_original_fallback_byte_identical": true,
         "source_function": "controlled_count_v1.history_scan_policy_values(jsonb,jsonb)"
       },
@@ -738,8 +759,8 @@
           "sha256": "e5664aeb827274b77b765314a18739dc7de10addba39c74d555fb14b922e30e2"
         },
         "pending_validation.py": {
-          "bytes": 15561,
-          "sha256": "7f8d21405c945a28b9742ba7f05cf276500fd0ca24928c44b48b7f191dbebf8e"
+          "bytes": 17226,
+          "sha256": "2244b86d47b840ae2ea451fadfce983de7b7c524828b10f27f7b02a3d4332678"
         }
       },
       "unchanged_final_ALL_IMMEDIATE": true

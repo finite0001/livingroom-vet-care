@@ -1,0 +1,67 @@
+{
+  "all_literal_policy_key_occurrences": [
+    "controlled_count_v1.product_count_history_required",
+    "controlled_count_v1.history_scan_policy_values",
+    "controlled_count_v1.history_preparation_graph",
+    "controlled_count_v1.history_approval_graph",
+    "controlled_count_v1.history_execution_graph",
+    "controlled_count_v1.history_resolution_graph"
+  ],
+  "contract_limits": [
+    "Arbitrary owner-forged private-map equivalence is explicitly false. Such a caller can fabricate matching invalid bytes; it is not an admitted public route.",
+    "Snapshot-only SQL proof, row/history validators, current principal/capability/session checks and source metadata/private ACL checks must not be changed in this optimization.",
+    "This is source reasoning, not native performance or Auth acceptance."
+  ],
+  "kind": "source-owned-pure-policy-memo-review-v1",
+  "original_policy_values_body_sha256": "b0f720b6b541eecb7067128dc5f0f14cc47b4bfaec82bd4845ac46b5d1b31b31",
+  "policy_key_writers": [
+    {
+      "body_sha256": "d0636b9b850f8c381bfffff2d5af00685dad3ae12c5e1cd65beaaf5b9fb7a091",
+      "function": "controlled_count_v1.product_count_history_required",
+      "map_origin": "fresh empty invocation-local JSONB object",
+      "storage": "full document, never a projection or authorization boolean",
+      "validation_source": "ORIGINAL policy_history before all-version insertion"
+    },
+    {
+      "body_sha256": "af18c29d9af0579fab41e27e6b2514f4564b235a9eac6afdb03612aa7177a9f2",
+      "function": "controlled_count_v1.history_preparation_graph",
+      "map_origin": "fresh empty invocation-local JSONB object",
+      "storage": "full document, never a projection or authorization boolean",
+      "validation_source": "ORIGINAL policy_values(grammar_document) before insertion"
+    },
+    {
+      "body_sha256": "e101212a478b6620478bec58c32608ae4dd651a1006500d3de6b689148362aab",
+      "function": "controlled_count_v1.history_approval_graph",
+      "map_origin": "fresh empty invocation-local JSONB object",
+      "storage": "full document, never a projection or authorization boolean",
+      "validation_source": "ORIGINAL policy_values(grammar_document) before insertion"
+    },
+    {
+      "body_sha256": "24e47c13dd72dcfec8ffc00919f375b600728ef1083111e05198efc9fd87f680",
+      "function": "controlled_count_v1.history_execution_graph",
+      "map_origin": "fresh empty invocation-local JSONB object",
+      "storage": "full document, never a projection or authorization boolean",
+      "validation_source": "ORIGINAL policy_values(grammar_document) before insertion"
+    },
+    {
+      "body_sha256": "0fd17fae2b7931d335f98ab0c1d400fa0fd2b314faf73919a17c3c4a4c9ff023",
+      "function": "controlled_count_v1.history_resolution_graph",
+      "map_origin": "fresh empty invocation-local JSONB object",
+      "storage": "full document, never a projection or authorization boolean",
+      "validation_source": "ORIGINAL policy_values(grammar_document) before insertion"
+    }
+  ],
+  "predecessor_commit": "38229208e3b3c528c1a65ce420c7c17613edd698",
+  "proof": [
+    "Both constructor classes call original full grammar/hash validation before inserting any policy-domain key.",
+    "Result, snapshot and body_grammar domains are disjoint; fixed result-kind whitelist cannot generate policy_values keys.",
+    "Only five source-owned roots create the private map; closed variants forward it. No public facade accepts the private map argument.",
+    "Original policy_values is pure captured JSON validation; memo hits do not certify row binding, current policy-chain membership, live capability or Auth state. Those outer checks remain unchanged.",
+    "Identical full JSONB text preserves all fields and hash framing, including the record_hash already established by original validation.",
+    "Wrong-map-type errors occur before the new IF; SQLNULL, JSONnull, missing/invalid/zero/noncanonical ID, missing key, wrong key and nonmatching cache value do not hit."
+  ],
+  "recommendation": "After unchanged wrong-map-type guard, allow object+canonicalUUID+key-presence+exact cached::text=input::text memo return. Remove first SQL row arm only; retain snapshot arm and complete original fallback byte-exact.",
+  "source": "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql",
+  "source_sha256": "aedf5d8cb68925bc83a952030c0b7afc26f4ba4a31c68677cf291e112558b160",
+  "writer_count": 5
+}

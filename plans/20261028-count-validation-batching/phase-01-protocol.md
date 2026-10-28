@@ -237,3 +237,33 @@ The all-schema predecessor call-graph review is preserved in
 functions, including public and entry helpers. It records the unchanged origin
 guards' current database-role checks explicitly. This is source evidence with
 stated parser/resolution limitations, not native Auth or release acceptance.
+
+
+## Preparation-pair and pure-policy refinement (October 28)
+
+The clean runner still reached its fixed limit during closure construction. Keep
+all final graph scheduling above. Make two further exact source substitutions:
+
+1. In each of the five reconciliation parent stages, fully validate approval first.
+   Its successful graph necessarily fully validates the preparation named by its
+   body: eager seeding completes original graph/registry/closure first, or its
+   fallback validates the original preparation graph without that seed. Read the
+   actual requested preparation row with the unchanged frontier-checked reader.
+   Reuse its document only when scope preparation ID, actual document ID and the
+   validated approval's preparation ID match exactly. Otherwise retain the original
+   full preparation graph call. All later policy, current principals, clock/expiry,
+   actual parent, boundary and full live-product checks remain byte-identical.
+2. The first policy grammar cache arm needs no current-table lookup: original
+   policy_values checks only its JSON input. All FIVE closed policy-key constructors
+   first complete ORIGINAL policy_values, either via complete policy_history or
+   directly before seeding. After the unchanged wrong-map-type guard, require an
+   object, canonical policy UUID, actual key presence and EXACT cached/input text.
+   Only then reuse pure grammar. Snapshot-cache SQL and the complete original
+   fallback remain byte-identical. Full policy chains, row bindings, capabilities
+   and current authorization still run in their original callers.
+
+These are invocation-local immutable JSON arguments, never public inputs or a
+stored validity/permission certificate. Arbitrary owner-forged matching maps are
+outside the explicitly admitted constructor contract; no general private-input
+or corrupted-cache equivalence is claimed. Do not change privilege-query loops
+without measured benefit. New native rollback/recovery and clean CI remain gates.

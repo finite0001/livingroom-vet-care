@@ -72,7 +72,7 @@ class FaultHttp:
             raise ValueError('Exact unchanged positive-profile start request required')
         controls = self.runtime.selected_query('fault-policy-grammar-controls',
             business.installation.prefix.regular(business.HERE / 'policy-reuse-controls.sql').decode())
-        if controls != dict(kind='historical-policy-grammar-controls-v1', cases=17,
+        if controls != dict(kind='historical-policy-grammar-controls-v1', cases=23,
                 original_and_context_results_exact=True, captured_capability_decisions_recomputed=True,
                 domain_writes=0, Auth_acceptance=False):
             raise ValueError('Complete admitted-policy grammar and invalid-UUID controls required')
