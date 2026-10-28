@@ -953,6 +953,8 @@ DECLARE inventory_value jsonb;product_value jsonb;scope_value jsonb;event_value 
 BEGIN
  PERFORM narcotics_recovery_v1.require_exclusive_admission();
  PERFORM narcotics_recovery_v1.require_head();
+ IF EXISTS(SELECT 1 FROM controlled_count_v1.pending_products)THEN
+ RAISE EXCEPTION 'narcotics_recovery_unfinished_validation' USING ERRCODE='PT409';END IF;
  PERFORM narcotics_register_v1.identity(p_actor,true);
  IF p_preflight IS NULL THEN RAISE EXCEPTION 'narcotics_request_invalid';END IF;
  inventory_value:=narcotics_recovery_v1.scope_inventory();
@@ -4349,6 +4351,8 @@ DECLARE inventory_value jsonb;product_value jsonb;scope_value jsonb;event_value 
 BEGIN
  PERFORM narcotics_recovery_reference_v1.require_exclusive_admission();
  PERFORM narcotics_recovery_reference_v1.require_head();
+ IF EXISTS(SELECT 1 FROM controlled_count_v1.pending_products)THEN
+ RAISE EXCEPTION 'narcotics_recovery_unfinished_validation' USING ERRCODE='PT409';END IF;
  PERFORM narcotics_register_reference_v1.identity(p_actor,true);
  IF p_preflight IS NULL THEN RAISE EXCEPTION 'narcotics_request_invalid';END IF;
  inventory_value:=narcotics_recovery_reference_v1.scope_inventory();

@@ -29,7 +29,7 @@ COUNT_TABLES = ("policies", "operations", "cycles", "snapshots", "statements", "
                 "cancellations", "causes", "resolutions", "open_causes",
                 "reconciliation_preparations", "reconciliation_approvals",
                 "reconciliation_executions", "reconciliation_confirmations",
-                "reconciliation_execution_causes", "descriptor", "operation_closures")
+                "reconciliation_execution_causes", "descriptor", "operation_closures", "pending_products")
 CONTROL = ("BEGIN;SET LOCAL search_path=pg_catalog;SET LOCAL quote_all_identifiers=false;"
            "SET LOCAL TimeZone='UTC';SET LOCAL DateStyle='ISO,YMD';"
            "SET LOCAL IntervalStyle='postgres';SET LOCAL extra_float_digits=3;"
@@ -113,7 +113,9 @@ def source_admission():
         pins[str((HERE / name).relative_to(ROOT))] = sha(raw)
     for name in ("install_rehearsal.py", "prefix_view.py", "bounded_process.py",
                  "sql_framing.py", "frame-cli.mjs", "release-candidate.json",
-                 "cli-framing.json", "proof-data-pins.json", "source_expectations.py"):
+                 "cli-framing.json", "proof-data-pins.json", "source_expectations.py",
+                 "pending_validation.py", "pending-validation.sql", "frontier_projection.py",
+                 "history_document_reuse.py"):
         pins[str((HERE / name).relative_to(ROOT))] = sha(prefix.regular(HERE / name))
     prefix.canonical206(ROOT)
     return candidate, layout, pins

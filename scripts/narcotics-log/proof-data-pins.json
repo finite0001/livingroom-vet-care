@@ -6,16 +6,16 @@
       "sha256": "0aa50da6278aee07d4399015963543bc1b16b66c4ff8e3b3f0604e6c7491ea66"
     },
     "module-capture.sql": {
-      "bytes": 107622,
-      "sha256": "37dddf424579cb7c47b557e62608f83b606a37f4baf83e1daf5ef1253f9cad73"
+      "bytes": 109082,
+      "sha256": "f0b8e27223b31a409731ced609ece1e19a07366d1971ffe385ccd66640f7280d"
     },
     "module-expected.json": {
-      "bytes": 12369107,
-      "sha256": "b9db4d07bebfdf0593f03028f6df2c6e437565fe349cf21cc36dd9ebb21e8691"
+      "bytes": 12383153,
+      "sha256": "d7a81ffca17ec657e254d6a43be29d5b8ff252651cc684bde03fced6d35fb814"
     },
     "module-source-expected.sql": {
-      "bytes": 9149866,
-      "sha256": "7a283456cee55268cb9105f6d84aa74c2b605b3799fdcd978f6892cad039f9c4"
+      "bytes": 9163592,
+      "sha256": "137cc24b65471cef0d51bbb5c30469570bd33a2a94034c7df399e090fdbf2215"
     },
     "original-row-hashes.sql": {
       "bytes": 1473,

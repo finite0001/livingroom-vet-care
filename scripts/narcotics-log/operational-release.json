@@ -5,12 +5,12 @@
   "migration_count": 209,
   "migration": "20261028170038_narcotics_register_exports_and_recovery.sql",
   "framing": {
-    "bytes": 688668,
-    "sha256": "b24a9e2914afc22570a345f991d0ec41f222921c3732093d076c6a1d479af435",
+    "bytes": 688982,
+    "sha256": "68ea722271b2c7ddee528f7a8ec66fed7a57e3aa6f349a0d8eb8eeee5fbb813f",
     "statement_count": 692,
-    "compact_array_sha256": "f90526a20f37bf6934354cf4baace39523fbc57f61afb69a87a77b95e7553337",
-    "postgres_array_sha256": "eb07f75b2305ed9b83a09f0d88a3058ee9f1434bad881c597b31d64efe942b47",
-    "postgres_array_bytes": 696322,
+    "compact_array_sha256": "57ed33d6388b9ce42de9186195e3c2709395ef8ee9ff03b5c7cb5733c725abcd",
+    "postgres_array_sha256": "c87a5a45cb5137b2e4284f52e9c0092f202136b9b8d05d9a901f54ea475e5785",
+    "postgres_array_bytes": 696640,
     "statement_sha256s": [
       "5ec86db69100cfe3e8410ef4b44f0133747476f22551a1ca3725e3ce3bed0d93",
       "8c8042e2ec87518d4078440b876ad478f17373f61718842f440be65945ddfe5f",
@@ -75,7 +75,7 @@
       "67886de6c1f120d0f7a54a57fc9870dd0a9e62edfaebdd3f1bbca3122062482d",
       "222f3c75207009a014b4476a00195c55c3baee0a528257c01b71f6497ee1277d",
       "2949b8208b9fd1022202fd2d3e5aef6d4f70db53458b82e4cd6473b4a3ae026a",
-      "4c0e83ee22a62eca0a829ccc27d2525fd2bb239517bd78e385cb49104e770543",
+      "832125138813ac3c6548d20d71d0255021f199ce5283c809de89337047f06e1c",
       "c9350d2f8dc1a1f84b9cde3b0bd90b1bbb5263c78c46afaab859545d318f44f7",
       "119acb7e401d97bff10d3d314d818ee2959a302eab3abc26ce94c5355a6292c3",
       "23f93a3f3da03031bbfe457453ebe07e9131fe4dc4d8b4a235e6f35531fd2e7a",
@@ -412,7 +412,7 @@
       "d531507233f076e68b6682da1ec5f663ba368286dcd5fbd0ee8a7a4a873a3165",
       "b0d063448d97b5ca6dd68b1e1587583155c1482c3f045e948569574d263c0acb",
       "c03f38f7ce0169080e01186e82249d7339b6d1b286a4eb3817c6e43229796ad7",
-      "5b915aa56fd2bdc06594209d9648e86156089e66c59ad04a8217a45fd42ea542",
+      "5336ab3d24f7b29290bebf953030d3962054ff14bb949390fdec5ebaa6953d96",
       "d5826bee9eac0f7da8c2eb5df7b891427ccf870fa6452c2ce2ca84b805b3f39b",
       "55792dd502a72b2d15c91392ad70b8d952c43b0a851511ecce5731da8071d3a0",
       "82c471a5d899f73ff7e919731a103075050c6e5823b0e33ee6824fcd23d362b1",
@@ -733,7 +733,7 @@
     },
     "scripts/narcotics-log/operational-source-proof.json": {
       "bytes": 8943,
-      "sha256": "77be60c3c6a40739276d65197d8e7107d2d9977233d85daac2c5acf07d81d792"
+      "sha256": "ff869a8e78d36cdebde8bf84ffe9127f44cb7c5df6829d6823a01f2fa4e3b66e"
     },
     "scripts/narcotics-log/operational_release.py": {
       "bytes": 11418,
@@ -768,8 +768,8 @@
       "sha256": "a6c3d969e9d80550366b48b62ff825f71a53bcd95edc91dec7de0b59f728dcb9"
     },
     "scripts/narcotics-log/operational-module/recovery-inventory.sql": {
-      "bytes": 10082,
-      "sha256": "e9315c25aaf269ba73e31ee56ad8a15381c3bd2031bc71df0f9ae30f115a0e5e"
+      "bytes": 10239,
+      "sha256": "fa1802eb9d8b4bf4d4893ee53fb49d793c631f115e0f326566638259e29e73cc"
     },
     "scripts/narcotics-log/operational-module/recovery-coordinator.sql": {
       "bytes": 24281,

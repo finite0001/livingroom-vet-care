@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61878485,
-      "sha256": "def47a0addfe353c098968ab7e59f8bf3720554696532cd80207acaf71123272"
+      "bytes": 61925580,
+      "sha256": "bd039bd6f0c55e7eb4ab98919db5e6c344e218b23bd7aaeed38ae3c5ff67b133"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61874583,
-      "sha256": "ef72c79807f7211a4720456d035e74e93e34f51520ecebd62510a00acdcbe2b9"
+      "bytes": 61921678,
+      "sha256": "88f053a5d271c75960068492f7541b7e8e99d3065b731dc8af548cabd01154d6"
     }
   },
   "source_corrections": {
@@ -251,6 +251,405 @@
       },
       "only_one_function_body_hash_metadata_difference": true,
       "real_Auth_verification_pending": true
+    },
+    "pending_product_validation": {
+      "all_deadlines_unchanged": true,
+      "body_inverses": {
+        "controlled_count_entry_v1.acquire_shared_product_relation_frontier()": {
+          "new_body_sha256": "0d5f099d099deecd8bd10ecb947891b4d7aed4839db9d0964d598b367d1aa230",
+          "original_body_sha256": "f7dc07be59d3c6773099fa3531e3d662b558a69f9472bcf2111c1e3293529133",
+          "replacements": [
+            [
+              "if seen<>121 then",
+              "if seen<>122 then"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.acquire_stock_workflow_relation_frontier()": {
+          "new_body_sha256": "6d9bf6cc0f4ed784de029c51e622e7417d670231827a3a84e7a177c5480c6a5c",
+          "original_body_sha256": "44f8602b18bbaf2e3aa7dd8f608da03e23bee4e24adc857ecd7027b2667e6a6e",
+          "replacements": [
+            [
+              "if seen<>121 then",
+              "if seen<>122 then"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.assert_count_subset_of_complete_product_kernel()": {
+          "new_body_sha256": "ab62229434ccdf0560b6bf8b54061eb04fc8a5ae256737795c882638eb24a01d",
+          "original_body_sha256": "45a6608196e2a9c9dcdc05d6c75742a2fb811fdddc6dbdc0ef635fda0581c43c",
+          "replacements": [
+            [
+              "())<>110",
+              "())<>111"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.assert_shared_product_relation_frontier()": {
+          "new_body_sha256": "2f79ef048c98fcc6922a6984bf469ac69b16a34cee686976036b2595d4854a55",
+          "original_body_sha256": "e7a71c22b6f43b7a7aee796ebfeb64052918fa03dbf6bc3d3e8270c59016cf3b",
+          "replacements": [
+            [
+              "if seen<>121 or unique_seen<>121",
+              "if seen<>122 or unique_seen<>122"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.assert_static_relation_frontier()": {
+          "new_body_sha256": "a65ea52521e050a3f0f0cbf2d752c2f08133d73355fa0e64bcaf4426c785febc",
+          "original_body_sha256": "f95e4ec3536a42a0672489a1d1f6fafb0901618d6202b3b100644286cbf5156f",
+          "replacements": [
+            [
+              "if seen<>110 then",
+              "if seen<>111 then"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.assert_stock_workflow_relation_frontier()": {
+          "new_body_sha256": "72b8248dd6e2a1b47913201d37484cf84dbd50e5160bbf58ed6ee6c17fc043b4",
+          "original_body_sha256": "bd2a94ef8522a03f7033700517cd5f89a7d2bf9084670b1ff9ef7f6816f4dde9",
+          "replacements": [
+            [
+              "if seen<>121 then",
+              "if seen<>122 then"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.begin_count_context(jsonb)": {
+          "new_body_sha256": "d22ce96aeeee1ead41b7313289a91f4cec036a25cf99d5fd5b8e7ac1cc68e502",
+          "original_body_sha256": "070f5e63e32603687bab234928ad2bf775be918bbfd0f5a4dc48678df8662a31",
+          "replacements": [
+            [
+              " perform controlled_count_entry_v1.scope_values(p_scope);",
+              " SET CONSTRAINTS controlled_count_v1.pending_product_consistency DEFERRED;\n perform controlled_count_entry_v1.scope_values(p_scope);"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.force_count_structural_checks()": {
+          "new_body_sha256": "daa6d2e73eb9a0023fdf8fd402e64372d358575893fd832cb27c3c2f550df22b",
+          "original_body_sha256": "b4ad5f3d110def83dbcbc5b2613550cd8449fe94a5a09d76286fb2fe4ca9564e",
+          "replacements": [
+            [
+              "controlled_count_v1.count_graph_consistency immediate;",
+              "controlled_count_v1.count_graph_consistency,controlled_count_v1.pending_product_consistency immediate;"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.resource_origin_catalog_required()": {
+          "new_body_sha256": "9baf3a630be019ac27f7eb91e6515a47444ab74fbc227bd96bbf033b38dd9cef",
+          "original_body_sha256": "551dc6289a4fa4ac51e7e364d1827f796780b89393906f4d33eabfd96fac9569",
+          "replacements": [
+            [
+              "1551a3b7336ad185560a2e26437aedf978fd120d69b38ed3cd71b0d11dd80016",
+              "2a02f6e45d8583e60b14110c1a0a3e09d10673066e740017d6ccdbdc982a0bc2"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.shared_product_relation_plan_values()": {
+          "new_body_sha256": "4786ed9a88b669041000e5734d987efb791c3da0f9fcca40d4082da06c5930bf",
+          "original_body_sha256": "ceae957e4a7d29bcb2b120933816c4789b69529010a1e3654772131cd63185ed",
+          "replacements": [
+            [
+              "('controlled_count_v1', 'policies', 6, 'ShareRowExclusiveLock', 'SHARE ROW EXCLUSIVE'), ",
+              "('controlled_count_v1', 'pending_products', 6, 'ShareRowExclusiveLock', 'SHARE ROW EXCLUSIVE'), ('controlled_count_v1', 'policies', 6, 'ShareRowExclusiveLock', 'SHARE ROW EXCLUSIVE'), "
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.shared_product_resource_origin_catalog_required()": {
+          "new_body_sha256": "d209cfbc57f60050f91a093d9613a06b012012636e22302a9ef66d16f24f17f4",
+          "original_body_sha256": "61df99601271695831d732b0ff8ce0331af33bf31ab44cd926de8ff0b485a59e",
+          "replacements": [
+            [
+              "ceae957e4a7d29bcb2b120933816c4789b69529010a1e3654772131cd63185ed",
+              "4786ed9a88b669041000e5734d987efb791c3da0f9fcca40d4082da06c5930bf"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.static_relation_plan_values()": {
+          "new_body_sha256": "2a02f6e45d8583e60b14110c1a0a3e09d10673066e740017d6ccdbdc982a0bc2",
+          "original_body_sha256": "1551a3b7336ad185560a2e26437aedf978fd120d69b38ed3cd71b0d11dd80016",
+          "replacements": [
+            [
+              " ('controlled_count_v1','policies',6,'ShareRowExclusiveLock','SHARE ROW EXCLUSIVE'),\n",
+              " ('controlled_count_v1','pending_products',6,'ShareRowExclusiveLock','SHARE ROW EXCLUSIVE'),\n ('controlled_count_v1','policies',6,'ShareRowExclusiveLock','SHARE ROW EXCLUSIVE'),\n"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.stock_workflow_relation_plan_values()": {
+          "new_body_sha256": "4786ed9a88b669041000e5734d987efb791c3da0f9fcca40d4082da06c5930bf",
+          "original_body_sha256": "ceae957e4a7d29bcb2b120933816c4789b69529010a1e3654772131cd63185ed",
+          "replacements": [
+            [
+              "('controlled_count_v1', 'policies', 6, 'ShareRowExclusiveLock', 'SHARE ROW EXCLUSIVE'), ",
+              "('controlled_count_v1', 'pending_products', 6, 'ShareRowExclusiveLock', 'SHARE ROW EXCLUSIVE'), ('controlled_count_v1', 'policies', 6, 'ShareRowExclusiveLock', 'SHARE ROW EXCLUSIVE'), "
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.stock_workflow_resource_origin_catalog_required()": {
+          "new_body_sha256": "18ece20e20f4cd875d80d23d3c0819b29eb6be0ce7649378eda7102c8caf56af",
+          "original_body_sha256": "2aaac3213d518d0f26953774ec21a380694508e9cafaf0a2970fb3928226029d",
+          "replacements": [
+            [
+              "ceae957e4a7d29bcb2b120933816c4789b69529010a1e3654772131cd63185ed",
+              "4786ed9a88b669041000e5734d987efb791c3da0f9fcca40d4082da06c5930bf"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_v1.count_graph_deferred()": {
+          "new_body_sha256": "05ab7ad0e34b4ac1334131ee6d0e93ed1b79aa6e211b25d9505bdb4217aa8e90",
+          "original_body_sha256": "87ce16a92b294c14333d2a0ffae9f23fa2498bd200d44618108a94028e6972fe",
+          "replacements": [
+            [
+              " -- Compare complete unresolved cause rows against the actual four-column live\n -- projection after every scoped write, including a resolution's DELETE.\n -- This callback needs the held frontier and retained complete graph, not a\n -- live count context, so final ALL IMMEDIATE after context deletion is safe.\n perform controlled_count_v1.product_live_causes(product_value);\n",
+              " -- Every admitted fact mutation immediately collects mandatory product work.\n -- Its guarded deletion unconditionally checks the complete CURRENT product\n -- before structural forcing can finish. Row-specific checks above remain.\n"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_v1.dispatch_count_management_mutation(text,jsonb)": {
+          "new_body_sha256": "6476487716775949b05bba5c6abb7aa61e13b2cdfcee31d3c786172bb55f6458",
+          "original_body_sha256": "3b0d05122719f55abc0959a369b8fc0cdd7324d23d7dc04a280b33de0aadd6c3",
+          "replacements": [
+            [
+              " perform controlled_count_entry_v1.acquire_static_relation_frontier();\n -- Exactly one whole metadata check, after real held frontier and before user/current-principal/saved reads.\n perform controlled_count_entry_v1.assert_read_frontier();\n perform controlled_count_entry_v1.require_bound_module();",
+              " perform controlled_count_entry_v1.acquire_static_relation_frontier();\n -- The sealed recovery post-check just checked full metadata when209 exists.\n -- Its admission lock also excludes concurrent supported209 installation.\n perform controlled_count_entry_v1.assert_read_frontier();\n IF NOT EXISTS(SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname='narcotics_recovery_v1')THEN\n perform controlled_count_entry_v1.require_bound_module();END IF;"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_stock_workflow_v1.witness_121_required()": {
+          "new_body_sha256": "a06e98e4fb7259a94b3f7e6795ced6a1d874192254f417969fc393b1ccae3173",
+          "original_body_sha256": "9a11760e0a146dda3b3ff7b74e871bf70fbe1889c3d8eed108775cff9e596ec3",
+          "replacements": [
+            [
+              "())<>121",
+              "())<>122"
+            ]
+          ],
+          "whole_body_inverse": true
+        }
+      },
+      "changed_existing_body_hashes": [
+        "controlled_count_entry_v1.acquire_shared_product_relation_frontier()",
+        "controlled_count_entry_v1.acquire_stock_workflow_relation_frontier()",
+        "controlled_count_entry_v1.assert_count_subset_of_complete_product_kernel()",
+        "controlled_count_entry_v1.assert_shared_product_relation_frontier()",
+        "controlled_count_entry_v1.assert_static_relation_frontier()",
+        "controlled_count_entry_v1.assert_stock_workflow_relation_frontier()",
+        "controlled_count_entry_v1.begin_count_context(jsonb)",
+        "controlled_count_entry_v1.force_count_structural_checks()",
+        "controlled_count_entry_v1.require_bound_module()",
+        "controlled_count_entry_v1.resource_origin_catalog_required()",
+        "controlled_count_entry_v1.shared_product_relation_plan_values()",
+        "controlled_count_entry_v1.shared_product_resource_origin_catalog_required()",
+        "controlled_count_entry_v1.static_relation_plan_values()",
+        "controlled_count_entry_v1.stock_workflow_relation_plan_values()",
+        "controlled_count_entry_v1.stock_workflow_resource_origin_catalog_required()",
+        "controlled_count_v1.count_graph_deferred()",
+        "controlled_count_v1.dispatch_count_management_mutation(text,jsonb)",
+        "controlled_stock_workflow_v1.witness_121_required()"
+      ],
+      "compiler_inverse_all_seven_artifacts_exact": true,
+      "complete_CLI_publication_inverse": true,
+      "current_artifacts": {
+        "capture.sql": {
+          "bytes": 109082,
+          "sha256": "f0b8e27223b31a409731ced609ece1e19a07366d1971ffe385ccd66640f7280d"
+        },
+        "declared-footprint.json": {
+          "bytes": 142445,
+          "sha256": "5af582f212a84a4f646d67ccde95ea82c422d31458fa116aea5e53db978bb950"
+        },
+        "expected-module.json": {
+          "bytes": 12383153,
+          "sha256": "d7a81ffca17ec657e254d6a43be29d5b8ff252651cc684bde03fced6d35fb814"
+        },
+        "install.sql": {
+          "bytes": 61921678,
+          "sha256": "88f053a5d271c75960068492f7541b7e8e99d3065b731dc8af548cabd01154d6"
+        },
+        "postcheck.sql": {
+          "bytes": 31295133,
+          "sha256": "289b7c09a8968e6d9cd0ee4989e377ac760f6f63d9cf4bcc478a281ff0278f09"
+        },
+        "preflight.sql": {
+          "bytes": 2551471,
+          "sha256": "64a65319c50d727ad51af25f2a4c0ee3083e6710be0b8ce5f26e09bd506eb074"
+        },
+        "source-expected.sql": {
+          "bytes": 9163592,
+          "sha256": "137cc24b65471cef0d51bbb5c30469570bd33a2a94034c7df399e090fdbf2215"
+        }
+      },
+      "fact_tables": [
+        "operations",
+        "cycles",
+        "snapshots",
+        "statements",
+        "outcomes",
+        "cancellations",
+        "causes",
+        "open_causes",
+        "resolutions",
+        "reconciliation_preparations",
+        "reconciliation_approvals",
+        "reconciliation_executions",
+        "reconciliation_confirmations",
+        "reconciliation_execution_causes"
+      ],
+      "final_global_validation": "unconditional pending BEFORE DELETE guard",
+      "immediate_metadata_dominance": {
+        "admission_lock_excludes_supported209_installation": true,
+        "all_session_epoch_and_history_checks_retained": true,
+        "both_acquisition_exits_checked": true,
+        "dispatcher": "controlled_count_v1.dispatch_count_management_mutation(text,jsonb)",
+        "full_check_body_sha256": "b7d67fa189a48ca9cffc12b044e134a73feb0cfa4958374d86098b08c642b2f3",
+        "no_intervening_domain_or_identity_reads": true,
+        "present_branch_full_check": "controlled_count_entry_v1.recovery_post_frontier_required()",
+        "standalone208_check_retained": true
+      },
+      "new_private_functions": [
+        "controlled_count_v1.collect_pending_product()",
+        "controlled_count_v1.flush_pending_product()",
+        "controlled_count_v1.pending_product_delete_guard()",
+        "controlled_count_v1.pending_product_write_guard()",
+        "controlled_count_v1.pending_scope_required()"
+      ],
+      "new_trigger_identities": [
+        [
+          "controlled_count_v1.cancellations",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.causes",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.cycles",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.open_causes",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.operations",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.outcomes",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.pending_products",
+          "pending_product_consistency"
+        ],
+        [
+          "controlled_count_v1.pending_products",
+          "pending_product_insert_update"
+        ],
+        [
+          "controlled_count_v1.pending_products",
+          "pending_product_no_truncate"
+        ],
+        [
+          "controlled_count_v1.pending_products",
+          "pending_product_validate_delete"
+        ],
+        [
+          "controlled_count_v1.reconciliation_approvals",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.reconciliation_confirmations",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.reconciliation_execution_causes",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.reconciliation_executions",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.reconciliation_preparations",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.resolutions",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.snapshots",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.statements",
+          "count_pending_product"
+        ]
+      ],
+      "no_validity_certificate": true,
+      "original_authorization_row_guards_and_full_product_validator_unchanged": true,
+      "predecessor": "V45 source composition",
+      "predecessor_artifacts": {
+        "capture.sql": {
+          "bytes": 107622,
+          "sha256": "37dddf424579cb7c47b557e62608f83b606a37f4baf83e1daf5ef1253f9cad73"
+        },
+        "declared-footprint.json": {
+          "bytes": 141879,
+          "sha256": "8eca62853c9e7e02782c95d5ab5a50a57fc0c6062d0c8b8c5fbc412df8cb5bef"
+        },
+        "expected-module.json": {
+          "bytes": 12369107,
+          "sha256": "b9db4d07bebfdf0593f03028f6df2c6e437565fe349cf21cc36dd9ebb21e8691"
+        },
+        "install.sql": {
+          "bytes": 61874583,
+          "sha256": "ef72c79807f7211a4720456d035e74e93e34f51520ecebd62510a00acdcbe2b9"
+        },
+        "postcheck.sql": {
+          "bytes": 31271834,
+          "sha256": "0d59ad0dbd94233341c6b72db70bdce3ffee7e7128fee7a157b965f377364a56"
+        },
+        "preflight.sql": {
+          "bytes": 2551471,
+          "sha256": "64a65319c50d727ad51af25f2a4c0ee3083e6710be0b8ce5f26e09bd506eb074"
+        },
+        "source-expected.sql": {
+          "bytes": 9149866,
+          "sha256": "7a283456cee55268cb9105f6d84aa74c2b605b3799fdcd978f6892cad039f9c4"
+        }
+      },
+      "predecessor_history_and_frontier_proofs_are_intermediate": true,
+      "previous_same_callback_global_validation_proof_superseded": true,
+      "real_Auth_verification_pending": true,
+      "source_tools": {
+        "pending-validation.sql": {
+          "bytes": 9143,
+          "sha256": "e5664aeb827274b77b765314a18739dc7de10addba39c74d555fb14b922e30e2"
+        },
+        "pending_validation.py": {
+          "bytes": 9250,
+          "sha256": "04012cafd1ce93e39c1db58de082ae1cebda0d07bc6e518dfba48baa5a2be027"
+        }
+      },
+      "unchanged_final_ALL_IMMEDIATE": true
     },
     "publication_relation_tail": {
       "actual_real_Auth_verification_pending": true,
@@ -864,6 +1263,7 @@
       },
       "only_forty_two_private_functions_and_twelve_body_hashes_added": true,
       "original_relation_frontiers_and_current_authority_preserved": true,
+      "proof_scope": "V45 predecessor; composed pending-product delta supersedes its same-callback final-global-check claim",
       "real_Auth_verification_pending": true,
       "recovery": {
         "armed_post_routes": [

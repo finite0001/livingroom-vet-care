@@ -182,11 +182,13 @@ class PopulatedRecovery(operational_release.SourceLedger,business.BusinessInstal
         current_b = ctx['current_actors'][b['id']]
         users = [a, current_b]
         identity = dict(schema_version=1, actor_id=a['id'])
+        source_runtime.verify_pending_empty('before-source-recovery-arm-pending-empty')
         ready = source_http.rpc('narcotics_recovery_preflight_v1', {'p_request': identity}, a)
         armed = controls(source_http, a, 'arm', ready, dict(capture_hash=ready['capture_hash']))
         head = armed['data']
         backup = controls(source_http, a, 'backup_prepare', head, {})
         owned_ingress(source_runtime, 'stop')
+        source_runtime.verify_pending_empty('before-source-backup-pending-empty')
         original = observe(source_runtime, 'backup-complete-original-data')
         original_auth = receiver_auth.capture(source_runtime, 'backup-complete-Auth')
         # Native pg_dump takes ONE internally consistent MVCC snapshot. No API
@@ -235,6 +237,7 @@ class PopulatedRecovery(operational_release.SourceLedger,business.BusinessInstal
             '-U', 'supabase_admin', '-d', 'postgres', '--clean', '--if-exists', '--exit-on-error', '--single-transaction'], timeout=min(30, self.remaining()), env=self.receiver.boot.env, cwd=receiver_folder)
         rr.raw_query("restore-original-witness-check", "BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='5s';\n" + (HERE / "restore-witness-check.sql").read_text() + "\nCOMMIT;")
         operational_release.verify_ledger(rr,self.operational_ledger,'restored-complete209-source-ledger')
+        rr.verify_pending_empty('restored-before-ingress-pending-empty')
         self.after_receiver_restore(rr)
         try:
             rr.verify_module('restored-full-source-properties')
@@ -341,6 +344,7 @@ class PopulatedRecovery(operational_release.SourceLedger,business.BusinessInstal
         if observe(rr, 'after-actual-receiver-restart') != before_restart:
             raise ValueError('Actual receiver restart changed retained data or sequences')
         rr.verify_module('restarted-full-source-properties')
+        rr.verify_pending_empty('restarted-pending-empty')
         restarted_native = rr.selected_query('actual-restarted-receiver-identity', 'SELECT narcotics_recovery_v1.server_identity();')
         if {k: v for k, v in restarted_native.items() if k != 'boot'} != {k: v for k, v in native.items() if k != 'boot'} or restarted_native['boot'] <= native['boot']:
             raise ValueError('Actual restart did not preserve database identity with a new native boot')
@@ -406,6 +410,7 @@ class PopulatedRecovery(operational_release.SourceLedger,business.BusinessInstal
         receiver_context = {**ctx, 'users': [fresh_a, fresh_b], 'current_actors': {}, 'http': FreshCountTransport(), 'count': {}}
         import full121_management as management
         proof = management.run(receiver_context, self.methods, rr, receiver_folder, rr.selected_query, business.save)
+        rr.verify_pending_empty('after-management-pending-empty')
         grammar_controls=rr.selected_query('management-boundary-grammar-controls',
             installation.prefix.regular(HERE/'boundary-reuse-controls.sql').decode())
         if grammar_controls!=dict(kind='management-boundary-grammar-controls-v1',kinds=4,boundaries=5,cases=56,map_and_sql_null_cases=6,body_grammar_cases=25,
@@ -468,6 +473,7 @@ class PopulatedRecovery(operational_release.SourceLedger,business.BusinessInstal
             raise ValueError('Recovery performed an unaccounted Auth operation after replacement login')
         business.save(receiver_folder, 'receiver-actual-Auth-effects',dict(six_grants=auth_proof,replacement=replacement_auth_proof))
         rr.verify_module('receiver-final-full-source-properties')
+        rr.verify_pending_empty('receiver-final-pending-empty')
         self.result.update(populated_receiver_verified=True, original_complete_rows_and_sequences_restored=True,
             original_Auth_principals_preserved=True, fresh_real_password_grants=7, actual_variance_reconciliation_and_release=True,
             actual_active_receiver_restart=True, new_epoch_and_replacement_independent_acknowledgment=True,

@@ -20,6 +20,9 @@ import install_rehearsal as installation
 
 def source_admission():
     _, layout, pins = installation.source_admission()
+    for name in ('pending_protocol.py', 'count_attribution.py'):
+        path = HERE / name
+        pins[str(path.relative_to(installation.ROOT))] = installation.sha(installation.prefix.regular(path))
     source = installation.decode(installation.prefix.regular(HERE / "business-source.json"))
     if source["kind"] != "narcotics-genuine-business-source-v1":
         raise ValueError("Fixed genuine business source inventory required")
@@ -67,10 +70,10 @@ def modules():
     # constructor override, old Runtime or arbitrary caller SQL is imported.
     sys.path.insert(0, str(WORKFLOWS))
     import auth_effects, identity_bootstrap, http_transport, owner_capture, sequence_effects, rest_defaults
-    import full121_profiles, wc_profiles, browser_runner, count_audit, parent_effects
+    import full121_profiles, wc_profiles, browser_runner, count_attribution, parent_effects
     return SimpleNamespace(auth=auth_effects, identity=identity_bootstrap,
         transport=http_transport, capture=owner_capture, sequence=sequence_effects,
-        profiles=full121_profiles, writers=wc_profiles, rest=rest_defaults, browser=browser_runner, count_audit=count_audit, parent_effects=parent_effects)
+        profiles=full121_profiles, writers=wc_profiles, rest=rest_defaults, browser=browser_runner, count_audit=count_attribution, parent_effects=parent_effects)
 
 
 class Runtime:
@@ -146,6 +149,12 @@ class Runtime:
             raise ValueError("One complete original owner JSON row required: " + label)
         return self.decode(raw[:-1])
 
+    def verify_pending_empty(self, label):
+        observed = self.selected_query(label,
+            "SELECT jsonb_build_object('pending_products',(SELECT count(*)FROM controlled_count_v1.pending_products));")
+        if observed != {'pending_products': 0}:
+            raise ValueError('Unfinished product validation work: ' + label)
+
     def verify_module(self, label):
         captured = self.install.query(label, (HERE / "module-capture.sql").read_text())
         # Expected DATA comes from the pinned literal/source-reference program.
@@ -211,6 +220,13 @@ class BusinessInstallation(installation.Installation):
         m = modules()
         runtime = Runtime(self)
         self.after_installation(runtime)
+        import pending_protocol
+        pending_controls = runtime.selected_query("isolated-pending-protocol-controls", pending_protocol.program())
+        if pending_controls != dict(kind='isolated-pending-protocol-controls-v1', cases=11,
+                owner_data_only=True, Auth_acceptance=False, clinical_rows_changed=0, whole_source_inverse=True):
+            raise ValueError('Complete isolated mandatory-work controls required')
+        save(self.evidence, "isolated-pending-protocol-controls", pending_controls)
+        runtime.verify_pending_empty("after-isolated-controls-pending-empty")
         save(self.evidence, "genuine-REST-source-defaults", m.rest.effective_defaults(runtime))
         save(self.evidence, "genuine-Auth-source-defaults", m.auth.effective_defaults(runtime))
         auth_before = m.auth.initial(runtime)
@@ -234,6 +250,7 @@ class BusinessInstallation(installation.Installation):
         if self.profile == "browser_lost_finalize":
             proof["actual_browser"] = m.browser.run(context, m, runtime, save)
         self.after_business(context, methods, runtime, proof)
+        runtime.verify_pending_empty("after-business-pending-empty")
         extras = [context["current_actors"][users[1]["id"]]] if self.profile in ("count_agreement", "browser_lost_finalize") else []
         if self.profile == "browser_lost_finalize":
             extras += [context["current_actors"][users[0]["id"]]]

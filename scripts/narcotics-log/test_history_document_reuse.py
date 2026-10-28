@@ -37,11 +37,17 @@ class HistoricalSourceControls(unittest.TestCase):
         self.assertTrue(proof['whole_body_inverse'])
         with self.assertRaises(ValueError):source.deduplicate_saved_closure(before.replace("c->>'state'='saved'","c->>'state'='abandoned'"))
 
-    def test_deferred_child_cut_preserves_the_exact_original_callback(self):
+    def test_predecessor_deferred_child_cut_retains_its_exact_original_inverse(self):
+        from pending_validation import OLD_GLOBAL, NEW_GLOBAL
         sql=(Path(__file__).resolve().parents[2]/'supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql').read_text()
         start=sql.index('CREATE FUNCTION controlled_count_v1.count_graph_deferred()')
         begin=sql.index(' AS $$',start)+len(' AS $$');end=sql.index('$$;',begin)
         candidate=sql[begin:end]
+        # The batching delta supersedes this same-callback scheduling proof.
+        # Restore its exact predecessor before testing the historical inverse.
+        self.assertEqual(candidate.count(NEW_GLOBAL),1)
+        self.assertNotIn(OLD_GLOBAL,candidate)
+        candidate=candidate.replace(NEW_GLOBAL,OLD_GLOBAL,1)
         anchor="""  if operation_value is null then raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;
   perform controlled_count_entry_v1.assert_read_frontier();
   select o.product_id into strict product_value"""

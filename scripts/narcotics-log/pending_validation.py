@@ -1,0 +1,144 @@
+"""Source-only mandatory-work delta; no cached validity or target observations.
+
+The disabled compiler remains the complete V45 predecessor. Every changed body
+below has an exact inverse; final metadata is generated after this delta.
+"""
+import copy
+import hashlib
+import re
+
+from frontier_projection import body, plan_projection
+from history_document_reuse import code_mask
+
+
+FACT_TABLES = ('operations', 'cycles', 'snapshots', 'statements', 'outcomes',
+               'cancellations', 'causes', 'open_causes', 'resolutions',
+               'reconciliation_preparations', 'reconciliation_approvals',
+               'reconciliation_executions', 'reconciliation_confirmations',
+               'reconciliation_execution_causes')
+NEW_FUNCTIONS = {'controlled_count_v1.' + name + '()' for name in (
+    'pending_scope_required', 'collect_pending_product', 'pending_product_write_guard',
+    'pending_product_delete_guard', 'flush_pending_product')}
+NEW_TRIGGERS = {('controlled_count_v1.' + name, 'count_pending_product') for name in FACT_TABLES} | {
+    ('controlled_count_v1.pending_products', name) for name in (
+        'pending_product_insert_update', 'pending_product_no_truncate',
+        'pending_product_validate_delete', 'pending_product_consistency')}
+ENTRY = 'controlled_count_entry_v1.'
+QUEUE = 'controlled_count_v1.pending_product_consistency'
+PLAN_ROW = " ('controlled_count_v1','pending_products',6,'ShareRowExclusiveLock','SHARE ROW EXCLUSIVE'),\n"
+PLAN_ANCHOR = " ('controlled_count_v1','policies',6,'ShareRowExclusiveLock','SHARE ROW EXCLUSIVE'),\n"
+OLD_GLOBAL = """ -- Compare complete unresolved cause rows against the actual four-column live
+ -- projection after every scoped write, including a resolution's DELETE.
+ -- This callback needs the held frontier and retained complete graph, not a
+ -- live count context, so final ALL IMMEDIATE after context deletion is safe.
+ perform controlled_count_v1.product_live_causes(product_value);
+"""
+NEW_GLOBAL = """ -- Every admitted fact mutation immediately collects mandatory product work.
+ -- Its guarded deletion unconditionally checks the complete CURRENT product
+ -- before structural forcing can finish. Row-specific checks above remain.
+"""
+
+
+def sha(text):
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
+def replace_exact(text, old, new):
+    if not old or text.count(old) != 1 or new in text:
+        raise ValueError('One exact predecessor source anchor required')
+    result = text.replace(old, new, 1)
+    if result.replace(new, old, 1) != text:
+        raise ValueError('Whole predecessor body inverse required')
+    return result
+
+
+def build(nodes):
+    changed = {}; proofs = {}
+
+    def change(signature, replacements):
+        node = copy.deepcopy(nodes[signature]); option, before = body(node)
+        after = before
+        for old, new in replacements:
+            after = replace_exact(after, old, new)
+        restored = after
+        for old, new in reversed(replacements):
+            if restored.count(new) != 1:
+                raise ValueError('One complete successor source anchor required')
+            restored = restored.replace(new, old, 1)
+        if restored != before:
+            raise ValueError('Complete predecessor source inverse required')
+        option.arg[0].sval = after; changed[signature] = node
+        proofs[signature] = dict(original_body_sha256=sha(before), new_body_sha256=sha(after),
+                                 whole_body_inverse=True, replacements=replacements)
+        return node
+
+    for plan, guard, count in (
+            ('static_relation_plan_values', 'resource_origin_catalog_required', 110),
+            ('shared_product_relation_plan_values', 'shared_product_resource_origin_catalog_required', 121),
+            ('stock_workflow_relation_plan_values', 'stock_workflow_resource_origin_catalog_required', 121)):
+        signature = ENTRY + plan + '()'
+        before_projection, before = plan_projection(nodes[signature], count)
+        anchor = PLAN_ANCHOR if count == 110 else "('controlled_count_v1', 'policies', 6, 'ShareRowExclusiveLock', 'SHARE ROW EXCLUSIVE'), "
+        row = PLAN_ROW if count == 110 else "('controlled_count_v1', 'pending_products', 6, 'ShareRowExclusiveLock', 'SHARE ROW EXCLUSIVE'), "
+        node = change(signature, [(anchor, row + anchor)])
+        after_projection, after = plan_projection(node, count + 1)
+        if before_projection != after_projection or before['namespaces'] != after['namespaces']:
+            raise ValueError('New relation cannot expand the original namespace cut')
+        change(ENTRY + guard + '()', [(before['plan_body_sha256'], after['plan_body_sha256'])])
+
+    for name, old, new in (
+            ('assert_static_relation_frontier', 'if seen<>110 then', 'if seen<>111 then'),
+            ('assert_shared_product_relation_frontier', 'if seen<>121 or unique_seen<>121', 'if seen<>122 or unique_seen<>122'),
+            ('assert_stock_workflow_relation_frontier', 'if seen<>121 then', 'if seen<>122 then'),
+            ('acquire_shared_product_relation_frontier', 'if seen<>121 then', 'if seen<>122 then'),
+            ('acquire_stock_workflow_relation_frontier', 'if seen<>121 then', 'if seen<>122 then'),
+            ('assert_count_subset_of_complete_product_kernel', '())<>110', '())<>111')):
+        change(ENTRY + name + '()', [(old, new)])
+    change(ENTRY + 'begin_count_context(jsonb)', [(
+        ' perform controlled_count_entry_v1.scope_values(p_scope);',
+        ' SET CONSTRAINTS ' + QUEUE + ' DEFERRED;\n perform controlled_count_entry_v1.scope_values(p_scope);')])
+    change(ENTRY + 'force_count_structural_checks()', [(
+        'controlled_count_v1.count_graph_consistency immediate;',
+        'controlled_count_v1.count_graph_consistency,' + QUEUE + ' immediate;')])
+    change('controlled_stock_workflow_v1.witness_121_required()', [('())<>121', '())<>122')])
+    # Both shared-acquisition exits invoke the sealed recovery post-check.
+    # Its present-module branch checks the full count metadata before returning.
+    # The already held admission lock excludes supported209 installation until
+    # this transaction ends, so absence cannot become presence in this slice.
+    post = body(nodes[ENTRY + 'recovery_post_frontier_required()'])[1]
+    absent = " IF NOT EXISTS(SELECT 1 FROM pg_namespace WHERE nspname='narcotics_recovery_v1')THEN RETURN;END IF;"
+    full = ' PERFORM controlled_count_entry_v1.require_bound_module();'
+    if post.count(absent) != 1 or post.count(full) != 1 or post.index(absent) > post.index(full):
+        raise ValueError('Exact absent-only return and full present recovery metadata check required')
+    if len(re.findall(r'\breturn\b', code_mask(post), re.I)) != 1 or post.index(full) > post.index('head_value:='):
+        raise ValueError('Present recovery cannot return or read its head before complete metadata admission')
+    acquisition = body(changed[ENTRY + 'acquire_shared_product_relation_frontier()'])[1]
+    if acquisition.count('PERFORM controlled_count_entry_v1.recovery_post_frontier_required();') != 2:
+        raise ValueError('Both original source-acquisition exits must run the recovery post-check')
+    old = """ perform controlled_count_entry_v1.acquire_static_relation_frontier();
+ -- Exactly one whole metadata check, after real held frontier and before user/current-principal/saved reads.
+ perform controlled_count_entry_v1.assert_read_frontier();
+ perform controlled_count_entry_v1.require_bound_module();"""
+    new = """ perform controlled_count_entry_v1.acquire_static_relation_frontier();
+ -- The sealed recovery post-check just checked full metadata when209 exists.
+ -- Its admission lock also excludes concurrent supported209 installation.
+ perform controlled_count_entry_v1.assert_read_frontier();
+ IF NOT EXISTS(SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname='narcotics_recovery_v1')THEN
+ perform controlled_count_entry_v1.require_bound_module();END IF;"""
+    change('controlled_count_v1.dispatch_count_management_mutation(text,jsonb)', [(old, new)])
+    change('controlled_count_v1.count_graph_deferred()', [(OLD_GLOBAL, NEW_GLOBAL)])
+    return changed, dict(
+        predecessor='V45 source composition', body_inverses=proofs,
+        predecessor_history_and_frontier_proofs_are_intermediate=True,
+        previous_same_callback_global_validation_proof_superseded=True,
+        final_global_validation='unconditional pending BEFORE DELETE guard',
+        fact_tables=list(FACT_TABLES), new_private_functions=sorted(NEW_FUNCTIONS),
+        new_trigger_identities=sorted(NEW_TRIGGERS),
+        no_validity_certificate=True, unchanged_final_ALL_IMMEDIATE=True,
+        immediate_metadata_dominance=dict(
+            dispatcher='controlled_count_v1.dispatch_count_management_mutation(text,jsonb)',
+            present_branch_full_check=ENTRY + 'recovery_post_frontier_required()',
+            full_check_body_sha256=sha(post), both_acquisition_exits_checked=True,
+            standalone208_check_retained=True, admission_lock_excludes_supported209_installation=True,
+            no_intervening_domain_or_identity_reads=True, all_session_epoch_and_history_checks_retained=True),
+        original_authorization_row_guards_and_full_product_validator_unchanged=True)

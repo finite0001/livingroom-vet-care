@@ -1,7 +1,7 @@
 {
   "compound_sql": {
-    "bytes": 688668,
-    "sha256": "b24a9e2914afc22570a345f991d0ec41f222921c3732093d076c6a1d479af435"
+    "bytes": 688982,
+    "sha256": "68ea722271b2c7ddee528f7a8ec66fed7a57e3aa6f349a0d8eb8eeee5fbb813f"
   },
   "database_operations": 0,
   "gateway": {
@@ -152,8 +152,8 @@
         "sha256": "b899792627b91c819219474896c80722e8ef77d602c8480eb9aa73fb063a7b90"
       },
       "recovery-inventory.sql": {
-        "bytes": 10082,
-        "sha256": "e9315c25aaf269ba73e31ee56ad8a15381c3bd2031bc71df0f9ae30f115a0e5e"
+        "bytes": 10239,
+        "sha256": "fa1802eb9d8b4bf4d4893ee53fb49d793c631f115e0f326566638259e29e73cc"
       },
       "recovery-operations.sql": {
         "bytes": 12007,
@@ -181,8 +181,8 @@
       }
     },
     "sql": {
-      "bytes": 686911,
-      "sha256": "e270ccc8a1e5dbd37c7875ec7a1af49540d408fb5da1fbf9b6307979e3148a4b"
+      "bytes": 687225,
+      "sha256": "09c90664a40fe9187a9fb0f44af4d96081aa6fd17a2dd6689d3811ef8c81a902"
     },
     "terminal_count_copy": {
       "copy_body_sha256": "2af10fbe501a3ade59f2f6e871838199755741e06d810f041c0b116be7bc7364",
