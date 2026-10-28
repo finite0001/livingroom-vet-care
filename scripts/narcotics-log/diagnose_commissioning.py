@@ -72,6 +72,16 @@ class Diagnosis(business.BusinessInstallation):
 
     def after_installation(self, runtime):
         self.diagnostic_runtime = runtime
+        if self.target == "count-finalize":
+            # Only this disposable diagnostic grants the database owner access
+            # to timing instrumentation; no staff or application role changes.
+            self.boot.sql("GRANT SET ON PARAMETER track_functions TO postgres;"
+                          "GRANT EXECUTE ON FUNCTION pg_catalog.pg_stat_force_next_flush() TO postgres;", admin=True)
+            granted = runtime.selected_query("engineering-timing-permission", "select jsonb_build_object("
+                "'track_functions',has_parameter_privilege('postgres','track_functions','SET'),"
+                "'flush',has_function_privilege('postgres','pg_catalog.pg_stat_force_next_flush()','EXECUTE'));")
+            if granted != {"track_functions": True, "flush": True}:
+                raise ValueError("Disposable timing permission was not established")
         root = business.installation.ROOT
         raw = business.installation.prefix.regular(root / "supabase/migrations" / business.installation.prefix.FORWARD[1]).decode()
         static = json.loads((business.HERE / "module-expected.json").read_text())
