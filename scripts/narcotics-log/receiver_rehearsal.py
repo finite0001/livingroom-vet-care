@@ -145,6 +145,7 @@ class PopulatedRecovery(business.BusinessInstallation):
     def execute(self):
         super().execute()
         source_runtime = business.Runtime(self)
+        self.source_runtime = source_runtime
         ctx = self.source_context
         source_http = ctx['http']; a, b = ctx['users']
         current_b = ctx['current_actors'][b['id']]
@@ -195,11 +196,37 @@ class PopulatedRecovery(business.BusinessInstallation):
         self.receiver.source_config, self.receiver.source_identity = source_config, source_identity
         self.receiver.execute()
         rr = business.Runtime(self.receiver)
+        self.receiver.runtime = rr
         owned_ingress(rr, 'stop')
         self.receiver.boot.sql('DROP SCHEMA IF EXISTS realtime CASCADE;', admin=True)
         self.archive.restore(['docker', '--host', self.receiver.boot.endpoint, 'exec', '-i', self.receiver.boot.container_id, 'pg_restore',
             '-U', 'supabase_admin', '-d', 'postgres', '--clean', '--if-exists', '--exit-on-error', '--single-transaction'], timeout=min(30, self.remaining()), env=self.receiver.boot.env, cwd=receiver_folder)
-        rr.verify_module('restored-full-source-properties')
+        try:
+            rr.verify_module('restored-full-source-properties')
+        except BaseException:
+            # Diagnostic observation only: do not turn a failed source seal into
+            # acceptance, or use observed target properties as expectations.
+            program = (HERE / 'module-capture.sql').read_text()
+            guard = 'DO $fixture_require_bound$ BEGIN PERFORM controlled_count_entry_v1.require_bound_module(); END $fixture_require_bound$;'
+            if program.count(guard) != 1:
+                raise ValueError('Exact diagnostic-only source observation cut required')
+            captured = rr.selected_query('restored-diagnostic-source-observation', program.replace(guard, '', 1))
+            differences = []
+            def compare(before, after, path):
+                if len(differences) >= 40 or type(before) is type(after) and before == after:
+                    return
+                if type(before) is dict and type(after) is dict:
+                    for key in sorted(set(before) | set(after)):
+                        compare(before.get(key), after.get(key), path + '.' + key)
+                elif type(before) is list and type(after) is list and len(before) == len(after):
+                    for index, (a, b) in enumerate(zip(before, after)):
+                        compare(a, b, path + '[' + str(index) + ']')
+                else:
+                    differences.append(dict(path=path, source=json.dumps(before)[:256], restored=json.dumps(after)[:256]))
+            compare(self.expected_module['properties'], captured['properties'], '$.properties')
+            compare(self.expected_module, captured['descriptor']['definition'], '$.descriptor.definition')
+            business.save(receiver_folder, 'restore-source-differences', dict(accepted=False, differences=differences))
+            raise
         if observe(rr, 'receiver-original-complete-data') != original:
             raise ValueError('Populated receiver differs from complete original backup data')
         if receiver_auth.capture(rr, 'receiver-original-complete-Auth') != original_auth:
@@ -334,7 +361,7 @@ class PopulatedRecovery(business.BusinessInstallation):
             if self.receiver.boot is not None:
                 self.receiver.boot.deadline = self.phase_end
             if getattr(self.receiver, 'paused_ingress', None):
-                owned_ingress(business.Runtime(self.receiver), 'start', cleanup=True)
+                owned_ingress(self.receiver.runtime, 'start', cleanup=True)
             if self.receiver.boot is not None and self.receiver.boot.started and not self.receiver.boot.record.get('failure_cleanup_complete'):
                 self.receiver.boot.cleanup()
             if self.receiver.boot is not None and any(self.receiver.boot.inventory()):
@@ -345,7 +372,7 @@ class PopulatedRecovery(business.BusinessInstallation):
         if self.boot is not None and self.boot.started and not self.boot.record.get('failure_cleanup_complete'):
             self.boot.deadline = self.phase_end
             if getattr(self, 'paused_ingress', None):
-                owned_ingress(business.Runtime(self), 'start', cleanup=True)
+                owned_ingress(self.source_runtime, 'start', cleanup=True)
             self.boot.cleanup()
         if self.boot is not None:
             self.boot.deadline = self.phase_end

@@ -194,7 +194,7 @@
     "forward-fixes/recovery-admission-source.sql": "15c02507e1126613a1d163bd250c1514a99d8f6bd328030a645c03bbc942760e",
     "history-read/private-cores.sql": "8d08144a6ff4f79ba2a0d25f2cb8ab9c65fc48874a2e3f4866a8249e9ddb6600",
     "history-read/root.sql": "9f39988ac7e69dbc6e795d90d140e3db8af9ea94429a2ec33f7282bb537db3fd",
-    "forward-fixes/history-document-reuse.sql": "ccd3e5e13f974d0b5884422f2b916376cced4c7776e2f5e4e5fe9e3f20b03729"
+    "forward-fixes/history-document-reuse.sql": "ef7fa5d344a7558230a140ff74aa82325e7b2fa599f6226bc9a6796c2d249f6b"
   },
   "trigger_addendum_sha256": "6b4f17e0cdc891405a66a0f2ef461dd47e38e1a94534394cc033f482a8c17744",
   "management_bundle_sha256": "8b556cf62be90b8c784d8ba5c55358a89988083357cdfc63c17e46112356e355",
@@ -542,7 +542,7 @@
           "IntervalStyle=postgres",
           "extra_float_digits=3"
         ],
-        "body_sha256": "b28dc673bd514cee4c971012bd06398a75013534dab3e6e5032eed509974b19b",
+        "body_sha256": "42839b23fcb7e099c5c292bd29982b636c9fe0edb7a519a352a34ba70f81526a",
         "acl": [
           {
             "grantor": "postgres",
@@ -11130,7 +11130,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "8eb85878e4430c39c4dcd7b9d22ea33ab6362dfffd1d8a690a76df73552863c9",
+        "body_sha256": "dc3f81ec2b9bd70d394a297133f60e04bf0191b92ff58db6d49bc6ba5694fd5a",
         "acl": [
           {
             "grantor": "postgres",
@@ -38521,7 +38521,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "8ddbf5ca39b4743628c9a080cc790a69db319f704cad737ce737fe7909b8bd5c",
+        "body_sha256": "51ee9a89f73c5768212352ceeae6b1d1006374168ef8299e60f40ce7471be295",
         "acl": [
           {
             "grantor": "postgres",
@@ -39882,6 +39882,53 @@
           "extra_float_digits=3"
         ],
         "body_sha256": "07e2880a60c4365104246f443a57237f5890622bd9e5d7c01d2f1406e5cddc2d",
+        "acl": [
+          {
+            "grantor": "postgres",
+            "grantee": "postgres",
+            "privilege": "EXECUTE",
+            "grantable": false
+          }
+        ],
+        "probin": null,
+        "argument_count": 1,
+        "default_count": 0
+      },
+      "controlled_count_v1.history_approval_graph(uuid)": {
+        "schema": "controlled_count_v1",
+        "name": "history_approval_graph",
+        "arg_types": [
+          "uuid"
+        ],
+        "arg_names": [
+          "p_id"
+        ],
+        "all_arg_types": null,
+        "arg_modes": null,
+        "return_type": "jsonb",
+        "setof": false,
+        "language": "plpgsql",
+        "volatility": "v",
+        "definer": false,
+        "strict": false,
+        "leakproof": false,
+        "parallel": "u",
+        "kind": "f",
+        "variadic": 0,
+        "support": 0,
+        "sqlbody_null": true,
+        "owner": "postgres",
+        "cost": 100,
+        "rows": 0,
+        "defaults": null,
+        "configuration": [
+          "search_path=pg_catalog, controlled_count_v1, pg_temp",
+          "TimeZone=UTC",
+          "DateStyle=ISO,YMD",
+          "IntervalStyle=postgres",
+          "extra_float_digits=3"
+        ],
+        "body_sha256": "78b25a70a9832311b64558385e96d6f80b8887eb2f7b66934bc4ba8ed3664579",
         "acl": [
           {
             "grantor": "postgres",
@@ -52135,6 +52182,7 @@
         "controlled_count_v1.historical_witness_boundary_values(jsonb)",
         "controlled_count_v1.historical_witness_transition_values(jsonb,jsonb,jsonb)",
         "controlled_count_v1.historical_witness_values(jsonb,jsonb,jsonb)",
+        "controlled_count_v1.history_approval_graph(uuid)",
         "controlled_count_v1.history_preparation_graph(uuid)",
         "controlled_count_v1.history_scan_historical_boundary_values(jsonb,jsonb)",
         "controlled_count_v1.history_scan_historical_parent_execution_boundaries_values(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)",

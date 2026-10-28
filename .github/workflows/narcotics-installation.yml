@@ -264,6 +264,7 @@ jobs:
             /tmp/lrv-narcotics-install-*/source-failure.txt
             /tmp/lrv-narcotics-install-*/rpc-failure.json
             /tmp/lrv-narcotics-install-*/receiver/rpc-failure.json
+            /tmp/lrv-narcotics-install-*/receiver/restore-source-differences.json
             /tmp/lrv-narcotics-install-*/receiver/populated-recovery-result.json
             /tmp/lrv-narcotics-install-*/receiver/receiver-actual-Auth-effects.json
             /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
