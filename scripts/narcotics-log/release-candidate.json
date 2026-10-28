@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61508433,
-      "sha256": "a089db7bbf284b173320feae95586ed1821f275419984225307c57f6720d8719"
+      "bytes": 61509413,
+      "sha256": "28a58fe8f061c62bb286dd9137e600b6893551a6aa0068bd1f693971bd5a50f6"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61504531,
-      "sha256": "ada7d9816c2a42f4ff307f96320e5c76d3511e630507d1b1bb0240fbf8a4ec15"
+      "bytes": 61505511,
+      "sha256": "32e71a93a886b5cc0cd5f818866f5c518a1ab9140bc49557e5ec54424cdf12ec"
     }
   },
   "source_corrections": {
@@ -190,6 +190,22 @@
       "original_advisory_FK_and_after_wait_principal_checks_unchanged": true,
       "original_relation_tail_acquired_before_assertion": true,
       "signature": "controlled_stock_workflow_v1.review_publication_locks(jsonb)"
+    },
+    "read_capture_witness_repair": {
+      "all_deadlines_unchanged": true,
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_v1.capture_full_boundary_read(uuid,uuid,uuid,uuid)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "3c21e8c1b6d8ac173af9200bb53fe1274d90781179ac3b34b233c57d88819f94",
+          "new_expression": " boundary_value:=boundary_value||jsonb_build_object('transitions',rows_value);\n -- NEW explicit event-owned witness class. Nonphysical pending/abandoned\n -- witness work is absent from physical/source freshness by construction.\n rows_value:='[]'::jsonb;class_bytes:=2;\n for source_row in select w.*from controlled_stock_workflow_v1.witness_operations w\n join public.controlled_stock_events e on e.id=w.parent_action_id\n where e.product_id=p_product and w.stage='saved'order by w.parent_action_id,w.operation_id loop\n  row_value:=to_jsonb(source_row);row_bytes:=octet_length(row_value::text);\n  if row_bytes>4194304 or class_bytes+row_bytes+2>16777216 or total_bytes+class_bytes+row_bytes+64>16777216 then\n   raise exception 'count_boundary_capacity'using errcode='P0001',detail='',hint='';end if;\n  perform controlled_stock_workflow_v1.witness_row_required(row_value);\n  class_bytes:=class_bytes+row_bytes+2;rows_value:=rows_value||jsonb_build_array(row_value);\n end loop;\n boundary_value:=boundary_value||jsonb_build_object('witness_operations',rows_value);\n if octet_length(boundary_value::text)>16777216",
+          "old_body_sha256": "1ec898538402dde80062c233f7e07488bc66461efa5eb9ed12e038df1024d368",
+          "old_expression": " boundary_value:=boundary_value||jsonb_build_object('transitions',rows_value);\n if octet_length(boundary_value::text)>16777216"
+        }
+      },
+      "only_one_function_body_hash_metadata_difference": true,
+      "real_Auth_verification_pending": true
     },
     "record_review_ledger": {
       "changes": [

@@ -81,10 +81,11 @@ def expected(profile, grants):
     elif profile == "clinical":
         add(1, "clients", "pets", "clinical_recap_epochs", "billing_invoices", "patient_anesthesia_records", "anesthesia_record_revisions", "anesthesia_drug_administrations")
         add(3, "patient_treatments")
-        add(2, "billing_invoice_items", "inventory_movements", "stock_movement_sources")
+        add(2, "billing_invoice_items", "inventory_movements", "stock_movement_sources", "treatment_alert_reviews")
         # Household/pet INSERTs(2), invoice INSERT+two updates(3), charges(2),
-        # stock movements(2), treatments including nonstock history(3).
-        add(12, "audit_logs")
+        # stock movements(2), treatments including nonstock history(3),
+        # two exact current-alert review INSERTs with their original audit trigger.
+        add(14, "audit_logs")
     elif profile.startswith("native_"):
         if profile not in ("native_pickup_annotation", "native_return_v1", "native_return_v2_discrepancy"):
             raise ValueError("Finite native schedule required")
