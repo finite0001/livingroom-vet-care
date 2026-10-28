@@ -29,7 +29,8 @@ class Diagnosis(business.BusinessInstallation):
     def after_installation(self, runtime):
         root = business.installation.ROOT
         raw = business.installation.prefix.regular(root / "supabase/migrations" / business.installation.prefix.FORWARD[1]).decode()
-        marker = "CREATE FUNCTION public." + self.api + "("
+        declaration = "CREATE OR REPLACE FUNCTION" if self.target == "stock-prepare" else "CREATE FUNCTION"
+        marker = declaration + " public." + self.api + "("
         if raw.count(marker) != 1:
             raise ValueError("Exactly one source commissioning API required")
         start = raw.index(marker)
