@@ -152,7 +152,9 @@ jobs:
           name: narcotics-engineering-native-error-${{ matrix.profile }}
           retention-days: 7
           if-no-files-found: ignore
-          path: /tmp/lrv-narcotics-install-*/diagnostic-native-failure-*.txt
+          path: |
+            /tmp/lrv-narcotics-install-*/diagnostic-native-failure-*.txt
+            /tmp/lrv-narcotics-install-*/diagnostic-function-costs.json
       - name: Admit fixed genuine business sources
         run: python3 -I -B scripts/narcotics-log/business_rehearsal.py --check-source --profile ${{ matrix.profile }}
       - name: Verify real staff accounts, business effects and normal cleanup

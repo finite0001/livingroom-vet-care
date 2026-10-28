@@ -47,6 +47,17 @@ def instrument(raw, static, signature, failure, rethrow):
         changed = changed.replace(original,
             "GET STACKED DIAGNOSTICS diagnostic_native_context = PG_EXCEPTION_CONTEXT;"
             "RAISE EXCEPTION USING ERRCODE=SQLSTATE,MESSAGE=SQLERRM,DETAIL=diagnostic_native_context,HINT='';", 1)
+        if signature == "controlled_count_v1.dispatch_count_mutation(text,jsonb)":
+            anchor = "begin\n perform controlled_count_entry_v1.count_entry_budget_required();"
+            if changed.count(anchor) != 1:
+                raise ValueError("Exact finalization profiling anchor required")
+            changed = changed.replace(anchor,
+                "begin\n if p_action='finalize'then perform pg_catalog.set_config('track_functions','all',true);end if;\n"
+                " perform controlled_count_entry_v1.count_entry_budget_required();", 1)
+            changed = changed.replace(
+                "GET STACKED DIAGNOSTICS diagnostic_native_context = PG_EXCEPTION_CONTEXT;",
+                "GET STACKED DIAGNOSTICS diagnostic_native_context = PG_EXCEPTION_CONTEXT;"
+                "PERFORM pg_catalog.pg_stat_force_next_flush();", 1)
     header = raw[start:body_start].replace("CREATE FUNCTION", "CREATE OR REPLACE FUNCTION", 1)
     return header + changed + "$$;", hashlib.sha256(changed.encode()).hexdigest()
 
@@ -60,6 +71,7 @@ class Diagnosis(business.BusinessInstallation):
         self.result.update(kind="narcotics-fixed-api-engineering-only-v1", engineering_only=True, diagnostic_target=target)
 
     def after_installation(self, runtime):
+        self.diagnostic_runtime = runtime
         root = business.installation.ROOT
         raw = business.installation.prefix.regular(root / "supabase/migrations" / business.installation.prefix.FORWARD[1]).decode()
         static = json.loads((business.HERE / "module-expected.json").read_text())
@@ -112,6 +124,19 @@ ALTER TABLE controlled_count_v1.descriptor ENABLE TRIGGER count_history_immutabl
                         stream.write(response)
             raise
         finally:
+            if self.target == "count-finalize" and hasattr(self, "diagnostic_runtime"):
+                try:
+                    costs = self.diagnostic_runtime.selected_query("engineering-function-costs", """
+select jsonb_build_object('engineering_only',true,'scope','finalization nested user functions; SQL inlining may omit individual functions',
+'functions',(select coalesce(jsonb_agg(to_jsonb(s)order by s.self_time desc,s.signature),'[]'::jsonb)
+from(select funcid::regprocedure::text as signature,calls,total_time,self_time
+from pg_stat_user_functions where schemaname in('public','controlled_count_v1','controlled_count_entry_v1',
+'controlled_stock_workflow_v1','controlled_review','controlled_review_v3')
+order by self_time desc,funcid limit 80)s));""")
+                    business.save(self.evidence, "diagnostic-function-costs", costs)
+                except Exception as error:
+                    business.save(self.evidence, "diagnostic-function-costs", {
+                        "engineering_only": True, "available": False, "error_type": type(error).__name__})
             self.result.update(application_Auth_verified=False, count_business_verified=False,
                                business_profile_verified=False, authenticated_browser_verified=False)
         raise RuntimeError("Engineering-only instrumentation can never grant acceptance")
