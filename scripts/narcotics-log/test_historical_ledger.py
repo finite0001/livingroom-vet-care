@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import re
 import unittest
+from sql_framing import split_reviewed_statements
 
 ROOT = Path(__file__).resolve().parents[2]
 CANDIDATE = ROOT / "tests/controlled-drugs/engine/candidate"
@@ -16,6 +17,15 @@ GATE = re.compile(
 
 
 class HistoricalLedgerTests(unittest.TestCase):
+    def test_initial_parent_checks_use_the_original_preinstallation_source(self):
+        tail = json.loads((CANDIDATE / "secondary_review_206_statements.json").read_bytes())
+        source = (ROOT / "supabase/migrations/20261027223535_controlled_record_review_workflows.sql").read_text()
+        statements = split_reviewed_statements(source)
+        for head in ("do $review_parent$", "do $review_installed$"):
+            original = next(value for value in tail["statements"] if value.startswith(head))
+            initial = next(value for value in statements if value.startswith(head))
+            self.assertEqual(initial, original)
+
     def test_all_preflight_and_postcheck_rows_match_frozen_source(self):
         old = json.loads((CANDIDATE / "secondary_review_expected_205_ledger.json").read_bytes())
         expected = {row["version"]: row for row in old["ledger"]}

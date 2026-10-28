@@ -6,7 +6,7 @@
   "migrations": {
     "20261027223535_controlled_record_review_workflows.sql": {
       "bytes": 36650350,
-      "sha256": "5db36bd968f5f82f8dec1db6d0d59947ef9eca31920a88bf1231d2cbe6455664"
+      "sha256": "9e85aba15fb093b2fd474aaa5e16e7c371cdccb47b64789d7cded15ea1e59a68"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
       "bytes": 61500657,
@@ -91,6 +91,24 @@
       "frozen_206_statements_file_sha256": "43736e52a08780b95edb7ef5594e8b98a7080634ce56dbd9180d2fc46d22618e",
       "no_observed_target_expected_values": true,
       "reason": "Previous native UUID source rewrites also changed quoted historical ledger oracles. Restore only six top-level comparisons to the independently frozen original206 statement vectors; preserve current native implementations and full metadata expectations."
+    },
+    "record_review_preflight": {
+      "changes": [
+        {
+          "only_preinstallation_occurrence": true,
+          "prior_sha256": "bb8f9aab98951072b3a75e039f7870635f0ac62adfa88747f184900196f64f19",
+          "restored_sha256": "bea9f669972ec3a18865a3038727e37ec6913ba8e3ee4fe387bc1313531852e0",
+          "statement_head": "do $review_parent$"
+        },
+        {
+          "only_preinstallation_occurrence": true,
+          "prior_sha256": "72f6523df7baf5e3cfe40cf5fa6869da35958d58589eba6e9c1899b125409c85",
+          "restored_sha256": "a2e98a96a41aa1c7cdddeb7621c8031229812120c9be7ed858777bfad2450df5",
+          "statement_head": "do $review_installed$"
+        }
+      ],
+      "no_observed_target_expected_values": true,
+      "reason": "Before any current function installation, verify original205 and original206 metadata against their independently frozen source. Preserve the separate final current-source metadata checks."
     }
   },
   "transaction_owner": "official CLI; outer BEGIN/COMMIT removed; advisory installation fence added; exact historical ledger literals restored from independent source pins",
