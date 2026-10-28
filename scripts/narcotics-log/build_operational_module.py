@@ -198,7 +198,7 @@ DO $operational_installed$BEGIN
  PERFORM controlled_count_entry_v1.require_bound_module();
 END $operational_installed$;
 '''
-    prefix = "SET LOCAL lock_timeout='5s';SET LOCAL statement_timeout='30s';SET LOCAL quote_all_identifiers=false;SET LOCAL TimeZone='UTC';SET LOCAL DateStyle='ISO,YMD';SET LOCAL IntervalStyle='postgres';SET LOCAL extra_float_digits=3;\nSELECT pg_advisory_xact_lock(90271040,0);\nDO $operational_parent$BEGIN PERFORM controlled_count_entry_v1.require_bound_module();END $operational_parent$;\n"
+    prefix = "SET LOCAL lock_timeout='5s';SET LOCAL statement_timeout='30s';SET LOCAL client_min_messages='warning';SET LOCAL quote_all_identifiers=false;SET LOCAL TimeZone='UTC';SET LOCAL DateStyle='ISO,YMD';SET LOCAL IntervalStyle='postgres';SET LOCAL extra_float_digits=3;\nSELECT pg_advisory_xact_lock(90271040,0);\nDO $operational_parent$BEGIN PERFORM controlled_count_entry_v1.require_bound_module();END $operational_parent$;\n"
     sql = prefix + actual + reference + tail
     proof = {'kind': 'narcotics-operational-source-draft-v1', 'engineering_only': True, 'ready_for_deployment': False,
         'expected_metadata_origin': 'independent empty source reference DDL; no observed actual target expectations',

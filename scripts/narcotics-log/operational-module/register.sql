@@ -178,7 +178,7 @@ BEGIN
  END LOOP;
  IF narcotics_register_v1.authority(actor_value,product_value,site_value) IS DISTINCT FROM before_authority THEN RAISE EXCEPTION 'narcotics_access_denied' USING ERRCODE='42501';END IF;
  result:=jsonb_build_object('schema_version',1,'report_id',p_request->'operation_id','request',p_request,'captured_at',narcotics_register_v1.utc(clock_timestamp()),
-  'time_basis','movements: recorded_at [from,to); reviews, counts and supporting forms: source state at capture','schedule',schedule_value,'product_name',policy_value.identity_snapshot->>'name',
+  'time_basis','movements and terminal counts: recorded_at [from,to); reviews, witnesses and supporting forms: source state at capture','schedule',schedule_value,'product_name',policy_value.identity_snapshot->>'name',
   'stock_unit',policy_value.stock_unit,'site_label',(SELECT s.label FROM public.controlled_stock_sites s WHERE s.id=site_value),
   'registration_evidence_text',(SELECT s.registration_evidence::text FROM public.controlled_stock_sites s WHERE s.id=site_value),'opening_evidence_text',to_jsonb(opening_value)::text,
   'authorization_kinds',kinds_value,'cells',cells_value,'events',events_value,'counts',counts_value,'supporting_forms',forms_value,

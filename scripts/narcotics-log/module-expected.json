@@ -11171,7 +11171,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "63e77bbd0f4bd8e6bc6c9aaef3cafa428ed0322adbf2ef8c698b7259d6d4e9a4",
+        "body_sha256": "40550fdcdd300ce7960987ccb05a4597c74388bf231dcd14bc421c5b0e195fbf",
         "acl": [
           {
             "grantor": "postgres",
