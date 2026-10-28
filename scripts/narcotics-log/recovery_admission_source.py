@@ -12,6 +12,7 @@ import build_operational_module as operational
 
 
 CONTROL = (
+    'narcotics_recovery_preflight_v1', 'narcotics_recovery_backup_prepare_v1', 'narcotics_recovery_read_evidence_v1',
     'narcotics_recovery_arm_v1', 'narcotics_recovery_source_resume_v1',
     'narcotics_recovery_begin_epoch_v1', 'narcotics_recovery_start_count_v1',
     'narcotics_recovery_preserve_evidence_v1', 'narcotics_recovery_acknowledge_evidence_v1',
@@ -79,6 +80,11 @@ def derive():
     # The source framer deliberately refuses client_min_messages in the
     # installation prefix. Reflection needs only the following source DDL.
     private = operational.functions(program[program.index('CREATE SCHEMA '):program.index('CREATE SCHEMA narcotics_register_reference_v1 ')])
+    return derive_from_private(private, source_proof)
+
+
+def derive_from_private(private, source_proof):
+    """Pure source derivation; also used by209 assembly without calling build."""
     original = private['narcotics_recovery_v1.catalog_projection()']['body']
     anchor = '\nBEGIN\n'
     if original.count(anchor) != 1:

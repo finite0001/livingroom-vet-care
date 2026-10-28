@@ -26,6 +26,22 @@ REGISTER_APIS = {
     'read_narcotics_form_operation_v1': "narcotics_register_v1.read_operation(p_request,'form')",
     'download_narcotics_form_v1': "narcotics_register_v1.download_form(p_request)",
 }
+RECOVERY_APIS = {
+    'narcotics_recovery_preflight_v1': 'narcotics_recovery_v1.preflight(p_request)',
+    'narcotics_recovery_arm_v1': 'narcotics_recovery_v1.arm(p_request)',
+    'narcotics_recovery_backup_prepare_v1': 'narcotics_recovery_v1.backup_prepare(p_request)',
+    'narcotics_recovery_source_resume_v1': 'narcotics_recovery_v1.source_resume(p_request)',
+    'narcotics_recovery_begin_epoch_v1': 'narcotics_recovery_v1.begin_epoch(p_request)',
+    'narcotics_recovery_start_count_v1': 'narcotics_recovery_v1.start_count(p_request)',
+    'narcotics_recovery_preserve_evidence_v1': 'narcotics_recovery_v1.preserve_evidence(p_request)',
+    'narcotics_recovery_acknowledge_evidence_v1': 'narcotics_recovery_v1.acknowledge_evidence(p_request)',
+    'narcotics_recovery_read_evidence_v1': 'narcotics_recovery_v1.read_evidence(p_request)',
+    'narcotics_recovery_release_v1': 'narcotics_recovery_v1.release(p_request)',
+    'narcotics_recovery_read_operation_v1': 'narcotics_recovery_v1.operation_pointer(p_request)',
+    'narcotics_recovery_close_operation_v1': 'narcotics_recovery_v1.close_operation(p_request)',
+    'narcotics_recovery_status_v1': 'narcotics_recovery_v1.status(p_request)',
+}
+HOOK = 'narcotics_recovery_admission_v1'
 LEAVES = {
     'narcotics_register_v1.enter_register()': ('plpgsql', 'v', 'void'),
     'narcotics_register_v1.require_module()': ('plpgsql', 'v', 'void'),
@@ -176,14 +192,16 @@ def table_controls(program):
 def build(register_only=False):
     if not register_only:
         raise ValueError('Recovery source and full release assembly are not complete')
-    apis = dict(REGISTER_APIS)
+    apis = {**REGISTER_APIS, **RECOVERY_APIS}
     apis['narcotics_recovery_probe_permissions_v1'] = 'narcotics_register_v1.probe_recovery_permission(p_request)'
     apis['narcotics_recovery_probe_boundary_v1'] = 'narcotics_recovery_v1.probe_boundary(p_request)'
     apis['narcotics_recovery_probe_state_v1'] = 'narcotics_recovery_v1.probe_state(p_request)'
     apis['narcotics_recovery_probe_gate_v1'] = 'narcotics_recovery_v1.probe_gate(p_request)'
-    names = ('common.sql', 'register.sql', 'register-operations.sql', 'recovery-state.sql', 'metadata.sql')
+    names = ('common.sql', 'register.sql', 'register-operations.sql', 'recovery-state.sql',
+             'recovery-operations.sql', 'recovery-inventory.sql', 'recovery-coordinator.sql',
+             'recovery-evidence.sql', 'recovery-release.sql', 'recovery-status.sql', 'metadata.sql')
     sources = {name: (SOURCE / name).read_bytes() for name in names}
-    public_names = 'ARRAY[' + ','.join(literal(name) for name in sorted(apis)) + ']::text[]'
+    public_names = 'ARRAY[' + ','.join(literal(name) for name in sorted((*apis, HOOK))) + ']::text[]'
     private = '\n'.join(raw.decode().replace('__PUBLIC_FACADE_NAMES__', public_names) for raw in sources.values())
     copied, copy_proof = terminal_count_copy()
     private += '\n' + copied
@@ -295,13 +313,30 @@ END $$;
     admission = cold_admission(functions(private))
     actual = private + '\n' + '\n'.join(facade(name, call,
         admission.replace('PERFORM narcotics_register_v1.enter_register();', 'PERFORM narcotics_recovery_v1.enter_recovery();')
-        if name in ('narcotics_recovery_probe_state_v1','narcotics_recovery_probe_gate_v1') else admission, engineering=register_only) for name, call in apis.items())
+        if name in RECOVERY_APIS or name in ('narcotics_recovery_probe_state_v1','narcotics_recovery_probe_gate_v1') else admission, engineering=register_only) for name, call in apis.items())
+    # Acyclic source derivation: the pure compiler needs only final LEAF bodies
+    # (including the fixed public-name inventory), never the assembled hook.
+    import recovery_admission_source
+    guard = recovery_admission_source.derive_from_private(functions(private), {'sql': {'sha256': sha(private.encode())}})
+    hook_seal = recovery_admission_source.seal(functions(guard['sql']), ['controlled_count_entry_v1.admit_recovery_request()'])
+    actual += 'CREATE FUNCTION public.' + HOOK + '''() RETURNS void
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog SET quote_all_identifiers=false
+SET timezone='UTC' SET datestyle='ISO,YMD' SET intervalstyle='postgres' SET extra_float_digits=3
+SET statement_timeout='8s' SET lock_timeout='5s' AS $$
+BEGIN
+ IF session_user<>'authenticator'OR current_setting('role')NOT IN ('anon','authenticated','service_role')THEN
+ RAISE EXCEPTION 'narcotics_access_denied' USING ERRCODE='42501',DETAIL='',HINT='';END IF;
+''' + hook_seal + '''
+ PERFORM controlled_count_entry_v1.admit_recovery_request();
+END $$;
+'''
     actual += table_controls(actual)
     definitions = functions(actual)
     for signature in definitions:
         actual += 'ALTER FUNCTION ' + signature + ' OWNER TO postgres;\nREVOKE ALL ON FUNCTION ' + signature + ' FROM PUBLIC,anon,authenticated,service_role;\n'
     for name in apis:
         actual += 'GRANT EXECUTE ON FUNCTION public.' + name + '(jsonb) TO authenticated;\n'
+    actual += 'GRANT EXECUTE ON FUNCTION public.' + HOOK + '() TO anon,authenticated,service_role;\n'
     reference = actual.replace(REGISTER + '.', REFERENCE_REGISTER + '.').replace(RECOVERY + '.', REFERENCE_RECOVERY + '.')
     # Schema literals in reflective helper bodies are normalized by its explicit
     # canonical parameters. Source namespace identifiers are changed everywhere.
@@ -312,7 +347,7 @@ END $$;
     # Literal public callback names inside function bodies remain unchanged.
     chunks = []
     for statement in split_reviewed_statements(reference):
-        for name in apis:
+        for name in (*apis, HOOK):
             statement = re.sub(r'^(CREATE FUNCTION|ALTER FUNCTION|REVOKE ALL ON FUNCTION|GRANT EXECUTE ON FUNCTION) public\.' + re.escape(name) + r'\(', r'\1 ' + REFERENCE_REGISTER + '.' + name + '(', statement)
         chunks.append(statement + ';')
     reference = '\n'.join(chunks) + '\n'

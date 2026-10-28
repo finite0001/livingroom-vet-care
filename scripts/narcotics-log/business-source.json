@@ -101,8 +101,8 @@
       "sha256": "3c43a7d20229f008990bc47940d0a8d4d2a027420b36dbbe8b2c3f1a21c0affe"
     },
     "http_transport.py": {
-      "bytes": 12188,
-      "sha256": "f24945589d29f7225d28a625d028bf72fc2ed1d044e5cb6417f0959b5f2915ae"
+      "bytes": 12739,
+      "sha256": "d5b77feb4e9353d5438fea31d0a17aa3a8ea16a659daec2c42c54bafeb313f44"
     },
     "identity_bootstrap.py": {
       "bytes": 1372,
@@ -125,8 +125,8 @@
       "sha256": "68f6dea14df45cf82531f1315ba09de911bc9698a637eca3971001990cf808f0"
     },
     "rest_defaults.py": {
-      "bytes": 3317,
-      "sha256": "5850bd53b04c75ebd918bdf5b15f87083d5ac422bd639ae55e3a68b7596b5af6"
+      "bytes": 3592,
+      "sha256": "365b3234e7d9773fa53f4b0c0fde77f382313e79998db40e9f95e81ba4b4c3d1"
     },
     "sequence_effects.py": {
       "bytes": 3583,

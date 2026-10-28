@@ -4,6 +4,7 @@ import csv
 from datetime import datetime, timedelta, timezone
 from functools import partial
 import hashlib
+from http.client import HTTPConnection
 import io
 import json
 import os
@@ -24,6 +25,43 @@ def digest(raw):
 
 def new_id():
     return str(uuid.uuid4())
+
+
+def wait_for_owned_rest(runtime, anon):
+    """Readiness only; it supplies no Auth or business acceptance evidence."""
+    deadline = time.monotonic() + runtime.remaining(30)
+    previous = runtime.install.owner_end
+    runtime.install.owner_end = min(deadline, previous) if previous is not None else deadline
+    try:
+        runtime.verify()
+        while True:
+            left = min(deadline - time.monotonic(), runtime.remaining(30))
+            if left <= 0:
+                raise TimeoutError('Original owned gateway readiness deadline exhausted')
+            connection = HTTPConnection('127.0.0.1', 64661, timeout=min(1, left))
+            try:
+                connection.request('GET', '/rest/v1/', headers={'apikey': anon})
+                response = connection.getresponse()
+                status = response.status
+                response.close()
+                if time.monotonic() >= deadline:
+                    raise TimeoutError('Original owned gateway readiness deadline exhausted')
+                if status == 200:
+                    runtime.verify()
+                    runtime.remaining(1)
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError('Original owned gateway readiness deadline exhausted')
+                    return
+                if status not in (502, 503, 504):
+                    raise ValueError('Owned REST health failed with status ' + str(status))
+            except OSError:
+                if time.monotonic() >= deadline:
+                    raise
+            finally:
+                connection.close()
+            time.sleep(min(0.1, max(0, deadline - time.monotonic())))
+    finally:
+        runtime.install.owner_end = previous
 
 
 def pdf_fixture():
@@ -68,11 +106,13 @@ class RegisterDiagnosis(business.BusinessInstallation):
                     item['document_hash'] = saved_form['data']['document_hash']
                 wire_entries.append(item)
             return result
-        def refuse(label, name, request, user=actor):
+        def refuse(label, name, request, user=actor, *, expected=None):
             status, result = http.post('/rest/v1/rpc/' + name, {'p_request': request}, user['token'])
             business.save(self.evidence, 'register-' + label, {'status': status, 'error': result})
             if status not in (400, 403, 409):
                 raise ValueError('Expected exact unsuccessful report/form request')
+            if expected is not None and (status, result.get('code'), result.get('message')) != expected:
+                raise ValueError('Expected exact recovery refusal reason differs')
         current = runtime.selected_query('register-engineering-clock', "select jsonb_build_object('at',to_char(clock_timestamp()at time zone'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"'));")['at']
         instant = datetime.fromisoformat(current.replace('Z', '+00:00')).astimezone(timezone.utc)
         utc = lambda value: value.isoformat(timespec='milliseconds').replace('+00:00', 'Z')
@@ -177,8 +217,73 @@ class RegisterDiagnosis(business.BusinessInstallation):
             actual_committed_armed_mode=True, physical_prepare_and_execute_refused=True,
             authorized_register_read_preserved=True, exact_original_physical_boundary_preserved=True,
             normal_idle_resumption=True))
+        # Use actual staff APIs to commission this synthetic count policy; no
+        # owner policy/stock/session writes or fabricated restore epochs.
+        from full121_policy import run as publish_count_policy
+        publish_count_policy(context, methods, runtime, self.evidence, runtime.selected_query, business.save)
+        ready = rpc('control-preflight', 'narcotics_recovery_preflight_v1', dict(schema_version=1, actor_id=actor['id']))
+        if ready['state'] != 'ready' or ready['inventory'] != dict(products=[ids['product']], scopes=[dict(product_id=ids['product'], site_id=ids['site'])]):
+            raise ValueError('Complete actual recovery inventory/preflight differs')
+        def control(action, head, data):
+            return dict(schema_version=1, actor_id=actor['id'], operation_id=new_id(), action=action,
+                        expected_head_id=head['head_id'], expected_head_hash=head['head_hash'], data=data)
+        arm_request = control('arm', ready, dict(capture_hash=ready['capture_hash']))
+        arm_receipt = rpc('control-arm', 'narcotics_recovery_arm_v1', arm_request)
+        if arm_receipt['state'] != 'saved' or arm_receipt['data']['mode'] != 'armed':
+            raise ValueError('Actual recovery control did not arm')
+        if rpc('control-arm-exact-retry', 'narcotics_recovery_arm_v1', arm_request) != arm_receipt:
+            raise ValueError('Saved control retry reapplied a mode transition')
+        arm_head = arm_receipt['data']
+        backup_request = control('backup_prepare', arm_head, {})
+        backup_receipt = rpc('control-backup-marker', 'narcotics_recovery_backup_prepare_v1', backup_request)
+        marker = backup_receipt['data']['marker']
+        if marker['arm_id'] != arm_head['arm_id'] or marker['source']['boot'] is None:
+            raise ValueError('Actual committed pre-backup marker differs')
+        refuse('control-same-source-epoch', 'narcotics_recovery_begin_epoch_v1', control('begin_epoch', arm_head,
+            dict(marker_id=marker['marker_id'], marker_hash=backup_receipt['data']['marker_hash'],
+                 external_capsule_sha256=digest(b'synthetic-unclaimed-capsule'), external_archive_sha256=digest(b'synthetic-unclaimed-archive'))),
+               expected=(409, 'PT409', 'narcotics_recovery_fresh_receiver_required'))
+        if http.rpc('is_active_staff', {'_user_id': actor['id']}, actor) is not True:
+            raise ValueError('Unrelated read-only POST probe unavailable before hook')
+        rest_ids = [key for key, value in runtime.owned_services.items() if value['name'] == '/supabase_rest_' + runtime.identity]
+        if len(rest_ids) != 1:
+            raise ValueError('Exactly one captured owned REST service required')
+        # Stop only our captured service. No name-based stop, global restart or
+        # signalling another task; role config is restored before ingress.
+        self.boot.command(['docker', 'stop', rest_ids[0]], timeout=runtime.remaining(30))
+        runtime.raw_query('recovery-owned-gateway-install', 'BEGIN;\n' + (source.SOURCE / 'recovery-gateway.sql').read_text() + '\nCOMMIT;')
+        self.boot.command(['docker', 'start', rest_ids[0]], timeout=runtime.remaining(30))
+        # Keep the existing whole owner30 readiness deadline. Only harmless
+        # health GETs may retry; business calls retain their exact-once evidence.
+        wait_for_owned_rest(runtime, context['public_anon_key'])
+        active_status = rpc('control-hook-status', 'narcotics_recovery_status_v1', dict(schema_version=1, actor_id=actor['id']))
+        if active_status['mode'] != 'armed' or active_status['head_id'] != arm_head['head_id']:
+            raise ValueError('Allowed actual POST did not preserve armed mode')
+        hook_status, hook_error = http.post('/rest/v1/rpc/is_active_staff', {'_user_id': actor['id']}, actor['token'])
+        if hook_status != 403 or hook_error.get('message') != 'narcotics_recovery_write_held':
+            raise ValueError('Actual hook did not refuse the unrelated read-only POST')
+        business.save(self.evidence, 'recovery-exact-gateway-profile', business.modules().rest.effective_defaults(runtime, recovery=True))
+        resumed = rpc('control-source-resume', 'narcotics_recovery_source_resume_v1', control('source_resume', arm_head, {}))
+        if resumed['data']['mode'] != 'idle' or http.rpc('is_active_staff', {'_user_id': actor['id']}, actor) is not True:
+            raise ValueError('Unchanged native source did not resume under the actual hook')
+        abandoned_id = new_id()
+        control_pointer = dict(schema_version=1, actor_id=actor['id'], operation_id=abandoned_id, action='arm')
+        if rpc('control-unsent-pointer', 'narcotics_recovery_read_operation_v1', control_pointer)['state'] != 'pending':
+            raise ValueError('Unsent control unexpectedly saved')
+        if rpc('control-unsent-close', 'narcotics_recovery_close_operation_v1', control_pointer)['state'] != 'abandoned':
+            raise ValueError('Unsent control did not close')
+        late = {**control('arm', resumed['data'], dict(capture_hash=ready['capture_hash'])), 'operation_id': abandoned_id}
+        refuse('control-late-abandoned-arm', 'narcotics_recovery_arm_v1', late,
+               expected=(409, 'PT409', 'narcotics_request_closed_or_unavailable'))
+        if rpc('boundary-after-controls', 'narcotics_recovery_probe_boundary_v1', scope) != boundary:
+            raise ValueError('Actual recovery controls changed the original physical boundary')
+        business.save(self.evidence, 'recovery-source-controls-engineering-proof', dict(engineering_only=True,
+            genuine_preflight_arm_and_saved_retry=True, genuine_committed_backup_preparation=True,
+            same_source_restore_epoch_refused=True, actual_global_hook_armed_POST_refusal=True,
+            genuine_same_source_resumption=True, late_control_tombstone_refused=True,
+            exact_original_physical_boundary_preserved=True, full_receiver_restore_verified=False))
         counts = runtime.selected_query('register-engineering-exact-counts', "select jsonb_build_object('descriptor',(select count(*)from narcotics_register_v1.descriptor),'operations',(select count(*)from narcotics_register_v1.operations),'reports',(select count(*)from narcotics_register_v1.reports),'contents',(select count(*)from narcotics_register_v1.form_contents),'forms',(select count(*)from narcotics_register_v1.form_records),'recovery_heads',(select count(*)from narcotics_recovery_v1.heads));")
-        if counts != dict(descriptor=1, operations=6, reports=2, contents=2, forms=2, recovery_heads=3):
+        if counts != dict(descriptor=1, operations=6, reports=2, contents=2, forms=2, recovery_heads=5):
             raise ValueError('Exact source-declared new report/form row counts differ')
         business.save(self.evidence, 'register-wire-original-inputs', dict(engineering_only=True, entries=wire_entries))
         checked = business.installation.process.run(['node', '--experimental-strip-types', str(HERE / 'verify-register-native-wire.mjs'), str(self.evidence)],
@@ -204,7 +309,7 @@ if __name__ == '__main__':
         raise ValueError('Explicit owned synthetic engineering run required')
     os.umask(0o077); started = time.monotonic()
     layout, pins = business.source_admission()
-    paths = [Path(__file__).resolve(), HERE / 'build_operational_module.py', HERE / 'verify-register-native-wire.mjs',
+    paths = [Path(__file__).resolve(), HERE / 'build_operational_module.py', HERE / 'recovery_admission_source.py', HERE / 'verify-register-native-wire.mjs',
              *sorted(source.SOURCE.glob('*.sql')), *sorted((business.installation.ROOT / 'src/hub/features/controlled-drugs/register').glob('*.ts'))]
     for path in paths:
         pins[str(path.relative_to(business.installation.ROOT))] = digest(business.installation.prefix.regular(path))

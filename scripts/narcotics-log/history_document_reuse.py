@@ -196,3 +196,97 @@ ROOT_EDITS = (
  when 'reconciliation_preparation'then 4 when 'reconciliation_approval'then 5 when 'reconciliation_execution'then 6 when 'reconciliation_confirmation'then 7 when 'cause_resolution'then 8 else 99 end,o.operation_id loop'''),
     (ROOT_CALL_BEFORE, ROOT_CALL_AFTER),
 )
+
+PREPARATION_ENTRY = '''
+ if p_kind='reconciliation_preparation'then
+  return controlled_count_v1.history_preparation_graph(p_id);
+ end if;
+'''
+
+PREPARATION_GRAPH_SQL = '''CREATE FUNCTION controlled_count_v1.history_preparation_graph(p_id uuid) RETURNS jsonb
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog,controlled_count_v1,pg_temp
+SET timezone='UTC' SET datestyle='ISO,YMD' SET intervalstyle='postgres' SET extra_float_digits=3 AS $$
+DECLARE preparation_row jsonb;source_row record;validated_documents jsonb:='{}';registry_row jsonb;
+ cycle_row jsonb;cycle_document jsonb;snapshot_row jsonb;snapshot_document jsonb;outcome_row jsonb;document_value jsonb;memo_key text;
+BEGIN
+ PERFORM controlled_count_entry_v1.resource_origin_catalog_required();
+ PERFORM controlled_count_entry_v1.assert_read_frontier();
+ SELECT to_jsonb(p)INTO STRICT preparation_row FROM controlled_count_v1.reconciliation_preparations p WHERE p.preparation_id=p_id;
+ -- Hints select ancestors only; they never certify a result. Unsupported or
+ -- malformed projections use the complete original validation path below.
+ IF jsonb_typeof(preparation_row#>'{document,body,live_causes}')IS DISTINCT FROM'array'THEN
+  RETURN controlled_count_v1.history_scan_saved_result_graph('reconciliation_preparation',p_id,validated_documents);
+ END IF;
+ IF jsonb_array_length(preparation_row#>'{document,body,live_causes}')>64 THEN
+  RETURN controlled_count_v1.history_scan_saved_result_graph('reconciliation_preparation',p_id,validated_documents);
+ END IF;
+ BEGIN
+ FOR source_row IN SELECT DISTINCT outcome_record.outcome_id,outcome_record.count_id,outcome_record.operation_id
+  FROM jsonb_array_elements(preparation_row#>'{document,body,live_causes}')hint(value)
+  JOIN controlled_count_v1.causes cause_record ON to_jsonb(cause_record.cause_id)=hint.value->'cause_id'
+   AND to_jsonb(cause_record.product_id)=preparation_row->'product_id'AND to_jsonb(cause_record.site_id)=preparation_row->'site_id'
+   AND cause_record.category='terminal_variance'
+  JOIN controlled_count_v1.outcomes outcome_record ON outcome_record.outcome_id=cause_record.outcome_id
+  JOIN controlled_count_v1.cycles cycle_record ON cycle_record.count_id=outcome_record.count_id
+   AND to_jsonb(cycle_record.product_id)=preparation_row->'product_id'AND to_jsonb(cycle_record.site_id)=preparation_row->'site_id'
+  ORDER BY outcome_record.outcome_id,outcome_record.count_id,outcome_record.operation_id LOOP
+  memo_key:='cycle:'||source_row.count_id::text;
+  IF NOT validated_documents?memo_key THEN
+   SELECT to_jsonb(c)INTO STRICT cycle_row FROM controlled_count_v1.cycles c WHERE c.count_id=source_row.count_id;
+   PERFORM controlled_count_v1.history_scan_validate_operation_graph((cycle_row->>'start_operation_id')::uuid,validated_documents);
+   SELECT to_jsonb(o)INTO STRICT registry_row FROM controlled_count_v1.operations o WHERE o.operation_id=(cycle_row->>'start_operation_id')::uuid;
+   -- A good unrelated registry must never certify a malformed hinted row.
+   IF registry_row->>'result_kind'IS DISTINCT FROM'cycle'OR registry_row->'result_id'IS DISTINCT FROM to_jsonb(source_row.count_id)
+   OR registry_row->'product_id'IS DISTINCT FROM cycle_row->'product_id'OR registry_row->'site_id'IS DISTINCT FROM cycle_row->'site_id'THEN
+    RAISE EXCEPTION 'count_source_invalid'using errcode='P0001',detail='',hint='';END IF;
+   cycle_document:=(controlled_count_v1.readcore_saved_result_row('cycle',source_row.count_id))->'document';
+   IF octet_length(validated_documents::text)+octet_length(cycle_document::text)+octet_length(memo_key)+8<=16777216 THEN
+    validated_documents:=validated_documents||jsonb_build_object(memo_key,cycle_document);
+   END IF;
+   SELECT to_jsonb(s)INTO STRICT snapshot_row FROM controlled_count_v1.snapshots s WHERE s.snapshot_id=(cycle_document#>>'{body,snapshot_id}')::uuid;
+   snapshot_document:=snapshot_row->'document';
+   IF snapshot_document->'id'IS DISTINCT FROM cycle_document#>'{body,snapshot_id}'
+   OR snapshot_document->'record_hash'IS DISTINCT FROM cycle_document#>'{body,snapshot_hash}'
+   OR snapshot_document->'record_hash'IS DISTINCT FROM snapshot_row->'record_hash'
+   OR controlled_count_v1.document_hash(snapshot_document)IS DISTINCT FROM cycle_document#>>'{body,snapshot_hash}'THEN
+    RAISE EXCEPTION 'count_source_invalid'using errcode='P0001',detail='',hint='';END IF;
+   memo_key:='snapshot:'||(snapshot_document->>'id');
+   IF octet_length(validated_documents::text)+octet_length(snapshot_document::text)+octet_length(memo_key)+8<=16777216 THEN
+    validated_documents:=validated_documents||jsonb_build_object(memo_key,snapshot_document);
+   END IF;
+  END IF;
+ END LOOP;
+ FOR source_row IN SELECT DISTINCT outcome_record.outcome_id,outcome_record.count_id,outcome_record.operation_id
+  FROM jsonb_array_elements(preparation_row#>'{document,body,live_causes}')hint(value)
+  JOIN controlled_count_v1.causes cause_record ON to_jsonb(cause_record.cause_id)=hint.value->'cause_id'
+   AND to_jsonb(cause_record.product_id)=preparation_row->'product_id'AND to_jsonb(cause_record.site_id)=preparation_row->'site_id'
+   AND cause_record.category='terminal_variance'
+  JOIN controlled_count_v1.outcomes outcome_record ON outcome_record.outcome_id=cause_record.outcome_id
+  JOIN controlled_count_v1.cycles cycle_record ON cycle_record.count_id=outcome_record.count_id
+   AND to_jsonb(cycle_record.product_id)=preparation_row->'product_id'AND to_jsonb(cycle_record.site_id)=preparation_row->'site_id'
+  ORDER BY outcome_record.outcome_id,outcome_record.count_id,outcome_record.operation_id LOOP
+  memo_key:='outcome:'||source_row.outcome_id::text;
+  IF NOT validated_documents?memo_key THEN
+   PERFORM controlled_count_v1.history_scan_validate_operation_graph(source_row.operation_id,validated_documents);
+   SELECT to_jsonb(o)INTO STRICT registry_row FROM controlled_count_v1.operations o WHERE o.operation_id=source_row.operation_id;
+   SELECT to_jsonb(o)INTO STRICT outcome_row FROM controlled_count_v1.outcomes o WHERE o.outcome_id=source_row.outcome_id;
+   IF registry_row->>'result_kind'IS DISTINCT FROM'outcome'OR registry_row->'result_id'IS DISTINCT FROM to_jsonb(source_row.outcome_id)
+   OR registry_row->'product_id'IS DISTINCT FROM outcome_row#>'{document,product_id}'OR registry_row->'site_id'IS DISTINCT FROM outcome_row#>'{document,site_id}'THEN
+    RAISE EXCEPTION 'count_source_invalid'using errcode='P0001',detail='',hint='';END IF;
+   document_value:=outcome_row->'document';
+   IF octet_length(validated_documents::text)+octet_length(document_value::text)+octet_length(memo_key)+8<=16777216 THEN
+    validated_documents:=validated_documents||jsonb_build_object(memo_key,document_value);
+   END IF;
+  END IF;
+ END LOOP;
+ EXCEPTION WHEN query_canceled OR assert_failure THEN RAISE;
+  WHEN OTHERS THEN
+   -- A routing/optimization failure cannot change the original acceptance
+   -- semantics. Discard ALL local reuse and run the original complete graph.
+   -- The existing request/statement deadline is never renewed.
+   validated_documents:='{}'::jsonb;
+ END;
+ -- Every original preparation/registry/cause/parent-boundary check still runs.
+ RETURN controlled_count_v1.history_scan_saved_result_graph('reconciliation_preparation',p_id,validated_documents);
+END $$;
+'''

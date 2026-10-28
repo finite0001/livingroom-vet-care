@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61660972,
-      "sha256": "06b82ed633f3ff9c076998beb855705453f7aa7e19db97f453ce46598cd2df71"
+      "bytes": 61671531,
+      "sha256": "345ad5acc8458793f25ac6f9067b2c9f10bd5a1473e72958e1b8289e68a73d75"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61657070,
-      "sha256": "7b82e51317db3d59e2ca650d7dd11c7f4275e5e14a10a5446c4d2c93fc92a4d1"
+      "bytes": 61667629,
+      "sha256": "d8477e8e1a5271db4d6eccb6e05b3ce04a18ce0679983bdcbffbe6328a6d2368"
     }
   },
   "source_corrections": {
@@ -377,6 +377,19 @@
         "map_added_only_after_complete_operation_and_closure_validation": true,
         "no_persisted_or_caller_supplied_certificate": true,
         "origin_and_current_authority_unchanged": true,
+        "preparation_entry": {
+          "new_body_sha256": "8ddbf5ca39b4743628c9a080cc790a69db319f704cad737ce737fe7909b8bd5c",
+          "original_body_sha256": "1490dc6bf20a108afd60c33b4a50c94d73bc8e55cc1f07cabb0aa94c217d5931",
+          "signature": "controlled_count_v1.readcore_saved_result_graph(text,uuid)",
+          "whole_body_inverse": true
+        },
+        "preparation_helper": {
+          "body_sha256": "07e2880a60c4365104246f443a57237f5890622bd9e5d7c01d2f1406e5cddc2d",
+          "exact_operation_result_binding": true,
+          "only_exact_preparation_ancestors": true,
+          "signature": "controlled_count_v1.history_preparation_graph(uuid)",
+          "whole_sql_sha256": "429fd5ca30c819f9e45d75b147e19e4d11681e95efbe2bdc6f5b116450ad9044"
+        },
         "reuse_capacity_only_with_full_validation_fallback": true,
         "root_new_body_sha256": "ba723077141417efc5e3be1764981c751c74100ac62d179fc725173d66a03f76",
         "root_original_body_sha256": "55ec2c3b165253179871a6194c2c374d745e778920749182d152d3fb16faa8ce",
@@ -473,11 +486,14 @@
           }
         }
       },
-      "only_fourteen_private_functions_and_four_body_hashes_added": true,
+      "only_fifteen_private_functions_and_five_body_hashes_added": true,
       "original_relation_frontiers_and_current_authority_preserved": true,
       "real_Auth_verification_pending": true,
       "recovery": {
         "armed_post_routes": [
+          "narcotics_recovery_preflight_v1",
+          "narcotics_recovery_backup_prepare_v1",
+          "narcotics_recovery_read_evidence_v1",
           "narcotics_recovery_arm_v1",
           "narcotics_recovery_source_resume_v1",
           "narcotics_recovery_begin_epoch_v1",
@@ -534,6 +550,9 @@
           "execute_controlled_count_reconciliation_v1"
         ],
         "exclusive_routes": [
+          "narcotics_recovery_preflight_v1",
+          "narcotics_recovery_backup_prepare_v1",
+          "narcotics_recovery_read_evidence_v1",
           "narcotics_recovery_arm_v1",
           "narcotics_recovery_source_resume_v1",
           "narcotics_recovery_begin_epoch_v1",
@@ -550,13 +569,13 @@
         "frontier_body_inverses": {
           "controlled_count_entry_v1.acquire_shared_product_relation_frontier()": {
             "complete_source_inverse": true,
-            "new_body_sha256": "9ac85bae51fb5d9a6827b555f849a0d4277639d37441cb1a084f26af45af785e",
+            "new_body_sha256": "aad21abefaea73b360eb7e90e57fc2dd07af6b05e025b422909fda539f9b9e84",
             "old_body_sha256": "518f6f8ad485874f4025a7141e2cd50b325dc37a9d36002885438708c1bb5c76",
             "post_frontier_exits": 2
           },
           "controlled_count_entry_v1.acquire_stock_workflow_relation_frontier()": {
             "complete_source_inverse": true,
-            "new_body_sha256": "a9f61ca18941b8adab48ed075345571c53155d18bffc008b64a4a1905c0199db",
+            "new_body_sha256": "0a0fb0ea893382c2ba062e6b15699e647148111583d3a6e329d6c193b36297f2",
             "old_body_sha256": "41c8d742734fbd8e393e2776091c71e9cb05b87abbcb238eb1d5d6bbbe131edc",
             "post_frontier_exits": 2
           }
@@ -567,22 +586,22 @@
           "controlled_count_entry_v1.recovery_post_frontier_required()"
         ],
         "pre_frontier_reads": "catalogs and pg_locks only",
-        "register_source_sha256": "fc1ca494ad6857de797db24208349ed051b6a3f5ae29b8775001f9f028f68d24",
-        "source_program_sha256": "17c7396a52d64c9e3abdcbfdceb87bbc8a62f738896900c3561639f7a5294786",
+        "register_source_sha256": "0f65806c92e6b6e13df271cea9618c26bc8bda24cd8fbe9a93c1ad41fdc9fbc2",
+        "source_program_sha256": "659ae3425389332af9a22c4694f474192935fb32f8f60eb7f1ea3eb73940bcbf",
         "whole_catalog_projection_inverse": true
       },
       "source_tools": {
         "build_operational_module.py": {
-          "bytes": 28416,
-          "sha256": "41782f9dc1f9db4a950f1bc275f4053154d401116def0128d248546b0bf2a07b"
+          "bytes": 31064,
+          "sha256": "a1c73a3e5c440cdeadea81ea273ce780d47874e5bc75ceac5204fb173a999d0c"
         },
         "history_document_reuse.py": {
-          "bytes": 10595,
-          "sha256": "89b1b797c89e0946b3deb1ee8a667f4fd4c5ab0e677850a522ce981582d274d3"
+          "bytes": 17881,
+          "sha256": "3a7e82b94b99fd13f10a3772bbd1912aa9b87b7cb22734aceeb00b29c08c62ea"
         },
         "recovery_admission_source.py": {
-          "bytes": 9345,
-          "sha256": "cbea60b92078c1d78b31f6ceedb7723bf1dec6fe2cf1769cdbac1f0fe24a06a8"
+          "bytes": 9649,
+          "sha256": "b2816cdbfb818abd2bbcd13c098841e54211f546f26ecee10c9c80cb7a1ba184"
         }
       },
       "variant_headers_equal_original_plus_one_private_argument": true

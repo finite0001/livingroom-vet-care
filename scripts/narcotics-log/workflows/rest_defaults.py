@@ -18,7 +18,10 @@ where(s.setdatabase=0 or d.datname='postgres')and(
  setting like 'pgrst.%'or((r.rolname in('authenticator','anon','authenticated','service_role')or s.setrole=0)
  and split_part(setting,'=',1)in('search_path','role','session_authorization')));"""
 
-def effective_defaults(runtime):
+RECOVERY_OVERRIDE=[{'role':'authenticator','database':None,'setting':'pgrst.db_pre_request=public.narcotics_recovery_admission_v1'}]
+
+def effective_defaults(runtime, *, recovery=False):
+ if type(recovery)is not bool:raise ValueError('Fixed REST source profile required')
  runtime.verify()
  candidates=[key for key,value in runtime.owned_services.items()if value['name']=='/supabase_rest_'+runtime.identity]
  if len(candidates)!=1:raise ValueError('Exactly one captured owned REST service required')
@@ -40,6 +43,6 @@ def effective_defaults(runtime):
  parsed=urllib.parse.urlsplit(env['PGRST_DB_URI'])
  if parsed.scheme!='postgresql'or parsed.username!='authenticator'or parsed.hostname!='supabase_db_'+runtime.identity or parsed.port!=5432 or parsed.path!='/postgres'or parsed.query or parsed.fragment or not parsed.password:raise ValueError('Source-declared internal REST DB binding differs')
  forbidden=json.loads(runtime.query(FORBIDDEN_SETTINGS_SQL))
- if forbidden!=[]:raise ValueError('Unexpected effective schema/hook/role/database override')
+ if forbidden!=(RECOVERY_OVERRIDE if recovery else []):raise ValueError('Unexpected effective schema/hook/role/database override')
  return {'rest_image':row['Config']['Image'],'rest_defaults':observed,'db_role':'authenticator','db_host':parsed.hostname,'db_port':parsed.port,'db_name':'postgres',
   'pgrst_db_config_builtin_default':True,'forbidden_role_database_overrides':forbidden,'full_role_configuration_certification':False,'global_closure_certification':False}
