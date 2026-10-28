@@ -8,6 +8,10 @@ stock-entry, witnessing, administration and correction backend. They follow the
 existing controlled-stock and private-review migrations. The official CLI owns
 each migration's transaction and ledger insertion; the standalone install
 programs' outer transaction wrappers have been removed.
+Historical ledger and descriptor values remain the original frozen values.
+Three reviewed native-prescription fixes are installed explicitly in the second
+forward migration, after checking their original source; their existence in an
+experimental database is not assumed.
 
 `release-candidate.json` deliberately says that deployment is not ready. The
 authenticated count, all ten ordinary writers, staff browser, forward ledger and
@@ -59,3 +63,10 @@ This installation rehearsal creates no staff account, signs no record and
 certifies no physical stock. Authenticated business and browser verification
 remain separate requirements. Production staff must supply the real clinic's
 medication classifications, permissions, opening stock and physical observations.
+
+The separate genuine-business jobs create two real local GoTrue users and sign
+in with their passwords. Only their initial synthetic staff permissions use an
+owner bootstrap. Medication setup, opening stock, review policies and physical
+counts use the real application APIs. Each profile gets a fresh database and
+the same original time limits. These jobs retain full private transport evidence
+locally; uploaded diagnostics omit passwords, tokens and raw Auth responses.

@@ -1,0 +1,226 @@
+{
+  "review_rules": {
+    "adjust_inventory": {
+      "adapter_version": 1,
+      "deadline_anchor": "observed_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "append_native_dispense_correction:clinical_annotation": {
+      "adapter_version": 1,
+      "deadline_anchor": "recorded_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "append_native_dispense_correction:operational_annotation": {
+      "adapter_version": 1,
+      "deadline_anchor": "recorded_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "append_native_dispense_correction:pickup_amendment": {
+      "adapter_version": 1,
+      "deadline_anchor": "recorded_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "receive_inventory": {
+      "adapter_version": 1,
+      "deadline_anchor": "observed_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_anesthesia_drug_administration": {
+      "adapter_version": 1,
+      "deadline_anchor": "observed_at",
+      "deadline_mode": "next_staffed_day_close",
+      "enabled": true,
+      "escalation_mode": "overdue",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_dispense": {
+      "adapter_version": 1,
+      "deadline_anchor": "observed_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_dispense_return:dispose": {
+      "adapter_version": 1,
+      "deadline_anchor": "observed_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_dispense_return:intake": {
+      "adapter_version": 1,
+      "deadline_anchor": "observed_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_dispense_return:restock": {
+      "adapter_version": 1,
+      "deadline_anchor": "observed_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_dispense_return_v2:dispose": {
+      "adapter_version": 1,
+      "deadline_anchor": "observed_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_dispense_return_v2:intake": {
+      "adapter_version": 1,
+      "deadline_anchor": "observed_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_dispense_return_v2:restock": {
+      "adapter_version": 1,
+      "deadline_anchor": "observed_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_dispense_return_v2:retract_disposal": {
+      "adapter_version": 1,
+      "deadline_anchor": "recorded_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_dispense_return_v2:retract_intake": {
+      "adapter_version": 1,
+      "deadline_anchor": "recorded_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_dispense_return_v2:retract_restock": {
+      "adapter_version": 1,
+      "deadline_anchor": "recorded_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_pickup": {
+      "adapter_version": 1,
+      "deadline_anchor": "observed_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_return_discrepancy:note": {
+      "adapter_version": 1,
+      "deadline_anchor": "recorded_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_return_discrepancy:report": {
+      "adapter_version": 1,
+      "deadline_anchor": "recorded_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "immediate_on_record",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_return_discrepancy:resolve_confirmed_original": {
+      "adapter_version": 1,
+      "deadline_anchor": "recorded_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_native_return_discrepancy:resolve_corrected": {
+      "adapter_version": 1,
+      "deadline_anchor": "recorded_at",
+      "deadline_mode": "not_configured",
+      "enabled": true,
+      "escalation_mode": "not_configured",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    },
+    "record_patient_treatment": {
+      "adapter_version": 1,
+      "deadline_anchor": "observed_at",
+      "deadline_mode": "next_staffed_day_close",
+      "enabled": true,
+      "escalation_mode": "overdue",
+      "meaning": "independent_record_review_v1",
+      "quorum": 1
+    }
+  },
+  "stock_event_kinds": [
+    "receive_inventory",
+    "adjust_inventory",
+    "record_patient_treatment",
+    "record_anesthesia_drug_administration",
+    "record_native_dispense",
+    "record_native_pickup",
+    "record_native_dispense_return:intake",
+    "record_native_dispense_return:dispose",
+    "record_native_dispense_return:restock",
+    "record_native_dispense_return_v2:intake",
+    "record_native_dispense_return_v2:dispose",
+    "record_native_dispense_return_v2:restock",
+    "record_native_dispense_return_v2:retract_intake",
+    "record_native_dispense_return_v2:retract_disposal",
+    "record_native_dispense_return_v2:retract_restock",
+    "record_native_return_discrepancy:report",
+    "record_native_return_discrepancy:note",
+    "record_native_return_discrepancy:resolve_corrected",
+    "record_native_return_discrepancy:resolve_confirmed_original",
+    "append_native_dispense_correction:clinical_annotation",
+    "append_native_dispense_correction:operational_annotation",
+    "append_native_dispense_correction:pickup_amendment"
+  ]
+}

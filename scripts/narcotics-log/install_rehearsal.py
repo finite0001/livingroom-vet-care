@@ -348,6 +348,11 @@ def main():
     if args.check_source:
         print(json.dumps({"source_files": len(pins), "database_operations": 0}))
         return
+    execute_owned(layout, pins, started, Installation)
+
+
+def execute_owned(layout, pins, started, installation_class):
+    """One source-selected owned candidate; success includes normal cleanup."""
     if shutil.disk_usage(tempfile.gettempdir()).free < 4 * 1024 ** 3:
         raise RuntimeError("Owned rehearsal disk reserve unavailable")
     evidence = Path(tempfile.mkdtemp(prefix="lrv-narcotics-install-")).resolve()
@@ -356,7 +361,7 @@ def main():
     errors = []
     try:
         with prefix.materialize() as (view, _):
-            runtime = Installation(view, evidence, layout, started)
+            runtime = installation_class(view, evidence, layout, started)
             try:
                 runtime.execute()
             except BaseException as error:

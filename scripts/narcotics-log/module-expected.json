@@ -126339,7 +126339,7 @@
             ],
             "definer": false,
             "owner": "postgres",
-            "sha256": "1411567762a09f129c480fd2fdd04a96485a05d2f9b26a17148ca49c0b0cc3eb"
+            "sha256": "f9d2a7b449fe08797e32109a9bf598709f1d3312f81ae3f94b6be24a4db73130"
           },
           "controlled_stock_manifest_snapshot()": {
             "acl": [
@@ -126441,7 +126441,7 @@
             ],
             "definer": false,
             "owner": "postgres",
-            "sha256": "c4f35d013a7f1d4154848f41f068cc0bb068d7c894646b284811fbfd6d1fa38f"
+            "sha256": "4c917a27f657bc414cad6166797c3c4e67b0243563cf7b935d779f4b766c2287"
           },
           "controlled_stock_opening_pickup(uuid)": {
             "acl": [
@@ -126458,7 +126458,7 @@
             ],
             "definer": false,
             "owner": "postgres",
-            "sha256": "71872638e154bdb62537887205a8db4944732eeb29625aa615f1c8a8021cd508"
+            "sha256": "a6f454b7dd1d2043f4e62e9be7dfe62f6f19ecd151545667f04c2718c78816f7"
           },
           "controlled_stock_opening_selector(jsonb)": {
             "acl": [
@@ -141289,7 +141289,7 @@
                     ],
                     "definer": false,
                     "owner": "postgres",
-                    "sha256": "1411567762a09f129c480fd2fdd04a96485a05d2f9b26a17148ca49c0b0cc3eb"
+                    "sha256": "f9d2a7b449fe08797e32109a9bf598709f1d3312f81ae3f94b6be24a4db73130"
                   },
                   "controlled_stock_manifest_snapshot()": {
                     "acl": [
@@ -141391,7 +141391,7 @@
                     ],
                     "definer": false,
                     "owner": "postgres",
-                    "sha256": "c4f35d013a7f1d4154848f41f068cc0bb068d7c894646b284811fbfd6d1fa38f"
+                    "sha256": "4c917a27f657bc414cad6166797c3c4e67b0243563cf7b935d779f4b766c2287"
                   },
                   "controlled_stock_opening_pickup(uuid)": {
                     "acl": [
@@ -141408,7 +141408,7 @@
                     ],
                     "definer": false,
                     "owner": "postgres",
-                    "sha256": "71872638e154bdb62537887205a8db4944732eeb29625aa615f1c8a8021cd508"
+                    "sha256": "a6f454b7dd1d2043f4e62e9be7dfe62f6f19ecd151545667f04c2718c78816f7"
                   },
                   "controlled_stock_opening_selector(jsonb)": {
                     "acl": [
@@ -166967,7 +166967,7 @@
                       ],
                       "definer": false,
                       "owner": "postgres",
-                      "sha256": "1411567762a09f129c480fd2fdd04a96485a05d2f9b26a17148ca49c0b0cc3eb"
+                      "sha256": "f9d2a7b449fe08797e32109a9bf598709f1d3312f81ae3f94b6be24a4db73130"
                     },
                     "controlled_stock_manifest_snapshot()": {
                       "acl": [
@@ -167069,7 +167069,7 @@
                       ],
                       "definer": false,
                       "owner": "postgres",
-                      "sha256": "c4f35d013a7f1d4154848f41f068cc0bb068d7c894646b284811fbfd6d1fa38f"
+                      "sha256": "4c917a27f657bc414cad6166797c3c4e67b0243563cf7b935d779f4b766c2287"
                     },
                     "controlled_stock_opening_pickup(uuid)": {
                       "acl": [
@@ -167086,7 +167086,7 @@
                       ],
                       "definer": false,
                       "owner": "postgres",
-                      "sha256": "71872638e154bdb62537887205a8db4944732eeb29625aa615f1c8a8021cd508"
+                      "sha256": "a6f454b7dd1d2043f4e62e9be7dfe62f6f19ecd151545667f04c2718c78816f7"
                     },
                     "controlled_stock_opening_selector(jsonb)": {
                       "acl": [
@@ -181915,7 +181915,7 @@
                         ],
                         "definer": false,
                         "owner": "postgres",
-                        "sha256": "1411567762a09f129c480fd2fdd04a96485a05d2f9b26a17148ca49c0b0cc3eb"
+                        "sha256": "f9d2a7b449fe08797e32109a9bf598709f1d3312f81ae3f94b6be24a4db73130"
                       },
                       "controlled_stock_manifest_snapshot()": {
                         "acl": [
@@ -182017,7 +182017,7 @@
                         ],
                         "definer": false,
                         "owner": "postgres",
-                        "sha256": "c4f35d013a7f1d4154848f41f068cc0bb068d7c894646b284811fbfd6d1fa38f"
+                        "sha256": "4c917a27f657bc414cad6166797c3c4e67b0243563cf7b935d779f4b766c2287"
                       },
                       "controlled_stock_opening_pickup(uuid)": {
                         "acl": [
@@ -182034,7 +182034,7 @@
                         ],
                         "definer": false,
                         "owner": "postgres",
-                        "sha256": "71872638e154bdb62537887205a8db4944732eeb29625aa615f1c8a8021cd508"
+                        "sha256": "a6f454b7dd1d2043f4e62e9be7dfe62f6f19ecd151545667f04c2718c78816f7"
                       },
                       "controlled_stock_opening_selector(jsonb)": {
                         "acl": [

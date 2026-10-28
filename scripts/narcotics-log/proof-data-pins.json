@@ -3,7 +3,7 @@
   "files": {
     "common-expected.json": {
       "bytes": 2490624,
-      "sha256": "b37f774ae350e05c32d74417329b9cd1b852cc08683fc018f5d33b2a6813d9ab"
+      "sha256": "0aa50da6278aee07d4399015963543bc1b16b66c4ff8e3b3f0604e6c7491ea66"
     },
     "module-capture.sql": {
       "bytes": 104341,
@@ -11,7 +11,7 @@
     },
     "module-expected.json": {
       "bytes": 12307959,
-      "sha256": "9df7cae392e389e4c6959868c65e03d28b190420134c970b615cce0a1a150672"
+      "sha256": "563c99608c622823a9499f5b70ed97ee41782ae855273ae65f0c919a19baa234"
     },
     "original-row-hashes.sql": {
       "bytes": 1473,

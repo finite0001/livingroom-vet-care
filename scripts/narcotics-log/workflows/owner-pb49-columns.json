@@ -1,0 +1,487 @@
+{
+  "actions": [
+    "id",
+    "actor_id",
+    "writer",
+    "session_id",
+    "request_hash",
+    "receipt",
+    "recorded_at"
+  ],
+  "anesthesia_drug_administrations": [
+    "id",
+    "record_id",
+    "pet_id",
+    "request",
+    "created_by",
+    "created_at"
+  ],
+  "billing_invoice_items": [
+    "id",
+    "invoice_id",
+    "pet_id",
+    "product_id",
+    "description",
+    "quantity",
+    "unit_price_cents",
+    "amount_cents",
+    "created_by",
+    "created_at"
+  ],
+  "cells": [
+    "id",
+    "container_id",
+    "lot_id",
+    "channel",
+    "dispense_id",
+    "allocation_id",
+    "intake_id",
+    "opening_id",
+    "created_event_id",
+    "opening_quantity"
+  ],
+  "containers": [
+    "id",
+    "product_id",
+    "stock_unit",
+    "label",
+    "kind",
+    "stock_lot_id",
+    "controlling_site_id",
+    "initial_location_id",
+    "initial_custodian_id",
+    "opening_id",
+    "created_event_id",
+    "actor_id",
+    "session_id",
+    "recorded_at"
+  ],
+  "correction_provenance": [
+    "event_id",
+    "actor_id"
+  ],
+  "custody_provenance": [
+    "event_id",
+    "writer",
+    "actor_id"
+  ],
+  "discrepancy_provenance": [
+    "event_id",
+    "actor_id"
+  ],
+  "draft_entries": [
+    "id",
+    "product_id",
+    "state",
+    "head_id",
+    "created_by",
+    "created_at"
+  ],
+  "draft_versions": [
+    "id",
+    "entry_id",
+    "version",
+    "definition",
+    "product_snapshot",
+    "action_id",
+    "actor_id",
+    "session_id",
+    "actor_name",
+    "created_at"
+  ],
+  "events": [
+    "id",
+    "product_id",
+    "sequence",
+    "prior_event_id",
+    "policy_version_id",
+    "opening_id",
+    "engine_revision",
+    "writer",
+    "event_kind",
+    "actor_id",
+    "session_id",
+    "actor_name",
+    "basis",
+    "observed_at",
+    "recorded_at",
+    "note",
+    "context_hash",
+    "canonical_result",
+    "source_bundle",
+    "source_effects",
+    "clinical_snapshot",
+    "secondary_review_required",
+    "prior_record_hash",
+    "record_hash"
+  ],
+  "heads": [
+    "container_id",
+    "version",
+    "location_id",
+    "custodian_id",
+    "status",
+    "last_event_id"
+  ],
+  "lines": [
+    "id",
+    "event_id",
+    "cell_id",
+    "source_link_id",
+    "quantity_delta",
+    "container_version_before",
+    "container_version_after"
+  ],
+  "locations": [
+    "id",
+    "site_id",
+    "kind",
+    "label",
+    "initial_custodian_id",
+    "actor_id",
+    "session_id",
+    "recorded_at"
+  ],
+  "lots": [
+    "id",
+    "product_id",
+    "lot_number",
+    "expires_on",
+    "location",
+    "created_by",
+    "created_at"
+  ],
+  "movement_provenance": [
+    "movement_id",
+    "writer",
+    "source_id",
+    "actor_id"
+  ],
+  "movements": [
+    "id",
+    "lot_id",
+    "quantity",
+    "kind",
+    "reason",
+    "created_by",
+    "created_at"
+  ],
+  "native_allocations": [
+    "id",
+    "dispense_id",
+    "lot_id",
+    "movement_id",
+    "quantity"
+  ],
+  "native_compensation_links": [
+    "id",
+    "event_id",
+    "target_event_id",
+    "allocation_id",
+    "lot_id",
+    "original_movement_id",
+    "movement_id",
+    "quantity"
+  ],
+  "native_correction_events": [
+    "id",
+    "authorization_id",
+    "pet_id",
+    "dispense_id",
+    "sequence",
+    "prior_event_id",
+    "actor_id",
+    "kind",
+    "created_at",
+    "record_hash",
+    "reviewed_context",
+    "document"
+  ],
+  "native_correction_operations": [
+    "id",
+    "actor_id",
+    "request",
+    "request_hash",
+    "result",
+    "created_at"
+  ],
+  "native_discrepancy_events": [
+    "id",
+    "authorization_id",
+    "pet_id",
+    "dispense_id",
+    "sequence",
+    "prior_event_id",
+    "actor_id",
+    "case_id",
+    "action",
+    "created_at",
+    "record_hash",
+    "reviewed_context",
+    "document"
+  ],
+  "native_discrepancy_links": [
+    "id",
+    "case_id",
+    "correction_id",
+    "resolution_id"
+  ],
+  "native_discrepancy_operations": [
+    "id",
+    "actor_id",
+    "request",
+    "request_hash",
+    "result",
+    "created_at"
+  ],
+  "native_dispenses": [
+    "id",
+    "authorization_id",
+    "pet_id",
+    "slot_id",
+    "invoice_id",
+    "invoice_item_id",
+    "quantity",
+    "actor_id",
+    "dispensed_at",
+    "document"
+  ],
+  "native_fulfillment_operations": [
+    "id",
+    "actor_id",
+    "operation",
+    "request",
+    "request_hash",
+    "result",
+    "created_at"
+  ],
+  "native_pickups": [
+    "id",
+    "authorization_id",
+    "pet_id",
+    "dispense_id",
+    "actor_id",
+    "picked_up_at",
+    "document"
+  ],
+  "native_prescription_authorizations": [
+    "id",
+    "pet_id",
+    "client_id",
+    "draft_id",
+    "document"
+  ],
+  "native_refill_events": [
+    "id",
+    "refill_id",
+    "revision",
+    "action",
+    "actor_id",
+    "reason",
+    "prior_event_id",
+    "before_snapshot",
+    "after_snapshot",
+    "link_context",
+    "created_at",
+    "fulfillment_reference"
+  ],
+  "native_return_events": [
+    "id",
+    "authorization_id",
+    "pet_id",
+    "dispense_id",
+    "sequence",
+    "prior_event_id",
+    "actor_id",
+    "action",
+    "intake_id",
+    "created_at",
+    "record_hash",
+    "reviewed_context",
+    "document"
+  ],
+  "native_return_operations": [
+    "id",
+    "actor_id",
+    "request",
+    "request_hash",
+    "result",
+    "created_at"
+  ],
+  "native_return_policy_decisions": [
+    "id",
+    "version",
+    "actor_id",
+    "request",
+    "request_hash",
+    "document",
+    "created_at"
+  ],
+  "native_return_policy_state": [
+    "id",
+    "version",
+    "decision_id"
+  ],
+  "native_return_stock_links": [
+    "id",
+    "event_id",
+    "allocation_id",
+    "lot_id",
+    "movement_id",
+    "quantity"
+  ],
+  "opening": [
+    "id",
+    "product_id",
+    "policy_version_id",
+    "observed_at",
+    "count_evidence",
+    "native_custody_boundary",
+    "actor_id",
+    "session_id",
+    "recorded_at"
+  ],
+  "opening_movements": [
+    "opening_id",
+    "movement_id",
+    "lot_id",
+    "quantity",
+    "source_snapshot"
+  ],
+  "patient_treatments": [
+    "id",
+    "pet_id",
+    "product_id",
+    "lot_id",
+    "invoice_id",
+    "kind",
+    "historical",
+    "product_name",
+    "manufacturer",
+    "lot_number",
+    "expires_on",
+    "quantity",
+    "dose",
+    "route",
+    "site",
+    "veterinarian",
+    "veterinarian_license",
+    "administered_at",
+    "next_due_on",
+    "source",
+    "request",
+    "created_by",
+    "created_at"
+  ],
+  "pickup_provenance": [
+    "event_id",
+    "actor_id"
+  ],
+  "positions": [
+    "cell_id",
+    "quantity"
+  ],
+  "preparations": [
+    "id",
+    "writer",
+    "actor_id",
+    "session_id",
+    "product_id",
+    "policy_version_id",
+    "state_head_id",
+    "opening_id",
+    "canonical_arguments",
+    "context",
+    "frozen",
+    "request_hash",
+    "created_at",
+    "expires_at"
+  ],
+  "product": [
+    "id",
+    "name",
+    "kind",
+    "manufacturer",
+    "unit",
+    "unit_price_cents",
+    "active",
+    "version",
+    "created_by",
+    "created_at"
+  ],
+  "sites": [
+    "id",
+    "label",
+    "registration_evidence",
+    "actor_id",
+    "session_id",
+    "recorded_at"
+  ],
+  "source_links": [
+    "id",
+    "event_id",
+    "movement_id",
+    "return_event_id",
+    "discrepancy_event_id",
+    "pickup_id",
+    "correction_event_id"
+  ],
+  "state": [
+    "product_id",
+    "head_id",
+    "event_version",
+    "last_event_id"
+  ],
+  "state_events": [
+    "id",
+    "product_id",
+    "version",
+    "prior_event_id",
+    "state",
+    "policy_version_id",
+    "opening_id",
+    "actor_id",
+    "session_id",
+    "reason",
+    "recorded_at"
+  ],
+  "stock_cancellations": [
+    "id",
+    "actor_id",
+    "writer",
+    "session_id",
+    "recorded_at"
+  ],
+  "stock_policies": [
+    "id",
+    "product_id",
+    "version",
+    "draft_version_id",
+    "engine_revision",
+    "stock_unit",
+    "identity_snapshot",
+    "permissions",
+    "clinic_retained_return_permitted",
+    "review_reference",
+    "actor_id",
+    "session_id",
+    "recorded_at"
+  ],
+  "stock_policy_sites": [
+    "policy_version_id",
+    "site_id"
+  ],
+  "transitions": [
+    "id",
+    "event_id",
+    "container_id",
+    "version_before",
+    "version_after",
+    "before_location_id",
+    "before_custodian_id",
+    "before_status",
+    "after_location_id",
+    "after_custodian_id",
+    "after_status"
+  ]
+}

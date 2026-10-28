@@ -6,11 +6,11 @@
   "migrations": {
     "20261027223535_controlled_record_review_workflows.sql": {
       "bytes": 36650350,
-      "sha256": "9e85aba15fb093b2fd474aaa5e16e7c371cdccb47b64789d7cded15ea1e59a68"
+      "sha256": "0f1330e8b9bb77043e5ed878492b6d2dfa35e2ca5c288fb6ca92df72476b92af"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61500657,
-      "sha256": "5f6363cb9e21d203a27db711c8c5107efa89c4bfd0b83d8692c3852ca096ea92"
+      "bytes": 61530215,
+      "sha256": "1268808065bd0196b4f428449b130e57758673842653ba95c63d51d79ee0f351"
     }
   },
   "prefix_migration_count": 206,
@@ -21,11 +21,37 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61496755,
-      "sha256": "c24391bf1fdc5105684fef3abcc59aa1c779d11e5edf0a6c412db60754f667a2"
+      "bytes": 61526313,
+      "sha256": "2c1a114f2f0870836f0985a3e37598896db9de25c0ff18c8ba331286b9d00d09"
     }
   },
   "source_corrections": {
+    "common_original_parent_seals": {
+      "digest_inverse": {
+        "1411567762a09f129c480fd2fdd04a96485a05d2f9b26a17148ca49c0b0cc3eb": "f9d2a7b449fe08797e32109a9bf598709f1d3312f81ae3f94b6be24a4db73130",
+        "71872638e154bdb62537887205a8db4944732eeb29625aa615f1c8a8021cd508": "a6f454b7dd1d2043f4e62e9be7dfe62f6f19ecd151545667f04c2718c78816f7",
+        "c4f35d013a7f1d4154848f41f068cc0bb068d7c894646b284811fbfd6d1fa38f": "4c917a27f657bc414cad6166797c3c4e67b0243563cf7b935d779f4b766c2287"
+      },
+      "literal_occurrences": {
+        "1411567762a09f129c480fd2fdd04a96485a05d2f9b26a17148ca49c0b0cc3eb": 9,
+        "71872638e154bdb62537887205a8db4944732eeb29625aa615f1c8a8021cd508": 9,
+        "c4f35d013a7f1d4154848f41f068cc0bb068d7c894646b284811fbfd6d1fa38f": 9
+      },
+      "no_current269_function_body_changed": true,
+      "reason": "The common269 forward migration preserves existing original205/206 parents. Three native-patch digests belonged to the experimental typed parent; those implementation changes must be installed explicitly later, while historical rows stay unchanged.",
+      "source_original206_wrapper_sha256": "adf45e10d25935486aadbc126c6b8282d38def119dc344bfe4935bb690d4b036"
+    },
+    "explicit_native_forward_changes": {
+      "all_original_parent_descriptors_preserved": true,
+      "current_native_fix_metadata_unchanged": true,
+      "functions": [
+        "public.preview_native_pickup(uuid,uuid,jsonb)",
+        "public.controlled_stock_opening_pickup(uuid)",
+        "public.controlled_stock_opening_native_entry_for_product(uuid,text,uuid,integer,integer,integer,uuid)"
+      ],
+      "no_observed_target_expected_values": true,
+      "prior_implementations_verified_from_frozen_prefix_source": true
+    },
     "record_review_ledger": {
       "changes": [
         {

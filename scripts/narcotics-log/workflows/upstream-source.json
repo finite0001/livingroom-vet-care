@@ -1,0 +1,168 @@
+{
+  "database_operations": 0,
+  "files": {
+    "auth_effects.py": {
+      "bytes": 11454,
+      "package": "closed Auth proof",
+      "sha256": "72a4a5f9996bb6ff2ce2c608a273156c2989d6b69564f14e9f3fc424f0bfb8e7",
+      "source_file": "closed_auth_effects_v4_latestlogin.py"
+    },
+    "full121_boundary_evidence.py": {
+      "bytes": 2487,
+      "package": "full121-genuine-workflows-v3",
+      "sha256": "1fa0ee809dcc4b197071cd134844c43a1b01e687b78efbe38a5ec213c9aea9c2",
+      "source_file": "full121_boundary_evidence.py"
+    },
+    "full121_browser_bridge.py": {
+      "bytes": 3522,
+      "package": "full121-genuine-workflows-v3",
+      "sha256": "f181ec6ba90ead83be1a7766313e999637756f37247744b2aab9a00d1796ffee",
+      "source_file": "full121_browser_bridge.py"
+    },
+    "full121_commissioning.py": {
+      "bytes": 13824,
+      "package": "full121-genuine-workflows-v3",
+      "sha256": "2e35efe92e75609ca034164bb5c6994d42ddb5212c1aa83cd5c483e48c42641c",
+      "source_file": "full121_commissioning.py"
+    },
+    "full121_count_pair.py": {
+      "bytes": 12863,
+      "package": "full121-genuine-workflows-v3",
+      "sha256": "9124a43c3e9c3f56bc4e0e5c3fecb04cfb887b9e1136fd5e25da8ec5f7cb8282",
+      "source_file": "full121_count_pair.py"
+    },
+    "full121_effects.py": {
+      "bytes": 2870,
+      "package": "full121-genuine-workflows-v3",
+      "sha256": "47639f53bebfd6f5d41b308250b87448f273a871e1f0838e274f2bd3547279eb",
+      "source_file": "full121_effects.py"
+    },
+    "full121_exact_json.py": {
+      "bytes": 2474,
+      "package": "full121-genuine-workflows-v3",
+      "sha256": "ada6d7d88b8f0fabfc9ec64cc7331e6f8f90a45f2a7b9431654a873aaf089e2c",
+      "source_file": "full121_exact_json.py"
+    },
+    "full121_gateway.py": {
+      "bytes": 8913,
+      "package": "full121-genuine-workflows-v3",
+      "sha256": "8f6b5ef8593f6827cd1d373d4401799aced173533a75d36522b366239055b320",
+      "source_file": "full121_gateway.py"
+    },
+    "full121_management.py": {
+      "bytes": 9770,
+      "package": "full121-genuine-workflows-v3",
+      "sha256": "47d45aabccc519cf719cc1a0ec5ceea84c3ea8cf0438e91900e4c251dd7bc27d",
+      "source_file": "full121_management.py"
+    },
+    "full121_policy.py": {
+      "bytes": 6844,
+      "package": "full121-genuine-workflows-v3",
+      "sha256": "36b10c3bd974966429c2a89ad673a444e0a1bb81cd77751b991b939470148af1",
+      "source_file": "full121_policy.py"
+    },
+    "full121_profiles.py": {
+      "bytes": 2523,
+      "package": "full121-genuine-workflows-v3",
+      "sha256": "0ce8a4f14d418fa973af7b8d05f69bc8c756deedaf5b078b577db6ad709b37ea",
+      "source_file": "full121_profiles.py"
+    },
+    "full121_queries.py": {
+      "bytes": 2206,
+      "package": "full121-genuine-workflows-v3",
+      "sha256": "e06267f73322cdabdced8f0f355c02645f5ee95dfb421068fac1af3467a5b15e",
+      "source_file": "full121_queries.py"
+    },
+    "full121_values.py": {
+      "bytes": 5540,
+      "package": "full121-genuine-workflows-v3",
+      "sha256": "d026508feb8d924d15705ec83f523dfe5a04d58888507426a46f6603d276e415",
+      "source_file": "full121_values.py"
+    },
+    "full121_witness.py": {
+      "bytes": 10201,
+      "package": "full121-genuine-workflows-v3",
+      "sha256": "b91319397fa3b57e01342581abefbf2bc22407fea93e9dd32e704b4ba3808a5c",
+      "source_file": "full121_witness.py"
+    },
+    "http_transport.py": {
+      "bytes": 10376,
+      "package": "count-full-public-fixture-installer-v1",
+      "sha256": "aed203ec7f504b9b08c3f002022ef50e1d4e56eee6f310f2eda8e750dde44f0e",
+      "source_file": "full_transport.py"
+    },
+    "synthetic-rule-choices.json": {
+      "bytes": 7643,
+      "package": "full121-genuine-workflows-v3",
+      "sha256": "90b8b837d904a02292f5a298eabed58ce57c063f7a739b8e5fab1cc97f08459f",
+      "source_file": "synthetic-rule-choices.json"
+    },
+    "wc_annotation_values.py": {
+      "bytes": 2734,
+      "package": "full121-writer-coverage-v1",
+      "sha256": "9f54d5726ad779040f035bc0397f1099128f4ea64a6d2401a36b8414d9533d0d",
+      "source_file": "wc_annotation_values.py"
+    },
+    "wc_clinical_values.py": {
+      "bytes": 2353,
+      "package": "full121-writer-coverage-v1",
+      "sha256": "b2ca74b9fefcf67fb276872c84a73ba36bdecd3ad6505687c69eee2b3977336c",
+      "source_file": "wc_clinical_values.py"
+    },
+    "wc_discrepancy_values.py": {
+      "bytes": 10041,
+      "package": "full121-writer-coverage-v1",
+      "sha256": "c567302c127306720f4a41ddc3c7ab4282d280a67241bf893eea6b0f248d2e07",
+      "source_file": "wc_discrepancy_values.py"
+    },
+    "wc_domain.py": {
+      "bytes": 4039,
+      "package": "full121-writer-coverage-v1",
+      "sha256": "ee2e3801ba4c71819be0bbaa8aacc2c11dfffb087c979e3f62512f5d96565d08",
+      "source_file": "wc_domain.py"
+    },
+    "wc_gateway.py": {
+      "bytes": 10002,
+      "package": "full121-writer-coverage-v1",
+      "sha256": "a4cd9bbc44f85947192dbc4a48649365e54e879cd71b5611a6137c58773acf95",
+      "source_file": "wc_gateway.py"
+    },
+    "wc_native_values.py": {
+      "bytes": 3603,
+      "package": "full121-writer-coverage-v1",
+      "sha256": "ae899d77e1d3cb2b1c090976c98b093f6b2a5cef4e35c258fe1141c4682d95fa",
+      "source_file": "wc_native_values.py"
+    },
+    "wc_profiles.py": {
+      "bytes": 14674,
+      "package": "full121-writer-coverage-v1",
+      "sha256": "7ef5d91b2f0bc25062989f218561d04d819424c816dcf513b7e016ee528ee364",
+      "source_file": "wc_profiles.py"
+    },
+    "wc_queries.py": {
+      "bytes": 2420,
+      "package": "full121-writer-coverage-v1",
+      "sha256": "78b40eedf00107b079b4fcd0ccccc029934a57a46f55295a31d88c3edc4f2425",
+      "source_file": "wc_queries.py"
+    },
+    "wc_return1_values.py": {
+      "bytes": 3937,
+      "package": "full121-writer-coverage-v1",
+      "sha256": "543abd45899df90036c7db5f67520a3c2543830236589d9b3b820439377416ea",
+      "source_file": "wc_return1_values.py"
+    },
+    "wc_return2_values.py": {
+      "bytes": 6066,
+      "package": "full121-writer-coverage-v1",
+      "sha256": "a23435f980370136a3b1335b46a000b530ff0bfc9a28f877890ec26f356840ca",
+      "source_file": "wc_return2_values.py"
+    },
+    "wc_schedule.py": {
+      "bytes": 4455,
+      "package": "full121-writer-coverage-v1",
+      "sha256": "4712f1bfb0057d48e9458071945dbf8c53394c3ad6dcf39f58557a7c442adb0e",
+      "source_file": "wc_schedule.py"
+    }
+  },
+  "kind": "narcotics-workflow-source-provenance-v1"
+}

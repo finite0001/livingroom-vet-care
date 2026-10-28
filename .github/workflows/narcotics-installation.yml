@@ -62,3 +62,42 @@ jobs:
             /tmp/lrv-narcotics-install-*/forward-ledger.json
             /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
             /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log
+
+  genuine-business:
+    needs: forward-installation
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [commission_all, count_agreement]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - run: npm ci --ignore-scripts
+      - run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
+      - name: Admit fixed genuine business sources
+        run: python3 -I -B scripts/narcotics-log/business_rehearsal.py --check-source --profile ${{ matrix.profile }}
+      - name: Verify real staff accounts, business effects and normal cleanup
+        run: python3 -I -B scripts/narcotics-log/business_rehearsal.py --run-synthetic-local --profile ${{ matrix.profile }}
+      - name: Retain scoped diagnostics without local passwords or session tokens
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-business-${{ matrix.profile }}
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/*-failure.txt
+            /tmp/lrv-narcotics-install-*/*-permanent-rows.json
+            /tmp/lrv-narcotics-install-*/genuine-Auth-complete-effects.json
+            /tmp/lrv-narcotics-install-*/sequence-source-effects.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log

@@ -1,5 +1,6 @@
 """Historical ledger literals must remain independent of current function edits."""
 import json
+import hashlib
 from pathlib import Path
 import re
 import unittest
@@ -23,8 +24,32 @@ class HistoricalLedgerTests(unittest.TestCase):
         statements = split_reviewed_statements(source)
         for head in ("do $review_parent$", "do $review_installed$"):
             original = next(value for value in tail["statements"] if value.startswith(head))
-            initial = next(value for value in statements if value.startswith(head))
-            self.assertEqual(initial, original)
+            selected = [value for value in statements if value.startswith(head)]
+            self.assertEqual(selected, [original, original])
+
+    def test_forward_descriptor_preserves_the_original_parent_rows(self):
+        original = json.loads((CANDIDATE / "secondary_review_protocol_private_expected_v2.json").read_bytes())["definition"]
+        proof = ROOT / "scripts/narcotics-log"
+        common = json.loads((proof / "common-expected.json").read_bytes())
+        current = json.loads((proof / "module-expected.json").read_bytes())
+        self.assertEqual(common["parents"]["private206"], original)
+        saved = current["properties"]["immutable_parent_rows"]
+        self.assertEqual(saved["parent205_definition"], original["parent"]["manifest"])
+        self.assertEqual(saved["private206_descriptor"], [{"id": True, "definition": original}])
+        self.assertEqual(saved["original269_descriptor"], [{"id": True, "definition": common}])
+
+    def test_native_forward_fixes_are_executable_definitions_matching_the_source_golden(self):
+        proof = ROOT / "scripts/narcotics-log"
+        current = json.loads((proof / "module-expected.json").read_bytes())
+        statements = split_reviewed_statements((ROOT / "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql").read_text())
+        for signature in ("public.preview_native_pickup(uuid,uuid,jsonb)", "public.controlled_stock_opening_pickup(uuid)",
+                          "public.controlled_stock_opening_native_entry_for_product(uuid,text,uuid,integer,integer,integer,uuid)"):
+            name = signature.split("(", 1)[0]
+            selected = [value for value in statements if re.match(r"create(?: or replace)? function " + re.escape(name) + r"\(", value, re.I)]
+            self.assertEqual(len(selected), 1, signature)
+            body = re.search(r"\bas\s+(\$[a-zA-Z0-9_]*\$)(.*?)\1", selected[0], re.I | re.S)
+            self.assertIsNotNone(body, signature)
+            self.assertEqual(hashlib.sha256(body[2].encode()).hexdigest(), current["properties"]["functions"][signature]["body_sha256"])
 
     def test_all_preflight_and_postcheck_rows_match_frozen_source(self):
         old = json.loads((CANDIDATE / "secondary_review_expected_205_ledger.json").read_bytes())
