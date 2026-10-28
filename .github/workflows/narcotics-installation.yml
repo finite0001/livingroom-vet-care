@@ -21,6 +21,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  staff-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      VITE_SUPABASE_URL: http://127.0.0.1:54321
+      VITE_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-not-a-production-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
   forward-installation:
     # This is installation evidence only. Auth, ordinary writers, count
     # execution and staff browser acceptance have separate remaining gates.
@@ -70,7 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [commission_all, count_agreement]
+        profile: [commission_all, count_agreement, browser_lost_finalize]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -81,6 +98,8 @@ jobs:
         with:
           version: 2.118.0
       - run: npm ci --ignore-scripts
+      - if: matrix.profile == 'browser_lost_finalize'
+        run: npx playwright install --with-deps chromium
       - run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
       - name: Admit fixed genuine business sources
         run: python3 -I -B scripts/narcotics-log/business_rehearsal.py --check-source --profile ${{ matrix.profile }}
@@ -99,5 +118,7 @@ jobs:
             /tmp/lrv-narcotics-install-*/*-permanent-rows.json
             /tmp/lrv-narcotics-install-*/genuine-Auth-complete-effects.json
             /tmp/lrv-narcotics-install-*/sequence-source-effects.json
+            /tmp/lrv-narcotics-install-*/authenticated-browser-proof.json
+            /tmp/lrv-genuine-count4-v2-*/browser-count-finalize-proof/agreement-after-recovery.png
             /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
             /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log

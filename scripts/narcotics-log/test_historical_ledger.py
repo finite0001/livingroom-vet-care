@@ -60,6 +60,20 @@ class HistoricalLedgerTests(unittest.TestCase):
             self.assertEqual(len(selected), 1, name)
             self.assertRegex(selected[0], r"RETURNS public\.(?:inventory_movements|patient_treatments)\b")
 
+    def test_all_final_staff_grants_follow_the_complete_property_check(self):
+        statements = split_reviewed_statements((ROOT / "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql").read_text())
+        checked = next(i for i, value in enumerate(statements) if value.startswith("DO $fixture_source_check$"))
+        descriptor = next(i for i, value in enumerate(statements) if value.startswith("DO $fixture_descriptor$"))
+        self.assertLess(checked, descriptor)
+        pattern = re.compile(r"GRANT EXECUTE ON FUNCTION (public\.[a-z0-9_]+\([^;]*\)) TO authenticated", re.I)
+        final = [pattern.fullmatch(value)[1] for value in statements[descriptor + 1:] if pattern.fullmatch(value)]
+        self.assertEqual(len(final), 48)
+        self.assertEqual(len(set(final)), 48)
+        for value in statements[:checked]:
+            grant = pattern.fullmatch(value)
+            if grant:
+                self.assertNotIn(grant[1], final)
+
     def test_all_preflight_and_postcheck_rows_match_frozen_source(self):
         old = json.loads((CANDIDATE / "secondary_review_expected_205_ledger.json").read_bytes())
         expected = {row["version"]: row for row in old["ledger"]}

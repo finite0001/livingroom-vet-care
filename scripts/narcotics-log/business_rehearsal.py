@@ -35,6 +35,30 @@ def source_admission():
             raise ValueError("Portable business source changed: " + name)
         pins[str(path.relative_to(installation.ROOT))] = installation.sha(raw)
     pins[str((HERE / "business-source.json").relative_to(installation.ROOT))] = installation.sha(installation.prefix.regular(HERE / "business-source.json"))
+    browser_names = {"tests/controlled-drugs/" + name for name in (
+        "run-local-authenticated-count-finalize.mjs", "narcotics-finalize-browser-bindings.json",
+        "narcotics-finalize-browser-input.ts", "narcotics-finalize-driver-source.test.ts",
+        "narcotics-finalize-portability-inverse.json")}
+    if set(source["browser_sources"]) != browser_names:
+        raise ValueError("Exact fixed authenticated browser source inventory required")
+    for name, wanted in source["browser_sources"].items():
+        raw = installation.prefix.regular(installation.ROOT / name, 2 * 1024 * 1024)
+        if wanted != {"bytes": len(raw), "sha256": installation.sha(raw)}:
+            raise ValueError("Authenticated browser source changed: " + name)
+        pins[name] = installation.sha(raw)
+    binding_name = "tests/controlled-drugs/narcotics-finalize-browser-bindings.json"
+    if pins[binding_name] != "1b875b3065009870d287ed40669511d717146687f599c8358d7c60544e93910c":
+        raise ValueError("Independently frozen146 frontend source binding required")
+    binding = installation.decode(installation.prefix.regular(installation.ROOT / binding_name))
+    if len(binding["files"]) != 146:
+        raise ValueError("Complete frozen frontend dependency set required")
+    for name, wanted in binding["files"].items():
+        if Path(name).is_absolute() or ".." in Path(name).parts:
+            raise ValueError("Fixed frontend source-relative path required")
+        raw = installation.prefix.regular(installation.ROOT / name, 2 * 1024 * 1024)
+        if wanted != {"bytes": len(raw), "sha256": installation.sha(raw)}:
+            raise ValueError("Frozen frontend source changed: " + name)
+        pins[name] = installation.sha(raw)
     return layout, pins
 
 
@@ -43,10 +67,10 @@ def modules():
     # constructor override, old Runtime or arbitrary caller SQL is imported.
     sys.path.insert(0, str(WORKFLOWS))
     import auth_effects, identity_bootstrap, http_transport, owner_capture, sequence_effects, rest_defaults
-    import full121_profiles, wc_profiles
+    import full121_profiles, wc_profiles, browser_runner
     return SimpleNamespace(auth=auth_effects, identity=identity_bootstrap,
         transport=http_transport, capture=owner_capture, sequence=sequence_effects,
-        profiles=full121_profiles, writers=wc_profiles, rest=rest_defaults)
+        profiles=full121_profiles, writers=wc_profiles, rest=rest_defaults, browser=browser_runner)
 
 
 class Runtime:
@@ -121,6 +145,12 @@ class Runtime:
         if not raw.endswith("\n") or "\n" in raw[:-1]:
             raise ValueError("One complete original owner JSON row required: " + label)
         return self.decode(raw[:-1])
+
+    def verify_module(self, label):
+        captured = self.install.query(label, (HERE / "module-capture.sql").read_text())
+        wanted = self.decode(installation.prefix.regular(HERE / "module-expected.json"))
+        if captured["reference_absent"] is not True or installation.canonical(captured["properties"]) != installation.canonical(wanted["properties"]) or installation.canonical(captured["descriptor"]["definition"]) != installation.canonical(wanted):
+            raise ValueError("Complete installed source properties changed: " + label)
 
 
 def save(folder, name, value):
@@ -208,25 +238,27 @@ class BusinessInstallation(installation.Installation):
         # The only owner-side identity write sets initial synthetic staff roles
         # for these actual GoTrue users. All stock and policies use HTTP.
         runtime.raw_query("fixed-initial-staff-bootstrap", m.identity.identity_fixture(users))
-        context = {"users": users, "ids": {}, "http": http, "public_anon_key": status["ANON_KEY"]}
+        context = {"users": users, "ids": {}, "http": http, "public_anon_key": status["ANON_KEY"], "auth_before": auth_before}
         methods = {"password_b": password_b, "full_capture": m.capture,
                    "full_components": None, "full_payload": None}
         proof = getattr(m.profiles, self.profile)(context, methods, runtime, self.evidence, runtime.selected_query, save)
-        extras = [context["current_actors"][users[1]["id"]]] if self.profile == "count_agreement" else []
+        if self.profile == "browser_lost_finalize":
+            proof["actual_browser"] = m.browser.run(context, m, runtime, save)
+        extras = [context["current_actors"][users[1]["id"]]] if self.profile in ("count_agreement", "browser_lost_finalize") else []
+        if self.profile == "browser_lost_finalize":
+            extras += [context["current_actors"][users[0]["id"]]]
         auth = m.auth.validate(runtime, auth_before, users, extras)
         save(self.evidence, "genuine-Auth-complete-effects", auth)
         sequence_after = runtime.selected_query("sequence-after", m.sequence.SQL)
         save(self.evidence, "sequence-source-effects", m.sequence.final(sequence_before, sequence_after, 2 + len(extras)))
         rows_after = self.rows("after-business-permanent-rows")
         installation.preserve(rows_before, rows_after, commissioning_parent_additions(2 + len(extras)))
-        captured = self.query("after-business-module-properties", (HERE / "module-capture.sql").read_text())
-        wanted = installation.decode(installation.prefix.regular(HERE / "module-expected.json"))
-        if captured["reference_absent"] is not True or installation.canonical(captured["properties"]) != installation.canonical(wanted["properties"]) or installation.canonical(captured["descriptor"]["definition"]) != installation.canonical(wanted):
-            raise ValueError("Complete installed source properties changed during business work")
+        runtime.verify_module("after-business-module-properties")
         save(self.evidence, "genuine-business-profile", proof)
         self.result.update(application_Auth_verified=True, original_parent_rows_verified=True,
             source_sequences_verified=True, business_profile_verified=True,
-            count_business_verified=self.profile == "count_agreement")
+            count_business_verified=self.profile in ("count_agreement", "browser_lost_finalize"),
+            authenticated_browser_verified=self.profile == "browser_lost_finalize")
 
 
 def main():
@@ -234,7 +266,7 @@ def main():
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--check-source", action="store_true")
     mode.add_argument("--run-synthetic-local", action="store_true")
-    parser.add_argument("--profile", choices=("commission_all", "count_agreement"), required=True)
+    parser.add_argument("--profile", choices=("commission_all", "count_agreement", "browser_lost_finalize"), required=True)
     args = parser.parse_args()
     os.umask(0o077)
     started = time.monotonic()

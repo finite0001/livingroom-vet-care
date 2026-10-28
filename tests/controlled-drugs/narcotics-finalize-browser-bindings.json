@@ -1,0 +1,592 @@
+{
+  "execution_admitted": false,
+  "files": {
+    "index.html": {
+      "bytes": 1771,
+      "sha256": "1b3501dc79740a291999f407c934e8f2dd69ba4838b207a8337f42fa9614937c"
+    },
+    "package-lock.json": {
+      "bytes": 342068,
+      "sha256": "a39299c33e0a62edcbfaa9324a9846895c4d5b870d0c6235d98a9af3aa30ba6f"
+    },
+    "package.json": {
+      "bytes": 4738,
+      "sha256": "6f527f6ac68983c6295e69c3392a82a00ee7e8f789e633e78e99e638f9746965"
+    },
+    "src/hub/contexts/AuthContext.tsx": {
+      "bytes": 7362,
+      "sha256": "299774cc6c6fee3aff3e7e994ded4698f7078994408577fba119b615fb729c20"
+    },
+    "src/hub/contexts/auth-context.ts": {
+      "bytes": 1027,
+      "sha256": "16927b6c4b4f12919b8a4e037a83ad46cdcb280da24038d4186a3d40bc7ed9d4"
+    },
+    "src/hub/contexts/auth-request-state.ts": {
+      "bytes": 1219,
+      "sha256": "5d07b132427e449502070c1c1c68683f1cd5503c65d326c90b76800a73cd01f0"
+    },
+    "src/hub/contexts/session-draft-retention.ts": {
+      "bytes": 1559,
+      "sha256": "276056c616590e82025bc3432b3ce4e4fd958074e70ebd6e5ed0abcbae971bd1"
+    },
+    "src/hub/features/controlled-drugs/ControlledDraftPanel.tsx": {
+      "bytes": 15532,
+      "sha256": "1cdeb9fa8b2cd244035e2a2f955fb30b8cfaa7ff1f525ddfc608420665b16b2e"
+    },
+    "src/hub/features/controlled-drugs/DraftReviewDialog.tsx": {
+      "bytes": 2873,
+      "sha256": "e40243c3816b356693b2f93afe8f410d410c15835ec252deebd94e3e723928ec"
+    },
+    "src/hub/features/controlled-drugs/administration/AdministrationPage.tsx": {
+      "bytes": 3603,
+      "sha256": "58ad14635f3f7f5f234b141b7b9348e629057c6454d8d3629bcaf608a37c04c6"
+    },
+    "src/hub/features/controlled-drugs/administration/AdministrationReview.tsx": {
+      "bytes": 9042,
+      "sha256": "2edaeb7e52fc23a35931a5d504db346b59535102c40ca7f2aa13bab4f64496a1"
+    },
+    "src/hub/features/controlled-drugs/administration/AdministrationWorkspace.tsx": {
+      "bytes": 22684,
+      "sha256": "72109ead106a9abe233cc24dab44aaaabbec6ee6c059b8912e8fbe0b491f2c50"
+    },
+    "src/hub/features/controlled-drugs/administration/FormFields.tsx": {
+      "bytes": 3512,
+      "sha256": "064a0efcc471b82ce9ee2c3247ba4625b5082ebc33d8c7b094065ffc26337046"
+    },
+    "src/hub/features/controlled-drugs/administration/ReviewAccessForm.tsx": {
+      "bytes": 4842,
+      "sha256": "96353153c95d36ec27099be3b0a853af00c52edb3bcfd97abe87754a6e4fa195"
+    },
+    "src/hub/features/controlled-drugs/administration/ReviewCalendarForm.tsx": {
+      "bytes": 7123,
+      "sha256": "24745f9eed6c040b7cfaedbe4aa1a117182bc3af9871ecb247fc552a3cc3931d"
+    },
+    "src/hub/features/controlled-drugs/administration/ReviewPolicyForm.tsx": {
+      "bytes": 7006,
+      "sha256": "75417beafd9476b58cccfde9a2fdd6733f992f986632b950e0bc9e832951d797"
+    },
+    "src/hub/features/controlled-drugs/administration/ReviewStaffFields.tsx": {
+      "bytes": 4145,
+      "sha256": "0b1c6e73f057daf0ec5ea674d7737853373d8310d14427f0b793f5586621f98b"
+    },
+    "src/hub/features/controlled-drugs/administration/SiteRegistrationForm.tsx": {
+      "bytes": 4318,
+      "sha256": "fb276e8633def160e2c1aeab792986353cbf45b5365704c2d5bc56b8a31d110e"
+    },
+    "src/hub/features/controlled-drugs/administration/StockOpeningForm.tsx": {
+      "bytes": 6090,
+      "sha256": "ff3f44049624d3f71f158fe4d8b413bf38ebacdb641fddc360629512f1c39958"
+    },
+    "src/hub/features/controlled-drugs/administration/StockPermissionFields.tsx": {
+      "bytes": 3620,
+      "sha256": "f094854d4c0204f90db7438f501ff33069568080d2ae786a4e5117d5de425999"
+    },
+    "src/hub/features/controlled-drugs/administration/StockPolicyRevisionForm.tsx": {
+      "bytes": 3193,
+      "sha256": "7da682baa1b68f85ce6111090728de70ada51054499de856712461dafda3e459"
+    },
+    "src/hub/features/controlled-drugs/administration/calendar-projection.ts": {
+      "bytes": 6801,
+      "sha256": "c30a6d064fca7b03ae41d653cda2185862f00ec35684b90d8bf4f8ffc0e44316"
+    },
+    "src/hub/features/controlled-drugs/administration/client.ts": {
+      "bytes": 5346,
+      "sha256": "1a9ceb2170eef355a24a179e114ce80a0c3789c9cf81311f00b750ab60927328"
+    },
+    "src/hub/features/controlled-drugs/administration/configuration-query.ts": {
+      "bytes": 4269,
+      "sha256": "e8e97d860748863c869b1c05166674ef30a5f8f7163fa803e716398a13154695"
+    },
+    "src/hub/features/controlled-drugs/administration/form-values.ts": {
+      "bytes": 479,
+      "sha256": "d6e6fde1f2756219f55b0a41456d0e8887cb75dbabf8507950f1dfcf554b8022"
+    },
+    "src/hub/features/controlled-drugs/administration/opening-definition.ts": {
+      "bytes": 5020,
+      "sha256": "d323eca8dd9b68af8c213f7cd9f6e2c8046ba280add5813c6cae933b336c6e90"
+    },
+    "src/hub/features/controlled-drugs/administration/opening-form.ts": {
+      "bytes": 3081,
+      "sha256": "474bf633b5ead9476838ff63c64d23e1126ad2979bb289f4028c2d4ced117bfd"
+    },
+    "src/hub/features/controlled-drugs/administration/operation-controller.ts": {
+      "bytes": 7293,
+      "sha256": "77bde15dcf8b7aadc14c1d42a2327d050382128875c35d6403592c39b8be3b7c"
+    },
+    "src/hub/features/controlled-drugs/administration/primitives.ts": {
+      "bytes": 2157,
+      "sha256": "639730cd4bd5adf1b460f974a23201f55726eb9c242d81ef512a08b6532e1cbf"
+    },
+    "src/hub/features/controlled-drugs/administration/queries.ts": {
+      "bytes": 9811,
+      "sha256": "6594fe3e192330f13bb3b15c1acc6f94c12d17ca77399252b9686f811f34a9eb"
+    },
+    "src/hub/features/controlled-drugs/administration/query-client.ts": {
+      "bytes": 5435,
+      "sha256": "4f48afc7282e1d9bbf7144b69a8b14a46b28bbf41ccdd78a848ca8450a7752d3"
+    },
+    "src/hub/features/controlled-drugs/administration/response.ts": {
+      "bytes": 5290,
+      "sha256": "bf1f6052447bed994a29e81ec60c1221779f495ef8a9bc1f7fb7cf57dbbe90c7"
+    },
+    "src/hub/features/controlled-drugs/administration/review-administration-definition.ts": {
+      "bytes": 1230,
+      "sha256": "a8d6a2a24dd6262cc25bd2f541ecc87ff5542c0cc3a89b884c50d61a3b628e50"
+    },
+    "src/hub/features/controlled-drugs/administration/review-configuration-definition.ts": {
+      "bytes": 7858,
+      "sha256": "20e79b11d59c04afadec041de6ac1e09fd875590b818d487861ac98f46b7c63a"
+    },
+    "src/hub/features/controlled-drugs/administration/review-policy-grammar.ts": {
+      "bytes": 43027,
+      "sha256": "f09ab6679a767b7742f78745cde6f0ece5a05b1ccc86de552b6a730286e09e7e"
+    },
+    "src/hub/features/controlled-drugs/administration/schema.ts": {
+      "bytes": 10599,
+      "sha256": "679ba3108264cb92cd09a892e8a19517e3e2c0fde2834546a4f921284bfb14c0"
+    },
+    "src/hub/features/controlled-drugs/administration/site-definition.ts": {
+      "bytes": 897,
+      "sha256": "ad0cf54ebcfbf5047ad7f12a0b88351435554fc3e193f8925a0953aac215fa8d"
+    },
+    "src/hub/features/controlled-drugs/administration/stock-policy-form.ts": {
+      "bytes": 2269,
+      "sha256": "11d6821c5f4f0d4940534918d73342425c2339aa05b78321cb0bb971c765a66e"
+    },
+    "src/hub/features/controlled-drugs/administration/wire.ts": {
+      "bytes": 4970,
+      "sha256": "2d9bc896ef8aee98e9a1d95c29de9a92870c41072d82e668d731014870b2ba9e"
+    },
+    "src/hub/features/controlled-drugs/count/CountCorrectionWorkspace.tsx": {
+      "bytes": 26712,
+      "sha256": "e0400a7b0ff268601dc77151e0b00d905e7894319a7e24f50a14604354bcc4de"
+    },
+    "src/hub/features/controlled-drugs/count/CountPolicyForm.tsx": {
+      "bytes": 9969,
+      "sha256": "90f9392bf3a77dd26e02cb86a76f94864d47bb986c61f69dfce882c0d8180980"
+    },
+    "src/hub/features/controlled-drugs/count/CountPolicyWorkspace.tsx": {
+      "bytes": 6071,
+      "sha256": "99797f455b0fdc0d0b9908894b33beec6986f3e091ae490efbff2553e74b1908"
+    },
+    "src/hub/features/controlled-drugs/count/CountRecord.tsx": {
+      "bytes": 6331,
+      "sha256": "5ef966a2b108b796cb236eb534fa89f96d86f5d6e6797756d52f7c7b5399b1df"
+    },
+    "src/hub/features/controlled-drugs/count/CountStatementForm.tsx": {
+      "bytes": 10131,
+      "sha256": "39733b81e5dc9a49b275bf33e6f3bb16b82363939e8e2c565d6624f4efde3656"
+    },
+    "src/hub/features/controlled-drugs/count/CountWorkspace.tsx": {
+      "bytes": 16824,
+      "sha256": "7549b33a605a65fe2e672468c97e71891d9393f14c990a5298e0f97bd796fb28"
+    },
+    "src/hub/features/controlled-drugs/count/NarcoticsLogPage.tsx": {
+      "bytes": 9372,
+      "sha256": "217f91760921d52b180a0a279695d7cbb5694708eb1720b87ac43ecf754671bd"
+    },
+    "src/hub/features/controlled-drugs/count/count-admin-schema.ts": {
+      "bytes": 14923,
+      "sha256": "8adec5974017b3b14f2138b96880b690ca1d5ffb5de7132e2c4926544179ac26"
+    },
+    "src/hub/features/controlled-drugs/count/count-causes.ts": {
+      "bytes": 4583,
+      "sha256": "df336e60b4697782181b71e0f48e4b270490321de6f401c60861075836b6ba69"
+    },
+    "src/hub/features/controlled-drugs/count/count-client.ts": {
+      "bytes": 11655,
+      "sha256": "d537c6e3d8a7196abf2375c147a382720212019e2de679cb9a540ab6ff2571c0"
+    },
+    "src/hub/features/controlled-drugs/count/count-dashboard.ts": {
+      "bytes": 10066,
+      "sha256": "ea9d42008daff6db8ad5e5a1fcc451aee5dc01c1991945a73f75fffad6727516"
+    },
+    "src/hub/features/controlled-drugs/count/count-discovery.ts": {
+      "bytes": 7215,
+      "sha256": "5863d4c3bd17f2ed0c4f5282228880498d229d004ebf55162b748460c3afe9ef"
+    },
+    "src/hub/features/controlled-drugs/count/count-entry.ts": {
+      "bytes": 5538,
+      "sha256": "4e01dcf5747325acd4bec25c3ecef852de88fd55d5c351b8ab93942cffe15665"
+    },
+    "src/hub/features/controlled-drugs/count/count-management-schema.ts": {
+      "bytes": 22734,
+      "sha256": "87555420422ae7068f24abc72f562c82babe274cdda6598223722e7533ac8611"
+    },
+    "src/hub/features/controlled-drugs/count/count-management-wire.ts": {
+      "bytes": 6123,
+      "sha256": "3bfba7844265605f2b3a4eee298e58d2575a64340994d877366aba3e63ad386f"
+    },
+    "src/hub/features/controlled-drugs/count/count-operation-closure.ts": {
+      "bytes": 7859,
+      "sha256": "85d11cd0f8a1dd0e45832e2b98abed144b42ae9b83b4bb488b849a12f30cca51"
+    },
+    "src/hub/features/controlled-drugs/count/count-operation-controller.ts": {
+      "bytes": 9086,
+      "sha256": "26a9d331a3a9fcc0c150a7857f607ae2cf29da78f86ee22f72bd451adec55e6c"
+    },
+    "src/hub/features/controlled-drugs/count/count-policy-form.ts": {
+      "bytes": 2961,
+      "sha256": "8082e4fa242c01d18b111622a267846e92734ab872087ad1b55fd4cf4b7536ae"
+    },
+    "src/hub/features/controlled-drugs/count/count-policy-wire.ts": {
+      "bytes": 4171,
+      "sha256": "5e3fcc47086d7c5913d592a709a0394a85482fa01dafce8d14917521d0890977"
+    },
+    "src/hub/features/controlled-drugs/count/count-read-wire.ts": {
+      "bytes": 19199,
+      "sha256": "8127bad56d8f9f1d8d5b84ddf96e44742d9f09d1e6dfe0e69208c1a7da8286d8"
+    },
+    "src/hub/features/controlled-drugs/count/count-reconciliation-detail.ts": {
+      "bytes": 4878,
+      "sha256": "15899711bcf8f414931d0e44b0036969706b57ac4860db9bdf9b1fcaa1d850d4"
+    },
+    "src/hub/features/controlled-drugs/count/count-request-schema.ts": {
+      "bytes": 18594,
+      "sha256": "29a723d28b530dacd17ef3f254544937bad87767e29b15e7f9c2341c89f9ac0a"
+    },
+    "src/hub/features/controlled-drugs/count/count-response.ts": {
+      "bytes": 1366,
+      "sha256": "8e9626b430c03433ebe6395d43320cd8a1aa106aac5e6291713a61c2ec6876de"
+    },
+    "src/hub/features/controlled-drugs/count/count-wire.ts": {
+      "bytes": 5535,
+      "sha256": "615f52a43d420c0fe12549b6b8e5cb7f8e95124be6f8bb3080a9eb222ecde9f9"
+    },
+    "src/hub/features/controlled-drugs/draft-api.ts": {
+      "bytes": 2919,
+      "sha256": "6075eb99c934e4b6d32fd6af9480150c72f80803ccffbf89e13b6d9d28ddded5"
+    },
+    "src/hub/features/controlled-drugs/draft-model.ts": {
+      "bytes": 6446,
+      "sha256": "6f0476fc99c410731cd8be97ee15c93b25cedc31ea8ab6d56fddcf70dd7b6ceb"
+    },
+    "src/hub/features/controlled-drugs/entry/ControlledStockEntryProvider.tsx": {
+      "bytes": 12069,
+      "sha256": "9ac9739ae3bc498ee78abb9c4a21f131df1c28460da2aa938f4b445b059ae8e6"
+    },
+    "src/hub/features/controlled-drugs/entry/EntryPlanForm.tsx": {
+      "bytes": 11320,
+      "sha256": "5580a33d1b3d485f308c0d5ebe0c6423d732104759c70e12bcae547c71cfe87a"
+    },
+    "src/hub/features/controlled-drugs/entry/EntryReview.tsx": {
+      "bytes": 10119,
+      "sha256": "b10987028c0706a4ccde759193b435558d61117e6523b8cbe17b88fb17ca7342"
+    },
+    "src/hub/features/controlled-drugs/entry/client.ts": {
+      "bytes": 11391,
+      "sha256": "e880abbe1cfa90521febc26e7d8e10d36afd8258e441aa4b173e19eff253a656"
+    },
+    "src/hub/features/controlled-drugs/entry/codec.ts": {
+      "bytes": 5408,
+      "sha256": "f43e9840051ae1a6f8add5a2d42f20b8699586ab87a643bb00678991929327e3"
+    },
+    "src/hub/features/controlled-drugs/entry/controlled-api.ts": {
+      "bytes": 961,
+      "sha256": "73fd20e99b0a27f52bf960a2a4ecb31b45d0050fc26ea1ab675803b16c59ddcb"
+    },
+    "src/hub/features/controlled-drugs/entry/gateway.ts": {
+      "bytes": 3265,
+      "sha256": "8cf6960586dda5dbb0354a419ba1c3974765f3e9e6a7840ca561250e84aed715"
+    },
+    "src/hub/features/controlled-drugs/entry/legacy-intent.ts": {
+      "bytes": 7607,
+      "sha256": "0027248b062841b7da69d9732bb9f33921d4daa9f75a51694960fafa3a03cec0"
+    },
+    "src/hub/features/controlled-drugs/entry/legacy-result.ts": {
+      "bytes": 2669,
+      "sha256": "d6e8fbb5993bb209b99fa6a2c405a9bcde9ca4c9a74fba963aa78009593b7315"
+    },
+    "src/hub/features/controlled-drugs/entry/plan.ts": {
+      "bytes": 7669,
+      "sha256": "d5ad1ca61eadb7809d4f82254e6b6231221fb3419727426bd2523ab4783f7a08"
+    },
+    "src/hub/features/controlled-drugs/entry/saved-result.ts": {
+      "bytes": 3728,
+      "sha256": "c7cdf24dc8f7e60578dde64aa7d15ac53743ded9b57ece90274bf54cb0a455da"
+    },
+    "src/hub/features/controlled-drugs/entry/schema.ts": {
+      "bytes": 15486,
+      "sha256": "189fa8f7a75e81a1141997cb47443165110e34f0ec1e251c26464eecf5e50355"
+    },
+    "src/hub/features/controlled-drugs/entry/service.ts": {
+      "bytes": 11424,
+      "sha256": "7011ddc0c3b4b07555da495bcea8020e7c07f0823677834cd1d0038c7e7342b9"
+    },
+    "src/hub/features/controlled-drugs/entry/use-controlled-writer-identity.ts": {
+      "bytes": 470,
+      "sha256": "b0a368285af5cb5662c6c8105ad66b0642eafce061aaf488b7a8dab4babedd14"
+    },
+    "src/hub/features/controlled-drugs/operation-errors.ts": {
+      "bytes": 372,
+      "sha256": "ab862b7e8080c7e57f8c0da6852f0202dc13b0b30acee679bf674b0980b88964"
+    },
+    "src/hub/features/controlled-drugs/record-review/RecordReviewDetail.tsx": {
+      "bytes": 4203,
+      "sha256": "2051834a448e5327a81b9363153b49dc86cba710fc48714c05c5c9bf6908d2a8"
+    },
+    "src/hub/features/controlled-drugs/record-review/RecordReviewDialog.tsx": {
+      "bytes": 6201,
+      "sha256": "4899972f94365cebd530083167aa224ee03a17f6ef2beb05266e059df31466ce"
+    },
+    "src/hub/features/controlled-drugs/record-review/RecordReviewPage.tsx": {
+      "bytes": 4092,
+      "sha256": "f283bd816c648e630fa5773ba6cf08d01f4d7422894c6ceb8fb57327c5c9a51f"
+    },
+    "src/hub/features/controlled-drugs/record-review/RecordReviewQueue.tsx": {
+      "bytes": 3531,
+      "sha256": "03f3e2d36cbbf5702d237d2fe74112d0949bef5c38c5a20976aa63d25a024868"
+    },
+    "src/hub/features/controlled-drugs/record-review/RecordReviewScopeChooser.tsx": {
+      "bytes": 4918,
+      "sha256": "f4322760e4eb380e2b965f09d67afb32c148024bbff2ae0cdd88eed2085b8f64"
+    },
+    "src/hub/features/controlled-drugs/record-review/RecordReviewWorkflow.tsx": {
+      "bytes": 16618,
+      "sha256": "5e9ca385a16c63f38713034e9f825e97279768be89042b84c02819e460a6a4fe"
+    },
+    "src/hub/features/controlled-drugs/record-review/RecordReviewWorkspace.tsx": {
+      "bytes": 3596,
+      "sha256": "5ec719f469c9d52e341aacb9ad3dcb3eb3dd4ab06a49df0f7248a49aa44db135"
+    },
+    "src/hub/features/controlled-drugs/record-review/clinical-alert-snapshot.ts": {
+      "bytes": 1917,
+      "sha256": "923eb0c61054c4662fd69a3781d4321fe36b03051e74ed4ac77165421778f2bf"
+    },
+    "src/hub/features/controlled-drugs/record-review/clinical-movement-structure.ts": {
+      "bytes": 2979,
+      "sha256": "9fae256221b06fd9a150aa2353a8a6e15004d8d52f76f65bd61d6f5c3683346b"
+    },
+    "src/hub/features/controlled-drugs/record-review/component-hashes.ts": {
+      "bytes": 14038,
+      "sha256": "ab5fc451dbc9eab9ffd0ed3941c0e9337640f54c0b33040411a27e833e35d8ee"
+    },
+    "src/hub/features/controlled-drugs/record-review/display-evidence.ts": {
+      "bytes": 1042,
+      "sha256": "db67a739815be7f76cfe3db393c945539dbe73e7aa00d2f304bdc3b80f87a914"
+    },
+    "src/hub/features/controlled-drugs/record-review/exact-json.ts": {
+      "bytes": 7003,
+      "sha256": "2cf2211a314c06b56ffd587ec7addc767e8e050fe709deea45ab00d4357a55e0"
+    },
+    "src/hub/features/controlled-drugs/record-review/exact-values.ts": {
+      "bytes": 3756,
+      "sha256": "3f25140930747c858aacf11317a053a3d81390a554b813fb82097452b4703111"
+    },
+    "src/hub/features/controlled-drugs/record-review/jsonb-equality.ts": {
+      "bytes": 2360,
+      "sha256": "4601979058941ab2f3c176874eaaf10199918098ffbb387060614357578624c5"
+    },
+    "src/hub/features/controlled-drugs/record-review/lifecycle.ts": {
+      "bytes": 13437,
+      "sha256": "9cb32b31490746713392a26a62e301674bd6dd1f8e8fcac13027f5683087b531"
+    },
+    "src/hub/features/controlled-drugs/record-review/movement-structure.ts": {
+      "bytes": 6073,
+      "sha256": "011af5668087b1c211de07e1ab554713b62860dbc5743d18b3713ddd9044828a"
+    },
+    "src/hub/features/controlled-drugs/record-review/native-movement-structure.ts": {
+      "bytes": 33382,
+      "sha256": "eeee62e1aac0da253ed2f08440683cac0cc91a4615ad97cea55240f4350e7f32"
+    },
+    "src/hub/features/controlled-drugs/record-review/owned-outcome.ts": {
+      "bytes": 2259,
+      "sha256": "a22b19181544cdec1df0004a833d2abf1220bfe476b13862a44b28a9424434df"
+    },
+    "src/hub/features/controlled-drugs/record-review/prepared-packet.ts": {
+      "bytes": 9829,
+      "sha256": "0c3f029b0d87dcdaa0a702980ae856a6e81f1dbd3ce563495f813892c820c262"
+    },
+    "src/hub/features/controlled-drugs/record-review/prospective-component-consistency.ts": {
+      "bytes": 8490,
+      "sha256": "e70609748ecb49ef74a34727b7ba7aaf7cdb1e53184d7accbe142c4b7aa3e550"
+    },
+    "src/hub/features/controlled-drugs/record-review/prospective-native-movement.ts": {
+      "bytes": 103504,
+      "sha256": "21bb39ac8677e86b29a64e09185274ba701bd865fcba52a69230175565b27c93"
+    },
+    "src/hub/features/controlled-drugs/record-review/prospective-packet-structure.ts": {
+      "bytes": 11622,
+      "sha256": "a6fe174db179b2db952c8ab077c8f74d2e9c75764dd0227e098de57e10c15c29"
+    },
+    "src/hub/features/controlled-drugs/record-review/prospective-source-shapes.ts": {
+      "bytes": 11526,
+      "sha256": "ed80205623bfc5ef527a916141489a350bd7081dbc619be9e4f0709f4100feff"
+    },
+    "src/hub/features/controlled-drugs/record-review/prospective-stock-movement.ts": {
+      "bytes": 20127,
+      "sha256": "374e4cd1a36d593bc2c972ead21c2bc04c1f249253faf5022e0d8248412f6e36"
+    },
+    "src/hub/features/controlled-drugs/record-review/queue-model.ts": {
+      "bytes": 9243,
+      "sha256": "5d40d439a44d1122aec385c04c735db86b2e052848d6a7e90252b0f431ee54df"
+    },
+    "src/hub/features/controlled-drugs/record-review/queue-reader.ts": {
+      "bytes": 5146,
+      "sha256": "63f14f3bd2282e289e345089a9f6e8da4ed8342d985acc89811a5057d5807743"
+    },
+    "src/hub/features/controlled-drugs/record-review/raw-rpc.ts": {
+      "bytes": 5762,
+      "sha256": "136c39af6aa4ff670a840c84e422d27639235a779b78f7ea0139611042e7c2ed"
+    },
+    "src/hub/features/controlled-drugs/record-review/read-detail.ts": {
+      "bytes": 8662,
+      "sha256": "3637ec32b7457aa5ea5de27d58e9aa87089be119017e41cce868634bb705b0e8"
+    },
+    "src/hub/features/controlled-drugs/record-review/read-rpc.ts": {
+      "bytes": 6150,
+      "sha256": "d1640de914c2dd00b44350f8a6babb2aca433f909dd03c6caf4862bb040449b2"
+    },
+    "src/hub/features/controlled-drugs/record-review/reconstructed-evidence.ts": {
+      "bytes": 7564,
+      "sha256": "c34814b6a61f69e787bb570111f7cfebc9a1d5768582549d25ebcefd24469f6b"
+    },
+    "src/hub/features/controlled-drugs/record-review/recovery-pointer.ts": {
+      "bytes": 3900,
+      "sha256": "3a9d10ea2f12d09dab9665f218bd37663ce4222e4da8d8a0b5eca2ab5000b146"
+    },
+    "src/hub/features/controlled-drugs/record-review/request.ts": {
+      "bytes": 2472,
+      "sha256": "baf5cd312fd3d30754592d8284bd18a3a5cd914ba99c15666bd32cb8689678ea"
+    },
+    "src/hub/features/controlled-drugs/record-review/review-labels.ts": {
+      "bytes": 1757,
+      "sha256": "ebe6736c927790b3b40121c0a67e550af6bf890412054bc800c1d8ebcb3da054"
+    },
+    "src/hub/features/controlled-drugs/record-review/review-summary.ts": {
+      "bytes": 8697,
+      "sha256": "a96d93d339304ea6c6280af68dc4c2aeabb84e057f18256d4f128a5f4de76f23"
+    },
+    "src/hub/features/controlled-drugs/record-review/scope-discovery.ts": {
+      "bytes": 3209,
+      "sha256": "331664a58014fbe0e15229adc92e69c9acf04f6dd002f4408d7ce4d5d8a2dabe"
+    },
+    "src/hub/features/controlled-drugs/record-review/staff-session-context.ts": {
+      "bytes": 454,
+      "sha256": "46c8cb04484b23e0e5eaa99a7ca5fcbd8f135a458fd5542a6b51772309600772"
+    },
+    "src/hub/features/controlled-drugs/record-review/staff-session.ts": {
+      "bytes": 5870,
+      "sha256": "bd9ee5ef45c10b2016c4b7bdad12469d5603a397059e4c0196fcb6c6be97d44b"
+    },
+    "src/hub/features/controlled-drugs/record-review/staff-workspace.ts": {
+      "bytes": 1187,
+      "sha256": "346539978dd7e2a38bb55ea4c10e669e45422667572f464c0055785ffa9d0f7a"
+    },
+    "src/hub/features/controlled-drugs/record-review/status-copy.ts": {
+      "bytes": 1722,
+      "sha256": "fed6a350a9ec6e5455bbb5c10751c7f93aeed5f92cc3791ec8165a4a95971df4"
+    },
+    "src/hub/features/controlled-drugs/record-review/workspace.ts": {
+      "bytes": 7902,
+      "sha256": "c3eccf38acab577719b4bef97eb5f61f071bbcebce3d2f14d49b7a4b2d2a8496"
+    },
+    "src/hub/features/controlled-drugs/review-pointer.ts": {
+      "bytes": 3045,
+      "sha256": "9f366c2343e3e70881d2a77d1aa4308744a48ae5367cdd9795fcb6679f4a461a"
+    },
+    "src/hub/features/controlled-drugs/use-draft-review.ts": {
+      "bytes": 7970,
+      "sha256": "16db769920975b9b96264dd50b48ee6145e7742ba9def3ab912362732b9ad1cb"
+    },
+    "src/hub/features/controlled-drugs/witness/PreparedWitnessDetails.tsx": {
+      "bytes": 4504,
+      "sha256": "7807df5132657b0c273cb347ae3a958b3e6b287ce3dc8f5ad02fdfae51f73486"
+    },
+    "src/hub/features/controlled-drugs/witness/WitnessWorkspace.tsx": {
+      "bytes": 12449,
+      "sha256": "ea65ba930a6177fdf17f5b4dd4c14774872f54c3a775d37b6ae0ba88fa895f8d"
+    },
+    "src/hub/features/controlled-drugs/witness/client.ts": {
+      "bytes": 6659,
+      "sha256": "0f39c7dff0bf969e59df54aa6aa5a50371ec04500cca03e27ba98e2697caee77"
+    },
+    "src/hub/features/controlled-drugs/witness/labels.ts": {
+      "bytes": 839,
+      "sha256": "0787190dd63fe0da021d37b831f7dc14a6893d25d9c0ec40bced130029dca694"
+    },
+    "src/hub/features/controlled-drugs/witness/request-scope.ts": {
+      "bytes": 751,
+      "sha256": "0fa16b18dd33e2b007ef07229c50e8f38affaa67e7915deb068db0184fa8c950"
+    },
+    "src/hub/features/controlled-drugs/witness/schema.ts": {
+      "bytes": 8817,
+      "sha256": "f52c33b657511a0c8f55a8f2200601e536dfde8e9eaaaf12d17426a21979a1ca"
+    },
+    "src/hub/features/controlled-drugs/witness/service.ts": {
+      "bytes": 5340,
+      "sha256": "1a1d434211fc2b9feadb626fc34afe9411709ea71e839e2082f61ed51d4050d3"
+    },
+    "src/hub/features/controlled-drugs/witness/wire.ts": {
+      "bytes": 1897,
+      "sha256": "567b2dc005aeb11797894fa262135668b98ab19b952fc85b178ab12230b83e76"
+    },
+    "src/hub/lib/safe-redirect.ts": {
+      "bytes": 1358,
+      "sha256": "0ddaa0f3dada8797b24f4da82f73bb2743db2332872f9f116785885b38f71ceb"
+    },
+    "src/hub/pages/LoginPage.tsx": {
+      "bytes": 7198,
+      "sha256": "81f2a5f474954f0f1b41acb011549cb2de61b3fc81978f9b959e402cf314a89a"
+    },
+    "src/index.css": {
+      "bytes": 7191,
+      "sha256": "6fdcdc9a9a73274218b24791333dd93a59d3759a6cbbff57c770427208fe7a5f"
+    },
+    "src/integrations/supabase/client.ts": {
+      "bytes": 665,
+      "sha256": "c1a7ebcf29c80b16d0cf29acd06793cbce839496596593ae2c1e7134bac574fe"
+    },
+    "src/integrations/supabase/previewAuthStorage.ts": {
+      "bytes": 4294,
+      "sha256": "cdae5666a7811444d48f1fcda966b1ab8947a5de665bb6bac6c89ed761e3922c"
+    },
+    "src/main.tsx": {
+      "bytes": 3434,
+      "sha256": "82f041f93867a2583ef590896397770fc2b4076790f229cd08d8f69613009aea"
+    },
+    "src/vite-env.d.ts": {
+      "bytes": 38,
+      "sha256": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5"
+    },
+    "tests/controlled-drugs/narcotics-authenticated-app.tsx": {
+      "bytes": 8537,
+      "sha256": "30ea1c32d6cb618b5f2263f9ecec6501ba953a947f195c5cb0139a5b852a4323"
+    },
+    "tests/controlled-drugs/narcotics-authenticated-fixture.html": {
+      "bytes": 313,
+      "sha256": "d7c161324d5ae7e8d4d35043c81e475e6ee7cf6adc653c58dfda187449e14b41"
+    },
+    "tests/controlled-drugs/narcotics-authenticated-fixture.tsx": {
+      "bytes": 1070,
+      "sha256": "1108d45248fe739957bef4c83399b96ee7a569d2dd7cdf45bf52df43baaab68a"
+    },
+    "tests/controlled-drugs/narcotics-authenticated-input.ts": {
+      "bytes": 1173,
+      "sha256": "301f510411b76e22fbbb67480b1a9e56ffec13f820dfb1da7bed96bc95adaa0d"
+    },
+    "tests/controlled-drugs/narcotics-local-transport.test.ts": {
+      "bytes": 2989,
+      "sha256": "51a3f06799e6009b0c711f8ed263ac785896a48055447611d3a30dd9d4ead2d4"
+    },
+    "tests/controlled-drugs/narcotics-local-transport.ts": {
+      "bytes": 2715,
+      "sha256": "1c89441250d8159bf21ac323931c0111680816a3e5ebbf5f41d892a3dc61ae2e"
+    },
+    "tsconfig.app.json": {
+      "bytes": 635,
+      "sha256": "b358b1b595f2c31d2d4461046fa57ae416283072909bcfa13feb14d41124978c"
+    },
+    "tsconfig.narcotics-proof.json": {
+      "bytes": 333,
+      "sha256": "63d5ceb1529c20aff2d2aa574925442322cf46838b4d4488b67419fd2763c28d"
+    },
+    "vite.config.ts": {
+      "bytes": 842,
+      "sha256": "078ab8ab10e802f1123e671c638f52abced168e1a9d0b19d68a4d78bca1658e3"
+    }
+  },
+  "harness_manifest_sha256": "4d3ff034814638b2007affdccb8618fa7965f8d6c92ed60450f5cc382bae3ae3",
+  "independent_review_ready_sha256": "fa6b95a03d7a10da0b7473e2b478da6bd0076e5b8935006fe7bc8c7f600f9bf0",
+  "kind": "fixed-narcotics-authenticated-finalize-browser-source-bindings-v1"
+}

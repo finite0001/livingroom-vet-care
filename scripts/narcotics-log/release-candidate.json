@@ -9,8 +9,8 @@
       "sha256": "0f1330e8b9bb77043e5ed878492b6d2dfa35e2ca5c288fb6ca92df72476b92af"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61530257,
-      "sha256": "62ab0b788f2bac8ec8159f6e62ef4730c73f17302e904bf871b90f95130693cf"
+      "bytes": 61525317,
+      "sha256": "c27d4b008bb7f503296a91d4a7fbbe398b7c1f55330d524e221c36aab7c44cc5"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61526355,
-      "sha256": "4ca4127e3a30bc9b549f9f58759fe00038da87ae124a381273d9a3869c625797"
+      "bytes": 61521415,
+      "sha256": "2ff8d2fb97e404692b7abb74571c05ca06663ad8f201a7be471b577d17aa975e"
     }
   },
   "source_corrections": {
@@ -40,6 +40,12 @@
       "no_current269_function_body_changed": true,
       "reason": "The common269 forward migration preserves existing original205/206 parents. Three native-patch digests belonged to the experimental typed parent; those implementation changes must be installed explicitly later, while historical rows stay unchanged.",
       "source_original206_wrapper_sha256": "adf45e10d25935486aadbc126c6b8282d38def119dc344bfe4935bb690d4b036"
+    },
+    "deferred_staff_grants": {
+      "authenticated_execute_granted_only_after_full_source_property_check": true,
+      "final_function_metadata_and_grants_unchanged": true,
+      "pregrant_common_snapshot_projects_the_same_phase": true,
+      "public_API_count": 48
     },
     "explicit_native_forward_changes": {
       "all_original_parent_descriptors_preserved": true,
