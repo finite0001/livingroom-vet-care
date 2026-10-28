@@ -51,15 +51,53 @@ def controls(http, user, action, head, data, operation_id=None):
     return reply
 
 
-def owned_ingress(runtime, action):
+def paused_resources(runtime, selected, *, require_stopped=True):
+    boot = runtime.install.boot
+    original = boot.resources
+    if original is None:
+        raise ValueError('Original owned resource anchor required')
+    # Observe with the unchanged full ownership validator, then compare against
+    # the ORIGINAL anchor ourselves. Never adopt an observed replacement.
+    boot.resources = None
+    try:
+        current = boot.owned_resources()
+    finally:
+        boot.resources = original
+    if current['containers'] != original['containers'] or current['volumes'] != original['volumes'] or set(current['networks']) != set(original['networks']):
+        raise ValueError('Paused owned immutable resources changed')
+    for name, value in current['networks'].items():
+        before = original['networks'][name]
+        if {k: v for k, v in value.items() if k != 'attached_container_ids'} != {k: v for k, v in before.items() if k != 'attached_container_ids'}:
+            raise ValueError('Paused owned network anchor changed')
+        previous, actual = set(before['attached_container_ids']), set(value['attached_container_ids'])
+        if actual - previous or previous - actual - set(selected):
+            raise ValueError('Only explicitly paused service attachments may disappear')
+    inspected = json.loads(boot.command(['docker', 'inspect', *selected], timeout=runtime.remaining(30)))
+    if len(inspected) != 4 or {row['Id'] for row in inspected} != set(selected) or any(type(row['State']['Running']) is not bool for row in inspected) or require_stopped and any(row['State']['Running'] for row in inspected):
+        raise ValueError('Every captured ingress service must actually be stopped')
+
+
+def owned_ingress(runtime, action, *, cleanup=False):
     runtime.verify()
     expected = {'/supabase_' + name + '_' + runtime.identity for name in ('auth', 'rest', 'storage', 'kong')}
     selected = [key for key, value in runtime.owned_services.items() if value['name'] in expected]
     if len(selected) != 4:
         raise ValueError('Exactly four original owned ingress service IDs required')
-    runtime.install.boot.owned_resources()
-    runtime.install.boot.command(['docker', action, *selected], timeout=runtime.remaining(30))
+    if action == 'start':
+        if runtime.install.paused_ingress != selected:
+            raise ValueError('Only the original explicitly paused ingress can reopen')
+        paused_resources(runtime, selected, require_stopped=not cleanup)
+    else:
+        runtime.install.boot.owned_resources()
     if action == 'stop':
+        runtime.install.paused_ingress = selected
+    runtime.install.boot.command(['docker', action, *selected], timeout=runtime.remaining(30))
+    if action == 'start':
+        runtime.install.boot.owned_resources()
+        runtime.install.paused_ingress = None
+    if action == 'stop':
+        runtime.install.paused_ingress = selected
+        paused_resources(runtime, selected)
         if runtime.install.boot.sql(runtime.install.bootstrap_module.DRAIN_SQL) != 't':
             raise ValueError('Owned scheduler no longer drained')
         active = runtime.selected_query('closed-ingress-client-backends', "SELECT jsonb_build_object('other_clients',count(*))FROM pg_stat_activity WHERE datname=current_database()AND backend_type='client backend'AND pid<>pg_backend_pid();")
@@ -122,8 +160,8 @@ class PopulatedRecovery(business.BusinessInstallation):
         # Native pg_dump takes ONE internally consistent MVCC snapshot. No API
         # or scheduler writer remains; compare the entire original data again
         # after completion, rather than treating transport success as proof.
-        self.archive = bounded_archive.capture(['docker', 'exec', self.boot.container_id,
-            'pg_dump', '-U', 'supabase_admin', '-d', 'postgres', '--format=custom'], self.evidence / 'original-backup.dump', timeout=min(30, self.remaining()))
+        self.archive = bounded_archive.capture(['docker', '--host', self.boot.endpoint, 'exec', self.boot.container_id,
+            'pg_dump', '-U', 'supabase_admin', '-d', 'postgres', '--format=custom'], self.evidence / 'original-backup.dump', timeout=min(30, self.remaining()), env=self.boot.env, cwd=self.evidence)
         if observe(source_runtime, 'backup-data-after-dump') != original:
             raise ValueError('Closed original source changed during native backup')
         completed = source_runtime.selected_query('actual-backup-completion-clock', "SELECT jsonb_build_object('at',to_char(clock_timestamp()at time zone'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"'));")['at']
@@ -159,8 +197,8 @@ class PopulatedRecovery(business.BusinessInstallation):
         rr = business.Runtime(self.receiver)
         owned_ingress(rr, 'stop')
         self.receiver.boot.sql('DROP SCHEMA IF EXISTS realtime CASCADE;', admin=True)
-        self.archive.restore(['docker', 'exec', '-i', self.receiver.boot.container_id, 'pg_restore',
-            '-U', 'supabase_admin', '-d', 'postgres', '--clean', '--if-exists', '--exit-on-error', '--single-transaction'], timeout=min(30, self.remaining()))
+        self.archive.restore(['docker', '--host', self.receiver.boot.endpoint, 'exec', '-i', self.receiver.boot.container_id, 'pg_restore',
+            '-U', 'supabase_admin', '-d', 'postgres', '--clean', '--if-exists', '--exit-on-error', '--single-transaction'], timeout=min(30, self.remaining()), env=self.receiver.boot.env, cwd=receiver_folder)
         rr.verify_module('restored-full-source-properties')
         if observe(rr, 'receiver-original-complete-data') != original:
             raise ValueError('Populated receiver differs from complete original backup data')
@@ -181,6 +219,36 @@ class PopulatedRecovery(business.BusinessInstallation):
         http = m.transport.Http(rr, receiver_folder, status['ANON_KEY'], status['SERVICE_ROLE_KEY'])
         receiver_auth.prerequisites(rr)
         m.rest.effective_defaults(rr, recovery=True)
+        # Configuration is not execution proof. An unrelated read-only POST
+        # must hit the restored global hook, while genuine GET/HEAD remain RO.
+        code, error = http.post('/rest/v1/rpc/is_active_staff', {'_user_id': a['id']}, a['token'])
+        if code != 403 or error.get('code') != '42501' or error.get('message') != 'narcotics_recovery_write_held':
+            raise ValueError('Restored actual global hook did not refuse unrelated armed POST')
+        from http.client import HTTPConnection
+        readonly_results = []
+        for method in ('GET', 'HEAD'):
+            deadline = time.monotonic() + rr.remaining(15)
+            def left():
+                value = min(deadline - time.monotonic(), rr.remaining(15))
+                if value <= 0:
+                    raise TimeoutError('Original whole readonly HTTP deadline exhausted')
+                return value
+            connection = HTTPConnection('127.0.0.1', 64661, timeout=left())
+            try:
+                connection.request(method, '/rest/v1/rpc/is_active_staff?_user_id=' + a['id'],
+                    headers={'apikey': status['ANON_KEY'], 'Authorization': 'Bearer ' + a['token']})
+                connection.sock.settimeout(left())
+                response = connection.getresponse()
+                if response.fp is not None:
+                    response.fp.raw._sock.settimeout(left())
+                body = response.read(33)
+                left()
+                if response.status != 200 or body != (b'true' if method == 'GET' else b''):
+                    raise ValueError('Actual restored read-only GET/HEAD compatibility differs')
+                readonly_results.append(dict(method=method, status=response.status, bytes=len(body)))
+            finally:
+                connection.close()
+        business.save(receiver_folder, 'actual-restored-hook-methods', dict(armed_unrelated_POST_refused=True, readonly_methods=readonly_results))
         grants = []
         def login(original_user, label):
             before = observe(rr, label + '-before-data')
@@ -263,6 +331,10 @@ class PopulatedRecovery(business.BusinessInstallation):
         self.phase_end = min(self.deadline, time.monotonic() + installation.CLEANUP_SECONDS)
         if self.receiver is not None:
             self.receiver.phase_end = self.phase_end
+            if self.receiver.boot is not None:
+                self.receiver.boot.deadline = self.phase_end
+            if getattr(self.receiver, 'paused_ingress', None):
+                owned_ingress(business.Runtime(self.receiver), 'start', cleanup=True)
             if self.receiver.boot is not None and self.receiver.boot.started and not self.receiver.boot.record.get('failure_cleanup_complete'):
                 self.receiver.boot.cleanup()
             if self.receiver.boot is not None and any(self.receiver.boot.inventory()):
@@ -271,6 +343,9 @@ class PopulatedRecovery(business.BusinessInstallation):
         if self.archive is not None:
             self.archive.close()
         if self.boot is not None and self.boot.started and not self.boot.record.get('failure_cleanup_complete'):
+            self.boot.deadline = self.phase_end
+            if getattr(self, 'paused_ingress', None):
+                owned_ingress(business.Runtime(self), 'start', cleanup=True)
             self.boot.cleanup()
         if self.boot is not None:
             self.boot.deadline = self.phase_end

@@ -205,6 +205,10 @@ PREPARATION_ENTRY = '''
  end if;
 '''
 
+# The ordinary graph retains its original complete frontier assertion before
+# entering the same source-private historical preparation root.
+ORDINARY_PREPARATION_ENTRY = PREPARATION_ENTRY
+
 PREPARATION_GRAPH_SQL = '''CREATE FUNCTION controlled_count_v1.history_preparation_graph(p_id uuid) RETURNS jsonb
 LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog,controlled_count_v1,pg_temp
 SET timezone='UTC' SET datestyle='ISO,YMD' SET intervalstyle='postgres' SET extra_float_digits=3 AS $$

@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61740973,
-      "sha256": "cf4015c39b39065a5a52cacd39ebdb26378b4c211fab45da1af551aac31d1849"
+      "bytes": 61741089,
+      "sha256": "2b6224fd95724a8a075009b83b28a9a89d39973a54c30efc3657231365733ffe"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61737071,
-      "sha256": "6e2624e3ddddba8c00e7700a5f3b425d32fb9e4f58faceb7bc5049e0d1654c57"
+      "bytes": 61737187,
+      "sha256": "5769ec59ed1ba998b80e4edf0515596e13b1badbd3de31d8635af9a4dddf7fb5"
     }
   },
   "source_corrections": {
@@ -396,6 +396,13 @@
         "kind": "single-invocation-validated-history-documents-v1",
         "map_added_only_after_complete_operation_and_closure_validation": true,
         "no_persisted_or_caller_supplied_certificate": true,
+        "ordinary_preparation_entry": {
+          "new_body_sha256": "8eb85878e4430c39c4dcd7b9d22ea33ab6362dfffd1d8a690a76df73552863c9",
+          "original_body_sha256": "adddd0c05f6b46bb5f4f199a4c70f5908712ce23fa727bff51634162960c15f8",
+          "original_full_frontier_retained": true,
+          "signature": "controlled_count_v1.saved_result_graph(text,uuid)",
+          "whole_body_inverse": true
+        },
         "origin_and_current_authority_unchanged": true,
         "preparation_entry": {
           "new_body_sha256": "8ddbf5ca39b4743628c9a080cc790a69db319f704cad737ce737fe7909b8bd5c",
@@ -578,7 +585,7 @@
           }
         }
       },
-      "only_twenty_four_private_functions_and_five_body_hashes_added": true,
+      "only_twenty_four_private_functions_and_six_body_hashes_added": true,
       "original_relation_frontiers_and_current_authority_preserved": true,
       "real_Auth_verification_pending": true,
       "recovery": {
@@ -688,8 +695,8 @@
           "sha256": "a1c73a3e5c440cdeadea81ea273ce780d47874e5bc75ceac5204fb173a999d0c"
         },
         "history_document_reuse.py": {
-          "bytes": 18075,
-          "sha256": "11588d81cfe9d8196e17bbc2f7aa7d8445b2bfb83df46ac2e53f39921e860a81"
+          "bytes": 18264,
+          "sha256": "809189c6f65db80322d6b724c55dc5770a3c79e16f079c3c470bb029bed360bd"
         },
         "recovery_admission_source.py": {
           "bytes": 10068,
