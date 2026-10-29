@@ -9,8 +9,8 @@
       "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61926347,
-      "sha256": "f0bff61495b06066a47b4b995a6cd98c339aed11883137531ded58a2477d47da"
+      "bytes": 61937976,
+      "sha256": "779e805a63a256623d4b325f8a91924cbb8dcf69e6d8b6c59613c20f96b37dbb"
     }
   },
   "prefix_migration_count": 206,
@@ -21,8 +21,8 @@
       "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61922445,
-      "sha256": "592651b413a14a7e63cc50b951ee78819953ffb1e4215132aa5a0aaa961badc3"
+      "bytes": 61934074,
+      "sha256": "25e8bf3c5af38490d448dc1baede6626a1f0aee0000a686a674469e9316c0b48"
     }
   },
   "source_corrections": {
@@ -500,12 +500,16 @@
           "whole_body_inverse": true
         },
         "controlled_count_v1.reconciliation_parent_source_required(jsonb,text)": {
-          "new_body_sha256": "54b96e1cec4352dd4e7122df871a9e565865e2b423e6fefb9700585a8cc999fc",
+          "new_body_sha256": "a8bf9fca62edcf7f73b891e29fc17d81274bafe89d9d3542fc538cbd9d59fac9",
           "original_body_sha256": "0b6cc89f3ee5129087ef9421ee98acd2d2e087fcf596689451f217fc53b993a2",
           "replacements": [
             [
               " prep:=controlled_count_v1.saved_result_graph('reconciliation_preparation',(p_scope#>>'{parent_exception,preparation_id}')::uuid);\n approval:=controlled_count_v1.saved_result_graph('reconciliation_approval',(p_scope#>>'{parent_exception,approval_id}')::uuid);",
               " -- A completed approval graph fully validates its exact preparation.\n approval:=controlled_count_v1.saved_result_graph('reconciliation_approval',(p_scope#>>'{parent_exception,approval_id}')::uuid);\n prep:=(controlled_count_v1.saved_result_row('reconciliation_preparation',(p_scope#>>'{parent_exception,preparation_id}')::uuid))->'document';\n IF prep->'id'IS DISTINCT FROM p_scope#>'{parent_exception,preparation_id}'\n OR approval#>'{body,preparation_id}'IS DISTINCT FROM prep->'id'THEN\n  prep:=controlled_count_v1.saved_result_graph('reconciliation_preparation',(p_scope#>>'{parent_exception,preparation_id}')::uuid);\n END IF;"
+            ],
+            [
+              " live_value:=controlled_count_v1.product_live_causes(product_value);",
+              " live_value:=controlled_count_v1.reconciliation_live_causes(p_scope);"
             ]
           ],
           "whole_body_inverse": true
@@ -556,6 +560,7 @@
         "dispatcher_post_store_checks_new_closure_and_fresh_frontier": true,
         "only_immediately_dominated_outer_parent_scans_removed": true,
         "original_operation_context_result_principal_bindings_unchanged": true,
+        "parent_history_replay_dominated_by_unchanged_initial_context_scans": true,
         "parent_preparation_reuse": {
           "actual_preparation_row_reread": true,
           "all_current_principal_policy_clock_and_product_checks_unchanged": true,
@@ -564,7 +569,7 @@
           "mismatch_keeps_original_full_preparation_graph": true
         },
         "parent_source_function": "controlled_count_v1.reconciliation_parent_source_required(jsonb,text)",
-        "parent_stages_keep_their_complete_scan": true,
+        "parent_stages_keep_complete_fresh_live_projection": true,
         "policy_publication_and_abandoned_closure_lanes_unchanged": true,
         "predecessor_readonly_closure_sha256": "2c765dae3922ca5032ed4e046d0aad7e1f813f6c0137f0a4d7dfe03913390ccc",
         "reviewed_parent_body_sha256": "0b6cc89f3ee5129087ef9421ee98acd2d2e087fcf596689451f217fc53b993a2",
@@ -573,32 +578,32 @@
       },
       "current_artifacts": {
         "capture.sql": {
-          "bytes": 109082,
-          "sha256": "f0b8e27223b31a409731ced609ece1e19a07366d1971ffe385ccd66640f7280d"
+          "bytes": 109138,
+          "sha256": "570c9fdda63d6e4eb0e101c68f094120de44834932bb1151de94b6b416cd9b37"
         },
         "declared-footprint.json": {
-          "bytes": 142445,
-          "sha256": "5af582f212a84a4f646d67ccde95ea82c422d31458fa116aea5e53db978bb950"
+          "bytes": 142567,
+          "sha256": "f24c9324b4d86e82bdcd5e594cb73af05c0fa7604d361a17ef06dff86aeb4d11"
         },
         "expected-module.json": {
-          "bytes": 12383153,
-          "sha256": "cbf2d99e31ff06b9a4255296c06aa42d9d97fb396832df14855dc6da6cb718f4"
+          "bytes": 12384542,
+          "sha256": "8e7da988a6dc73bec764e8e7f5c9d333aeeb497647772e6ec67133987f94fe06"
         },
         "install.sql": {
-          "bytes": 61922445,
-          "sha256": "592651b413a14a7e63cc50b951ee78819953ffb1e4215132aa5a0aaa961badc3"
+          "bytes": 61934074,
+          "sha256": "25e8bf3c5af38490d448dc1baede6626a1f0aee0000a686a674469e9316c0b48"
         },
         "postcheck.sql": {
-          "bytes": 31295133,
-          "sha256": "f216948e72c6683a2813ee0814febc412d6d51c786e82458b95fe2aa298a46f0"
+          "bytes": 31296921,
+          "sha256": "acb80e7c491bc24c4bdf5f935798c3d82f13f9c6d11737607d32dd5e17a4f569"
         },
         "preflight.sql": {
           "bytes": 2551471,
           "sha256": "64a65319c50d727ad51af25f2a4c0ee3083e6710be0b8ce5f26e09bd506eb074"
         },
         "source-expected.sql": {
-          "bytes": 9163592,
-          "sha256": "6d9565bd7d955bac6b2d8f56abd3822a2f354e9e67304f39d5df9c01d5285def"
+          "bytes": 9164486,
+          "sha256": "b517ab6917a799934ca64d077b556b18775a87eae69d39a7e391739c9230607f"
         }
       },
       "fact_tables": [
@@ -633,7 +638,8 @@
         "controlled_count_v1.flush_pending_product()",
         "controlled_count_v1.pending_product_delete_guard()",
         "controlled_count_v1.pending_product_write_guard()",
-        "controlled_count_v1.pending_scope_required()"
+        "controlled_count_v1.pending_scope_required()",
+        "controlled_count_v1.reconciliation_live_causes(jsonb)"
       ],
       "new_trigger_identities": [
         [
@@ -711,6 +717,61 @@
       ],
       "no_validity_certificate": true,
       "original_authorization_row_guards_and_full_product_validator_unchanged": true,
+      "parent_history_projection": {
+        "derivation": {
+          "actual_context_scope_phase_and_fresh_header_required": true,
+          "all_original_live_projection_checks_and_caps_retained": true,
+          "derived": "controlled_count_v1.reconciliation_live_causes(jsonb)",
+          "derived_body_sha256": "0a8cb492483fa07a440e56b98605ab4338b11f1861ae40ad0de84a7e0ce0096b",
+          "existing_outer_operation_and_closure_refused": true,
+          "only_full_history_replay_removed": true,
+          "original": "controlled_count_v1.product_live_causes(uuid)",
+          "original_body_sha256": "bb8d66fc31b05867eca41f91d04cbb304c4cf5d5c3f55d514718bb24e4c5baf0",
+          "original_full_helper_unchanged": true,
+          "replacements": [
+            [
+              "declare item record;cause_doc jsonb;resolution_doc jsonb;resolution_value uuid;",
+              "declare p_product uuid;context_value jsonb;scope_value jsonb;item record;cause_doc jsonb;resolution_doc jsonb;resolution_value uuid;"
+            ],
+            [
+              " perform controlled_count_v1.product_count_history_required(p_product);\n",
+              " -- The original context birth/operating scans dominate this unchanged\n -- count-data window. This helper does not certify or cache history validity.\n select to_jsonb(c)into strict context_value from public.controlled_stock_execution_contexts c\n where c.backend_pid=pg_backend_pid();\n scope_value:=controlled_count_entry_v1.current_count_context_header_required(context_value);\n perform controlled_count_entry_v1.assert_scope_resource_frontier(scope_value);\n if scope_value::text is distinct from p_scope::text\n or scope_value->>'outer_action'is distinct from 'reconciliation_execute'\n or(context_value->>'phase'=any(array['count_operating','executing']))is not true\n or exists(select 1 from controlled_count_v1.operations o where o.operation_id=(scope_value->>'outer_operation_id')::uuid)\n or exists(select 1 from controlled_count_v1.operation_closures o where o.operation_id=(scope_value->>'outer_operation_id')::uuid)then\n  raise exception 'count_context_invalid'using errcode='P0001',detail='',hint='';end if;\n p_product:=(scope_value->>'product_id')::uuid;\n"
+            ],
+            [
+              "   -- The SAME preceding complete first inventory selected this exact registry\n   -- root and finished its graph+closure. A document product claim alone is\n   -- insufficient: an orphan can be absent from joined result inventories.\n",
+              "   -- Original context scans selected this exact registry root and finished\n   -- its graph/closure. Sealed parent control flow and held relations exclude\n   -- count-data writes in this window; orphan history already refused entry.\n"
+            ]
+          ],
+          "whole_AST_header_inverse": true,
+          "whole_body_inverse": true
+        },
+        "source_cut": {
+          "all_history_reads_held_and_unchanged_during_parent": true,
+          "application_read_relations": [
+            "controlled_count_v1.cancellations",
+            "controlled_count_v1.causes",
+            "controlled_count_v1.cycles",
+            "controlled_count_v1.operation_closures",
+            "controlled_count_v1.operations",
+            "controlled_count_v1.outcomes",
+            "controlled_count_v1.policies",
+            "controlled_count_v1.reconciliation_approvals",
+            "controlled_count_v1.reconciliation_confirmations",
+            "controlled_count_v1.reconciliation_execution_causes",
+            "controlled_count_v1.reconciliation_executions",
+            "controlled_count_v1.reconciliation_preparations",
+            "controlled_count_v1.resolutions",
+            "controlled_count_v1.snapshots",
+            "controlled_count_v1.statements"
+          ],
+          "bound_history_functions": 299,
+          "bound_parent_context_functions": 12,
+          "evidence": "docs/controlled-drugs/product-history-readcut-20261028.json",
+          "no_current_public_stock_journal_or_Auth_read_in_history": true,
+          "no_runtime_validity_flag_or_queue_absence_certificate": true,
+          "sha256": "dec62055c55799969eeb3b198cf8d3e284374b682aca15f3b9c4c3034772f910"
+        }
+      },
       "policy_pure_hash_reuse": {
         "SQL_null_map_skips_only_unprovable_snapshot_memo_query": true,
         "admitted_private_source_owned_maps_only": true,
@@ -759,13 +820,17 @@
       "previous_same_callback_global_validation_proof_superseded": true,
       "real_Auth_verification_pending": true,
       "source_tools": {
+        "parent_history_projection.py": {
+          "bytes": 8797,
+          "sha256": "f2f78992217501f1c4874a072fc7218c2a038ce6b5230b05975031a3b9ceb19f"
+        },
         "pending-validation.sql": {
           "bytes": 9143,
           "sha256": "e5664aeb827274b77b765314a18739dc7de10addba39c74d555fb14b922e30e2"
         },
         "pending_validation.py": {
-          "bytes": 17747,
-          "sha256": "ac2831b3953ebc3dd86ec98673e08a537f640534802c1bd51a2e5024f382dc85"
+          "bytes": 18618,
+          "sha256": "ae175225886eecb7eb5bd5ec88240f84390f2c7e472e839e4b08b4cba6b07da8"
         }
       },
       "unchanged_final_ALL_IMMEDIATE": true

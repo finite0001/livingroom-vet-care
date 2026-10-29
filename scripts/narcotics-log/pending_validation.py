@@ -9,6 +9,9 @@ import re
 
 from frontier_projection import body, plan_projection
 from history_document_reuse import code_mask
+import parent_history_projection
+
+DERIVED_FUNCTIONS = {parent_history_projection.SIGNATURE}
 
 
 FACT_TABLES = ('operations', 'cycles', 'snapshots', 'statements', 'outcomes',
@@ -147,7 +150,12 @@ def build(nodes):
  OR approval#>'{body,preparation_id}'IS DISTINCT FROM prep->'id'THEN
   prep:=controlled_count_v1.saved_result_graph('reconciliation_preparation',(p_scope#>>'{parent_exception,preparation_id}')::uuid);
  END IF;"""
-    change(parent_signature, [(parent_pair_before, parent_pair_after)])
+    parent_predecessor = replace_exact(parent_source, parent_pair_before, parent_pair_after)
+    parent_live_before = ' live_value:=controlled_count_v1.product_live_causes(product_value);'
+    parent_live_after = ' live_value:=controlled_count_v1.reconciliation_live_causes(p_scope);'
+    change(parent_signature, [(parent_pair_before, parent_pair_after), (parent_live_before, parent_live_after)])
+    projection_node, projection_proof = parent_history_projection.derive(nodes)
+    changed[parent_history_projection.SIGNATURE] = projection_node
     closing_signature = 'controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)'
     before_parent = "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'before');\n"
     after_parent = "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'after');\n"
@@ -204,19 +212,22 @@ end """
             or policy_after.split(fallback_anchor, 1)[1] != policy_before.split(fallback_anchor, 1)[1]):
         raise ValueError('Snapshot-cache hash and complete original fallback must remain exact')
     change('controlled_count_v1.count_graph_deferred()', [(OLD_GLOBAL, NEW_GLOBAL)])
+    projection_cut = parent_history_projection.verify_cut(nodes, changed, parent_predecessor)
     return changed, dict(
         predecessor='V45 source composition', body_inverses=proofs,
         predecessor_history_and_frontier_proofs_are_intermediate=True,
         previous_same_callback_global_validation_proof_superseded=True,
         final_global_validation='unconditional pending BEFORE DELETE guard',
-        fact_tables=list(FACT_TABLES), new_private_functions=sorted(NEW_FUNCTIONS),
+        fact_tables=list(FACT_TABLES), new_private_functions=sorted(NEW_FUNCTIONS | DERIVED_FUNCTIONS),
+        parent_history_projection=dict(derivation=projection_proof, source_cut=projection_cut),
         new_trigger_identities=sorted(NEW_TRIGGERS),
         no_validity_certificate=True, unchanged_final_ALL_IMMEDIATE=True,
         context_scan_schedule=dict(
             source_function=closing_signature, parent_source_function=parent_signature,
             reviewed_parent_body_sha256=sha(parent_source),
             predecessor_readonly_closure_sha256='2c765dae3922ca5032ed4e046d0aad7e1f813f6c0137f0a4d7dfe03913390ccc',
-            parent_stages_keep_their_complete_scan=True,
+            parent_stages_keep_complete_fresh_live_projection=True,
+            parent_history_replay_dominated_by_unchanged_initial_context_scans=True,
             only_immediately_dominated_outer_parent_scans_removed=True,
             closing_product_scan_required_by_guarded_pending_delete=True,
             original_operation_context_result_principal_bindings_unchanged=True,

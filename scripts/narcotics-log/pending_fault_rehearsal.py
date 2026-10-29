@@ -143,6 +143,9 @@ ALTER TABLE controlled_count_v1.descriptor ENABLE TRIGGER count_history_immutabl
         business.installation.Installation.execute(self)
         m = business.modules(); runtime = business.Runtime(self)
         self.bind_fault(runtime)
+        import parent_projection_protocol
+        projection_controls = parent_projection_protocol.run(runtime)
+        business.save(self.evidence, 'isolated-parent-projection-guard-controls', projection_controls)
         business.save(self.evidence, 'genuine-REST-source-defaults', m.rest.effective_defaults(runtime))
         business.save(self.evidence, 'genuine-Auth-source-defaults', m.auth.effective_defaults(runtime))
         auth_before = m.auth.initial(runtime)

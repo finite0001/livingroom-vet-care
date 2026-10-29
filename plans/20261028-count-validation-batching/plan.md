@@ -40,3 +40,5 @@ their pending checks with `SET CONSTRAINTS`. A row collector is immediate so a
 forced-immediate mode can reject incomplete data but cannot validate before the
 original row exists. See the official [trigger documentation](https://www.postgresql.org/docs/17/sql-createtrigger.html)
 and [constraint timing documentation](https://www.postgresql.org/docs/17/sql-set-constraints.html).
+
+The clean runner still requires the source-bound parent-window refinement in [phase02](phase-02-parent-history.md). All previous final integrity and release gates remain.

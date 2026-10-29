@@ -544,7 +544,7 @@
           "IntervalStyle=postgres",
           "extra_float_digits=3"
         ],
-        "body_sha256": "cd6269e9b44a9bf21595213b332529cb5627fcfc3f730c6c9c9dc74e959cea6c",
+        "body_sha256": "f6feeae8a261d68cbd2c674d0c8d6dafcb2de7dfd1b628b39dd62d1c99376380",
         "acl": [
           {
             "grantor": "postgres",
@@ -15042,7 +15042,7 @@
           "IntervalStyle=postgres",
           "extra_float_digits=3"
         ],
-        "body_sha256": "54b96e1cec4352dd4e7122df871a9e565865e2b423e6fefb9700585a8cc999fc",
+        "body_sha256": "a8bf9fca62edcf7f73b891e29fc17d81274bafe89d9d3542fc538cbd9d59fac9",
         "acl": [
           {
             "grantor": "postgres",
@@ -40763,6 +40763,53 @@
         "argument_count": 1,
         "default_count": 0
       },
+      "controlled_count_v1.reconciliation_live_causes(jsonb)": {
+        "schema": "controlled_count_v1",
+        "name": "reconciliation_live_causes",
+        "arg_types": [
+          "jsonb"
+        ],
+        "arg_names": [
+          "p_scope"
+        ],
+        "all_arg_types": null,
+        "arg_modes": null,
+        "return_type": "jsonb",
+        "setof": false,
+        "language": "plpgsql",
+        "volatility": "v",
+        "definer": false,
+        "strict": false,
+        "leakproof": false,
+        "parallel": "u",
+        "kind": "f",
+        "variadic": 0,
+        "support": 0,
+        "sqlbody_null": true,
+        "owner": "postgres",
+        "cost": 100,
+        "rows": 0,
+        "defaults": null,
+        "configuration": [
+          "search_path=pg_catalog, controlled_count_v1, pg_temp",
+          "TimeZone=UTC",
+          "DateStyle=ISO,YMD",
+          "IntervalStyle=postgres",
+          "extra_float_digits=3"
+        ],
+        "body_sha256": "0a8cb492483fa07a440e56b98605ab4338b11f1861ae40ad0de84a7e0ce0096b",
+        "acl": [
+          {
+            "grantor": "postgres",
+            "grantee": "postgres",
+            "privilege": "EXECUTE",
+            "grantable": false
+          }
+        ],
+        "probin": null,
+        "argument_count": 1,
+        "default_count": 0
+      },
       "controlled_count_v1.pending_scope_required()": {
         "schema": "controlled_count_v1",
         "name": "pending_scope_required",
@@ -53410,6 +53457,7 @@
         "controlled_count_v1.readcore_validated_operation_closure(uuid)",
         "controlled_count_v1.readcore_validated_operation_closure_9(uuid)",
         "controlled_count_v1.readcore_validated_policy_operation_closure(uuid)",
+        "controlled_count_v1.reconciliation_live_causes(jsonb)",
         "controlled_count_v1.reconciliation_parent_source_required(jsonb,text)",
         "controlled_count_v1.reject_history_change()",
         "controlled_count_v1.reservation_keys(text[])",

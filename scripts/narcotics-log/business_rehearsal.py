@@ -20,7 +20,7 @@ import install_rehearsal as installation
 
 def source_admission():
     _, layout, pins = installation.source_admission()
-    for name in ('pending_protocol.py', 'count_attribution.py'):
+    for name in ('pending_protocol.py', 'count_attribution.py', 'parent_projection_protocol.py'):
         path = HERE / name
         pins[str(path.relative_to(installation.ROOT))] = installation.sha(installation.prefix.regular(path))
     source = installation.decode(installation.prefix.regular(HERE / "business-source.json"))
@@ -226,6 +226,9 @@ class BusinessInstallation(installation.Installation):
                 owner_data_only=True, Auth_acceptance=False, clinical_rows_changed=0, whole_source_inverse=True):
             raise ValueError('Complete isolated mandatory-work controls required')
         save(self.evidence, "isolated-pending-protocol-controls", pending_controls)
+        import parent_projection_protocol
+        projection_controls = parent_projection_protocol.run(runtime)
+        save(self.evidence, "isolated-parent-projection-guard-controls", projection_controls)
         runtime.verify_pending_empty("after-isolated-controls-pending-empty")
         save(self.evidence, "genuine-REST-source-defaults", m.rest.effective_defaults(runtime))
         save(self.evidence, "genuine-Auth-source-defaults", m.auth.effective_defaults(runtime))

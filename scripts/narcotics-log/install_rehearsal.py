@@ -115,8 +115,10 @@ def source_admission():
                  "sql_framing.py", "frame-cli.mjs", "release-candidate.json",
                  "cli-framing.json", "proof-data-pins.json", "source_expectations.py",
                  "pending_validation.py", "pending-validation.sql", "frontier_projection.py",
-                 "history_document_reuse.py"):
+                 "history_document_reuse.py", "parent_history_projection.py"):
         pins[str((HERE / name).relative_to(ROOT))] = sha(prefix.regular(HERE / name))
+    evidence = 'docs/controlled-drugs/product-history-readcut-20261028.json'
+    pins[evidence] = sha(prefix.regular(ROOT / evidence))
     prefix.canonical206(ROOT)
     return candidate, layout, pins
 

@@ -1,7 +1,7 @@
 """Source construction refusals; these do not claim PostgreSQL/Auth acceptance."""
 import unittest
 
-from pending_validation import FACT_TABLES, NEW_FUNCTIONS, NEW_TRIGGERS, replace_exact
+from pending_validation import FACT_TABLES, NEW_FUNCTIONS, NEW_TRIGGERS, DERIVED_FUNCTIONS, replace_exact
 
 
 class PendingSourceControls(unittest.TestCase):
@@ -10,6 +10,7 @@ class PendingSourceControls(unittest.TestCase):
         self.assertEqual(len(set(FACT_TABLES)), 14)
         self.assertTrue({'descriptor', 'policies', 'operation_closures'}.isdisjoint(FACT_TABLES))
         self.assertEqual(len(NEW_FUNCTIONS), 5)
+        self.assertEqual(DERIVED_FUNCTIONS, {'controlled_count_v1.reconciliation_live_causes(jsonb)'})
         self.assertEqual(len(NEW_TRIGGERS), 18)
 
     def test_replacement_retains_entire_predecessor_including_surrounding_checks(self):
