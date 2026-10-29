@@ -187,13 +187,21 @@ end """
  AND p_validated_documents ? """ + policy_key + """
  AND(p_validated_documents->""" + policy_key + """)::text IS NOT DISTINCT FROM p_document::text
  THEN RETURN p_document;END IF;
+ IF p_validated_documents IS NOT NULL THEN
  if exists(
 """
     old_policy_cut = old_arm + '  union all\n'
-    policy_node = change(policy_signature, [(old_policy_cut, fast_policy)])
+    snapshot_end = ' )then return p_document;end if;\n'
+    policy_node = change(policy_signature, [
+        (old_policy_cut, fast_policy), (snapshot_end, snapshot_end + ' END IF;\n')])
     policy_after = body(policy_node)[1]
     snapshot_anchor = '  select 1 from jsonb_object_keys(p_validated_documents)verified(key)'
-    if policy_after.split(snapshot_anchor, 1)[1] != policy_before.split(snapshot_anchor, 1)[1]:
+    def snapshot_query(text):
+        start = text.index(snapshot_anchor)
+        return text[start:text.index(snapshot_end, start) + len(snapshot_end)]
+    fallback_anchor = ' if p_document is null or octet_length'
+    if (snapshot_query(policy_after) != snapshot_query(policy_before)
+            or policy_after.split(fallback_anchor, 1)[1] != policy_before.split(fallback_anchor, 1)[1]):
         raise ValueError('Snapshot-cache hash and complete original fallback must remain exact')
     change('controlled_count_v1.count_graph_deferred()', [(OLD_GLOBAL, NEW_GLOBAL)])
     return changed, dict(
@@ -226,6 +234,7 @@ end """
             source_function=policy_signature, first_arm_only=True,
             exact_original_validated_cache_and_input_text_required=True,
             object_canonical_uuid_and_key_presence_required=True,
+            SQL_null_map_skips_only_unprovable_snapshot_memo_query=True,
             first_arm_has_no_table_or_current_authority_semantics=True,
             snapshot_arm_and_original_fallback_byte_identical=True,
             constructors='original policy_history followed by root seeding; four helpers call original policy_values before seeding',

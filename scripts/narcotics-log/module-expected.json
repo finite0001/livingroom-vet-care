@@ -39460,7 +39460,7 @@
         "configuration": [
           "search_path=pg_catalog, controlled_count_v1"
         ],
-        "body_sha256": "f6b9381a0d3c1a799dc303e18767847bcdb8b22bfcf799383fd8db5b22b331c7",
+        "body_sha256": "5cba57c6b5ae585aa48910b67528df199b866287d9e96dfaef50087f7ba89ea9",
         "acl": [
           {
             "grantor": "postgres",

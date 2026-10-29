@@ -267,3 +267,18 @@ stored validity/permission certificate. Arbitrary owner-forged matching maps are
 outside the explicitly admitted constructor contract; no general private-input
 or corrupted-cache equivalence is claimed. Do not change privilege-query loops
 without measured benefit. New native rollback/recovery and clean CI remain gates.
+
+
+### SQL-null cache guard found by native controls
+
+The added SQL-null-map case exposed PostgreSQL evaluating non-strict
+`document_hash(NULL)` in the snapshot query before its empty function scan.
+An explicit PL/pgSQL `IF p_validated_documents IS NOT NULL` now surrounds only
+that cache query. A null map cannot supply a snapshot proof, so it proceeds to
+unchanged original validation. Keep the wrong-map-type guard first: JSON null,
+scalar and array map behavior remains unchanged. Snapshot query interior and
+complete original fallback retain exact source inverses. All 23 cases passed in
+an isolated PostgreSQL 17.11 pure-data reproduction; this is a diagnostic only,
+not genuine-login/native release acceptance. The full owned release tests remain
+required. Diagnostic errors now identify case number and exact result/error parity
+without exposing document contents.

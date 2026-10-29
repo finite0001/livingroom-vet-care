@@ -720,8 +720,8 @@
       "sha256": "dce9bc4df128cde16770c78025d373dc64de62ce9c6520a3aeed978fb99b680d"
     },
     "scripts/narcotics-log/policy-reuse-controls.sql": {
-      "bytes": 5097,
-      "sha256": "aca6baee5025f46a826e682489d0f97ac4ff1addd4401aa03164a999442fb6b3"
+      "bytes": 5352,
+      "sha256": "1da7fa9b7293cafee08dda885170c0cb5ec986d7a9e267900349cc5b19cb9cda"
     },
     "scripts/narcotics-log/boundary-reuse-controls.sql": {
       "bytes": 5342,

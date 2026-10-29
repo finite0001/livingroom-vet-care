@@ -66,7 +66,10 @@ BEGIN
    WHEN OTHERS THEN GET STACKED DIAGNOSTICS new_code=RETURNED_SQLSTATE,new_message=MESSAGE_TEXT;END;
   IF old_code IS DISTINCT FROM new_code OR old_message IS DISTINCT FROM new_message
    OR old_result::text IS DISTINCT FROM new_result::text THEN
-   RAISE EXCEPTION 'policy_grammar_reuse_control_failed';END IF;
+   RAISE EXCEPTION 'policy_grammar_reuse_control_failed'USING DETAIL=jsonb_build_object(
+    'variant',variant,'original_code',old_code,'context_code',new_code,
+    'original_message',old_message,'context_message',new_message,
+    'same_result_text',old_result::text IS NOT DISTINCT FROM new_result::text)::text;END IF;
   checked:=checked+1;
  END LOOP;
  RETURN jsonb_build_object('kind','historical-policy-grammar-controls-v1','cases',checked,
