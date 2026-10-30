@@ -1,7 +1,8 @@
+import { controlledTestFactory } from "./controlled-writer-test.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  createNativeReturnsApi,
+  createNativeReturnsApi as originalcreateNativeReturnsApi,
   createNativeReturnPolicyApi,
   returnIntentSchema,
 } from "../../src/hub/features/prescriptions/fulfillment-returns-api.ts";
@@ -332,4 +333,11 @@ test("exact intake read rejects another target and future intake sequence", asyn
   await assert.rejects(f.api.readIntake(id(20)));
   f.set({version:1,target,head,intake});
   await assert.rejects(f.api.readIntake(id(20)));
+});
+
+const createNativeReturnsApi = controlledTestFactory(originalcreateNativeReturnsApi);
+
+test("production V1 return cannot fall back to SDK when staff identity is missing", async () => {
+  let writes=0;const api=originalcreateNativeReturnsApi({rpc:async()=>{writes++;return{data:null,error:null};}},actor,target);
+  await assert.rejects(()=>api.execute(fixture().op));assert.equal(writes,0);
 });

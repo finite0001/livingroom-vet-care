@@ -1,3 +1,7 @@
+import type { ExactJson } from "../controlled-drugs/record-review/exact-json.ts";
+import type { ReviewIdentity } from "../controlled-drugs/record-review/raw-rpc.ts";
+import { invokeCapturedControlledWriter, type ControlledWriterInvoker } from "../controlled-drugs/entry/controlled-api.ts";
+import { admitLegacyResult } from "../controlled-drugs/entry/legacy-result.ts";
 /** Exact, actor-bound transport for physical return reconciliation. Hash verification is server-owned. */
 import { z } from "zod";
 import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
@@ -682,6 +686,8 @@ export function createNativeReconciliationApi(
   client: PrescriptionRpc,
   actor: string,
   t: z.infer<typeof target>,
+  expectedIdentity?: Readonly<ReviewIdentity> | null,
+  controlledInvoke?: ControlledWriterInvoker,
 ) {
   uuid.parse(actor);
   target.parse(t);
@@ -765,6 +771,9 @@ export function createNativeReconciliationApi(
     return r as ReconciliationReceipt;
   }
   return {
+    admitSaved(id:string,requestRaw:ExactJson,resultRaw:ExactJson){
+      return validatedReceipt(admitLegacyResult(receipt,resultRaw),{id,kind:"record_return_v2",payload:admitLegacyResult(request,requestRaw)});
+    },
     async read(): Promise<ReconciliationRead | null> {
       const raw = await rpc("read_native_dispense_returns_v2", args);
       if (raw === null) return null;
@@ -977,13 +986,8 @@ export function createNativeReconciliationApi(
     },
     async execute(op: Readonly<PrescriptionOperation>) {
       const q = parsedRequest(op);
-      return validatedReceipt(
-        await rpc("record_native_dispense_return_v2", {
-          p_id: op.id,
-          p_request: q,
-        }),
-        op,
-      );
+      return invokeCapturedControlledWriter("record_native_dispense_return_v2", { p_id: op.id, p_request: q }, actor,
+        expectedIdentity, raw => validatedReceipt(admitLegacyResult(receipt, raw), op), controlledInvoke);
     },
     async recover(op: Readonly<PrescriptionOperation>) {
       parsedRequest(op);
@@ -998,6 +1002,8 @@ export function createNativeReturnDiscrepancyApi(
   client: PrescriptionRpc,
   actor: string,
   t: z.infer<typeof target>,
+  expectedIdentity?: Readonly<ReviewIdentity> | null,
+  controlledInvoke?: ControlledWriterInvoker,
 ) {
   uuid.parse(actor);
   target.parse(t);
@@ -1071,6 +1077,9 @@ export function createNativeReturnDiscrepancyApi(
     return r as ReturnDiscrepancyReceipt;
   }
   return {
+    admitSaved(id:string,requestRaw:ExactJson,resultRaw:ExactJson){
+      return receiptFor(admitLegacyResult(discrepancyReceipt,resultRaw),{id,kind:"record_return_discrepancy",payload:admitLegacyResult(discrepancyRequest,requestRaw)});
+    },
     async preview(value: unknown): Promise<ReturnDiscrepancyPreview> {
       const i = discrepancyIntentSchema.parse(value);
       ensure(equal(i.target, t));
@@ -1125,13 +1134,8 @@ export function createNativeReturnDiscrepancyApi(
     },
     async execute(op: Readonly<PrescriptionOperation>) {
       const q = requestFor(op);
-      return receiptFor(
-        await rpc("record_native_return_discrepancy", {
-          p_id: op.id,
-          p_request: q,
-        }),
-        op,
-      );
+      return invokeCapturedControlledWriter("record_native_return_discrepancy", { p_id: op.id, p_request: q }, actor,
+        expectedIdentity, raw => receiptFor(admitLegacyResult(discrepancyReceipt, raw), op), controlledInvoke);
     },
     async recover(op: Readonly<PrescriptionOperation>) {
       requestFor(op);

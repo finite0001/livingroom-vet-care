@@ -1,0 +1,45 @@
+{
+  "Auth_and_workflow_and_deadlines_unchanged": true,
+  "changes": [
+    {
+      "after": "const failureDiagnostics=[];\nfunction noteFailure(error,phase){\n try{\n  if(failureDiagnostics.length>=8)return;\n  const names=new Set(['Error','AssertionError','TimeoutError','TypeError','ReferenceError','SyntaxError']);\n  const name=error instanceof Error&&names.has(error.name)?error.name:'Other';\n  const match=error instanceof Error?/run-local-authenticated-count-finalize\\.mjs:(\\d+):(\\d+)/.exec(error.stack??''):null;\n  const record={phase,error_name:name,driver_line:match?Number(match[1]):null,driver_column:match?Number(match[2]):null};\n  if(Number.isInteger(error?.actual)&&error.actual>=0&&error.actual<=599)record.actual_integer=error.actual;\n  if(Number.isInteger(error?.expected)&&error.expected>=0&&error.expected<=599)record.expected_integer=error.expected;\n  failureDiagnostics.push(record);\n }catch{/* Diagnostics never change success, failure or cleanup behavior. */}\n}\n",
+      "before": ""
+    },
+    {
+      "after": "}catch(error){noteFailure(error,'route');fail();await route.abort().catch(()=>{});}",
+      "before": "}catch{fail();await route.abort().catch(()=>{});}"
+    },
+    {
+      "after": "page.on('pageerror',error=>{noteFailure(error,'page');fail();});",
+      "before": "page.on('pageerror',fail);"
+    },
+    {
+      "after": "}catch(error){noteFailure(error,'workflow');fail();}finally{",
+      "before": "}catch{fail();}finally{"
+    },
+    {
+      "after": "output('result.json',{kind:'closed-local-count-finalize-ack-loss-browser-v1',failure_diagnostics:failureDiagnostics,passed:",
+      "before": "output('result.json',{kind:'closed-local-count-finalize-ack-loss-browser-v1',passed:"
+    },
+    {
+      "after": "let browserClosed=false,viteClosed=false,authCalls=0,optionsCount=0,refusedDevClientSockets=0;",
+      "before": "let browserClosed=false,viteClosed=false,authCalls=0,optionsCount=0;"
+    },
+    {
+      "after": " const devSocket=new URL(pageOrigin.replace(/^http:/,'ws:')+'/');devSocket.searchParams.set('token',vite.config.webSocketToken);\n await context.routeWebSocket('**/*',socket=>{\n  // Vite7 still attempts initial+fallback dev sockets with hmr:false. Refuse\n  // both without forwarding; every unexpected socket remains a hard failure.\n  if(socket.url()===devSocket.href&&++refusedDevClientSockets<=2){socket.close();return;}\n  blocked.add(new URL(socket.url()).origin);fail();socket.close();\n });",
+      "before": " await context.routeWebSocket('**/*',socket=>{blocked.add(new URL(socket.url()).origin);fail();socket.close();});"
+    },
+    {
+      "after": "failure_diagnostics:failureDiagnostics,refused_development_websockets:refusedDevClientSockets,passed:",
+      "before": "failure_diagnostics:failureDiagnostics,passed:"
+    }
+  ],
+  "complete_source_inverse": true,
+  "credentials_and_exception_messages_and_raw_stacks_never_written": true,
+  "frontend146_binding_unchanged": true,
+  "kind": "narcotics-browser-nonsecret-diagnostics-source-inverse-v1",
+  "source_v3_sha256": "1d6bbeeef1ed1dadc1212c1d1b7c56d633306b0ba5b24637bccbe53e5be4f3a5",
+  "source_v4_sha256": "72b50a4f60d26b946a2bc5d53d28cf99b559fe29b61352371f09c97260dd1df3",
+  "source_v5_sha256": "51a58ac68db8a89bc1f0480c7fac9950f817d964b1ae239fe5811892748ff181",
+  "v5_change_count": 3
+}

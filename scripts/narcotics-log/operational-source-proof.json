@@ -1,0 +1,195 @@
+{
+  "compound_sql": {
+    "bytes": 688982,
+    "sha256": "68ea722271b2c7ddee528f7a8ec66fed7a57e3aa6f349a0d8eb8eeee5fbb813f"
+  },
+  "database_operations": 0,
+  "gateway": {
+    "bytes": 1660,
+    "sha256": "208b700b69e1a35c92b5590374b9e1035ae2fe7d66a11126b05fdd028a404cc5"
+  },
+  "migration": "20261028170038_narcotics_register_exports_and_recovery.sql",
+  "module": {
+    "builder_sha256": "7153f29a366cb3b729e59c466020977393fcbaaeb02ebaa3fc770c15eedd9734",
+    "engineering_only": false,
+    "expected_metadata_origin": "independent empty source reference DDL; no observed actual target expectations",
+    "function_signatures": [
+      "narcotics_recovery_v1.acknowledge_evidence(jsonb)",
+      "narcotics_recovery_v1.acknowledgment_record(uuid,uuid,uuid)",
+      "narcotics_recovery_v1.agreement_required(jsonb,jsonb,jsonb)",
+      "narcotics_recovery_v1.append_head(text,uuid,uuid,jsonb,uuid,text)",
+      "narcotics_recovery_v1.arm(jsonb)",
+      "narcotics_recovery_v1.arm_record(uuid)",
+      "narcotics_recovery_v1.backup_prepare(jsonb)",
+      "narcotics_recovery_v1.backup_record(uuid)",
+      "narcotics_recovery_v1.begin_epoch(jsonb)",
+      "narcotics_recovery_v1.capture_full_boundary(uuid,uuid)",
+      "narcotics_recovery_v1.capture_guard(uuid,uuid)",
+      "narcotics_recovery_v1.capture_inventory(uuid,boolean)",
+      "narcotics_recovery_v1.catalog_projection()",
+      "narcotics_recovery_v1.close_operation(jsonb)",
+      "narcotics_recovery_v1.enter_recovery()",
+      "narcotics_recovery_v1.evidence_record(uuid)",
+      "narcotics_recovery_v1.fresh_identity(uuid,boolean,jsonb)",
+      "narcotics_recovery_v1.latest_epoch(jsonb)",
+      "narcotics_recovery_v1.operation_action(jsonb)",
+      "narcotics_recovery_v1.operation_pointer(jsonb)",
+      "narcotics_recovery_v1.operation_request(jsonb,text)",
+      "narcotics_recovery_v1.post_frontier_session_required(jsonb)",
+      "narcotics_recovery_v1.preflight(jsonb)",
+      "narcotics_recovery_v1.preserve_evidence(jsonb)",
+      "narcotics_recovery_v1.projection_of(jsonb,text)",
+      "narcotics_recovery_v1.read_evidence(jsonb)",
+      "narcotics_recovery_v1.release(jsonb)",
+      "narcotics_recovery_v1.require_epoch()",
+      "narcotics_recovery_v1.require_exclusive_admission()",
+      "narcotics_recovery_v1.require_head()",
+      "narcotics_recovery_v1.save_operation(jsonb,jsonb)",
+      "narcotics_recovery_v1.saved_operation(uuid)",
+      "narcotics_recovery_v1.server_identity()",
+      "narcotics_recovery_v1.source_resume(jsonb)",
+      "narcotics_recovery_v1.start_count(jsonb)",
+      "narcotics_recovery_v1.status(jsonb)",
+      "narcotics_register_v1.authority(uuid,uuid,uuid)",
+      "narcotics_register_v1.close_operation(jsonb)",
+      "narcotics_register_v1.create_report(jsonb)",
+      "narcotics_register_v1.csv(jsonb)",
+      "narcotics_register_v1.csv_cell(text)",
+      "narcotics_register_v1.csv_row(text[])",
+      "narcotics_register_v1.custody_at(uuid,timestamptz)",
+      "narcotics_register_v1.download_form(jsonb)",
+      "narcotics_register_v1.enter_register()",
+      "narcotics_register_v1.event_authority(uuid,uuid,uuid,uuid)",
+      "narcotics_register_v1.form_bytes(text,text)",
+      "narcotics_register_v1.hash(text,jsonb)",
+      "narcotics_register_v1.identity(uuid,boolean)",
+      "narcotics_register_v1.instant_value(jsonb)",
+      "narcotics_register_v1.keys(jsonb,text[])",
+      "narcotics_register_v1.list_reports(jsonb)",
+      "narcotics_register_v1.make_dataset(jsonb)",
+      "narcotics_register_v1.module_properties(text,text,text,text)",
+      "narcotics_register_v1.operation_lock(uuid)",
+      "narcotics_register_v1.preserve_form(jsonb)",
+      "narcotics_register_v1.quantity_at(uuid,timestamptz)",
+      "narcotics_register_v1.read_operation(jsonb,text)",
+      "narcotics_register_v1.read_terminal_count(jsonb)",
+      "narcotics_register_v1.reject_history_change()",
+      "narcotics_register_v1.require_module()",
+      "narcotics_register_v1.result_of(uuid,uuid,text)",
+      "narcotics_register_v1.text_value(jsonb,integer)",
+      "narcotics_register_v1.utc(timestamptz)",
+      "narcotics_register_v1.uuid_value(jsonb)",
+      "public.close_narcotics_register_operation_v1(jsonb)",
+      "public.create_narcotics_register_v1(jsonb)",
+      "public.download_narcotics_form_v1(jsonb)",
+      "public.list_narcotics_registers_v1(jsonb)",
+      "public.narcotics_recovery_acknowledge_evidence_v1(jsonb)",
+      "public.narcotics_recovery_admission_v1()",
+      "public.narcotics_recovery_arm_v1(jsonb)",
+      "public.narcotics_recovery_backup_prepare_v1(jsonb)",
+      "public.narcotics_recovery_begin_epoch_v1(jsonb)",
+      "public.narcotics_recovery_close_operation_v1(jsonb)",
+      "public.narcotics_recovery_preflight_v1(jsonb)",
+      "public.narcotics_recovery_preserve_evidence_v1(jsonb)",
+      "public.narcotics_recovery_read_evidence_v1(jsonb)",
+      "public.narcotics_recovery_read_operation_v1(jsonb)",
+      "public.narcotics_recovery_release_v1(jsonb)",
+      "public.narcotics_recovery_source_resume_v1(jsonb)",
+      "public.narcotics_recovery_start_count_v1(jsonb)",
+      "public.narcotics_recovery_status_v1(jsonb)",
+      "public.preserve_narcotics_form_v1(jsonb)",
+      "public.read_narcotics_form_operation_v1(jsonb)",
+      "public.read_narcotics_register_v1(jsonb)"
+    ],
+    "kind": "narcotics-operational-source-v1",
+    "native_errors_engineering_only": false,
+    "public_apis": [
+      "close_narcotics_register_operation_v1",
+      "create_narcotics_register_v1",
+      "download_narcotics_form_v1",
+      "list_narcotics_registers_v1",
+      "narcotics_recovery_acknowledge_evidence_v1",
+      "narcotics_recovery_arm_v1",
+      "narcotics_recovery_backup_prepare_v1",
+      "narcotics_recovery_begin_epoch_v1",
+      "narcotics_recovery_close_operation_v1",
+      "narcotics_recovery_preflight_v1",
+      "narcotics_recovery_preserve_evidence_v1",
+      "narcotics_recovery_read_evidence_v1",
+      "narcotics_recovery_read_operation_v1",
+      "narcotics_recovery_release_v1",
+      "narcotics_recovery_source_resume_v1",
+      "narcotics_recovery_start_count_v1",
+      "narcotics_recovery_status_v1",
+      "preserve_narcotics_form_v1",
+      "read_narcotics_form_operation_v1",
+      "read_narcotics_register_v1"
+    ],
+    "ready_for_deployment": false,
+    "recovery_boundary_copy": {
+      "all_original_columns_caps_and_historical_validation_retained": true,
+      "copy_body_sha256": "423708d4f47e772785518251e44b5c46c7def27a16200b9a5fe6277b814a6f5f",
+      "original_body_sha256": "d1bfd051feede9ee8a807e8ef836ead2a3aeecba5b3908eb61516c2780ef4994",
+      "physical_classes": 50,
+      "replaced_guards": 2,
+      "whole_body_inverse": true
+    },
+    "source_files": {
+      "common.sql": {
+        "bytes": 8150,
+        "sha256": "cec7de93c270e9f795ceaefa53d9f13f600ab3dca5b205caf82d492cf4c82e1f"
+      },
+      "metadata.sql": {
+        "bytes": 8602,
+        "sha256": "6a76fd90856fc401bd7b693ce163553fbe442b66d6e0445cd6edb5db5aa5616f"
+      },
+      "recovery-coordinator.sql": {
+        "bytes": 24281,
+        "sha256": "2ff3a9653998c8d5beb2b538da65db60617d1b03be5ff3b37f0e81c526ba536c"
+      },
+      "recovery-evidence.sql": {
+        "bytes": 17506,
+        "sha256": "b899792627b91c819219474896c80722e8ef77d602c8480eb9aa73fb063a7b90"
+      },
+      "recovery-inventory.sql": {
+        "bytes": 10239,
+        "sha256": "fa1802eb9d8b4bf4d4893ee53fb49d793c631f115e0f326566638259e29e73cc"
+      },
+      "recovery-operations.sql": {
+        "bytes": 12007,
+        "sha256": "a6c3d969e9d80550366b48b62ff825f71a53bcd95edc91dec7de0b59f728dcb9"
+      },
+      "recovery-release.sql": {
+        "bytes": 14843,
+        "sha256": "18cbb21867258d0c462b8ad3d97f16c39bcfe6d2e504bd2f5d9b748c1d1af1cb"
+      },
+      "recovery-state.sql": {
+        "bytes": 15387,
+        "sha256": "25927f32bdd07f15068e93fe3cf765c105c66024cd1075ab34267ecc07f2a5a1"
+      },
+      "recovery-status.sql": {
+        "bytes": 4463,
+        "sha256": "8d6ffe9e5cd4f55748b8008fc2f081fe8eb12f889aaf2eba33e113208f28c1ff"
+      },
+      "register-operations.sql": {
+        "bytes": 21729,
+        "sha256": "c36c6628d3f50c8e1d4c0130ab5076339d4c70d932c6f71c47d708bf3b84165b"
+      },
+      "register.sql": {
+        "bytes": 22967,
+        "sha256": "8e6a21a97cecce74d504c04500b0e228e8c954c2902ed140a8ceb1162bfc529b"
+      }
+    },
+    "sql": {
+      "bytes": 687225,
+      "sha256": "09c90664a40fe9187a9fb0f44af4d96081aa6fd17a2dd6689d3811ef8c81a902"
+    },
+    "terminal_count_copy": {
+      "copy_body_sha256": "2af10fbe501a3ade59f2f6e871838199755741e06d810f041c0b116be7bc7364",
+      "current_authorization_and_projector_unchanged": true,
+      "only_removed_statement": " perform controlled_count_entry_v1.require_bound_module();",
+      "original_body_sha256": "78bceadaf4139e195b44834b5266aca93fb562ee1acc03d7e377c08f8defd7a0",
+      "whole_body_inverse": true
+    }
+  }
+}

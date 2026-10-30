@@ -1,9 +1,10 @@
-# Unmounted staff record-review workflow
+# Staff record-review workflow
 
-This prospective Living Room Vet slice adds an imperative lifecycle, raw HTTP
-adapter and staff review sheet to the PR 294 foundations. It is not mounted,
-configured with a real Auth source, granted an RPC, or connected to a live backend.
-The earlier README describes the foundations before this slice.
+The Living Room Vet narcotics routes now compose the queue, readable evidence,
+review dialog and signing/recovery lifecycle through the actual staff Auth broker.
+`staff-workspace.ts` requires authenticated reconstruction of complete evidence;
+there is no permissive adapter fallback. Source routing is not a deployment or
+backend acceptance claim. See [the current staff guide](../count/STAFF-WORKFLOW.md).
 
 `RecordReviewWorkflow` requires a lifecycle model and an accepted server-issued
 detail selection. Staff explicitly prepare, inspect the returned packet, acknowledge
@@ -65,7 +66,7 @@ transport and fixture admission. It uses actual browser Web Locks/localStorage f
 the four-field pointer. No real Auth, RPC grant, backend persistence, clinical
 signature or staff acceptance is claimed by those tests.
 
-`RecordReviewDialog` adds an unmounted data-router host around the inline sheet.
+`RecordReviewDialog` provides the data-router host around the inline sheet.
 It distinguishes discarded local edits from durable unresolved operations, warns
 on close, pathname/search/hash navigation and unload, and never turns leaving into
 a cancellation or signature. A confirmed outcome with pending storage cleanup has
@@ -75,11 +76,9 @@ closing returns to the trigger. Model identity plus session revision remounts th
 local form before old text can appear in a replacement model at the same revision.
 The presentation-only dirty callback persists no draft text.
 
-Before mounting, finish independent backend/reference-vector admission, real
-two-user Auth acceptance and the actual host's Auth/permission boundary. The new
-dialog is a tested prospective host, not a production route or an authorization
-source. Counts, physical witnesses, transfers, disposal and register commissioning
-remain separate work.
+Production activation requires the complete admitted backend, real authenticated
+integration and hosted acceptance. Physical counts and administrator commissioning
+have their own source and permissions; a record-review signature grants neither.
 
 Official references checked for this slice:
 
@@ -110,5 +109,4 @@ three TypeScript projects and the production build. The repository retains four
 pre-existing Fast Refresh warnings and its existing bundle-size warning; the
 new files have no focused lint warnings. Prepared-sheet/dialog screenshots at
 375/1280 pixels were inspected; independent editable-dialog/warning geometry and
-focus checks also passed. Final Auth, backend and actual mounted-host acceptance
-remain separate.
+focus checks also passed. These earlier results remain scoped to that prospective slice. Current full-composition synthetic browser tests are separate; real backend/Auth and hosted acceptance remain separate.

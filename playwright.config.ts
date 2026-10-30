@@ -9,6 +9,7 @@ const backend = {
 
 export default defineConfig({
   testDir: "./e2e",
+  testMatch: ["**/*.@(spec|test).?(c|m)[jt]s?(x)", "**/*.playwright.ts"],
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
   reporter: "list",
@@ -29,13 +30,13 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "npm run dev -- --host 127.0.0.1 --port 8080 --strictPort",
+      command: "npm run dev -- --config vite.legacy-e2e.config.ts --host 127.0.0.1 --port 8080 --strictPort",
       url: "http://127.0.0.1:8080",
       reuseExistingServer: false,
       env: { ...backend, VITE_CONTACT_TURNSTILE_SITE_KEY: "synthetic-site-key" },
     },
     {
-      command: "npm run dev -- --host 127.0.0.1 --port 8081 --strictPort",
+      command: "npm run dev -- --config vite.legacy-e2e.config.ts --host 127.0.0.1 --port 8081 --strictPort",
       url: "http://127.0.0.1:8081",
       reuseExistingServer: false,
       env: { ...backend, VITE_CONTACT_TURNSTILE_SITE_KEY: "" },

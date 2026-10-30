@@ -3,11 +3,16 @@ import { readExactReviewResponse, type ExactJson } from "./exact-json.ts";
 import { reviewQueueRequestSchema, type ReviewQueueRequest } from "./queue-model.ts";
 import { reviewUuidSchema } from "./request.ts";
 import { parseReviewIdentity, sameReviewIdentity, type ReviewIdentity, type ReviewRpcConfig, type ReviewSessionSource } from "./raw-rpc.ts";
+import { reviewScopeRequestSchema, type ReviewScopeRequest } from "./scope-discovery.ts";
 
-export const reviewReadRpcSchema = z.enum(["get_controlled_record_review_event_v3", "list_controlled_record_reviews_v3"]);
+export const reviewReadRpcSchema = z.enum(["get_controlled_record_review_event_v3", "list_controlled_record_reviews_v3", "get_controlled_record_review_admission_v1", "discover_controlled_record_review_scopes_v1"]);
 export type ReviewReadMethod = z.infer<typeof reviewReadRpcSchema>;
 export const reviewDetailRequestSchema = z.object({ actor_id: reviewUuidSchema, event_id: reviewUuidSchema }).strict();
 export interface ReviewDetailRequest extends z.infer<typeof reviewDetailRequestSchema> {}
+export const reviewAdmissionRequestSchema = z.object({ schema_version: z.literal(1), actor_id: reviewUuidSchema, event_id: reviewUuidSchema,
+  operation_id: reviewUuidSchema.nullable(), view: z.enum(["detail", "prepared"]) }).strict()
+  .refine(value => (value.view === "detail") === (value.operation_id === null));
+export interface ReviewAdmissionRequest extends z.infer<typeof reviewAdmissionRequestSchema> {}
 export interface ReviewReadRpc {
   /** The consuming controller must recheck identity at its own state commit. */
   call(method: ReviewReadMethod, request: unknown, identity: ReviewIdentity, check: () => void): Promise<ExactJson>;
@@ -41,10 +46,11 @@ export function createReviewReadRpc(configInput: ReviewRpcConfig, sessions: Revi
     catch { throw new ReviewReadTransportError("unavailable"); }
     let identity: Readonly<ReviewIdentity>;
     try { identity = parseReviewIdentity(identityInput); } catch { throw new ReviewReadTransportError("identity_changed"); }
-    let request: ReviewDetailRequest | ReviewQueueRequest, body: string;
+    let request: ReviewDetailRequest | ReviewQueueRequest | ReviewAdmissionRequest | ReviewScopeRequest, body: string;
     try {
-      request = method === "get_controlled_record_review_event_v3"
-        ? reviewDetailRequestSchema.parse(requestInput) : reviewQueueRequestSchema.parse(requestInput);
+      request = method === "get_controlled_record_review_event_v3" ? reviewDetailRequestSchema.parse(requestInput) :
+        method === "get_controlled_record_review_admission_v1" ? reviewAdmissionRequestSchema.parse(requestInput) :
+        method === "discover_controlled_record_review_scopes_v1" ? reviewScopeRequestSchema.parse(requestInput) : reviewQueueRequestSchema.parse(requestInput);
       body = JSON.stringify({ p_request: request });
       if (new TextEncoder().encode(body).byteLength > 128 * 1024) throw new Error("Read request exceeds limit");
     } catch { throw new ReviewReadTransportError("unavailable"); }

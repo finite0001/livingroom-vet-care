@@ -1,0 +1,1678 @@
+{
+  "cli_version": "2.118.0",
+  "hosted_writes": 0,
+  "kind": "narcotics-forward-migration-candidate-v1",
+  "migration_count": 208,
+  "migrations": {
+    "20261027223535_controlled_record_review_workflows.sql": {
+      "bytes": 36787822,
+      "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
+    },
+    "20261027223544_narcotics_count_and_stock_workflows.sql": {
+      "bytes": 61937976,
+      "sha256": "779e805a63a256623d4b325f8a91924cbb8dcf69e6d8b6c59613c20f96b37dbb"
+    }
+  },
+  "prefix_migration_count": 206,
+  "ready_for_deployment": false,
+  "source_artifacts": {
+    "20261027223535_controlled_record_review_workflows.sql": {
+      "bytes": 36657813,
+      "sha256": "efa85437e2759b90ab16adcfd80c5be4862dfdf49ca3589d7aa053130fc4e640"
+    },
+    "20261027223544_narcotics_count_and_stock_workflows.sql": {
+      "bytes": 61934074,
+      "sha256": "25e8bf3c5af38490d448dc1baede6626a1f0aee0000a686a674469e9316c0b48"
+    }
+  },
+  "source_corrections": {
+    "additional_guarded_root_read_cuts": {
+      "all_deadlines_unchanged": true,
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_v1.count_graph_deferred()": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "f2039746e67cb527d8b82a6b647c1c0f6da65b6c60b9918f9dfb322f2487f88d",
+          "new_expression": "\ndeclare row_value jsonb;operation_value uuid;product_value uuid;document_value jsonb;\nbegin\n perform controlled_count_entry_v1.assert_read_frontier();\n if TG_TABLE_SCHEMA is distinct from 'controlled_count_v1'\n or(TG_OP is distinct from 'INSERT'and not(TG_TABLE_NAME='open_causes'and TG_OP='DELETE'))then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n if TG_OP='DELETE'then row_value:=to_jsonb(OLD);else row_value:=to_jsonb(NEW);end if;\n case TG_TABLE_NAME\n when 'operations'then operation_value:=(row_value->>'operation_id')::uuid;\n when 'cycles'then operation_value:=(row_value->>'start_operation_id')::uuid;\n when 'snapshots'then\n  document_value:=controlled_count_v1.readcore_saved_snapshot_document((row_value->>'snapshot_id')::uuid);\n  select c.start_operation_id into strict operation_value from controlled_count_v1.cycles c\n   where c.count_id=(row_value->>'count_id')::uuid and c.snapshot_id=(row_value->>'snapshot_id')::uuid;\n when 'statements','outcomes','cancellations','resolutions','reconciliation_preparations',\n      'reconciliation_approvals','reconciliation_executions','reconciliation_confirmations'then\n  operation_value:=(row_value->>'operation_id')::uuid;\n when 'causes'then\n  document_value:=controlled_count_v1.readcore_saved_cause_graph((row_value->>'cause_id')::uuid);\n  operation_value:=(document_value#>>'{source_result,operation_id}')::uuid;\n when 'reconciliation_execution_causes'then\n  select e.operation_id into strict operation_value from controlled_count_v1.reconciliation_executions e\n   where e.execution_id=(row_value->>'execution_id')::uuid;\n when 'open_causes'then\n  document_value:=controlled_count_v1.readcore_saved_cause_graph((row_value->>'cause_id')::uuid);\n  if document_value->'product_id'is distinct from row_value->'product_id'\n  or document_value->'site_id'is distinct from row_value->'site_id'\n  or document_value->'record_hash'is distinct from row_value->'cause_hash'then\n   raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n  product_value:=(row_value->>'product_id')::uuid;\n else raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end case;\n if TG_TABLE_NAME<>'open_causes'then\n  if operation_value is null then raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n  perform controlled_count_v1.validate_operation_graph(operation_value);\n  select o.product_id into strict product_value from controlled_count_v1.operations o where o.operation_id=operation_value;\n end if;\n -- Compare complete unresolved cause rows against the actual four-column live\n -- projection after every scoped write, including a resolution's DELETE.\n -- This callback needs the held frontier and retained complete graph, not a\n -- live count context, so final ALL IMMEDIATE after context deletion is safe.\n perform controlled_count_v1.product_live_causes(product_value);\n return null;\nend ",
+          "old_body_sha256": "5f61231697d10f80505c14a15c0ad4c3ce2d72b764251724b0bcc2fa673d08be",
+          "old_expression": "\ndeclare row_value jsonb;operation_value uuid;product_value uuid;document_value jsonb;\nbegin\n perform controlled_count_entry_v1.assert_read_frontier();\n if TG_TABLE_SCHEMA is distinct from 'controlled_count_v1'\n or(TG_OP is distinct from 'INSERT'and not(TG_TABLE_NAME='open_causes'and TG_OP='DELETE'))then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n if TG_OP='DELETE'then row_value:=to_jsonb(OLD);else row_value:=to_jsonb(NEW);end if;\n case TG_TABLE_NAME\n when 'operations'then operation_value:=(row_value->>'operation_id')::uuid;\n when 'cycles'then operation_value:=(row_value->>'start_operation_id')::uuid;\n when 'snapshots'then\n  document_value:=controlled_count_v1.saved_snapshot_document((row_value->>'snapshot_id')::uuid);\n  select c.start_operation_id into strict operation_value from controlled_count_v1.cycles c\n   where c.count_id=(row_value->>'count_id')::uuid and c.snapshot_id=(row_value->>'snapshot_id')::uuid;\n when 'statements','outcomes','cancellations','resolutions','reconciliation_preparations',\n      'reconciliation_approvals','reconciliation_executions','reconciliation_confirmations'then\n  operation_value:=(row_value->>'operation_id')::uuid;\n when 'causes'then\n  document_value:=controlled_count_v1.saved_cause_graph((row_value->>'cause_id')::uuid);\n  operation_value:=(document_value#>>'{source_result,operation_id}')::uuid;\n when 'reconciliation_execution_causes'then\n  select e.operation_id into strict operation_value from controlled_count_v1.reconciliation_executions e\n   where e.execution_id=(row_value->>'execution_id')::uuid;\n when 'open_causes'then\n  document_value:=controlled_count_v1.saved_cause_graph((row_value->>'cause_id')::uuid);\n  if document_value->'product_id'is distinct from row_value->'product_id'\n  or document_value->'site_id'is distinct from row_value->'site_id'\n  or document_value->'record_hash'is distinct from row_value->'cause_hash'then\n   raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n  product_value:=(row_value->>'product_id')::uuid;\n else raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end case;\n if TG_TABLE_NAME<>'open_causes'then\n  if operation_value is null then raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n  perform controlled_count_v1.validate_operation_graph(operation_value);\n  select o.product_id into strict product_value from controlled_count_v1.operations o where o.operation_id=operation_value;\n end if;\n -- Compare complete unresolved cause rows against the actual four-column live\n -- projection after every scoped write, including a resolution's DELETE.\n -- This callback needs the held frontier and retained complete graph, not a\n -- live count context, so final ALL IMMEDIATE after context deletion is safe.\n perform controlled_count_v1.product_live_causes(product_value);\n return null;\nend "
+        },
+        "controlled_count_v1.product_live_causes(uuid)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "3cf48d5e4ebe1651f962083bdedfda1f0c2e4405cf9b8ae50093840dd37bbbee",
+          "new_expression": "\ndeclare item record;cause_doc jsonb;resolution_doc jsonb;resolution_value uuid;\n expected_members jsonb:='[]'::jsonb;expected_causes jsonb:='[]'::jsonb;\n actual_members jsonb:='[]'::jsonb;member_value jsonb;result_value jsonb;\n total_bytes bigint;actual_bytes bigint:=2;active_count integer:=0;actual_count integer:=0;\nbegin\n perform controlled_count_entry_v1.assert_read_frontier();\n perform controlled_count_v1.product_count_history_required(p_product);\n result_value:=jsonb_build_object('schema_version',1,'domain','lrv-controlled-count-live-causes-v1',\n  'product_id',p_product,'causes',expected_causes,'membership',expected_members);\n total_bytes:=octet_length(result_value::text);\n -- History length is not capped. Only the COMPLETE currently unresolved\n -- projection has the independently declared64-member/1MiB live boundary.\n for item in select c.cause_id from controlled_count_v1.causes c\n where c.product_id=p_product or c.document->'product_id'=to_jsonb(p_product)\n order by c.cause_id loop\n  cause_doc:=controlled_count_v1.readcore_saved_cause_graph(item.cause_id);\n  if cause_doc->'product_id'is distinct from to_jsonb(p_product)then\n   raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n  resolution_value:=null;\n  select r.resolution_id into resolution_value from controlled_count_v1.resolutions r where r.cause_id=item.cause_id;\n  if resolution_value is not null then\n   resolution_doc:=controlled_count_v1.readcore_saved_result_graph('cause_resolution',resolution_value);\n   if resolution_doc#>'{body,cause_id}'is distinct from to_jsonb(item.cause_id)\n   or resolution_doc->'product_id'is distinct from to_jsonb(p_product)then\n    raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n  else\n   active_count:=active_count+1;\n   if active_count>64 then raise exception 'count_capacity_exceeded'using errcode='P0001',detail='',hint='';end if;\n   member_value:=jsonb_build_object('cause_id',cause_doc->'id','product_id',cause_doc->'product_id',\n    'site_id',cause_doc->'site_id','cause_hash',cause_doc->'record_hash');\n   total_bytes:=total_bytes+octet_length(cause_doc::text)+octet_length(member_value::text)+4;\n   if total_bytes>1048576 then raise exception 'count_capacity_exceeded'using errcode='P0001',detail='',hint='';end if;\n   expected_causes:=expected_causes||jsonb_build_array(cause_doc);\n   expected_members:=expected_members||jsonb_build_array(member_value);\n  end if;\n end loop;\n -- Compare all four actual columns, not count-only or cause-ID subset. The OR\n -- includes a wrong product projection pointing at a relevant actual cause.\n for member_value in select to_jsonb(o)from controlled_count_v1.open_causes o\n left join controlled_count_v1.causes c on c.cause_id=o.cause_id\n where o.product_id=p_product or c.product_id=p_product\n order by o.cause_id loop\n  actual_count:=actual_count+1;\n  actual_bytes:=actual_bytes+octet_length(member_value::text)+2;\n  if actual_count>64 or actual_bytes>1048576 then\n   raise exception 'count_capacity_exceeded'using errcode='P0001',detail='',hint='';end if;\n  actual_members:=actual_members||jsonb_build_array(member_value);\n end loop;\n if actual_members::text is distinct from expected_members::text then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n result_value:=jsonb_build_object('schema_version',1,'domain','lrv-controlled-count-live-causes-v1',\n  'product_id',p_product,'causes',expected_causes,'membership',expected_members);\n if octet_length(result_value::text)>1048576 then\n  raise exception 'count_capacity_exceeded'using errcode='P0001',detail='',hint='';end if;\n return result_value;\nend ",
+          "old_body_sha256": "fe79f60c6a98655f5a237361959228d4a8d94ab84b271e0d500f1df4b087c1e5",
+          "old_expression": "\ndeclare item record;cause_doc jsonb;resolution_doc jsonb;resolution_value uuid;\n expected_members jsonb:='[]'::jsonb;expected_causes jsonb:='[]'::jsonb;\n actual_members jsonb:='[]'::jsonb;member_value jsonb;result_value jsonb;\n total_bytes bigint;actual_bytes bigint:=2;active_count integer:=0;actual_count integer:=0;\nbegin\n perform controlled_count_entry_v1.assert_read_frontier();\n perform controlled_count_v1.product_count_history_required(p_product);\n result_value:=jsonb_build_object('schema_version',1,'domain','lrv-controlled-count-live-causes-v1',\n  'product_id',p_product,'causes',expected_causes,'membership',expected_members);\n total_bytes:=octet_length(result_value::text);\n -- History length is not capped. Only the COMPLETE currently unresolved\n -- projection has the independently declared64-member/1MiB live boundary.\n for item in select c.cause_id from controlled_count_v1.causes c\n where c.product_id=p_product or c.document->'product_id'=to_jsonb(p_product)\n order by c.cause_id loop\n  cause_doc:=controlled_count_v1.saved_cause_graph(item.cause_id);\n  if cause_doc->'product_id'is distinct from to_jsonb(p_product)then\n   raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n  resolution_value:=null;\n  select r.resolution_id into resolution_value from controlled_count_v1.resolutions r where r.cause_id=item.cause_id;\n  if resolution_value is not null then\n   resolution_doc:=controlled_count_v1.saved_result_graph('cause_resolution',resolution_value);\n   if resolution_doc#>'{body,cause_id}'is distinct from to_jsonb(item.cause_id)\n   or resolution_doc->'product_id'is distinct from to_jsonb(p_product)then\n    raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n  else\n   active_count:=active_count+1;\n   if active_count>64 then raise exception 'count_capacity_exceeded'using errcode='P0001',detail='',hint='';end if;\n   member_value:=jsonb_build_object('cause_id',cause_doc->'id','product_id',cause_doc->'product_id',\n    'site_id',cause_doc->'site_id','cause_hash',cause_doc->'record_hash');\n   total_bytes:=total_bytes+octet_length(cause_doc::text)+octet_length(member_value::text)+4;\n   if total_bytes>1048576 then raise exception 'count_capacity_exceeded'using errcode='P0001',detail='',hint='';end if;\n   expected_causes:=expected_causes||jsonb_build_array(cause_doc);\n   expected_members:=expected_members||jsonb_build_array(member_value);\n  end if;\n end loop;\n -- Compare all four actual columns, not count-only or cause-ID subset. The OR\n -- includes a wrong product projection pointing at a relevant actual cause.\n for member_value in select to_jsonb(o)from controlled_count_v1.open_causes o\n left join controlled_count_v1.causes c on c.cause_id=o.cause_id\n where o.product_id=p_product or c.product_id=p_product\n order by o.cause_id loop\n  actual_count:=actual_count+1;\n  actual_bytes:=actual_bytes+octet_length(member_value::text)+2;\n  if actual_count>64 or actual_bytes>1048576 then\n   raise exception 'count_capacity_exceeded'using errcode='P0001',detail='',hint='';end if;\n  actual_members:=actual_members||jsonb_build_array(member_value);\n end loop;\n if actual_members::text is distinct from expected_members::text then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n result_value:=jsonb_build_object('schema_version',1,'domain','lrv-controlled-count-live-causes-v1',\n  'product_id',p_product,'causes',expected_causes,'membership',expected_members);\n if octet_length(result_value::text)>1048576 then\n  raise exception 'count_capacity_exceeded'using errcode='P0001',detail='',hint='';end if;\n return result_value;\nend "
+        }
+      },
+      "only_two_function_body_hash_metadata_differences": true,
+      "real_Auth_verification_pending": true
+    },
+    "clinical_and_frontier_repairs": {
+      "all_deadlines_unchanged": true,
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_entry_v1.assert_shared_product_relation_frontier()": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "f5b4bda9754b2f68138725cbb3e2f69e61853e6a5754519a0948c13414c33825",
+          "new_expression": "\ndeclare seen bigint;unique_seen bigint;valid boolean;advisory_valid boolean;\nbegin\n perform controlled_count_entry_v1.shared_product_resource_origin_catalog_required();\n -- A fresh complete backend lock snapshot for THIS invocation, never a\n -- remembered certificate. Transaction locks remain held until transaction end.\n WITH held AS MATERIALIZED (\n  select l.* from pg_catalog.pg_locks l\n  where l.pid=pg_catalog.pg_backend_pid()and l.database=(select oid from pg_catalog.pg_database where datname=pg_catalog.current_database())and l.granted\n ),resolved AS MATERIALIZED (\n  select p.*,c.oid as relation_oid,c.relkind,c.relispartition\n  from controlled_count_entry_v1.shared_product_relation_plan_values()p\n  left join pg_catalog.pg_namespace n on n.nspname=p.schema_name\n  left join pg_catalog.pg_class c on c.relnamespace=n.oid and c.relname=p.relation_name\n )\n select count(*),count(distinct r.relation_oid),\n coalesce(bool_and(r.relation_oid is not null and r.relkind='r'and not r.relispartition\n  and exists(select 1 from held l where l.locktype='relation'and l.relation=r.relation_oid and l.mode=r.held_mode)),false),\n exists(select 1 from held l where l.locktype='advisory'and l.classid=90271040::oid and l.objid=0::oid and l.objsubid=2 and l.mode='ShareLock')\n into seen,unique_seen,valid,advisory_valid from resolved r;\n if seen<>121 or unique_seen<>121 or valid is not true or advisory_valid is not true then\n  raise exception 'count_frontier_invalid'using errcode='P0001',detail='',hint='';end if;\nend ",
+          "old_body_sha256": "c92a8bc4a94491c26b1aab2a2a759b4ed9415feaaf732beb471c719c94a73544",
+          "old_expression": "\ndeclare r record;seen integer:=0;\nbegin\n perform controlled_count_entry_v1.shared_product_resource_origin_catalog_required();\n if not exists(select 1 from pg_catalog.pg_locks l where l.locktype='advisory'\n and l.pid=pg_catalog.pg_backend_pid()and l.database=(select oid from pg_catalog.pg_database where datname=pg_catalog.current_database())\n and l.classid=90271040::oid and l.objid=0::oid and l.objsubid=2\n and l.mode='ShareLock'and l.granted)then\n  raise exception 'count_frontier_invalid'using errcode='P0001',detail='',hint='';end if;\n for r in select p.*,c.oid as relation_oid,c.relkind,c.relispartition\n from controlled_count_entry_v1.shared_product_relation_plan_values()p\n left join pg_catalog.pg_namespace n on n.nspname=p.schema_name\n left join pg_catalog.pg_class c on c.relnamespace=n.oid and c.relname=p.relation_name loop\n  seen:=seen+1;\n  if r.relation_oid is null or r.relkind<>'r'or r.relispartition\n  or not exists(select 1 from pg_catalog.pg_locks l where l.locktype='relation'\n   and l.pid=pg_catalog.pg_backend_pid()and l.database=(select oid from pg_catalog.pg_database where datname=pg_catalog.current_database())\n   and l.relation=r.relation_oid and l.mode=r.held_mode and l.granted)then\n   raise exception 'count_frontier_invalid'using errcode='P0001',detail='',hint='';end if;\n end loop;\n if seen<>121 then raise exception 'count_frontier_invalid'using errcode='P0001',detail='',hint='';end if;\nend "
+        },
+        "controlled_count_entry_v1.parent_impl_record_anesthesia_drug_administration(uuid,uuid,uuid,jsonb)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "bf69ca74958cde50ce77619eb0e084c437d3d5d622849fc3643e29b08c4c7ce3",
+          "new_expression": "perform controlled_count_entry_v1.before_canonical_writer('record_anesthesia_drug_administration',p_id);",
+          "old_body_sha256": "ad1f76d9c31c36e62e7e41ba18f256867560cf48dce158f9afcbe158fcca054d",
+          "old_expression": "perform controlled_count_entry_v1.before_canonical_writer('record_patient_treatment',p_id);"
+        }
+      },
+      "only_two_function_body_hash_metadata_differences": true,
+      "real_Auth_verification_pending": true
+    },
+    "common_original_parent_seals": {
+      "digest_inverse": {
+        "1411567762a09f129c480fd2fdd04a96485a05d2f9b26a17148ca49c0b0cc3eb": "f9d2a7b449fe08797e32109a9bf598709f1d3312f81ae3f94b6be24a4db73130",
+        "71872638e154bdb62537887205a8db4944732eeb29625aa615f1c8a8021cd508": "a6f454b7dd1d2043f4e62e9be7dfe62f6f19ecd151545667f04c2718c78816f7",
+        "c4f35d013a7f1d4154848f41f068cc0bb068d7c894646b284811fbfd6d1fa38f": "4c917a27f657bc414cad6166797c3c4e67b0243563cf7b935d779f4b766c2287"
+      },
+      "literal_occurrences": {
+        "1411567762a09f129c480fd2fdd04a96485a05d2f9b26a17148ca49c0b0cc3eb": 9,
+        "71872638e154bdb62537887205a8db4944732eeb29625aa615f1c8a8021cd508": 9,
+        "c4f35d013a7f1d4154848f41f068cc0bb068d7c894646b284811fbfd6d1fa38f": 9
+      },
+      "no_current269_function_body_changed": true,
+      "reason": "The common269 forward migration preserves existing original205/206 parents. Three native-patch digests belonged to the experimental typed parent; those implementation changes must be installed explicitly later, while historical rows stay unchanged.",
+      "source_original206_wrapper_sha256": "adf45e10d25935486aadbc126c6b8282d38def119dc344bfe4935bb690d4b036"
+    },
+    "complete_reference_schema": {
+      "FK_registration_metadata_preserves_all_fields_with_identical_projected_identity_order_and_schema_groups": true,
+      "all_current_context_projections_use_source_created12_column_reference": true,
+      "complete_expected_metadata_from_independent_empty_source_references": true,
+      "historical_FK_RESTRICT_chronology_from": "20260930120000_linkage_integrity.sql",
+      "observed_target_properties_used_as_expectations": false,
+      "original_SQL_syntax_retained": [
+        "TRIM",
+        "AT TIME ZONE"
+      ],
+      "same_pretty_deparser_for_publication_checks": true,
+      "seven_search_paths_emit_three_actual_identifiers": true
+    },
+    "deferred_staff_grants": {
+      "authenticated_execute_granted_only_after_full_source_property_check": true,
+      "final_function_metadata_and_grants_unchanged": true,
+      "pregrant_common_snapshot_projects_the_same_phase": true,
+      "public_API_count": 48
+    },
+    "dual_inventory_immutable_result_reuse": {
+      "all_deadlines_unchanged": true,
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_v1.product_count_history_required(uuid)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "55ec2c3b165253179871a6194c2c374d745e778920749182d152d3fb16faa8ce",
+          "new_expression": "  -- The first loop fully validates every selected immutable registry root.\n  -- Keep this independent result inventory so orphan/misbound rows cannot hide.\n  document_value:=(controlled_count_v1.readcore_saved_result_row(item.kind,item.id))->'document';\n  if not exists(select 1 from controlled_count_v1.operations o\n   where to_jsonb(o.operation_id)=document_value->'operation_id'\n   and o.result_kind=item.kind and o.result_id=item.id\n   and(o.product_id=p_product or o.document->'product_id'=to_jsonb(p_product)))then\n   document_value:=controlled_count_v1.readcore_saved_result_graph(item.kind,item.id);\n  end if;",
+          "old_body_sha256": "c47e5d7b90d1a8e7dc37ef647396f894117a00d99988d899e38ec9625c7ffdcf",
+          "old_expression": "  document_value:=controlled_count_v1.readcore_saved_result_graph(item.kind,item.id);"
+        }
+      },
+      "only_one_function_body_hash_metadata_difference": true,
+      "real_Auth_verification_pending": true
+    },
+    "explicit_native_forward_changes": {
+      "all_original_parent_descriptors_preserved": true,
+      "current_native_fix_metadata_unchanged": true,
+      "functions": [
+        "public.preview_native_pickup(uuid,uuid,jsonb)",
+        "public.controlled_stock_opening_pickup(uuid)",
+        "public.controlled_stock_opening_native_entry_for_product(uuid,text,uuid,integer,integer,integer,uuid)"
+      ],
+      "no_observed_target_expected_values": true,
+      "prior_implementations_verified_from_frozen_prefix_source": true
+    },
+    "explicit_public_return_types": {
+      "function_bodies_and_full_expected_metadata_unchanged": true,
+      "functions": [
+        "controlled_count_entry_v1.local_parent_adjust_inventory_impl",
+        "controlled_count_entry_v1.local_parent_adjust_inventory",
+        "public.receive_inventory",
+        "public.adjust_inventory",
+        "public.record_patient_treatment",
+        "public.record_anesthesia_drug_administration"
+      ],
+      "only_composite_return_type_schema_qualified": true
+    },
+    "finishing_immutable_result_reuse": {
+      "all_deadlines_unchanged": true,
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "5bc404e90e44dce98eb5d4c0ea4b3d0a75c144d1d79039a3feb537f24cb62a74",
+          "new_expression": "  -- The unchanged validator above has just checked this complete immutable\n  -- result, registry, children, cause and closure under the same held frontier.\n  result_value:=(controlled_count_v1.saved_result_row(operation_value->>'result_kind',(operation_value->>'result_id')::uuid))->'document';",
+          "old_body_sha256": "9bd42d96ef104f7569538879ba14abc494f5aa0e8ac422cf5257b0758cd726ed",
+          "old_expression": "  result_value:=controlled_count_v1.saved_result_graph(operation_value->>'result_kind',(operation_value->>'result_id')::uuid);"
+        }
+      },
+      "only_one_function_body_hash_metadata_difference": true,
+      "real_Auth_verification_pending": true
+    },
+    "historical_transport_receipts": {
+      "actual_hosted_history_rehearsal_pending": true,
+      "changed_gate_count": 410,
+      "historical_rows_rewritten": false,
+      "hosted206_source_framing_sha256": "7bffc4cb145172e10bb65bebdddf2c416bdfa981f6ada69a2e233df9c2e5a9a6",
+      "kind": "forward-source-receipt-variant-v1",
+      "observed_database_values_used_as_expected": false,
+      "original_canonical_json_literals_preserved": true,
+      "original_non_gate_bytes_recovered_exactly": true,
+      "original_source_sha256": "0f1330e8b9bb77043e5ed878492b6d2dfa35e2ca5c288fb6ca92df72476b92af",
+      "variant_source_bytes": 36787822,
+      "variant_source_sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
+    },
+    "immutable_parent_manifest": {
+      "actual_real_Auth_verification_pending": true,
+      "complete_source_inverse": true,
+      "existing_manifest_row_rewritten": false,
+      "new_body_sha256": "539dbdfa642392cbd630b7e850bff27a5158ca68197d752c5c83a4e01ab7a4ca",
+      "old_body_sha256": "53184b6e02fb30e9226c0c2859cc43a8446e0c87b917520441549fa9e3c567e8",
+      "only_three_experimental_historical_hashes_restored": true,
+      "signature": "controlled_count_entry_v1.local_parent_engine_required_impl()",
+      "source_original206_wrapper_sha256": "adf45e10d25935486aadbc126c6b8282d38def119dc344bfe4935bb690d4b036",
+      "typed_preview_check_and_all_other_branches_unchanged": true
+    },
+    "immutable_review_manifests": {
+      "actual_real_Auth_verification_pending": true,
+      "all_other_branches_unchanged": true,
+      "complete_current_source_projections": [
+        {
+          "new_source_sha256": "389ed8487c2de0bc0a357c6f7c06711bc6712dc23af895d726bab0e439199ce4",
+          "old_source_sha256": "f5a42b2beb58dc694ba59b422ee15214aecf341768ee5816de9c4c06eb4708d4",
+          "path": [
+            "private206",
+            "functions",
+            "controlled_review.required()",
+            "source"
+          ]
+        },
+        {
+          "new_source_sha256": "a1e293b0f2b13c1461b1db1da0188f767ec7ea9246c828a9001b76072151134c",
+          "old_source_sha256": "804e94c295542d9aa94b0200535734416a49a8a8fab299966ec0b2d626bd167c",
+          "path": [
+            "original269",
+            "functions",
+            "controlled_review_v3.required()",
+            "source"
+          ]
+        },
+        {
+          "new_source_sha256": "389ed8487c2de0bc0a357c6f7c06711bc6712dc23af895d726bab0e439199ce4",
+          "old_source_sha256": "f5a42b2beb58dc694ba59b422ee15214aecf341768ee5816de9c4c06eb4708d4",
+          "path": [
+            "original269",
+            "parents",
+            "private206",
+            "functions",
+            "controlled_review.required()",
+            "source"
+          ]
+        }
+      ],
+      "complete_source_inverse": true,
+      "existing_descriptor_rows_rewritten": false,
+      "functions": {
+        "controlled_review.required()": {
+          "new_body_sha256": "389ed8487c2de0bc0a357c6f7c06711bc6712dc23af895d726bab0e439199ce4",
+          "old_body_sha256": "f5a42b2beb58dc694ba59b422ee15214aecf341768ee5816de9c4c06eb4708d4"
+        },
+        "controlled_review_v3.required()": {
+          "new_body_sha256": "a1e293b0f2b13c1461b1db1da0188f767ec7ea9246c828a9001b76072151134c",
+          "old_body_sha256": "804e94c295542d9aa94b0200535734416a49a8a8fab299966ec0b2d626bd167c"
+        }
+      },
+      "only_three_original_parent_hash_fields_restored": true
+    },
+    "operation_graph_root_read_cut": {
+      "all_deadlines_unchanged": true,
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_v1.validate_operation_graph_v3(uuid)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "40550fdcdd300ce7960987ccb05a4597c74388bf231dcd14bc421c5b0e195fbf",
+          "new_expression": "d:=controlled_count_v1.readcore_saved_result_graph(g->>'result_kind',(g->>'result_id')::uuid);",
+          "old_body_sha256": "63e77bbd0f4bd8e6bc6c9aaef3cafa428ed0322adbf2ef8c698b7259d6d4e9a4",
+          "old_expression": "d:=controlled_count_v1.saved_result_graph(g->>'result_kind',(g->>'result_id')::uuid);"
+        }
+      },
+      "only_one_function_body_hash_metadata_difference": true,
+      "real_Auth_verification_pending": true
+    },
+    "pending_product_validation": {
+      "all_deadlines_unchanged": true,
+      "body_inverses": {
+        "controlled_count_entry_v1.acquire_shared_product_relation_frontier()": {
+          "new_body_sha256": "0d5f099d099deecd8bd10ecb947891b4d7aed4839db9d0964d598b367d1aa230",
+          "original_body_sha256": "f7dc07be59d3c6773099fa3531e3d662b558a69f9472bcf2111c1e3293529133",
+          "replacements": [
+            [
+              "if seen<>121 then",
+              "if seen<>122 then"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.acquire_stock_workflow_relation_frontier()": {
+          "new_body_sha256": "6d9bf6cc0f4ed784de029c51e622e7417d670231827a3a84e7a177c5480c6a5c",
+          "original_body_sha256": "44f8602b18bbaf2e3aa7dd8f608da03e23bee4e24adc857ecd7027b2667e6a6e",
+          "replacements": [
+            [
+              "if seen<>121 then",
+              "if seen<>122 then"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.assert_count_subset_of_complete_product_kernel()": {
+          "new_body_sha256": "ab62229434ccdf0560b6bf8b54061eb04fc8a5ae256737795c882638eb24a01d",
+          "original_body_sha256": "45a6608196e2a9c9dcdc05d6c75742a2fb811fdddc6dbdc0ef635fda0581c43c",
+          "replacements": [
+            [
+              "())<>110",
+              "())<>111"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.assert_shared_product_relation_frontier()": {
+          "new_body_sha256": "2f79ef048c98fcc6922a6984bf469ac69b16a34cee686976036b2595d4854a55",
+          "original_body_sha256": "e7a71c22b6f43b7a7aee796ebfeb64052918fa03dbf6bc3d3e8270c59016cf3b",
+          "replacements": [
+            [
+              "if seen<>121 or unique_seen<>121",
+              "if seen<>122 or unique_seen<>122"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.assert_static_relation_frontier()": {
+          "new_body_sha256": "a65ea52521e050a3f0f0cbf2d752c2f08133d73355fa0e64bcaf4426c785febc",
+          "original_body_sha256": "f95e4ec3536a42a0672489a1d1f6fafb0901618d6202b3b100644286cbf5156f",
+          "replacements": [
+            [
+              "if seen<>110 then",
+              "if seen<>111 then"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.assert_stock_workflow_relation_frontier()": {
+          "new_body_sha256": "72b8248dd6e2a1b47913201d37484cf84dbd50e5160bbf58ed6ee6c17fc043b4",
+          "original_body_sha256": "bd2a94ef8522a03f7033700517cd5f89a7d2bf9084670b1ff9ef7f6816f4dde9",
+          "replacements": [
+            [
+              "if seen<>121 then",
+              "if seen<>122 then"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.begin_count_context(jsonb)": {
+          "new_body_sha256": "d22ce96aeeee1ead41b7313289a91f4cec036a25cf99d5fd5b8e7ac1cc68e502",
+          "original_body_sha256": "070f5e63e32603687bab234928ad2bf775be918bbfd0f5a4dc48678df8662a31",
+          "replacements": [
+            [
+              " perform controlled_count_entry_v1.scope_values(p_scope);",
+              " SET CONSTRAINTS controlled_count_v1.pending_product_consistency DEFERRED;\n perform controlled_count_entry_v1.scope_values(p_scope);"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.finish_count_context()": {
+          "new_body_sha256": "9a308a0944cce5bcc7b562255d1368bd13e6cf48d32a448b366276bd2be3b7a6",
+          "original_body_sha256": "43fcb59f869a91739de79b876c95613d5a16b11bfe4efe2bb89e3de180f5b13a",
+          "replacements": [
+            [
+              " -- The BEFORE UPDATE source guard validates the complete immutable operation\n -- and result/cause/membership graph BEFORE this phase can become finishing.",
+              " -- The BEFORE UPDATE source guard retains current authority and exact\n -- operation/result bindings. Mandatory forcing below checks the COMPLETE\n -- graph, saved closures and live membership BEFORE context deletion."
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.force_count_structural_checks()": {
+          "new_body_sha256": "daa6d2e73eb9a0023fdf8fd402e64372d358575893fd832cb27c3c2f550df22b",
+          "original_body_sha256": "b4ad5f3d110def83dbcbc5b2613550cd8449fe94a5a09d76286fb2fe4ca9564e",
+          "replacements": [
+            [
+              "controlled_count_v1.count_graph_consistency immediate;",
+              "controlled_count_v1.count_graph_consistency,controlled_count_v1.pending_product_consistency immediate;"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.resource_origin_catalog_required()": {
+          "new_body_sha256": "9baf3a630be019ac27f7eb91e6515a47444ab74fbc227bd96bbf033b38dd9cef",
+          "original_body_sha256": "551dc6289a4fa4ac51e7e364d1827f796780b89393906f4d33eabfd96fac9569",
+          "replacements": [
+            [
+              "1551a3b7336ad185560a2e26437aedf978fd120d69b38ed3cd71b0d11dd80016",
+              "2a02f6e45d8583e60b14110c1a0a3e09d10673066e740017d6ccdbdc982a0bc2"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.shared_product_relation_plan_values()": {
+          "new_body_sha256": "4786ed9a88b669041000e5734d987efb791c3da0f9fcca40d4082da06c5930bf",
+          "original_body_sha256": "ceae957e4a7d29bcb2b120933816c4789b69529010a1e3654772131cd63185ed",
+          "replacements": [
+            [
+              "('controlled_count_v1', 'policies', 6, 'ShareRowExclusiveLock', 'SHARE ROW EXCLUSIVE'), ",
+              "('controlled_count_v1', 'pending_products', 6, 'ShareRowExclusiveLock', 'SHARE ROW EXCLUSIVE'), ('controlled_count_v1', 'policies', 6, 'ShareRowExclusiveLock', 'SHARE ROW EXCLUSIVE'), "
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.shared_product_resource_origin_catalog_required()": {
+          "new_body_sha256": "d209cfbc57f60050f91a093d9613a06b012012636e22302a9ef66d16f24f17f4",
+          "original_body_sha256": "61df99601271695831d732b0ff8ce0331af33bf31ab44cd926de8ff0b485a59e",
+          "replacements": [
+            [
+              "ceae957e4a7d29bcb2b120933816c4789b69529010a1e3654772131cd63185ed",
+              "4786ed9a88b669041000e5734d987efb791c3da0f9fcca40d4082da06c5930bf"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.static_relation_plan_values()": {
+          "new_body_sha256": "2a02f6e45d8583e60b14110c1a0a3e09d10673066e740017d6ccdbdc982a0bc2",
+          "original_body_sha256": "1551a3b7336ad185560a2e26437aedf978fd120d69b38ed3cd71b0d11dd80016",
+          "replacements": [
+            [
+              " ('controlled_count_v1','policies',6,'ShareRowExclusiveLock','SHARE ROW EXCLUSIVE'),\n",
+              " ('controlled_count_v1','pending_products',6,'ShareRowExclusiveLock','SHARE ROW EXCLUSIVE'),\n ('controlled_count_v1','policies',6,'ShareRowExclusiveLock','SHARE ROW EXCLUSIVE'),\n"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.stock_workflow_relation_plan_values()": {
+          "new_body_sha256": "4786ed9a88b669041000e5734d987efb791c3da0f9fcca40d4082da06c5930bf",
+          "original_body_sha256": "ceae957e4a7d29bcb2b120933816c4789b69529010a1e3654772131cd63185ed",
+          "replacements": [
+            [
+              "('controlled_count_v1', 'policies', 6, 'ShareRowExclusiveLock', 'SHARE ROW EXCLUSIVE'), ",
+              "('controlled_count_v1', 'pending_products', 6, 'ShareRowExclusiveLock', 'SHARE ROW EXCLUSIVE'), ('controlled_count_v1', 'policies', 6, 'ShareRowExclusiveLock', 'SHARE ROW EXCLUSIVE'), "
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.stock_workflow_resource_origin_catalog_required()": {
+          "new_body_sha256": "18ece20e20f4cd875d80d23d3c0819b29eb6be0ce7649378eda7102c8caf56af",
+          "original_body_sha256": "2aaac3213d518d0f26953774ec21a380694508e9cafaf0a2970fb3928226029d",
+          "replacements": [
+            [
+              "ceae957e4a7d29bcb2b120933816c4789b69529010a1e3654772131cd63185ed",
+              "4786ed9a88b669041000e5734d987efb791c3da0f9fcca40d4082da06c5930bf"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_v1.count_graph_deferred()": {
+          "new_body_sha256": "05ab7ad0e34b4ac1334131ee6d0e93ed1b79aa6e211b25d9505bdb4217aa8e90",
+          "original_body_sha256": "87ce16a92b294c14333d2a0ffae9f23fa2498bd200d44618108a94028e6972fe",
+          "replacements": [
+            [
+              " -- Compare complete unresolved cause rows against the actual four-column live\n -- projection after every scoped write, including a resolution's DELETE.\n -- This callback needs the held frontier and retained complete graph, not a\n -- live count context, so final ALL IMMEDIATE after context deletion is safe.\n perform controlled_count_v1.product_live_causes(product_value);\n",
+              " -- Every admitted fact mutation immediately collects mandatory product work.\n -- Its guarded deletion unconditionally checks the complete CURRENT product\n -- before structural forcing can finish. Row-specific checks above remain.\n"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_v1.dispatch_count_management_mutation(text,jsonb)": {
+          "new_body_sha256": "d0062eeca6bb6a779f9c480dcb7d64f66e7ddce200b9dd69814884ca4b395602",
+          "original_body_sha256": "3b0d05122719f55abc0959a369b8fc0cdd7324d23d7dc04a280b33de0aadd6c3",
+          "replacements": [
+            [
+              " perform controlled_count_entry_v1.acquire_static_relation_frontier();\n -- Exactly one whole metadata check, after real held frontier and before user/current-principal/saved reads.\n perform controlled_count_entry_v1.assert_read_frontier();\n perform controlled_count_entry_v1.require_bound_module();",
+              " perform controlled_count_entry_v1.acquire_static_relation_frontier();\n -- The sealed recovery post-check just checked full metadata when209 exists.\n -- Its admission lock also excludes concurrent supported209 installation.\n perform controlled_count_entry_v1.assert_read_frontier();\n IF NOT EXISTS(SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname='narcotics_recovery_v1')THEN\n perform controlled_count_entry_v1.require_bound_module();END IF;"
+            ],
+            [
+              " perform controlled_count_v1.validate_operation_graph((q->>'operation_id')::uuid);",
+              " -- Store and its unchanged BEFORE INSERT guard both fully checked v3.\n -- Check the newly stored closure now; final product forcing checks ALL graphs.\n perform controlled_count_v1.operation_closure_required((q->>'operation_id')::uuid);\n perform controlled_count_entry_v1.assert_read_frontier();"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)": {
+          "new_body_sha256": "c4deeb3d2ee50cb04c5ea523d848ce1550bda262f1932462c8c66af15bc5b614",
+          "original_body_sha256": "5bc404e90e44dce98eb5d4c0ea4b3d0a75c144d1d79039a3feb537f24cb62a74",
+          "replacements": [
+            [
+              "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'before');\n",
+              "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'before');return;\n"
+            ],
+            [
+              "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'after');\n",
+              "\n   perform controlled_count_v1.reconciliation_parent_source_required(scope_value,'after');return;\n"
+            ],
+            [
+              "  perform controlled_count_v1.validate_operation_graph((scope_value->>'outer_operation_id')::uuid);\n",
+              "  -- The mandatory guarded product flush checks this complete graph.\n"
+            ],
+            [
+              "  -- The unchanged validator above has just checked this complete immutable\n  -- result, registry, children, cause and closure under the same held frontier.",
+              "  -- Retain the actual result and every context/operation/scope binding.\n  -- Complete graph/closure validation is mandatory before context deletion."
+            ],
+            [
+              " perform controlled_count_v1.product_live_causes((scope_value->>'product_id')::uuid);\nend ",
+              " -- Closing retains every operation/context/result/principal check above.\n -- Actual fact collectors require a full guarded product check before finish.\n IF p_operation IS DISTINCT FROM 'DELETE' AND new_phase IS DISTINCT FROM 'count_finishing' THEN\n perform controlled_count_v1.product_live_causes((scope_value->>'product_id')::uuid);\n END IF;\nend "
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_v1.history_scan_policy_values(jsonb,jsonb)": {
+          "new_body_sha256": "5cba57c6b5ae585aa48910b67528df199b866287d9e96dfaef50087f7ba89ea9",
+          "original_body_sha256": "522068bfce948fbec1d5900e297c9f64e0d3ed849ecc979d0eb57d04d536196d",
+          "replacements": [
+            [
+              " if exists(\n  select 1 from controlled_count_v1.policies policy_row\n  where policy_row.policy_id::text=p_document->>'policy_id'\n   and(p_validated_documents->('policy_values:'||policy_row.policy_id::text))::text is not distinct from policy_row.document::text\n   and policy_row.document::text is not distinct from p_document::text\n   and p_document->'policy_id'=to_jsonb(policy_row.policy_id)\n   and p_document->'product_id'=to_jsonb(policy_row.product_id)and p_document->'site_id'=to_jsonb(policy_row.site_id)\n   and p_document->>'record_hash'=policy_row.record_hash\n   and controlled_count_v1.document_hash(p_document)=policy_row.record_hash\n  union all\n",
+              " -- Reuse PURE grammar only for this exact already validated input.\n -- All five closed constructors validate ORIGINAL policy_values before seeding.\n IF jsonb_typeof(p_document)='object'\n AND controlled_count_v1.count_wire_uuid(p_document->'policy_id')IS TRUE\n AND p_validated_documents ? ('policy_values:'||(p_document->>'policy_id'))\n AND(p_validated_documents->('policy_values:'||(p_document->>'policy_id')))::text IS NOT DISTINCT FROM p_document::text\n THEN RETURN p_document;END IF;\n IF p_validated_documents IS NOT NULL THEN\n if exists(\n"
+            ],
+            [
+              " )then return p_document;end if;\n",
+              " )then return p_document;end if;\n END IF;\n"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_v1.operation_closure_deferred()": {
+          "new_body_sha256": "e50370b4fab1f3733a5c499d9ebee0b768394f988b19e424774776e62ded34cd",
+          "original_body_sha256": "61ed5748d31678555ca6d93c7844fd8f4372b57cc9660b66466ea9d5b680317c",
+          "replacements": [
+            [
+              " if c->>'state'='saved'then perform controlled_count_v1.validate_operation_graph_v3(NEW.operation_id);\n perform controlled_count_entry_v1.assert_read_frontier();end if;",
+              " -- The unconditional pending-product guard checks every saved graph.\n if c->>'state'='saved'then perform controlled_count_entry_v1.assert_read_frontier();end if;"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_count_v1.reconciliation_parent_source_required(jsonb,text)": {
+          "new_body_sha256": "a8bf9fca62edcf7f73b891e29fc17d81274bafe89d9d3542fc538cbd9d59fac9",
+          "original_body_sha256": "0b6cc89f3ee5129087ef9421ee98acd2d2e087fcf596689451f217fc53b993a2",
+          "replacements": [
+            [
+              " prep:=controlled_count_v1.saved_result_graph('reconciliation_preparation',(p_scope#>>'{parent_exception,preparation_id}')::uuid);\n approval:=controlled_count_v1.saved_result_graph('reconciliation_approval',(p_scope#>>'{parent_exception,approval_id}')::uuid);",
+              " -- A completed approval graph fully validates its exact preparation.\n approval:=controlled_count_v1.saved_result_graph('reconciliation_approval',(p_scope#>>'{parent_exception,approval_id}')::uuid);\n prep:=(controlled_count_v1.saved_result_row('reconciliation_preparation',(p_scope#>>'{parent_exception,preparation_id}')::uuid))->'document';\n IF prep->'id'IS DISTINCT FROM p_scope#>'{parent_exception,preparation_id}'\n OR approval#>'{body,preparation_id}'IS DISTINCT FROM prep->'id'THEN\n  prep:=controlled_count_v1.saved_result_graph('reconciliation_preparation',(p_scope#>>'{parent_exception,preparation_id}')::uuid);\n END IF;"
+            ],
+            [
+              " live_value:=controlled_count_v1.product_live_causes(product_value);",
+              " live_value:=controlled_count_v1.reconciliation_live_causes(p_scope);"
+            ]
+          ],
+          "whole_body_inverse": true
+        },
+        "controlled_stock_workflow_v1.witness_121_required()": {
+          "new_body_sha256": "a06e98e4fb7259a94b3f7e6795ced6a1d874192254f417969fc393b1ccae3173",
+          "original_body_sha256": "9a11760e0a146dda3b3ff7b74e871bf70fbe1889c3d8eed108775cff9e596ec3",
+          "replacements": [
+            [
+              "())<>121",
+              "())<>122"
+            ]
+          ],
+          "whole_body_inverse": true
+        }
+      },
+      "changed_existing_body_hashes": [
+        "controlled_count_entry_v1.acquire_shared_product_relation_frontier()",
+        "controlled_count_entry_v1.acquire_stock_workflow_relation_frontier()",
+        "controlled_count_entry_v1.assert_count_subset_of_complete_product_kernel()",
+        "controlled_count_entry_v1.assert_shared_product_relation_frontier()",
+        "controlled_count_entry_v1.assert_static_relation_frontier()",
+        "controlled_count_entry_v1.assert_stock_workflow_relation_frontier()",
+        "controlled_count_entry_v1.begin_count_context(jsonb)",
+        "controlled_count_entry_v1.finish_count_context()",
+        "controlled_count_entry_v1.force_count_structural_checks()",
+        "controlled_count_entry_v1.require_bound_module()",
+        "controlled_count_entry_v1.resource_origin_catalog_required()",
+        "controlled_count_entry_v1.shared_product_relation_plan_values()",
+        "controlled_count_entry_v1.shared_product_resource_origin_catalog_required()",
+        "controlled_count_entry_v1.static_relation_plan_values()",
+        "controlled_count_entry_v1.stock_workflow_relation_plan_values()",
+        "controlled_count_entry_v1.stock_workflow_resource_origin_catalog_required()",
+        "controlled_count_v1.count_graph_deferred()",
+        "controlled_count_v1.dispatch_count_management_mutation(text,jsonb)",
+        "controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)",
+        "controlled_count_v1.history_scan_policy_values(jsonb,jsonb)",
+        "controlled_count_v1.operation_closure_deferred()",
+        "controlled_count_v1.reconciliation_parent_source_required(jsonb,text)",
+        "controlled_stock_workflow_v1.witness_121_required()"
+      ],
+      "compiler_inverse_all_seven_artifacts_exact": true,
+      "complete_CLI_publication_inverse": true,
+      "context_scan_schedule": {
+        "both_original_pre_publication_v3_checks_retained": true,
+        "closing_graph_checks_assigned_to_mandatory_product_flush": true,
+        "closing_product_scan_required_by_guarded_pending_delete": true,
+        "dispatcher_post_store_checks_new_closure_and_fresh_frontier": true,
+        "only_immediately_dominated_outer_parent_scans_removed": true,
+        "original_operation_context_result_principal_bindings_unchanged": true,
+        "parent_history_replay_dominated_by_unchanged_initial_context_scans": true,
+        "parent_preparation_reuse": {
+          "actual_preparation_row_reread": true,
+          "all_current_principal_policy_clock_and_product_checks_unchanged": true,
+          "exact_scope_and_approval_child_id_binding": true,
+          "full_approval_graph_retained": true,
+          "mismatch_keeps_original_full_preparation_graph": true
+        },
+        "parent_source_function": "controlled_count_v1.reconciliation_parent_source_required(jsonb,text)",
+        "parent_stages_keep_complete_fresh_live_projection": true,
+        "policy_publication_and_abandoned_closure_lanes_unchanged": true,
+        "predecessor_readonly_closure_sha256": "2c765dae3922ca5032ed4e046d0aad7e1f813f6c0137f0a4d7dfe03913390ccc",
+        "reviewed_parent_body_sha256": "0b6cc89f3ee5129087ef9421ee98acd2d2e087fcf596689451f217fc53b993a2",
+        "saved_closure_deferred_graph_assigned_to_mandatory_product_flush": true,
+        "source_function": "controlled_count_v1.entry_context_source_required(text,jsonb,jsonb)"
+      },
+      "current_artifacts": {
+        "capture.sql": {
+          "bytes": 109138,
+          "sha256": "570c9fdda63d6e4eb0e101c68f094120de44834932bb1151de94b6b416cd9b37"
+        },
+        "declared-footprint.json": {
+          "bytes": 142567,
+          "sha256": "f24c9324b4d86e82bdcd5e594cb73af05c0fa7604d361a17ef06dff86aeb4d11"
+        },
+        "expected-module.json": {
+          "bytes": 12384542,
+          "sha256": "8e7da988a6dc73bec764e8e7f5c9d333aeeb497647772e6ec67133987f94fe06"
+        },
+        "install.sql": {
+          "bytes": 61934074,
+          "sha256": "25e8bf3c5af38490d448dc1baede6626a1f0aee0000a686a674469e9316c0b48"
+        },
+        "postcheck.sql": {
+          "bytes": 31296921,
+          "sha256": "acb80e7c491bc24c4bdf5f935798c3d82f13f9c6d11737607d32dd5e17a4f569"
+        },
+        "preflight.sql": {
+          "bytes": 2551471,
+          "sha256": "64a65319c50d727ad51af25f2a4c0ee3083e6710be0b8ce5f26e09bd506eb074"
+        },
+        "source-expected.sql": {
+          "bytes": 9164486,
+          "sha256": "b517ab6917a799934ca64d077b556b18775a87eae69d39a7e391739c9230607f"
+        }
+      },
+      "fact_tables": [
+        "operations",
+        "cycles",
+        "snapshots",
+        "statements",
+        "outcomes",
+        "cancellations",
+        "causes",
+        "open_causes",
+        "resolutions",
+        "reconciliation_preparations",
+        "reconciliation_approvals",
+        "reconciliation_executions",
+        "reconciliation_confirmations",
+        "reconciliation_execution_causes"
+      ],
+      "final_global_validation": "unconditional pending BEFORE DELETE guard",
+      "immediate_metadata_dominance": {
+        "admission_lock_excludes_supported209_installation": true,
+        "all_session_epoch_and_history_checks_retained": true,
+        "both_acquisition_exits_checked": true,
+        "dispatcher": "controlled_count_v1.dispatch_count_management_mutation(text,jsonb)",
+        "full_check_body_sha256": "b7d67fa189a48ca9cffc12b044e134a73feb0cfa4958374d86098b08c642b2f3",
+        "no_intervening_domain_or_identity_reads": true,
+        "present_branch_full_check": "controlled_count_entry_v1.recovery_post_frontier_required()",
+        "standalone208_check_retained": true
+      },
+      "new_private_functions": [
+        "controlled_count_v1.collect_pending_product()",
+        "controlled_count_v1.flush_pending_product()",
+        "controlled_count_v1.pending_product_delete_guard()",
+        "controlled_count_v1.pending_product_write_guard()",
+        "controlled_count_v1.pending_scope_required()",
+        "controlled_count_v1.reconciliation_live_causes(jsonb)"
+      ],
+      "new_trigger_identities": [
+        [
+          "controlled_count_v1.cancellations",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.causes",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.cycles",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.open_causes",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.operations",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.outcomes",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.pending_products",
+          "pending_product_consistency"
+        ],
+        [
+          "controlled_count_v1.pending_products",
+          "pending_product_insert_update"
+        ],
+        [
+          "controlled_count_v1.pending_products",
+          "pending_product_no_truncate"
+        ],
+        [
+          "controlled_count_v1.pending_products",
+          "pending_product_validate_delete"
+        ],
+        [
+          "controlled_count_v1.reconciliation_approvals",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.reconciliation_confirmations",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.reconciliation_execution_causes",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.reconciliation_executions",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.reconciliation_preparations",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.resolutions",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.snapshots",
+          "count_pending_product"
+        ],
+        [
+          "controlled_count_v1.statements",
+          "count_pending_product"
+        ]
+      ],
+      "no_validity_certificate": true,
+      "original_authorization_row_guards_and_full_product_validator_unchanged": true,
+      "parent_history_projection": {
+        "derivation": {
+          "actual_context_scope_phase_and_fresh_header_required": true,
+          "all_original_live_projection_checks_and_caps_retained": true,
+          "derived": "controlled_count_v1.reconciliation_live_causes(jsonb)",
+          "derived_body_sha256": "0a8cb492483fa07a440e56b98605ab4338b11f1861ae40ad0de84a7e0ce0096b",
+          "existing_outer_operation_and_closure_refused": true,
+          "only_full_history_replay_removed": true,
+          "original": "controlled_count_v1.product_live_causes(uuid)",
+          "original_body_sha256": "bb8d66fc31b05867eca41f91d04cbb304c4cf5d5c3f55d514718bb24e4c5baf0",
+          "original_full_helper_unchanged": true,
+          "replacements": [
+            [
+              "declare item record;cause_doc jsonb;resolution_doc jsonb;resolution_value uuid;",
+              "declare p_product uuid;context_value jsonb;scope_value jsonb;item record;cause_doc jsonb;resolution_doc jsonb;resolution_value uuid;"
+            ],
+            [
+              " perform controlled_count_v1.product_count_history_required(p_product);\n",
+              " -- The original context birth/operating scans dominate this unchanged\n -- count-data window. This helper does not certify or cache history validity.\n select to_jsonb(c)into strict context_value from public.controlled_stock_execution_contexts c\n where c.backend_pid=pg_backend_pid();\n scope_value:=controlled_count_entry_v1.current_count_context_header_required(context_value);\n perform controlled_count_entry_v1.assert_scope_resource_frontier(scope_value);\n if scope_value::text is distinct from p_scope::text\n or scope_value->>'outer_action'is distinct from 'reconciliation_execute'\n or(context_value->>'phase'=any(array['count_operating','executing']))is not true\n or exists(select 1 from controlled_count_v1.operations o where o.operation_id=(scope_value->>'outer_operation_id')::uuid)\n or exists(select 1 from controlled_count_v1.operation_closures o where o.operation_id=(scope_value->>'outer_operation_id')::uuid)then\n  raise exception 'count_context_invalid'using errcode='P0001',detail='',hint='';end if;\n p_product:=(scope_value->>'product_id')::uuid;\n"
+            ],
+            [
+              "   -- The SAME preceding complete first inventory selected this exact registry\n   -- root and finished its graph+closure. A document product claim alone is\n   -- insufficient: an orphan can be absent from joined result inventories.\n",
+              "   -- Original context scans selected this exact registry root and finished\n   -- its graph/closure. Sealed parent control flow and held relations exclude\n   -- count-data writes in this window; orphan history already refused entry.\n"
+            ]
+          ],
+          "whole_AST_header_inverse": true,
+          "whole_body_inverse": true
+        },
+        "source_cut": {
+          "all_history_reads_held_and_unchanged_during_parent": true,
+          "application_read_relations": [
+            "controlled_count_v1.cancellations",
+            "controlled_count_v1.causes",
+            "controlled_count_v1.cycles",
+            "controlled_count_v1.operation_closures",
+            "controlled_count_v1.operations",
+            "controlled_count_v1.outcomes",
+            "controlled_count_v1.policies",
+            "controlled_count_v1.reconciliation_approvals",
+            "controlled_count_v1.reconciliation_confirmations",
+            "controlled_count_v1.reconciliation_execution_causes",
+            "controlled_count_v1.reconciliation_executions",
+            "controlled_count_v1.reconciliation_preparations",
+            "controlled_count_v1.resolutions",
+            "controlled_count_v1.snapshots",
+            "controlled_count_v1.statements"
+          ],
+          "bound_history_functions": 299,
+          "bound_parent_context_functions": 12,
+          "evidence": "docs/controlled-drugs/product-history-readcut-20261028.json",
+          "no_current_public_stock_journal_or_Auth_read_in_history": true,
+          "no_runtime_validity_flag_or_queue_absence_certificate": true,
+          "sha256": "dec62055c55799969eeb3b198cf8d3e284374b682aca15f3b9c4c3034772f910"
+        }
+      },
+      "policy_pure_hash_reuse": {
+        "SQL_null_map_skips_only_unprovable_snapshot_memo_query": true,
+        "admitted_private_source_owned_maps_only": true,
+        "arbitrary_owner_supplied_private_input_equivalence_claimed": false,
+        "constructors": "original policy_history followed by root seeding; four helpers call original policy_values before seeding",
+        "exact_original_validated_cache_and_input_text_required": true,
+        "first_arm_has_no_table_or_current_authority_semantics": true,
+        "first_arm_only": true,
+        "object_canonical_uuid_and_key_presence_required": true,
+        "original_policy_row_chain_and_current_authority_checks_unchanged": true,
+        "snapshot_arm_and_original_fallback_byte_identical": true,
+        "source_function": "controlled_count_v1.history_scan_policy_values(jsonb,jsonb)"
+      },
+      "predecessor": "V45 source composition",
+      "predecessor_artifacts": {
+        "capture.sql": {
+          "bytes": 107622,
+          "sha256": "37dddf424579cb7c47b557e62608f83b606a37f4baf83e1daf5ef1253f9cad73"
+        },
+        "declared-footprint.json": {
+          "bytes": 141879,
+          "sha256": "8eca62853c9e7e02782c95d5ab5a50a57fc0c6062d0c8b8c5fbc412df8cb5bef"
+        },
+        "expected-module.json": {
+          "bytes": 12369107,
+          "sha256": "b9db4d07bebfdf0593f03028f6df2c6e437565fe349cf21cc36dd9ebb21e8691"
+        },
+        "install.sql": {
+          "bytes": 61874583,
+          "sha256": "ef72c79807f7211a4720456d035e74e93e34f51520ecebd62510a00acdcbe2b9"
+        },
+        "postcheck.sql": {
+          "bytes": 31271834,
+          "sha256": "0d59ad0dbd94233341c6b72db70bdce3ffee7e7128fee7a157b965f377364a56"
+        },
+        "preflight.sql": {
+          "bytes": 2551471,
+          "sha256": "64a65319c50d727ad51af25f2a4c0ee3083e6710be0b8ce5f26e09bd506eb074"
+        },
+        "source-expected.sql": {
+          "bytes": 9149866,
+          "sha256": "7a283456cee55268cb9105f6d84aa74c2b605b3799fdcd978f6892cad039f9c4"
+        }
+      },
+      "predecessor_history_and_frontier_proofs_are_intermediate": true,
+      "previous_same_callback_global_validation_proof_superseded": true,
+      "real_Auth_verification_pending": true,
+      "source_tools": {
+        "parent_history_projection.py": {
+          "bytes": 8797,
+          "sha256": "f2f78992217501f1c4874a072fc7218c2a038ce6b5230b05975031a3b9ceb19f"
+        },
+        "pending-validation.sql": {
+          "bytes": 9143,
+          "sha256": "e5664aeb827274b77b765314a18739dc7de10addba39c74d555fb14b922e30e2"
+        },
+        "pending_validation.py": {
+          "bytes": 18618,
+          "sha256": "ae175225886eecb7eb5bd5ec88240f84390f2c7e472e839e4b08b4cba6b07da8"
+        }
+      },
+      "unchanged_final_ALL_IMMEDIATE": true
+    },
+    "publication_relation_tail": {
+      "actual_real_Auth_verification_pending": true,
+      "complete_source_inverse": true,
+      "metadata_lock_or_admission_cache_used": false,
+      "new_body_sha256": "efc2dd100268f0ebac61243919b40cb15d4449034f6278a31449f3babdeb749e",
+      "old_body_sha256": "f22adc79ded6691eee34c6177eb5cd1c3023a46384364e5f970c2e2c74413222",
+      "original_advisory_FK_and_after_wait_principal_checks_unchanged": true,
+      "original_relation_tail_acquired_before_assertion": true,
+      "signature": "controlled_stock_workflow_v1.review_publication_locks(jsonb)"
+    },
+    "read_capture_witness_repair": {
+      "all_deadlines_unchanged": true,
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_v1.capture_full_boundary_read(uuid,uuid,uuid,uuid)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "3c21e8c1b6d8ac173af9200bb53fe1274d90781179ac3b34b233c57d88819f94",
+          "new_expression": " boundary_value:=boundary_value||jsonb_build_object('transitions',rows_value);\n -- NEW explicit event-owned witness class. Nonphysical pending/abandoned\n -- witness work is absent from physical/source freshness by construction.\n rows_value:='[]'::jsonb;class_bytes:=2;\n for source_row in select w.*from controlled_stock_workflow_v1.witness_operations w\n join public.controlled_stock_events e on e.id=w.parent_action_id\n where e.product_id=p_product and w.stage='saved'order by w.parent_action_id,w.operation_id loop\n  row_value:=to_jsonb(source_row);row_bytes:=octet_length(row_value::text);\n  if row_bytes>4194304 or class_bytes+row_bytes+2>16777216 or total_bytes+class_bytes+row_bytes+64>16777216 then\n   raise exception 'count_boundary_capacity'using errcode='P0001',detail='',hint='';end if;\n  perform controlled_stock_workflow_v1.witness_row_required(row_value);\n  class_bytes:=class_bytes+row_bytes+2;rows_value:=rows_value||jsonb_build_array(row_value);\n end loop;\n boundary_value:=boundary_value||jsonb_build_object('witness_operations',rows_value);\n if octet_length(boundary_value::text)>16777216",
+          "old_body_sha256": "1ec898538402dde80062c233f7e07488bc66461efa5eb9ed12e038df1024d368",
+          "old_expression": " boundary_value:=boundary_value||jsonb_build_object('transitions',rows_value);\n if octet_length(boundary_value::text)>16777216"
+        }
+      },
+      "only_one_function_body_hash_metadata_difference": true,
+      "real_Auth_verification_pending": true
+    },
+    "record_review_ledger": {
+      "changes": [
+        {
+          "prior_gate_sha256": "717ae7e520876c332dbf02ba92a06298a2d5983f2964135cabd81166a88a9c52",
+          "statement_differences": [
+            40
+          ],
+          "version": "20260916072509"
+        },
+        {
+          "prior_gate_sha256": "ceac3bf151c24641543e17b66c269030c9a7cef746731dff7cdfa66539c10661",
+          "statement_differences": [
+            66,
+            67,
+            89,
+            91
+          ],
+          "version": "20261020151157"
+        },
+        {
+          "prior_gate_sha256": "327ee244a8d017a577245be260109bbd0d95c13d8f08de4b4b3b562d2d361a15",
+          "statement_differences": [
+            121,
+            206,
+            207,
+            299,
+            300,
+            301
+          ],
+          "version": "20261022010000"
+        },
+        {
+          "prior_gate_sha256": "717ae7e520876c332dbf02ba92a06298a2d5983f2964135cabd81166a88a9c52",
+          "statement_differences": [
+            40
+          ],
+          "version": "20260916072509"
+        },
+        {
+          "prior_gate_sha256": "ceac3bf151c24641543e17b66c269030c9a7cef746731dff7cdfa66539c10661",
+          "statement_differences": [
+            66,
+            67,
+            89,
+            91
+          ],
+          "version": "20261020151157"
+        },
+        {
+          "prior_gate_sha256": "327ee244a8d017a577245be260109bbd0d95c13d8f08de4b4b3b562d2d361a15",
+          "statement_differences": [
+            121,
+            206,
+            207,
+            299,
+            300,
+            301
+          ],
+          "version": "20261022010000"
+        }
+      ],
+      "frozen_205_ledger_sha256": "d776a51d37530600aaf69258eacdd8de433b192cc191bbd95ef0736d95c96fd4",
+      "frozen_206_statements_file_sha256": "43736e52a08780b95edb7ef5594e8b98a7080634ce56dbd9180d2fc46d22618e",
+      "no_observed_target_expected_values": true,
+      "reason": "Previous native UUID source rewrites also changed quoted historical ledger oracles. Restore only six top-level comparisons to the independently frozen original206 statement vectors; preserve current native implementations and full metadata expectations."
+    },
+    "record_review_preflight": {
+      "changes": [
+        {
+          "only_preinstallation_occurrence": true,
+          "prior_sha256": "bb8f9aab98951072b3a75e039f7870635f0ac62adfa88747f184900196f64f19",
+          "restored_sha256": "bea9f669972ec3a18865a3038727e37ec6913ba8e3ee4fe387bc1313531852e0",
+          "statement_head": "do $review_parent$"
+        },
+        {
+          "only_preinstallation_occurrence": true,
+          "prior_sha256": "72f6523df7baf5e3cfe40cf5fa6869da35958d58589eba6e9c1899b125409c85",
+          "restored_sha256": "a2e98a96a41aa1c7cdddeb7621c8031229812120c9be7ed858777bfad2450df5",
+          "statement_head": "do $review_installed$"
+        }
+      ],
+      "no_observed_target_expected_values": true,
+      "reason": "Before any current function installation, verify original205 and original206 metadata against their independently frozen source. Preserve the separate final current-source metadata checks."
+    },
+    "recovery_admission_and_single_invocation_history": {
+      "all_deadlines_unchanged": true,
+      "candidate_artifacts_exact": true,
+      "compiler_inverse_all_seven_artifacts_exact": true,
+      "complete_CLI_publication_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "frontier": {
+        "controlled_count_entry_v1.assert_shared_product_relation_frontier()": {
+          "all_121_resolved_relation_and_mode_checks_and_exact_advisory_check_retained": true,
+          "distinct_relation_mode_projection_prevents_join_multiplicity": true,
+          "new_body_sha256": "e7a71c22b6f43b7a7aee796ebfeb64052918fa03dbf6bc3d3e8270c59016cf3b",
+          "original_body_sha256": "f5b4bda9754b2f68138725cbb3e2f69e61853e6a5754519a0948c13414c33825",
+          "same_single_current_lock_snapshot": true,
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.resource_origin_catalog_required()": {
+          "new_body_sha256": "551dc6289a4fa4ac51e7e364d1827f796780b89393906f4d33eabfd96fac9569",
+          "original_body_sha256": "7ab954d155333083d1270a7e3d3b10a1982177ea8e1bcf703e64727905081bb6",
+          "original_plan_seal_and_all_current_privilege_checks_retained": true,
+          "plan": {
+            "complete_VALUES_AST_inverse": true,
+            "distinct_namespace_projection_exact": true,
+            "namespaces": [
+              "auth",
+              "controlled_count_v1",
+              "controlled_review",
+              "controlled_review_v3",
+              "public"
+            ],
+            "plan_body_sha256": "1551a3b7336ad185560a2e26437aedf978fd120d69b38ed3cd71b0d11dd80016",
+            "rows": 110
+          },
+          "whole_body_inverse": true
+        },
+        "controlled_count_entry_v1.shared_product_resource_origin_catalog_required()": {
+          "new_body_sha256": "61df99601271695831d732b0ff8ce0331af33bf31ab44cd926de8ff0b485a59e",
+          "original_body_sha256": "938f06f24df93e354d0720babb1730dfc21218a24aa82eb7b31f5718867f733e",
+          "original_plan_seal_and_all_current_privilege_checks_retained": true,
+          "plan": {
+            "complete_VALUES_AST_inverse": true,
+            "distinct_namespace_projection_exact": true,
+            "namespaces": [
+              "auth",
+              "controlled_count_v1",
+              "controlled_review",
+              "controlled_review_v3",
+              "controlled_stock_workflow_v1",
+              "public"
+            ],
+            "plan_body_sha256": "ceae957e4a7d29bcb2b120933816c4789b69529010a1e3654772131cd63185ed",
+            "rows": 121
+          },
+          "whole_body_inverse": true
+        }
+      },
+      "history": {
+        "actual_result_document_reread_and_exactly_bound": true,
+        "all_fifty_boundary_classes_validated_before_any_exact_byte_reuse": true,
+        "all_parent_cell_and_receipt_checks_retained": true,
+        "approval_helper": {
+          "body_sha256": "e101212a478b6620478bec58c32608ae4dd651a1006500d3de6b689148362aab",
+          "completed_preparation_graph_registry_and_closure_before_reuse": true,
+          "signature": "controlled_count_v1.history_approval_graph(uuid)",
+          "whole_sql_sha256": "40f1199c6714b14dd90fbe1258b1c870de6819a6724912174a9764df42e8a571"
+        },
+        "both_root_inventories_retained": true,
+        "closure_callback": {
+          "complete_result_registry_graph_retained": true,
+          "fresh_frontier_retained": true,
+          "initial_actual_closure_proof_retained": true,
+          "new_body_sha256": "61ed5748d31678555ca6d93c7844fd8f4372b57cc9660b66466ea9d5b680317c",
+          "no_cross_trigger_validation": true,
+          "original_body_sha256": "00c711e956a4ca8c55ea394b7da22a8f68baf9352769d0f09521ec0c0d955b79",
+          "original_graph_wrapper_sha256": "9b2642df90b7acd2a730eec902671bfeffbd4f78d6c55c58fecb72240f183031",
+          "policy_and_abandoned_branches_unchanged": true,
+          "signature": "controlled_count_v1.operation_closure_deferred()",
+          "whole_body_inverse": true
+        },
+        "complete_policy_history_and_current_authorization_retained": true,
+        "deferred_callback": {
+          "actual_operation_lookup_retained": true,
+          "complete_final_product_history_unchanged": true,
+          "complete_scalar_product_inventory_retained": true,
+          "dominance_source_body_sha256": {
+            "operation_graph": "edab2434dd4bb0906c1ad23e08270a59d7f8d9a37348302b68e5416babfa4904",
+            "operation_graph_v3": "c87d64e5a5243eccfb95b7b962d3877f22bc6e75951a4ed8c7132ac4800c80f8",
+            "product_history": "d0636b9b850f8c381bfffff2d5af00685dad3ae12c5e1cd65beaaf5b9fb7a091",
+            "product_live_causes": "bb8d66fc31b05867eca41f91d04cbb304c4cf5d5c3f55d514718bb24e4c5baf0",
+            "saved_closure": "a119e6df062f0d63fd396cd6ff79b237ec1c3b47d6912e96915209c3c664eea1"
+          },
+          "final_operation_result_registry_and_saved_closure_checks_retained": true,
+          "new_body_sha256": "87ce16a92b294c14333d2a0ffae9f23fa2498bd200d44618108a94028e6972fe",
+          "no_cross_trigger_or_persisted_validation": true,
+          "original_body_sha256": "f2039746e67cb527d8b82a6b647c1c0f6da65b6c60b9918f9dfb322f2487f88d",
+          "original_callback_frontier_retained": true,
+          "removed_only_locally_dominated_child_validation": true,
+          "signature": "controlled_count_v1.count_graph_deferred()",
+          "whole_body_inverse": true
+        },
+        "exact_eighteen_node_boundary_context": [
+          "controlled_count_v1.historical_boundary_values",
+          "controlled_count_v1.historical_parent_execution_boundaries_values",
+          "controlled_count_v1.historical_parent_execution_boundaries_values_49",
+          "controlled_count_v1.historical_parent_preparation_boundary_values",
+          "controlled_count_v1.historical_parent_preparation_cell_values",
+          "controlled_count_v1.readcore_saved_assert_result_cause",
+          "controlled_count_v1.readcore_saved_available_cause_cell",
+          "controlled_count_v1.readcore_saved_cause_graph",
+          "controlled_count_v1.readcore_saved_clean_count_observations",
+          "controlled_count_v1.readcore_saved_count_children",
+          "controlled_count_v1.readcore_saved_management_children",
+          "controlled_count_v1.readcore_saved_resolution_children",
+          "controlled_count_v1.readcore_saved_result_graph",
+          "controlled_count_v1.readcore_saved_snapshot_document",
+          "controlled_count_v1.saved_body_values",
+          "controlled_count_v1.saved_boundary_manifest",
+          "controlled_count_v1.saved_cause_category",
+          "controlled_count_v1.saved_cause_row_values"
+        ],
+        "exact_twenty_four_node_policy_grammar_context": [
+          "controlled_count_v1.closure_values",
+          "controlled_count_v1.policy_capability_values",
+          "controlled_count_v1.policy_closure_values",
+          "controlled_count_v1.policy_history",
+          "controlled_count_v1.policy_original_request",
+          "controlled_count_v1.policy_row_values",
+          "controlled_count_v1.policy_values",
+          "controlled_count_v1.readcore_operation_closure_required",
+          "controlled_count_v1.readcore_saved_available_cause_cell",
+          "controlled_count_v1.readcore_saved_cause_graph",
+          "controlled_count_v1.readcore_saved_clean_count_observations",
+          "controlled_count_v1.readcore_saved_count_children",
+          "controlled_count_v1.readcore_saved_management_children",
+          "controlled_count_v1.readcore_saved_policy_document",
+          "controlled_count_v1.readcore_saved_resolution_children",
+          "controlled_count_v1.readcore_saved_result_graph",
+          "controlled_count_v1.readcore_saved_snapshot_document",
+          "controlled_count_v1.readcore_validate_operation_graph",
+          "controlled_count_v1.readcore_validate_operation_graph_v3",
+          "controlled_count_v1.readcore_validated_operation_closure",
+          "controlled_count_v1.readcore_validated_operation_closure_9",
+          "controlled_count_v1.readcore_validated_policy_operation_closure",
+          "controlled_count_v1.saved_other_authorization_values",
+          "controlled_count_v1.saved_policy_projection_values"
+        ],
+        "execution_helper": {
+          "body_sha256": "24e47c13dd72dcfec8ffc00919f375b600728ef1083111e05198efc9fd87f680",
+          "completed_approval_and_preparation_graphs_registry_and_closures_before_reuse": true,
+          "signature": "controlled_count_v1.history_execution_graph(uuid)",
+          "whole_sql_sha256": "af6d151194983082f391e89f9b5ba7e10ccc6945d63aae74289121c7cfa54b3d"
+        },
+        "full_result_registry_children_and_closure_checks_still_required": true,
+        "kind": "single-invocation-validated-history-documents-v1",
+        "live_causes": {
+          "explicit_selected_registry_root_required": true,
+          "new_body_sha256": "bb8d66fc31b05867eca41f91d04cbb304c4cf5d5c3f55d514718bb24e4c5baf0",
+          "original_body_sha256": "3cf48d5e4ebe1651f962083bdedfda1f0c2e4405cf9b8ae50093840dd37bbbee",
+          "original_graph_fallback": true,
+          "signature": "controlled_count_v1.product_live_causes(uuid)",
+          "unchanged_complete_history_dominates_both_reads": true,
+          "whole_body_inverse": true
+        },
+        "no_persisted_or_caller_supplied_certificate": true,
+        "ordinary_preparation_entry": {
+          "new_body_sha256": "dbef33e95696393a0f0afe32a294a7bcb657b9d44e303e32bbaba8c3ca3810d8",
+          "original_body_sha256": "adddd0c05f6b46bb5f4f199a4c70f5908712ce23fa727bff51634162960c15f8",
+          "original_full_frontier_retained": true,
+          "signature": "controlled_count_v1.saved_result_graph(text,uuid)",
+          "whole_body_inverse": true
+        },
+        "origin_and_current_authority_unchanged": true,
+        "plpgsql_bodies_syntax_checked": 45,
+        "policy_grammar_reuse_only_full_original_validation": true,
+        "preparation_entry": {
+          "new_body_sha256": "bd832191aca75f5e37bf5b473c47b4299c8b5521853ba190c788c470967d14e9",
+          "original_body_sha256": "1490dc6bf20a108afd60c33b4a50c94d73bc8e55cc1f07cabb0aa94c217d5931",
+          "signature": "controlled_count_v1.readcore_saved_result_graph(text,uuid)",
+          "whole_body_inverse": true
+        },
+        "preparation_helper": {
+          "body_sha256": "af18c29d9af0579fab41e27e6b2514f4564b235a9eac6afdb03612aa7177a9f2",
+          "exact_operation_result_binding": true,
+          "only_exact_preparation_ancestors": true,
+          "signature": "controlled_count_v1.history_preparation_graph(uuid)",
+          "whole_sql_sha256": "7bea5d3aecfe522f160c0b683d439b5a11cf1f7a2b107279bd0f6ab54df7f9c0"
+        },
+        "resolution_helper": {
+          "body_sha256": "0fd17fae2b7931d335f98ab0c1d400fa0fd2b314faf73919a17c3c4a4c9ff023",
+          "only_completed_count_cause_and_confirmation_ancestors": true,
+          "signature": "controlled_count_v1.history_resolution_graph(uuid)",
+          "whole_sql_sha256": "8bc3aa060be862e071fbf3eea5c9a13e350cab07af33a3e59a5a90de0e51e6fd"
+        },
+        "result_documents_added_only_after_complete_operation_and_closure_validation": true,
+        "reuse_capacity_only_with_full_validation_fallback": true,
+        "root_new_body_sha256": "d0636b9b850f8c381bfffff2d5af00685dad3ae12c5e1cd65beaaf5b9fb7a091",
+        "root_original_body_sha256": "55ec2c3b165253179871a6194c2c374d745e778920749182d152d3fb16faa8ce",
+        "root_whole_body_inverse": true,
+        "separate_body_grammar_domain_after_full_body_validation": true,
+        "snapshot_added_only_after_complete_cycle_validation": true,
+        "variants": {
+          "controlled_count_v1.closure_values(jsonb,jsonb,jsonb,jsonb)": {
+            "changed_private_callee_references": 3,
+            "new_signature": "controlled_count_v1.history_scan_closure_values(jsonb,jsonb,jsonb,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "753f06c52f5736344cf9117740418b14c5b37639db92d445bae3a188c4661449",
+            "variant_body_sha256": "6f51f3a7ed3506b5bb9565f01a72061a18aa5d0a75b369ab3e1ea664a23fd278",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.historical_boundary_values(jsonb)": {
+            "changed_private_callee_references": 0,
+            "new_signature": "controlled_count_v1.history_scan_historical_boundary_values(jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "767ee1aa7b389eb4059eeb364bc50b99027c3039b37007541a29ac110123156c",
+            "variant_body_sha256": "0c37b81a3733c89cd7ae629663996b917657d2381a7e546c347cf345a0054900",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.historical_parent_execution_boundaries_values(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_historical_parent_execution_boundaries_values(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "4e0a01745259458c61157a40f45869d366c120556d2e344dda4152a05c533fd9",
+            "variant_body_sha256": "8529681404c12a8abd39612ea2ff0ceace3a19419f76559726bb74c47603fbd1",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.historical_parent_execution_boundaries_values_49(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)": {
+            "changed_private_callee_references": 2,
+            "new_signature": "controlled_count_v1.history_scan_historical_parent_execution_boundaries_values_49(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "b064f8f0ab6185bfe1e07d026d6070f64ea8c177b7fc5a990b95654eedc1ad4f",
+            "variant_body_sha256": "6d6157b8dcae0fc52f6dd598a04176af3310103b80c1e9de457236dac351cc0c",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.historical_parent_preparation_boundary_values(jsonb,jsonb)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_historical_parent_preparation_boundary_values(jsonb,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "73aa1b7a7f6f87e6fee527250da81e1b5e2db0698aaaf32c2956cadbd1c0e3cf",
+            "variant_body_sha256": "a71b78c82b037e2d1adbae8c82cacd03b5102d1031dd13c3e94d15d15c706a6b",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.historical_parent_preparation_cell_values(jsonb,jsonb,uuid)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_historical_parent_preparation_cell_values(jsonb,jsonb,uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "29d5c5f767079fa37dfafbc6310aa71fd00b869795030edfe61efd8a07443584",
+            "variant_body_sha256": "5cf0499d5b18ffdcc0126ac1ffc3197ae9fa900f0e234e5727fc3518afba736a",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.policy_capability_values(jsonb,jsonb,text)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_policy_capability_values(jsonb,jsonb,text,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "1b27ec4b96b789d9071a14db998a76029be3410b96319db4c19374dfb5f324d4",
+            "variant_body_sha256": "3a52b80aaebd814e27e72246edf188c2765b68a3b4ecdd67fb72cc3b0cdf79d9",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.policy_closure_values(jsonb,jsonb)": {
+            "changed_private_callee_references": 2,
+            "new_signature": "controlled_count_v1.history_scan_policy_closure_values(jsonb,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "26a779db438f7705d4466e0c867cbcdad1f1e2d319a8fb5d6e6f3c35ec9f6b6e",
+            "variant_body_sha256": "08a8a9b0d7c106171b0181cb674493edca8f409f0fafd217b91604a062f64dcc",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.policy_history(uuid,uuid)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_policy_history(uuid,uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "fe40fb9cc58bd9a647836a8ed1d736daeb94413e55158eae91d58f177c2ff6d9",
+            "variant_body_sha256": "87eaf207a79d4bf557c6ce37273efec380274c8b90025b7a39be208fbf079251",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.policy_original_request(jsonb)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_policy_original_request(jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "9793960c717ee55f7c835276734824b50bd8d12cbb9218f8c1dfc8a5ab95c080",
+            "variant_body_sha256": "ae64d9b3b88335e186a6c134843673cacc5d6412caeb74eb03978945871ea2c7",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.policy_row_values(jsonb)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_policy_row_values(jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "6c671614c2faa82c854ea810d0d775a6db5bfb60858ab31893769eed63f4ff40",
+            "variant_body_sha256": "dc76deda4ad3b599b18d018dc8876b806ea9e9eb3cd1b555ff60845f0f2ffea0",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.policy_values(jsonb)": {
+            "changed_private_callee_references": 0,
+            "new_signature": "controlled_count_v1.history_scan_policy_values(jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "b0f720b6b541eecb7067128dc5f0f14cc47b4bfaec82bd4845ac46b5d1b31b31",
+            "variant_body_sha256": "522068bfce948fbec1d5900e297c9f64e0d3ed849ecc979d0eb57d04d536196d",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_operation_closure_required(uuid)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_operation_closure_required(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "9eb792230f3b77b05e5232dfa4349f8974ea360ac759fa8d1189c5bd7e0d9792",
+            "variant_body_sha256": "a119e6df062f0d63fd396cd6ff79b237ec1c3b47d6912e96915209c3c664eea1",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_assert_result_cause(text,jsonb)": {
+            "changed_private_callee_references": 2,
+            "new_signature": "controlled_count_v1.history_scan_saved_assert_result_cause(text,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "6d504d69bb90b7f369630404c0e70d9ed7b97264a229d13cfafd4a36a2505cd0",
+            "variant_body_sha256": "b80adca21cf229ba98ffb8e896e6dfb08d7db23e92a2823fba31e919d9709cf5",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_available_cause_cell(jsonb,jsonb,uuid,uuid)": {
+            "changed_private_callee_references": 4,
+            "new_signature": "controlled_count_v1.history_scan_saved_available_cause_cell(jsonb,jsonb,uuid,uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "1f7b0a699cd60be227ac8020c5f6e46e8503b0e09e8b3caf679d3def38c6e83f",
+            "variant_body_sha256": "0238758b161f6ed2a99d8284f618790a10d2ef67833be7a8ea72373610966e3c",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_cause_graph(uuid)": {
+            "changed_private_callee_references": 2,
+            "new_signature": "controlled_count_v1.history_scan_saved_cause_graph(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "3a700933d2569256ec409359b9e3f439ce6ec3e12652185c089081f20ec882cd",
+            "variant_body_sha256": "774dda6ed3529fb165a9421aa219fd8567f6281c84b4dffb64795412f696c553",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_clean_count_observations(uuid)": {
+            "changed_private_callee_references": 3,
+            "new_signature": "controlled_count_v1.history_scan_saved_clean_count_observations(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "782eddc3f8b6e872c80da9585577a1ba35aac92dfe9bb706957c8caabcf1f3c8",
+            "variant_body_sha256": "c3692b7c901b5e022775b275f12f083146b5afa3b92300901bbf06c8922e844c",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_count_children(text,jsonb,jsonb,jsonb,jsonb)": {
+            "changed_private_callee_references": 16,
+            "new_signature": "controlled_count_v1.history_scan_saved_count_children(text,jsonb,jsonb,jsonb,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "296cd87e380653b04a34b851a732cd43f66717dd55d54aee8333e81aee48672f",
+            "variant_body_sha256": "cf4ba68d292ab3283c4f2682a0a4a15c09b42bd2ccea1464eadba93c9d2c9323",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_management_children(text,jsonb,jsonb,jsonb,jsonb)": {
+            "changed_private_callee_references": 13,
+            "new_signature": "controlled_count_v1.history_scan_saved_management_children(text,jsonb,jsonb,jsonb,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "a53fa25f36df5d09cad89901362bc6f2496876449e574e04353b97a96a4c6776",
+            "parent_cell_inline": {
+              "all_original_cell_predicates_retained": true,
+              "complete_identifier_substitution_inverse": true,
+              "dominating_span_sha256": "f0fddf64bfad630cf9cad04f22debcc243eab1f5fbcbcc7af98d72c48ac9b3e0",
+              "exact_cell_remainder_sha256": "1bfa57b801a08c457e1673b3e57216ff4c11004395fde688df63e9c4c28e5dad",
+              "helper_configuration_independent_JSON_and_UUID_only": true,
+              "nested_block_delimiter_added": true,
+              "original_cell_body_sha256": "29d5c5f767079fa37dfafbc6310aa71fd00b869795030edfe61efd8a07443584",
+              "original_full_boundary_call_retained": true,
+              "whole_management_clone_inverse": true
+            },
+            "variant_body_sha256": "c21d237a6911e0fc1eab991772ef9a4e2ef5480855a9f9d736ed75d894ff1f6b",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_policy_document(uuid)": {
+            "changed_private_callee_references": 2,
+            "new_signature": "controlled_count_v1.history_scan_saved_policy_document(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "583f9bbb2f4585acc80ca01ebe4732855795c7909790c011a4d797bef9fff0e8",
+            "variant_body_sha256": "98e6f417ff39c1ee6daf909cfeac11d851637632654730d2eb873e30ccc4fe5c",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_resolution_children(jsonb,jsonb,jsonb,jsonb)": {
+            "changed_private_callee_references": 13,
+            "new_signature": "controlled_count_v1.history_scan_saved_resolution_children(jsonb,jsonb,jsonb,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "6d34fddf1250f18cf8a84af739ff2db53717f31cdec746469cd36b1a15f1929c",
+            "variant_body_sha256": "a596ec4ad59fdd322385c8842289395b88c007c3e8a5254dd1c5e3993877826e",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_result_graph(text,uuid)": {
+            "changed_private_callee_references": 8,
+            "new_signature": "controlled_count_v1.history_scan_saved_result_graph(text,uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "1490dc6bf20a108afd60c33b4a50c94d73bc8e55cc1f07cabb0aa94c217d5931",
+            "variant_body_sha256": "3dacbe59d8a16443c24bfc8bc07b1a70d07b649e7559cb8013c1fdd0c9d48977",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_saved_snapshot_document(uuid)": {
+            "changed_private_callee_references": 5,
+            "new_signature": "controlled_count_v1.history_scan_saved_snapshot_document(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "225b6c55030fbb7e85ac747847026f85cd01b1c647dc2db55cb12331194ad417",
+            "variant_body_sha256": "7ff04ac24a2adce2c4fc8bd1e812e4254a6b6d96e4aa36f9c1ae6bcdd3ca3294",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_validate_operation_graph(uuid)": {
+            "changed_private_callee_references": 2,
+            "new_signature": "controlled_count_v1.history_scan_validate_operation_graph(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "c1cc8940225c358a19bc73d17745a4a3e05b058b2f27b2e2a3806bd52e17c945",
+            "variant_body_sha256": "edab2434dd4bb0906c1ad23e08270a59d7f8d9a37348302b68e5416babfa4904",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_validate_operation_graph_v3(uuid)": {
+            "changed_private_callee_references": 2,
+            "new_signature": "controlled_count_v1.history_scan_validate_operation_graph_v3(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "178a5cff978022cea722a4aec0045b2375905c49478d61fd1b226775a3c63fe9",
+            "variant_body_sha256": "c87d64e5a5243eccfb95b7b962d3877f22bc6e75951a4ed8c7132ac4800c80f8",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_validated_operation_closure(uuid)": {
+            "changed_private_callee_references": 2,
+            "new_signature": "controlled_count_v1.history_scan_validated_operation_closure(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "208f010a6ae412faf72a493c6c2728930ca98fd3fc0b7309b9bed8b6c33da9f8",
+            "variant_body_sha256": "e4f7c92164d91bbb98586668b1bc9c9953575d86e8844459a039983730b1b393",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_validated_operation_closure_9(uuid)": {
+            "changed_private_callee_references": 2,
+            "new_signature": "controlled_count_v1.history_scan_validated_operation_closure_9(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "fb789c2a431bbb5f9e90b73109afb8b1f9156c8bceda6c1dcf1c049500e2930d",
+            "variant_body_sha256": "a55810174166eb085c6ffcd71f7ceb212ce3ce4437a240cbd41efaac1f29ae9e",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.readcore_validated_policy_operation_closure(uuid)": {
+            "changed_private_callee_references": 3,
+            "new_signature": "controlled_count_v1.history_scan_validated_policy_operation_closure(uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "97ffed9a97e612be88d46d133b2ea36495edc154ef136dc0c611291e1d7c6c9b",
+            "variant_body_sha256": "8b37ee2f5f8d9c923d15780524a72af9d1e6810694282ce1428e9c7e78c5e1da",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.saved_body_values(text,jsonb)": {
+            "changed_private_callee_references": 6,
+            "new_signature": "controlled_count_v1.history_scan_saved_body_values(text,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "18232e9d1b807cf8f3b7ab3fbfce89b72a4a25ff4d6883de8fbe168f03ce8878",
+            "variant_body_sha256": "b0fbe9a3341f9830e8dcbfa14ed19ce2e2645a54529063da6d3f6122c3ef66e3",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.saved_boundary_manifest(jsonb,uuid)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_saved_boundary_manifest(jsonb,uuid,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "6a49c7a8e31d9ea9e0458068c3cea36f172ceaf6ed9e22101dbbcb626f441abd",
+            "variant_body_sha256": "d2690a1bda441393de342ad232416d70cd53dbcade308e7355b5240a372df0e3",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.saved_cause_category(text,jsonb)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_saved_cause_category(text,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "66508b764d975c4023c0bea2ccd833b44f775da327590f08858fed34d2e26d96",
+            "variant_body_sha256": "91548cef642e63ebe24428bdf0882b772d47895e7a42e8e549c8caab57810828",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.saved_cause_row_values(jsonb,text,jsonb)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_saved_cause_row_values(jsonb,text,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "fbff91c68ee8ac8015da2bcae3cdb1ef19b50db1e87b2fa47af8b339925af38b",
+            "variant_body_sha256": "0c309548b05e71c5185e657d6c55c733587f4f360b5d9f01a50de88310c2092c",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.saved_other_authorization_values(jsonb,uuid,jsonb,text)": {
+            "changed_private_callee_references": 2,
+            "new_signature": "controlled_count_v1.history_scan_saved_other_authorization_values(jsonb,uuid,jsonb,text,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "2a67fb102dfe1e98092f3ffcdde0b4889f56d05c275a0bdcc29bb7f6ea5dc410",
+            "variant_body_sha256": "750bd8b381906f64a6bacc6634748188a22221f476c251e35049bad4c0465c23",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.saved_policy_projection_values(text,jsonb,jsonb)": {
+            "changed_private_callee_references": 1,
+            "new_signature": "controlled_count_v1.history_scan_saved_policy_projection_values(text,jsonb,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "ab0af904672ba63810507af45415815a7eec453d81ef03c1002c7c2a59f3d7e3",
+            "variant_body_sha256": "cb918024fc3f793322392ca1bc1e2cb3ffe8cb977735539051238ec25f70cddc",
+            "whole_body_inverse": true
+          },
+          "controlled_count_v1.saved_registry_values(jsonb,jsonb)": {
+            "changed_private_callee_references": 0,
+            "new_signature": "controlled_count_v1.history_scan_saved_registry_values(jsonb,jsonb,jsonb)",
+            "origin_guard_retained": true,
+            "original_body_sha256": "d5cb83f4f325e3067e95c31489c4c68aa718744226da25e1475bd699171c36f9",
+            "registry_receipt_inline": {
+              "complete_identifier_substitution_inverse": true,
+              "inline_sha256": "91c2d91221399349e8ceeada0dd0127d4b351f532fd29110db63e0aee449c08d",
+              "original_receipt_body_sha256": "008e844dc982901a1d180dae56ef5f1a5ff919b2d5d9fa2c0a7dad02de457633",
+              "removed_duplicate_validators_sha256": "b91b77954c104dbb146c022d70829dca7beab84a9d36dbcf22b8484da997803f",
+              "whole_registry_clone_inverse": true
+            },
+            "variant_body_sha256": "415143e49d424cb0dd5c83ec04de274e99e59eea75d3abae4d0eddac8e8f5f45",
+            "whole_body_inverse": true
+          }
+        }
+      },
+      "only_forty_two_private_functions_and_twelve_body_hashes_added": true,
+      "original_relation_frontiers_and_current_authority_preserved": true,
+      "proof_scope": "V45 predecessor; composed pending-product delta supersedes its same-callback final-global-check claim",
+      "real_Auth_verification_pending": true,
+      "recovery": {
+        "armed_post_routes": [
+          "narcotics_recovery_preflight_v1",
+          "narcotics_recovery_backup_prepare_v1",
+          "narcotics_recovery_read_evidence_v1",
+          "narcotics_recovery_arm_v1",
+          "narcotics_recovery_source_resume_v1",
+          "narcotics_recovery_begin_epoch_v1",
+          "narcotics_recovery_start_count_v1",
+          "narcotics_recovery_preserve_evidence_v1",
+          "narcotics_recovery_acknowledge_evidence_v1",
+          "narcotics_recovery_release_v1",
+          "narcotics_recovery_read_operation_v1",
+          "narcotics_recovery_close_operation_v1",
+          "narcotics_recovery_status_v1",
+          "narcotics_recovery_probe_state_v1",
+          "narcotics_recovery_probe_gate_v1",
+          "list_controlled_count_scopes_v1",
+          "discover_controlled_counts_v1",
+          "read_controlled_count_policy_v1",
+          "read_controlled_count_v1",
+          "save_controlled_count_statement_v1",
+          "finalize_controlled_count_v1",
+          "recover_controlled_count_operation_v1",
+          "read_controlled_count_operation_closure_v1",
+          "read_controlled_count_operation_closure_v2",
+          "close_controlled_count_operation_v1",
+          "close_controlled_count_operation_v2",
+          "cancel_controlled_count_v1",
+          "discover_controlled_count_causes_v1",
+          "list_controlled_count_investigations_v1",
+          "list_controlled_count_reconciliations_v1",
+          "read_controlled_count_reconciliation_detail_v1",
+          "read_controlled_count_reconciliation_v1",
+          "prepare_controlled_count_reconciliation_v1",
+          "approve_controlled_count_reconciliation_v1",
+          "execute_controlled_count_reconciliation_v1",
+          "confirm_controlled_count_reconciliation_v1",
+          "resolve_controlled_count_cause_v1",
+          "list_controlled_record_reviews_v3",
+          "get_controlled_record_review_event_v3",
+          "prepare_controlled_record_review_v3",
+          "read_controlled_record_review_v3",
+          "execute_controlled_record_review_v3",
+          "list_narcotics_registers_v1",
+          "create_narcotics_register_v1",
+          "read_narcotics_register_v1",
+          "close_narcotics_register_operation_v1",
+          "preserve_narcotics_form_v1",
+          "read_narcotics_form_operation_v1",
+          "download_narcotics_form_v1"
+        ],
+        "before_any_practice_or_user_relation": true,
+        "catalog_projection_original_sha256": "5a3eedb8d37355d45789c12017637fdb9f73731988b3527022558e61c2e20b63",
+        "current_audit_validation": "after complete original121 frontier",
+        "engineering_only": true,
+        "epoch_required_post_routes": [
+          "narcotics_recovery_start_count_v1",
+          "execute_controlled_count_reconciliation_v1"
+        ],
+        "exclusive_routes": [
+          "narcotics_recovery_preflight_v1",
+          "narcotics_recovery_backup_prepare_v1",
+          "narcotics_recovery_read_evidence_v1",
+          "narcotics_recovery_arm_v1",
+          "narcotics_recovery_source_resume_v1",
+          "narcotics_recovery_begin_epoch_v1",
+          "narcotics_recovery_start_count_v1",
+          "narcotics_recovery_preserve_evidence_v1",
+          "narcotics_recovery_acknowledge_evidence_v1",
+          "narcotics_recovery_release_v1",
+          "narcotics_recovery_read_operation_v1",
+          "narcotics_recovery_close_operation_v1",
+          "narcotics_recovery_status_v1",
+          "narcotics_recovery_probe_state_v1",
+          "narcotics_recovery_probe_gate_v1"
+        ],
+        "frontier_body_inverses": {
+          "controlled_count_entry_v1.acquire_shared_product_relation_frontier()": {
+            "complete_source_inverse": true,
+            "new_body_sha256": "f7dc07be59d3c6773099fa3531e3d662b558a69f9472bcf2111c1e3293529133",
+            "old_body_sha256": "518f6f8ad485874f4025a7141e2cd50b325dc37a9d36002885438708c1bb5c76",
+            "post_frontier_exits": 2
+          },
+          "controlled_count_entry_v1.acquire_stock_workflow_relation_frontier()": {
+            "complete_source_inverse": true,
+            "new_body_sha256": "44f8602b18bbaf2e3aa7dd8f608da03e23bee4e24adc857ecd7027b2667e6a6e",
+            "old_body_sha256": "41c8d742734fbd8e393e2776091c71e9cb05b87abbcb238eb1d5d6bbbe131edc",
+            "post_frontier_exits": 2
+          }
+        },
+        "new_helpers": [
+          "controlled_count_entry_v1.recovery_catalog_projection()",
+          "controlled_count_entry_v1.admit_recovery_request()",
+          "controlled_count_entry_v1.recovery_post_frontier_required()"
+        ],
+        "pre_frontier_reads": "catalogs and pg_locks only",
+        "register_source_sha256": "aeaae6cd304a2c2bb25a780bd675d6e81bb6c35d682485e1e17cc2ea9b66c280",
+        "source_program_sha256": "15c02507e1126613a1d163bd250c1514a99d8f6bd328030a645c03bbc942760e",
+        "whole_catalog_projection_inverse": true
+      },
+      "source_tools": {
+        "build_operational_module.py": {
+          "bytes": 32163,
+          "sha256": "7153f29a366cb3b729e59c466020977393fcbaaeb02ebaa3fc770c15eedd9734"
+        },
+        "frontier_projection.py": {
+          "bytes": 6418,
+          "sha256": "c3e4751d002d04aeb0cc4c285aa79c59bfcd33a6870a251a21a78057789ef59c"
+        },
+        "history_document_reuse.py": {
+          "bytes": 65545,
+          "sha256": "ac490367a76d3a59a7039ffc3b0c2bb13dd700662c207afa58166d9ea769428d"
+        },
+        "recovery_admission_source.py": {
+          "bytes": 10068,
+          "sha256": "4c240b4a1cc93d195a7f0207f4cfcbefe9bed452331fb415ff1fb9f75a276091"
+        }
+      }
+    },
+    "snapshot_validation_deduplication": {
+      "all_deadlines_unchanged": true,
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_v1.readcore_saved_count_children(text,jsonb,jsonb,jsonb,jsonb)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "df34bc780c3d4804e1a306df9a4d88c1404236d2e0e5f1ad08d2e028211f3a18",
+          "new_expression": " -- saved_result_graph('cycle',...) above has just validated this complete\n -- immutable snapshot under the held frontier. Read the exact same document,\n -- then bind both its identifier and recomputed digest to that validated cycle.\n select s.document into strict snapshot_doc from controlled_count_v1.snapshots s\n where s.snapshot_id=(cycle_doc#>>'{body,snapshot_id}')::uuid;\n if snapshot_doc->'id'is distinct from cycle_doc#>'{body,snapshot_id}'\n or snapshot_doc->'record_hash'is distinct from cycle_doc#>'{body,snapshot_hash}'\n or controlled_count_v1.document_hash(snapshot_doc)is distinct from cycle_doc#>>'{body,snapshot_hash}'then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;",
+          "old_body_sha256": "c840d8210baa6ed295862c01ab1d5c79885b1be3f38241be84e44eeb5cfb3a7f",
+          "old_expression": " snapshot_doc:=controlled_count_v1.readcore_saved_snapshot_document((cycle_doc#>>'{body,snapshot_id}')::uuid);"
+        },
+        "controlled_count_v1.readcore_saved_snapshot_document(uuid)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "225b6c55030fbb7e85ac747847026f85cd01b1c647dc2db55cb12331194ad417",
+          "new_expression": " -- Validate the complete header/value shape here. The immediately following\n -- saved_boundary_manifest validates the SAME immutable PB before return.\n declare p_document jsonb:=r->'document';key_value text;participants jsonb;a jsonb;b jsonb;policy_doc jsonb;\nbegin\n if p_document is null or octet_length(p_document::text)>16777216\n or controlled_count_v1.count_wire_keys(p_document,array['schema_version','domain','id','count_id','product_id','site_id','captured_at','policy','participants','physical_boundary','physical_boundary_hash','unit_manifest','container_manifest','location_ids','record_hash'])is not true\n or p_document->'schema_version'is distinct from '1'::jsonb or(p_document->'schema_version')::text is distinct from '1'\n or p_document->'domain'is distinct from '\"lrv-controlled-count-snapshot-v1\"'::jsonb then\n  raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n foreach key_value in array array['id','count_id','product_id','site_id']loop\n  if controlled_count_v1.count_wire_uuid(p_document->key_value)is not true then raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n end loop;\n if controlled_count_v1.count_wire_time(p_document->'captured_at')is not true then raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n perform controlled_count_v1.saved_require_hash(p_document->'record_hash');perform controlled_count_v1.saved_require_hash(p_document->'physical_boundary_hash');\n if p_document->>'record_hash'is distinct from controlled_count_v1.document_hash(p_document)\n or p_document->>'physical_boundary_hash'is distinct from controlled_count_v1.saved_boundary_hash(p_document->'physical_boundary')then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n\n perform controlled_count_v1.observation_manifest_values(jsonb_build_object('units',p_document->'unit_manifest','containers',p_document->'container_manifest'));\n perform controlled_count_v1.saved_uuid_array_values(p_document->'location_ids',4096);\n policy_doc:=controlled_count_v1.policy_values(p_document->'policy');participants:=p_document->'participants';\n if controlled_count_v1.count_wire_keys(participants,array['actor_a','actor_b'])is not true then raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n a:=controlled_count_v1.actor_values(participants->'actor_a');b:=participants->'actor_b';\n if controlled_count_v1.count_wire_keys(b,array['id','name','live_roles','policy_id','policy_hash'])is not true\n or controlled_count_v1.count_wire_uuid(b->'id')is not true or controlled_count_v1.count_wire_uuid(b->'policy_id')is not true then\n  raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n perform public.controlled_stock_text(b->'name',200,false);perform controlled_count_v1.role_set_values(b->'live_roles',true);perform controlled_count_v1.saved_require_hash(b->'policy_hash');\n if a->'id'=b->'id'or a#>'{current_authorization,capability}'is distinct from '\"observe\"'::jsonb\n or policy_doc->'product_id'is distinct from p_document->'product_id'or policy_doc->'site_id'is distinct from p_document->'site_id'\n or a#>'{current_authorization,product_id}'is distinct from p_document->'product_id'or a#>'{current_authorization,site_id}'is distinct from p_document->'site_id'\n or a#>'{current_authorization,policy_id}'is distinct from policy_doc->'policy_id'or a#>'{current_authorization,policy_hash}'is distinct from policy_doc->'record_hash'\n or b->'policy_id'is distinct from policy_doc->'policy_id'or b->'policy_hash'is distinct from policy_doc->'record_hash'\n or controlled_count_v1.policy_capability_values(policy_doc,a#>'{current_authorization,live_roles}','observe')is not true\n or controlled_count_v1.policy_capability_values(policy_doc,b->'live_roles','observe')is not true\n or(policy_doc->>'recorded_at')::timestamptz>(p_document->>'captured_at')::timestamptz then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n d:=p_document;\nend;",
+          "old_body_sha256": "955f990300bcf939d06f04fbef1786148573a4da81d4cb644e5161340837dbaf",
+          "old_expression": " d:=controlled_count_v1.saved_snapshot_values(r->'document');"
+        },
+        "controlled_count_v1.saved_count_children(text,jsonb,jsonb,jsonb,jsonb)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "f3828cacfe6ac656d81664b4f5800129423ced719b724efeff8a4bb02488f166",
+          "new_expression": " -- saved_result_graph('cycle',...) above has just validated this complete\n -- immutable snapshot under the held frontier. Read the exact same document,\n -- then bind both its identifier and recomputed digest to that validated cycle.\n select s.document into strict snapshot_doc from controlled_count_v1.snapshots s\n where s.snapshot_id=(cycle_doc#>>'{body,snapshot_id}')::uuid;\n if snapshot_doc->'id'is distinct from cycle_doc#>'{body,snapshot_id}'\n or snapshot_doc->'record_hash'is distinct from cycle_doc#>'{body,snapshot_hash}'\n or controlled_count_v1.document_hash(snapshot_doc)is distinct from cycle_doc#>>'{body,snapshot_hash}'then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;",
+          "old_body_sha256": "e795524b70183e73b6dfecf88869204c01bfe0a54b08a82ca436973c882016ad",
+          "old_expression": " snapshot_doc:=controlled_count_v1.saved_snapshot_document((cycle_doc#>>'{body,snapshot_id}')::uuid);"
+        },
+        "controlled_count_v1.saved_snapshot_document(uuid)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "6cb9ededafef1b7bd8df61bfd37b3b69daefd76bada3d67dadaabc9616fa4167",
+          "new_expression": " -- Validate the complete header/value shape here. The immediately following\n -- saved_boundary_manifest validates the SAME immutable PB before return.\n declare p_document jsonb:=r->'document';key_value text;participants jsonb;a jsonb;b jsonb;policy_doc jsonb;\nbegin\n if p_document is null or octet_length(p_document::text)>16777216\n or controlled_count_v1.count_wire_keys(p_document,array['schema_version','domain','id','count_id','product_id','site_id','captured_at','policy','participants','physical_boundary','physical_boundary_hash','unit_manifest','container_manifest','location_ids','record_hash'])is not true\n or p_document->'schema_version'is distinct from '1'::jsonb or(p_document->'schema_version')::text is distinct from '1'\n or p_document->'domain'is distinct from '\"lrv-controlled-count-snapshot-v1\"'::jsonb then\n  raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n foreach key_value in array array['id','count_id','product_id','site_id']loop\n  if controlled_count_v1.count_wire_uuid(p_document->key_value)is not true then raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n end loop;\n if controlled_count_v1.count_wire_time(p_document->'captured_at')is not true then raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n perform controlled_count_v1.saved_require_hash(p_document->'record_hash');perform controlled_count_v1.saved_require_hash(p_document->'physical_boundary_hash');\n if p_document->>'record_hash'is distinct from controlled_count_v1.document_hash(p_document)\n or p_document->>'physical_boundary_hash'is distinct from controlled_count_v1.saved_boundary_hash(p_document->'physical_boundary')then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n\n perform controlled_count_v1.observation_manifest_values(jsonb_build_object('units',p_document->'unit_manifest','containers',p_document->'container_manifest'));\n perform controlled_count_v1.saved_uuid_array_values(p_document->'location_ids',4096);\n policy_doc:=controlled_count_v1.policy_values(p_document->'policy');participants:=p_document->'participants';\n if controlled_count_v1.count_wire_keys(participants,array['actor_a','actor_b'])is not true then raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n a:=controlled_count_v1.actor_values(participants->'actor_a');b:=participants->'actor_b';\n if controlled_count_v1.count_wire_keys(b,array['id','name','live_roles','policy_id','policy_hash'])is not true\n or controlled_count_v1.count_wire_uuid(b->'id')is not true or controlled_count_v1.count_wire_uuid(b->'policy_id')is not true then\n  raise exception 'count_value_invalid'using errcode='P0001',detail='',hint='';end if;\n perform public.controlled_stock_text(b->'name',200,false);perform controlled_count_v1.role_set_values(b->'live_roles',true);perform controlled_count_v1.saved_require_hash(b->'policy_hash');\n if a->'id'=b->'id'or a#>'{current_authorization,capability}'is distinct from '\"observe\"'::jsonb\n or policy_doc->'product_id'is distinct from p_document->'product_id'or policy_doc->'site_id'is distinct from p_document->'site_id'\n or a#>'{current_authorization,product_id}'is distinct from p_document->'product_id'or a#>'{current_authorization,site_id}'is distinct from p_document->'site_id'\n or a#>'{current_authorization,policy_id}'is distinct from policy_doc->'policy_id'or a#>'{current_authorization,policy_hash}'is distinct from policy_doc->'record_hash'\n or b->'policy_id'is distinct from policy_doc->'policy_id'or b->'policy_hash'is distinct from policy_doc->'record_hash'\n or controlled_count_v1.policy_capability_values(policy_doc,a#>'{current_authorization,live_roles}','observe')is not true\n or controlled_count_v1.policy_capability_values(policy_doc,b->'live_roles','observe')is not true\n or(policy_doc->>'recorded_at')::timestamptz>(p_document->>'captured_at')::timestamptz then\n  raise exception 'count_source_invalid'using errcode='P0001',detail='',hint='';end if;\n d:=p_document;\nend;",
+          "old_body_sha256": "742923ca75a7a41dad4f7f44a50d3a324d809ef0f6ee812965a561210c61b77f",
+          "old_expression": " d:=controlled_count_v1.saved_snapshot_values(r->'document');"
+        }
+      },
+      "only_four_function_body_hashes_and_one_derived_source_hash": true,
+      "real_Auth_verification_pending": true
+    },
+    "staff_sql_expression_repairs": {
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_v1.policy_closure_values(jsonb,jsonb)": {
+          "actual_real_Auth_verification_pending": true,
+          "all_other_checks_unchanged": true,
+          "complete_source_inverse": true,
+          "new_body_sha256": "26a779db438f7705d4466e0c867cbcdad1f1e2d319a8fb5d6e6f3c35ec9f6b6e",
+          "new_expression": "((p_policy->'actor')-'name')::text",
+          "old_body_sha256": "966e3308ae471e4a8b80946478d9614a50a2a91e473e9dffb6a569e01cf7dd52",
+          "old_expression": "(p_policy->'actor'-'name')::text"
+        },
+        "controlled_stock_workflow_v1.managed_parent_row_values(jsonb)": {
+          "actual_real_Auth_verification_pending": true,
+          "all_other_checks_unchanged": true,
+          "complete_source_inverse": true,
+          "new_body_sha256": "1f798a3fdb12858f93b522e8b5a51ed3d6c0458fcd27c1a47197caf6f2f09fff",
+          "new_expression": "jsonb_array_elements(f->'expected_effects') AS expected_effect(effect) GROUP BY expected_effect.effect-'quantity_delta'",
+          "old_body_sha256": "e87af79400fd2e75ed9eef89af3befae7b7d6364f4259da362aa617b2b29d969",
+          "old_expression": "jsonb_array_elements(f->'expected_effects')x group by x-'quantity_delta'"
+        },
+        "controlled_stock_workflow_v1.witness_row_required(jsonb)": {
+          "actual_real_Auth_verification_pending": true,
+          "all_other_checks_unchanged": true,
+          "complete_source_inverse": true,
+          "new_body_sha256": "04682845bad50dbbe30a6b29572ec53a23c54c8eb6693c42bf228e690f38466e",
+          "new_expression": "((p_row->'request')-array['preparation_digest','attest_witness'])::text",
+          "old_body_sha256": "d3cb5367a0fb225815099a967c129f1c4e6beb3fbb8593501959a7744738cad9",
+          "old_expression": "(p_row->'request'-array['preparation_digest','attest_witness'])::text"
+        }
+      },
+      "only_three_function_body_hash_metadata_differences": true
+    },
+    "validated_count_scope_reuse": {
+      "all_deadlines_unchanged": true,
+      "both_original_full_boundaries_validated_before_reuse": true,
+      "changed_components_source_sha256": "5207dbfcbdcfadc5bacc9f7ff5d685e241fda4f1a210a98ed34a1ee7ca869b3f",
+      "common_statement_source_sha256": "adddd0c05f6b46bb5f4f199a4c70f5908712ce23fa727bff51634162960c15f8",
+      "complete_CLI_file_inverse": true,
+      "existing_historical_rows_rewritten": false,
+      "functions": {
+        "controlled_count_v1.readcore_saved_count_children(text,jsonb,jsonb,jsonb,jsonb)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "296cd87e380653b04a34b851a732cd43f66717dd55d54aee8333e81aee48672f",
+          "old_body_sha256": "df34bc780c3d4804e1a306df9a4d88c1404236d2e0e5f1ad08d2e028211f3a18"
+        },
+        "controlled_count_v1.saved_count_children(text,jsonb,jsonb,jsonb,jsonb)": {
+          "complete_source_inverse": true,
+          "new_body_sha256": "849371026fbd21392b8f9e8d06107f46d9daa9840ed29fa63be701571ac3ec3a",
+          "old_body_sha256": "f3828cacfe6ac656d81664b4f5800129423ced719b724efeff8a4bb02488f166"
+        }
+      },
+      "no_cached_certificates": true,
+      "only_two_body_hashes_and_one_derived_source_hash": true,
+      "real_Auth_verification_pending": true,
+      "statement_policy_and_registry_and_slot_and_time_and_membership_and_cause_checks_retained": true
+    }
+  },
+  "transaction_owner": "official CLI; outer BEGIN/COMMIT removed; advisory installation fence added; exact historical ledger literals restored from independent source pins",
+  "verification_pending": [
+    "authenticated whole-count closure",
+    "full121 business profiles",
+    "all10 ordinary writers",
+    "real authenticated browser",
+    "forward CLI atomicity/ledger/current metadata",
+    "CI and review",
+    "named PR approval"
+  ]
+}

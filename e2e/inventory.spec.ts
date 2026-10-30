@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { unmanagedStockProbe } from "./helpers/unmanaged-stock";
 const backend = "http://127.0.0.1:54321";
 const actor = "11111111-1111-4111-8111-111111111111";
 const pet = "22222222-2222-4222-8222-222222222222";
@@ -20,7 +21,7 @@ async function fixture(
   };
   const expires = Math.floor(Date.now() / 1000) + 3600;
   const session = {
-    access_token: `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({ sub: actor, exp: expires, role: "authenticated" })).toString("base64url")}.synthetic`,
+    access_token: `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({ sub: actor, session_id: "99999999-9999-4999-8999-999999999999", exp: expires, role: "authenticated" })).toString("base64url")}.synthetic`,
     refresh_token: "synthetic",
     token_type: "bearer",
     expires_in: 3600,
@@ -61,6 +62,7 @@ async function fixture(
 
   await page.route(`${backend}/**`, async (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (path === "/rest/v1/rpc/probe_controlled_stock_intent_v1") return route.fulfill({ contentType: "application/json", body: unmanagedStockProbe(route.request().postDataJSON(), "77777777-7777-4777-8777-777777777777") });
     if (path === "/rest/v1/rpc/list_appointment_catalog") return route.fulfill({ json: { items: [], next: null } });
     if (path === "/rest/v1/rpc/read_appointment_catalog_binding") return route.fulfill({ json: null });
     if (path === "/auth/v1/user") return route.fulfill({ json: user });
@@ -150,7 +152,7 @@ async function fixture(
         json: [
           {
             id: lot,
-            product_id: "product",
+            product_id: "77777777-7777-4777-8777-777777777777",
             product_name: "Rabies vaccine",
             kind: "vaccine",
             unit: "dose",

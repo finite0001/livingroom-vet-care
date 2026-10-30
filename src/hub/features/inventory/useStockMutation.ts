@@ -1,3 +1,6 @@
+import { snapshotControlledLegacyIntent } from "../controlled-drugs/entry/legacy-intent";
+import { useControlledWriterIdentity } from "../controlled-drugs/entry/use-controlled-writer-identity";
+import { ControlledStockWriteError } from "../controlled-drugs/entry/gateway";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hub/contexts/auth-context";
@@ -11,10 +14,12 @@ interface PendingRequest {
   actor: string;
   name: InventoryMutation;
   args: InventoryMutationArgs;
+  intentBody: string;
 }
 const pendingRequests = new Map<string, PendingRequest>();
 export function useStockMutation(scope = "inventory") {
   const { user } = useAuth();
+  const expectedIdentity = useControlledWriterIdentity();
   const queryClient = useQueryClient();
   const storageKey = `${user?.id}:${scope}`;
   const operation = useRef<PendingRequest | null>(
@@ -38,18 +43,35 @@ export function useStockMutation(scope = "inventory") {
     args: InventoryMutationArgs,
   ): Promise<boolean> {
     if (lock.current) return false;
+    if ((name === "receive_inventory" || name === "adjust_inventory" || name === "record_patient_treatment") &&
+      (!expectedIdentity || expectedIdentity.actorId !== user?.id)) {
+      setError("Confirm your staff session before recording this entry.");
+      return false;
+    }
     if (!user || (operation.current && operation.current.actor !== user.id)) {
       setError("Sign in with the staff account that started this request.");
       return false;
     }
-    operation.current ??= { actor: user.id, name, args: structuredClone(args) };
+    let intentBody: string;
+    try {
+      intentBody = name === "receive_inventory" || name === "adjust_inventory" || name === "record_patient_treatment"
+        ? snapshotControlledLegacyIntent(name, args).requestBody : JSON.stringify(args);
+    } catch {
+      setError("Review the complete entry before submitting it.");
+      return false;
+    }
+    if (operation.current && (operation.current.name !== name || operation.current.intentBody !== intentBody)) {
+      setError("Recover the original request before submitting different values.");
+      return false;
+    }
+    operation.current ??= { actor: user.id, name, args: JSON.parse(intentBody) as InventoryMutationArgs, intentBody };
     pendingRequests.set(storageKey, operation.current);
     lock.current = true;
     setBusy(true);
     setError("");
     setSuccess("");
     try {
-      await mutateInventory(operation.current.name, operation.current.args);
+      await mutateInventory(operation.current.name, operation.current.args, expectedIdentity);
       operation.current = null;
       pendingRequests.delete(storageKey);
       setUncertain(false);
@@ -62,7 +84,9 @@ export function useStockMutation(scope = "inventory") {
         void queryClient.invalidateQueries({ queryKey: [prefix] });
       return true;
     } catch (failure) {
-      const definitive = isDefinitiveRejection(failure);
+      const definitive = failure instanceof ControlledStockWriteError
+        ? failure.definitive && (!uncertain || failure.code === "CONTROLLED_ENTRY_CANCELLED")
+        : isDefinitiveRejection(failure);
       if (definitive) {
         operation.current = null;
         pendingRequests.delete(storageKey);

@@ -1,0 +1,375 @@
+name: Narcotics installation rehearsal
+
+on:
+  push:
+    branches: [feat/controlled-count-staff-20261026]
+    paths:
+      - 'scripts/narcotics-log/**'
+      - 'supabase/migrations/2026102722*.sql'
+      - 'supabase/migrations/20261028170038_narcotics_register_exports_and_recovery.sql'
+      - 'src/hub/features/controlled-drugs/**'
+      - 'src/hub/contexts/**'
+      - 'src/hub/pages/LoginPage.tsx'
+      - 'src/integrations/supabase/client.ts'
+      - 'src/App.tsx'
+      - 'tests/controlled-drugs/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/narcotics-installation.yml'
+  pull_request:
+    paths:
+      - 'scripts/narcotics-log/**'
+      - 'supabase/migrations/2026102722*.sql'
+      - 'supabase/migrations/20261028170038_narcotics_register_exports_and_recovery.sql'
+      - 'src/hub/features/controlled-drugs/**'
+      - 'src/hub/contexts/**'
+      - 'src/hub/pages/LoginPage.tsx'
+      - 'src/integrations/supabase/client.ts'
+      - 'src/App.tsx'
+      - 'tests/controlled-drugs/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/narcotics-installation.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: narcotics-installation-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  historical-source-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Materialize and admit the unchanged historical release
+        run: python3 -I -B scripts/narcotics-log/prepare_historical_ci.py
+      - name: Verify retained installation artifacts in that historical view
+        working-directory: ../lrv-canonical206-regression
+        run: |
+          python3 -B tests/controlled-drugs/engine/candidate/release_assembly.py --check
+          python3 -B tests/controlled-drugs/engine/candidate/cli_migration_body.py --check
+          python3 -B tests/controlled-drugs/engine/candidate/secondary_review_release.py --check
+          python3 -B tests/controlled-drugs/engine/candidate/secondary_review_cli_body.py --check
+
+  forward-installation:
+    # This is installation evidence only. Auth, ordinary writers, count
+    # execution and staff browser acceptance have separate remaining gates.
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
+      - run: npm ci --ignore-scripts
+      - name: Verify process containment and framing controls
+        run: |
+          python3 -B -m unittest discover -s scripts/narcotics-log -p 'test_*.py'
+          node --test scripts/narcotics-log/frame-cli.test.mjs
+      - name: Derive forward ledger hashes from the pinned official CLI parser
+        run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
+      - name: Check complete source admission
+        run: python3 -I -B scripts/narcotics-log/install_rehearsal.py --check-source
+      - name: Rehearse actual owned CLI installation and complete source properties
+        run: python3 -I -B scripts/narcotics-log/install_rehearsal.py --run-synthetic-local
+      - name: Retain scoped installation diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-installation-evidence
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/*-failure.txt
+            /tmp/lrv-narcotics-install-*/*-permanent-rows.json
+            /tmp/lrv-narcotics-install-*/common-source-properties.json
+            /tmp/lrv-narcotics-install-*/full-module-properties.json
+            /tmp/lrv-narcotics-install-*/forward-ledger.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log
+
+  authored-history-installation:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
+      - run: npm ci --ignore-scripts
+      - name: Verify exact source receipt variants
+        run: |
+          python3 -I -B scripts/narcotics-log/hosted_history.py --check-source
+          node scripts/narcotics-log/frame-hosted-history.mjs --write-candidate
+          node scripts/narcotics-log/frame-cli.mjs --write-candidate
+          python3 -I -B scripts/narcotics-log/hosted_rehearsal.py --check-source
+      - name: Rehearse authored history and complete CLI installation
+        run: python3 -I -B scripts/narcotics-log/hosted_rehearsal.py --run-synthetic-local
+      - name: Retain scoped installation diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-authored-history-installation
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/*-failure.txt
+            /tmp/lrv-narcotics-install-*/forward-ledger.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log
+
+  genuine-business:
+    needs: forward-installation
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        profile: [commission_all, count_agreement, browser_lost_finalize,
+                  ordinary_none, record_review_signing, independent_witness, variance_reconciliation,
+                  scalars, clinical, native_pickup_annotation, native_return_v1,
+                  native_return_v2_discrepancy]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
+      - run: npm ci --ignore-scripts
+      - if: matrix.profile == 'browser_lost_finalize'
+        run: npx playwright install --with-deps chromium
+      - run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
+      - name: Trace clinical execution failure in a disposable instrumented database
+        if: matrix.profile == 'clinical'
+        continue-on-error: true
+        run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local --target clinical-execute
+      - name: Trace count finalization failure in a disposable instrumented database
+        if: matrix.profile == 'count_agreement'
+        continue-on-error: true
+        run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local --target count-finalize
+      - name: Retain only the synthetic native error before normal acceptance
+        if: always() && (matrix.profile == 'clinical' || matrix.profile == 'count_agreement')
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-engineering-native-error-${{ matrix.profile }}
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/diagnostic-native-failure-*.txt
+            /tmp/lrv-narcotics-install-*/diagnostic-function-costs.json
+      - name: Trace discrepancy execution in a separate owned engineering database
+        if: matrix.profile == 'variance_reconciliation'
+        continue-on-error: true
+        run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local --target variance-execute
+      - name: Retain bounded variance native error and timing
+        if: always() && matrix.profile == 'variance_reconciliation'
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-engineering-variance-execute
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/diagnostic-native-failure-variance-execute.txt
+            /tmp/lrv-narcotics-install-*/diagnostic-function-costs.json
+      - name: Admit fixed genuine business sources
+        run: python3 -I -B scripts/narcotics-log/business_rehearsal.py --check-source --profile ${{ matrix.profile }}
+      - name: Verify real staff accounts, business effects and normal cleanup
+        run: python3 -I -B scripts/narcotics-log/business_rehearsal.py --run-synthetic-local --profile ${{ matrix.profile }}
+      - name: Retain scoped diagnostics without local passwords or session tokens
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-business-${{ matrix.profile }}
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/rpc-failure.json
+            /tmp/lrv-narcotics-install-*/*-failure.txt
+            /tmp/lrv-narcotics-install-*/*-permanent-rows.json
+            /tmp/lrv-narcotics-install-*/genuine-Auth-complete-effects.json
+            /tmp/lrv-narcotics-install-*/sequence-source-effects.json
+            /tmp/lrv-narcotics-install-*/authenticated-browser-proof.json
+            /tmp/lrv-narcotics-install-*/browser-candidate-diagnostic.json
+            /tmp/lrv-genuine-count4-v2-*/browser-count-finalize-proof/agreement-after-recovery.png
+            /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log
+
+  register-engineering:
+    needs: forward-installation
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
+      - run: npm ci --ignore-scripts
+      - run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
+      - name: Exercise reports and preserved forms in an owned engineering database
+        continue-on-error: true
+        run: python3 -I -B scripts/narcotics-log/diagnose_register.py --run-synthetic-local
+      - name: Retain bounded source and API diagnostics, never release acceptance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-register-engineering
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/register-source-proof.json
+            /tmp/lrv-narcotics-install-*/register-engineering-proof.json
+            /tmp/lrv-narcotics-install-*/register-native-wire-proof.json
+            /tmp/lrv-narcotics-install-*/recovery-permission-engineering-proof.json
+            /tmp/lrv-narcotics-install-*/recovery-boundary-engineering-proof.json
+            /tmp/lrv-narcotics-install-*/recovery-state-engineering-proof.json
+            /tmp/lrv-narcotics-install-*/recovery-no-hook-gate-engineering-proof.json
+            /tmp/lrv-narcotics-install-*/recovery-source-controls-engineering-proof.json
+            /tmp/lrv-narcotics-install-*/recovery-exact-gateway-profile.json
+            /tmp/lrv-narcotics-install-*/register-engineering-install-stderr.bin
+            /tmp/lrv-narcotics-install-*/rpc-failure.json
+            /tmp/lrv-narcotics-install-*/*-failure.txt
+
+  operational-staff-browser:
+    needs: forward-installation
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
+      - name: Admit original operational frontend and backend sources
+        run: python3 -I -B scripts/narcotics-log/operational_browser.py --check-source
+      - name: Verify real staff login and interrupted operational saves
+        run: python3 -I -B scripts/narcotics-log/operational_browser.py --run-synthetic-local
+      - name: Retain bounded results without credentials or session tokens
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-operational-staff-browser
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/primary-failure.txt
+            /tmp/lrv-narcotics-install-*/cleanup-failure.txt
+            /tmp/lrv-narcotics-install-*/source-failure.txt
+            /tmp/lrv-narcotics-install-*/authenticated-operational-browser-proof.json
+            /tmp/lrv-narcotics-install-*/operational-browser-failure.json
+            /tmp/lrv-operational-browser-*/operational-browser-proof/result.json
+            /tmp/lrv-operational-browser-*/operational-browser-proof/actual-operational-workspace.png
+
+  pending-validation-rollback:
+    needs: forward-installation
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
+      - run: npm ci --ignore-scripts
+      - run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
+      - name: Prove genuine count failure rolls back all records
+        run: python3 -I -B scripts/narcotics-log/pending_fault_rehearsal.py --run-synthetic-local
+      - name: Retain engineering negative proof separately from acceptance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-pending-validation-rollback
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/pending-fault-rollback-proof.json
+            /tmp/lrv-narcotics-install-*/pending-fault-source-inverses.json
+            /tmp/lrv-narcotics-install-*/pending-fault-policy-grammar-controls.json
+            /tmp/lrv-narcotics-install-*/cleanup-failure.txt
+            /tmp/lrv-narcotics-install-*/source-failure.txt
+
+  populated-recovery:
+    needs: forward-installation
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
+      - run: npm ci --ignore-scripts
+      - run: node scripts/narcotics-log/frame-cli.mjs --write-candidate
+      - name: Verify complete populated recovery using original Auth principals
+        run: python3 -I -B scripts/narcotics-log/receiver_rehearsal.py --run-synthetic-local
+      - name: Retain bounded synthetic result diagnostics only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcotics-populated-recovery
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/primary-failure.txt
+            /tmp/lrv-narcotics-install-*/cleanup-failure.txt
+            /tmp/lrv-narcotics-install-*/source-failure.txt
+            /tmp/lrv-narcotics-install-*/rpc-failure.json
+            /tmp/lrv-narcotics-install-*/receiver/rpc-failure.json
+            /tmp/lrv-narcotics-install-*/receiver/restore-source-differences.json
+            /tmp/lrv-narcotics-install-*/receiver/populated-recovery-result.json
+            /tmp/lrv-narcotics-install-*/receiver/receiver-actual-Auth-effects.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log
+            /tmp/lrv-narcotics-install-*/receiver/bootstrap/*-status.json
+            /tmp/lrv-narcotics-install-*/receiver/bootstrap/*-stderr.log

@@ -34,6 +34,7 @@ const detail = z.object({ version: wireInteger(3), state: z.literal("detail"), d
 }).strict() }).strict();
 const exception = z.object({ version: wireInteger(3), state: z.literal("exception"), data: z.object({ summary: reviewSummarySchema }).strict() }).strict();
 const response = z.discriminatedUnion("state", [detail, exception]);
+export const reviewDetailResponseSchema = response;
 export interface ReviewDetail extends z.infer<typeof detail> {}
 export interface ReviewDetailException extends z.infer<typeof exception> {}
 export type ReviewDetailResponse = ReviewDetail | ReviewDetailException;

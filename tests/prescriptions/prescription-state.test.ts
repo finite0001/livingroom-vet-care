@@ -1,3 +1,4 @@
+import { ControlledStockWriteError } from "../../src/hub/features/controlled-drugs/entry/gateway.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { commitPrescriptionOperation, discardPrescriptionReview, emptyPrescriptionOperation, prescriptionOperationConfirmed, prescriptionOperationFailed, prescriptionOperationLocked, prescriptionRecoveryAbsent, prescriptionRecoveryFailed, recoverPrescriptionOperation, reviewPrescriptionOperation } from "../../src/hub/features/prescriptions/prescription-state.ts";
@@ -75,4 +76,14 @@ test("review is explicit and can be discarded before sending without a pending o
   assert.deepEqual(discardPrescriptionReview(reviewed), initial());
   assert.equal(recoverPrescriptionOperation(reviewed), reviewed);
   assert.equal(prescriptionOperationConfirmed(reviewed, reply), reviewed);
+});
+
+test("only typed definitive controlled errors clear intent; pre-send refusal cannot erase an older unknown flight", () => {
+  const unavailable = new ControlledStockWriteError("CONTROLLED_ENTRY_UNAVAILABLE", true);
+  assert.equal(prescriptionOperationFailed(submitted(), reply, unavailable).phase, "editing");
+  assert.equal(prescriptionOperationFailed(submitted(), reply, { code: unavailable.code, definitive: true }).phase, "uncertain");
+  const older = prescriptionRecoveryAbsent(recoverPrescriptionOperation(prescriptionOperationFailed(submitted(), reply, new Error("lost"))), reply);
+  assert.equal(prescriptionOperationFailed(commitPrescriptionOperation(older), reply, unavailable).phase, "uncertain");
+  assert.equal(prescriptionOperationFailed(commitPrescriptionOperation(older), reply, new ControlledStockWriteError("CONTROLLED_ENTRY_CANCELLED", true)).phase, "editing");
+  assert.equal(prescriptionOperationFailed(submitted(), reply, new ControlledStockWriteError("CONTROLLED_ENTRY_PENDING", false)).phase, "uncertain");
 });

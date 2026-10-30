@@ -1,0 +1,470 @@
+{
+  "kind": "independent-python-all22-vectors-not-SQL-execution",
+  "source_sha256": "cb9cc16b1e57738837dd440ae3742542e853102982f61fb54d4b25fc79696224",
+  "grammar_sha256": "31113fb6e576aa90a9773dc57d21aeac5904f933646835054181bfb90989c26e",
+  "request_vectors": [
+    {
+      "action": "stock_policy",
+      "actor_id": "10000000-0000-4000-8000-000000000001",
+      "definition": {
+        "draft_version_id": "50000000-0000-4000-8000-000000000001",
+        "expected_policy_version_id": "60000000-0000-4000-8000-000000000001",
+        "policy": {
+          "clinic_retained_return_permitted": false,
+          "permissions": {
+            "adjust_inventory": {
+              "basis": "physical_record",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "append_native_dispense_correction:clinical_annotation": {
+              "basis": "annotation",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "append_native_dispense_correction:operational_annotation": {
+              "basis": "annotation",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "append_native_dispense_correction:pickup_amendment": {
+              "basis": "annotation",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "receive_inventory": {
+              "basis": "physical_record",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_anesthesia_drug_administration": {
+              "basis": "physical_record",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_dispense": {
+              "basis": "physical_record",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_dispense_return:dispose": {
+              "basis": "physical_record",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_dispense_return:intake": {
+              "basis": "physical_record",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_dispense_return:restock": {
+              "basis": "physical_record",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_dispense_return_v2:dispose": {
+              "basis": "physical_record",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_dispense_return_v2:intake": {
+              "basis": "physical_record",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_dispense_return_v2:restock": {
+              "basis": "physical_record",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_dispense_return_v2:retract_disposal": {
+              "basis": "correction_assertion",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_dispense_return_v2:retract_intake": {
+              "basis": "correction_assertion",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_dispense_return_v2:retract_restock": {
+              "basis": "correction_assertion",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_pickup": {
+              "basis": "physical_record",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_return_discrepancy:note": {
+              "basis": "discrepancy_assertion",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_return_discrepancy:report": {
+              "basis": "discrepancy_assertion",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_return_discrepancy:resolve_confirmed_original": {
+              "basis": "discrepancy_assertion",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_native_return_discrepancy:resolve_corrected": {
+              "basis": "discrepancy_assertion",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            },
+            "record_patient_treatment": {
+              "basis": "physical_record",
+              "enabled": false,
+              "location_kinds": [],
+              "roles": [],
+              "secondary_review": false,
+              "witness": "none"
+            }
+          },
+          "review_reference": "Pure22-kind source policy vector; no actual commissioning",
+          "site_ids": [
+            "30000000-0000-4000-8000-000000000001"
+          ]
+        },
+        "reason": "Pure codec vector"
+      },
+      "operation_id": "20000000-0000-4000-8000-000000000001",
+      "product_id": "40000000-0000-4000-8000-000000000001",
+      "schema_version": 1,
+      "site_id": "30000000-0000-4000-8000-000000000001"
+    },
+    {
+      "action": "review_configuration",
+      "actor_id": "10000000-0000-4000-8000-000000000001",
+      "definition": {
+        "approval_reference": "Pure22-kind source review vector; no actual publication",
+        "body": {
+          "calendar_id": null,
+          "effective_from": {
+            "at": null,
+            "mode": "now"
+          },
+          "native_deadline_kind": null,
+          "routing_id": null,
+          "rules": {
+            "adjust_inventory": {
+              "adapter_version": 1,
+              "deadline_anchor": "observed_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "append_native_dispense_correction:clinical_annotation": {
+              "adapter_version": 1,
+              "deadline_anchor": "recorded_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "append_native_dispense_correction:operational_annotation": {
+              "adapter_version": 1,
+              "deadline_anchor": "recorded_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "append_native_dispense_correction:pickup_amendment": {
+              "adapter_version": 1,
+              "deadline_anchor": "recorded_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "receive_inventory": {
+              "adapter_version": 1,
+              "deadline_anchor": "observed_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_anesthesia_drug_administration": {
+              "adapter_version": 1,
+              "deadline_anchor": "observed_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_dispense": {
+              "adapter_version": 1,
+              "deadline_anchor": "observed_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_dispense_return:dispose": {
+              "adapter_version": 1,
+              "deadline_anchor": "observed_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_dispense_return:intake": {
+              "adapter_version": 1,
+              "deadline_anchor": "observed_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_dispense_return:restock": {
+              "adapter_version": 1,
+              "deadline_anchor": "observed_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_dispense_return_v2:dispose": {
+              "adapter_version": 1,
+              "deadline_anchor": "observed_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_dispense_return_v2:intake": {
+              "adapter_version": 1,
+              "deadline_anchor": "observed_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_dispense_return_v2:restock": {
+              "adapter_version": 1,
+              "deadline_anchor": "observed_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_dispense_return_v2:retract_disposal": {
+              "adapter_version": 1,
+              "deadline_anchor": "recorded_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_dispense_return_v2:retract_intake": {
+              "adapter_version": 1,
+              "deadline_anchor": "recorded_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_dispense_return_v2:retract_restock": {
+              "adapter_version": 1,
+              "deadline_anchor": "recorded_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_pickup": {
+              "adapter_version": 1,
+              "deadline_anchor": "observed_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_return_discrepancy:note": {
+              "adapter_version": 1,
+              "deadline_anchor": "recorded_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_return_discrepancy:report": {
+              "adapter_version": 1,
+              "deadline_anchor": "recorded_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_return_discrepancy:resolve_confirmed_original": {
+              "adapter_version": 1,
+              "deadline_anchor": "recorded_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_native_return_discrepancy:resolve_corrected": {
+              "adapter_version": 1,
+              "deadline_anchor": "recorded_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            },
+            "record_patient_treatment": {
+              "adapter_version": 1,
+              "deadline_anchor": "observed_at",
+              "deadline_mode": "not_configured",
+              "enabled": false,
+              "escalation_mode": "not_configured",
+              "meaning": "independent_record_review_v1",
+              "quorum": 1
+            }
+          }
+        },
+        "enabled": false,
+        "expected_predecessor_id": null,
+        "kind": "policy",
+        "scope": {
+          "capability": null,
+          "event_kind": null,
+          "product_id": "40000000-0000-4000-8000-000000000001",
+          "site_id": "30000000-0000-4000-8000-000000000001"
+        }
+      },
+      "operation_id": "20000000-0000-4000-8000-000000000001",
+      "product_id": "40000000-0000-4000-8000-000000000001",
+      "schema_version": 1,
+      "site_id": "30000000-0000-4000-8000-000000000001"
+    }
+  ],
+  "receipt_vectors": [
+    {
+      "action": "stock_policy",
+      "actor_id": "10000000-0000-4000-8000-000000000001",
+      "operation_id": "20000000-0000-4000-8000-000000000001",
+      "preparation_id": "20000000-0000-4000-8000-000000000001",
+      "product_id": "40000000-0000-4000-8000-000000000001",
+      "receipt_digest": "020d49f9d170371ae169680dbd83a5ba745f091153eb45c3f011494f296e792c",
+      "recorded_at": "2026-10-27T12:00:00.123456Z",
+      "request_digest": "bd7dbb63fcb2d8005a1cbe1013ba04bffc71b770c3e9cae8e03be3f211c334a9",
+      "result_ref": {
+        "id": "20000000-0000-4000-8000-000000000001",
+        "kind": "stock_policy",
+        "version": "2"
+      },
+      "schema_version": 1,
+      "site_id": "30000000-0000-4000-8000-000000000001"
+    },
+    {
+      "action": "review_configuration",
+      "actor_id": "10000000-0000-4000-8000-000000000001",
+      "operation_id": "20000000-0000-4000-8000-000000000001",
+      "preparation_id": "20000000-0000-4000-8000-000000000001",
+      "product_id": "40000000-0000-4000-8000-000000000001",
+      "receipt_digest": "cce0dcc9b9a8d88d670165a732306985828b755ad9d682fded7f80b3e7b62f02",
+      "recorded_at": "2026-10-27T12:00:00.123456Z",
+      "request_digest": "eb4b87ae2cd7036bc63b8b6f02936b41e696d54de3bdb466d67c40e9901cb955",
+      "result_ref": {
+        "id": "20000000-0000-4000-8000-000000000001",
+        "kind": "configuration",
+        "version": "2"
+      },
+      "schema_version": 1,
+      "site_id": "30000000-0000-4000-8000-000000000001"
+    }
+  ]
+}

@@ -148,3 +148,18 @@ test("read failure aborts once without retry or private error disclosure", async
       error instanceof ReviewReadTransportError && error.kind === "unavailable" && !String(error).includes("PRIVATE"));
   }
 });
+
+test("reconstruction and review-scope discovery have closed requests and bounded raw responses", async () => {
+  const scopes = { schema_version: 1, actor_id: actor, cursor: null, page_size: 100 };
+  const admission = { schema_version: 1, ...detail, operation_id: null, view: "detail" };
+  const sent: string[] = [];
+  const rpc = createReviewReadRpc(config, source(), async (url, options) => { sent.push(String(url));
+    assert.deepEqual(JSON.parse(options!.body as string), { p_request: String(url).includes("discover_") ? scopes : admission }); return response(); });
+  await rpc.call("discover_controlled_record_review_scopes_v1", scopes, identity, () => {});
+  await rpc.call("get_controlled_record_review_admission_v1", admission, identity, () => {});
+  await assert.rejects(rpc.call("get_controlled_record_review_admission_v1", { ...admission, operation_id: other }, identity, () => {}));
+  await assert.rejects(rpc.call("discover_controlled_record_review_scopes_v1", { ...scopes, count_access: true }, identity, () => {}));
+  assert.equal(sent.length, 2);
+  const oversized = createReviewReadRpc(config, source(), async () => new Response(JSON.stringify({ text: "x".repeat(2 * 1024 * 1024) }), { headers: { "content-type": "application/json" } }));
+  await assert.rejects(oversized.call("discover_controlled_record_review_scopes_v1", scopes, identity, () => {}));
+});

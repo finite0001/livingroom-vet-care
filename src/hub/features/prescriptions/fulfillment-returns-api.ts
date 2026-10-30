@@ -1,3 +1,7 @@
+import type { ExactJson } from "../controlled-drugs/record-review/exact-json.ts";
+import type { ReviewIdentity } from "../controlled-drugs/record-review/raw-rpc.ts";
+import { invokeCapturedControlledWriter, type ControlledWriterInvoker } from "../controlled-drugs/entry/controlled-api.ts";
+import { admitLegacyResult } from "../controlled-drugs/entry/legacy-result.ts";
 /** Closed native custody/stock-return boundaries; quantities remain exact decimals. */
 import { z } from "zod";
 import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
@@ -442,6 +446,8 @@ export function createNativeReturnsApi(
   client: PrescriptionRpc,
   actor: string,
   target: z.infer<typeof targetSchema>,
+  expectedIdentity?: Readonly<ReviewIdentity> | null,
+  controlledInvoke?: ControlledWriterInvoker,
 ) {
   uuid.parse(actor);
   targetSchema.parse(target);
@@ -517,6 +523,9 @@ export function createNativeReturnsApi(
     return r;
   }
   return {
+    admitSaved(id:string,requestRaw:ExactJson,resultRaw:ExactJson){
+      return receipt(admitLegacyResult(receiptSchema,resultRaw),{id,kind:"record_return",payload:admitLegacyResult(returnRequestSchema,requestRaw)});
+    },
     async read() {
       const raw = await rpc("read_native_dispense_returns", args);
       if (raw === null) return null;
@@ -668,13 +677,8 @@ export function createNativeReturnsApi(
     },
     async execute(op: Readonly<PrescriptionOperation>) {
       const q = request(op);
-      return receipt(
-        await rpc("record_native_dispense_return", {
-          p_id: op.id,
-          p_request: q,
-        }),
-        op,
-      );
+      return invokeCapturedControlledWriter("record_native_dispense_return", { p_id: op.id, p_request: q }, actor,
+        expectedIdentity, raw => receipt(admitLegacyResult(receiptSchema, raw), op), controlledInvoke);
     },
     async recover(op: Readonly<PrescriptionOperation>) {
       request(op);

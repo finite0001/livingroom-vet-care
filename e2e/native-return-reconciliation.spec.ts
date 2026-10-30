@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { unmanagedStockProbe } from "./helpers/unmanaged-stock";
 import {
   actor,
   id,
@@ -170,6 +171,8 @@ async function workspace(page: Page) {
   await page.route("**/rest/v1/rpc/*", async (route) => {
     const name = new URL(route.request().url()).pathname.split("/").at(-1),
       p = route.request().postDataJSON() ?? {};
+    if (name === "probe_controlled_stock_intent_v1")
+      return route.fulfill({ contentType: "application/json", body: unmanagedStockProbe(p, "80000000-0000-4000-8000-000000000001") });
     const read = {
       version: 2,
       target,

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { unmanagedStockProbe } from "./helpers/unmanaged-stock";
 
 const backend = "http://127.0.0.1:54321";
 const staffId = "11111111-1111-4111-8111-111111111111";
@@ -44,6 +45,7 @@ async function fixture(page: Page) {
   const payload = Buffer.from(
     JSON.stringify({
       sub: staffId,
+      session_id: "99999999-9999-4999-8999-999999999999",
       exp: expires,
       role: "authenticated",
       aud: "authenticated",
@@ -65,6 +67,7 @@ async function fixture(page: Page) {
  await page.route('**/*',route=>new URL(route.request().url()).origin==='http://127.0.0.1:8080'?route.continue():route.abort());
  await page.route(`${backend}/**`,async route=>{
   const url=new URL(route.request().url());const path=url.pathname;
+  if(path==='/rest/v1/rpc/probe_controlled_stock_intent_v1')return route.fulfill({contentType:'application/json',body:unmanagedStockProbe(route.request().postDataJSON(),'77777777-7777-4777-8777-777777777771')});
   if(path==='/auth/v1/token')return route.fulfill({json:session});
   if(path==='/auth/v1/user')return route.fulfill({json:user});
   if(path==='/rest/v1/profiles')return route.fulfill({json:[profile]});
@@ -101,7 +104,7 @@ async function fixture(page: Page) {
   if(path==='/rest/v1/patient_treatments')return route.fulfill({json:state.treatments});
   if(path==='/rest/v1/rpc/record_anesthesia_drug_administration') {
    const body=route.request().postDataJSON();state.drugCalls.push(body);
-   const r=body.p_request;const row={id:body.p_id,pet_id:petId,product_id:'77777777-7777-4777-8777-777777777771',lot_id:r.lot_id,invoice_id:r.invoice_id,kind:'medication',historical:false,product_name:'Synthetic induction agent',manufacturer:'Synthetic',lot_number:'ANES-1',expires_on:'2999-01-01',quantity:r.quantity,dose:r.dose,route:r.route,site:r.site,veterinarian:r.veterinarian,veterinarian_license:r.veterinarian_license,administered_at:r.administered_at,next_due_on:null,source:`Anesthesia record ${body.p_record_id}`,request:r,created_by:staffId,created_at:'2026-01-02T17:30:00Z'};
+   const r=body.p_request;const row={id:body.p_id,pet_id:petId,product_id:'77777777-7777-4777-8777-777777777771',lot_id:r.lot_id,invoice_id:r.invoice_id,kind:'medication',historical:false,product_name:'Synthetic induction agent',manufacturer:'Synthetic',lot_number:'ANES-1',expires_on:'2999-01-01',quantity:r.quantity,dose:r.dose,route:r.route,site:r.site,veterinarian:r.veterinarian,veterinarian_license:r.veterinarian_license,administered_at:r.administered_at,next_due_on:null,source:`Anesthesia record ${body.p_record_id}`,request:{...r,pet_id:petId,source:`Anesthesia record ${body.p_record_id}`},created_by:staffId,created_at:'2026-01-02T17:30:00Z'};
    state.treatments.push(row);return route.fulfill({json:row});
   }
   if(path==='/rest/v1/rpc/add_anesthesia_record_addendum') {
@@ -169,7 +172,7 @@ test('stock anesthesia drug debits a lot and charges the household draft, then l
  await page.getByRole('button',{name:'Save anesthesia draft',exact:true}).click();
  await expect(page.getByRole('status').filter({hasText:'Anesthesia draft saved.'})).toBeVisible();
  const panel=page.getByRole('region',{name:'Anesthesia drugs from stock'});
- await expect(panel.getByText(/Controlled-substance \(DEA\) logs are not kept here/)).toBeVisible();
+ await expect(panel.getByText(/Medicines requiring a controlled-drug entry continue through its review before saving/)).toBeVisible();
  const lot=panel.getByLabel('Drug lot administered');
  await expect(lot.locator('option',{hasText:'ANES-1'})).toHaveCount(1);
  await expect(lot.locator('option',{hasText:'VAX-1'})).toHaveCount(0);

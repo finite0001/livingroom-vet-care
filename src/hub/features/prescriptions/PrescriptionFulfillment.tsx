@@ -1,3 +1,4 @@
+import { useControlledWriterIdentity } from "../controlled-drugs/entry/use-controlled-writer-identity";
 import { NativeDispenseFinance } from "./NativeDispenseFinance";
 import { NativeDispenseReturns } from "./NativeDispenseReturns";
 import { PrescriptionFulfillmentCorrections } from "./PrescriptionFulfillmentCorrections";
@@ -88,6 +89,7 @@ function FulfillmentWorkspace({
   inactive,
   onDirtyChange,
 }: Props) {
+  const expectedIdentity = useControlledWriterIdentity();
   const petId = authorization.pet_id;
   const releaseCache = useQueryClient();
   const api = useMemo(
@@ -96,8 +98,9 @@ function FulfillmentWorkspace({
         supabase,
         actor,
         authorization,
+        expectedIdentity,
       ),
-    [actor, authorization],
+    [actor, authorization, expectedIdentity],
   );
   const refillApi = useMemo(
     () => createNativeRefillApi(supabase, actor),

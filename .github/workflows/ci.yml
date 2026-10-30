@@ -83,14 +83,26 @@ jobs:
         run: python3 scripts/verify-clinical-audio-edge-isolation.py
 
   database:
+    name: Historical 206 database regressions
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ../lrv-canonical206-regression
     steps:
       - uses: actions/checkout@v4
+      - name: Admit unchanged historical 206 regression source
+        working-directory: ${{ github.workspace }}
+        run: python3 -I -B scripts/narcotics-log/prepare_historical_ci.py
+      - name: Select the owned historical runtime for HTTP checks
+        run: echo "LRV_HISTORICAL_PROJECT=$PWD" >> "$GITHUB_ENV"
       - name: Verify local concurrency harness regressions
         run: python3 -B -m unittest discover -s supabase/tests -p 'test_*_harness.py'
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        working-directory: ${{ github.workspace }}
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
       - name: Verify scheduler interference refusal and paused canonical installation
         run: python3 -B scripts/ci-owned-bootstrap-evidence.py --stage timer_probe
       - name: Retain encrypted scheduler proof diagnostics
@@ -213,6 +225,10 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Verify native prescribing, real browser dispensing and populated restore
         run: python3 -B tests/prescriptions/native-disposable.py --run-synthetic-local
+      - name: Project safe historical RPC failure codes without exposing private logs
+        if: failure()
+        working-directory: ${{ github.workspace }}
+        run: python3 -I -B scripts/narcotics-log/collect_historical_failure.py
       - uses: denoland/setup-deno@v2
         with:
           deno-version: 2.9.6
@@ -222,33 +238,33 @@ jobs:
       - name: Verify actual payment capability HTTP and ledger roundtrip
         run: node --experimental-strip-types tests/payment-access/local-roundtrip.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Check and cache reconciliation HTTP roundtrip dependencies
         run: deno check --frozen tests/payment-reconciliation/local-server.ts
       - name: Verify actual administrator reconciliation HTTP and proof capture
         run: node --experimental-strip-types tests/payment-reconciliation/local-roundtrip.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Check and cache payment delivery HTTP dependencies
         run: deno check --frozen tests/payment-access/delivery-local-server.ts
       - name: Verify actual payment delivery HTTP, queue and worker roundtrip
         run: node --experimental-strip-types tests/payment-access/delivery-local-roundtrip.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Verify actual clinical booking, treatment, billing and release workflow
         run: node --experimental-strip-types tests/clinical/local-workflow.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Compare PostgreSQL and TypeScript return quantity replay
         run: python3 -B tests/prescriptions/return-replay-parity.py --run-synthetic-local --project-config supabase/config.toml
       - name: Verify actual scheduler run receipts and operational discovery
         run: node --experimental-strip-types tests/operations/local-roundtrip.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Verify actual reviewed outbox retry receipts and original delivery guards
         run: node --experimental-strip-types tests/outbox-retry/local-roundtrip.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Verify actual private Storage round-trip
         run: node scripts/verify-local-storage.mjs
         env:
@@ -258,33 +274,33 @@ jobs:
       - name: Verify actual lab report HTTP and private Storage byte capture
         run: node --experimental-strip-types tests/lab-reports/local-roundtrip.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Verify signed inbound receipt and actual staff inbox workflow
         run: node --experimental-strip-types tests/inbound/local-roundtrip.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Verify signed SMS consent ordering and inbox persistence
         run: node --experimental-strip-types tests/inbound/sms-local-roundtrip.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Check and cache external record HTTP dependencies
         run: deno check --frozen tests/external-records/local-server.ts
       - name: Verify actual external record HTTP and private file capture
         run: node --experimental-strip-types tests/external-records/local-roundtrip.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Verify patient-scoped clinical imports through actual HTTP and Auth
         run: node --experimental-strip-types tests/ezyvet/clinical-local-roundtrip.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Verify consult-scoped vaccination imports through actual HTTP and Auth
         run: node --experimental-strip-types tests/ezyvet/vaccination-local-roundtrip.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Verify prescription intake and clinical review through actual HTTP and Auth
         run: node --experimental-strip-types tests/ezyvet/prescription-local-roundtrip.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Verify unpaid invoice reminders through local Auth, browser, contention and populated restore
         run: python3 -B tests/invoice-reminders/disposable.py --run-synthetic-local
       - name: Verify source-bound dictation review through real Auth, browser, competing edits and populated restore
@@ -310,32 +326,32 @@ jobs:
       - name: Verify conversation upload ownership and actual private bytes
         run: node --experimental-strip-types tests/communications/upload-local-roundtrip.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Verify incoming attachment HTTP capture and reads through actual Auth and private Storage
         run: node --experimental-strip-types tests/inbound/attachment-local-roundtrip.ts
         env:
-          PAYMENT_TEST_PROJECT: ${{ github.workspace }}
+          PAYMENT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Verify patient photo ownership and actual private image bytes
         run: node --experimental-strip-types tests/patient-photos/local-roundtrip.ts
         env:
-          PHOTO_TEST_PROJECT: ${{ github.workspace }}
+          PHOTO_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Verify Whogot and performed services through actual local Auth and PostgREST
         run: node --experimental-strip-types tests/whogot/local-roundtrip.ts
         env:
-          WHOGOT_TEST_PROJECT: ${{ github.workspace }}
+          WHOGOT_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Verify daily communications through actual local Auth and PostgREST
         run: node --experimental-strip-types tests/daily-communications/local-roundtrip.ts
         env:
-          DAILY_TEST_PROJECT: ${{ github.workspace }}
+          DAILY_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
       - name: Verify recurring care through actual local Auth and PostgREST
         run: node --experimental-strip-types tests/care-plans/local-roundtrip.ts
         env:
-          CARE_TEST_PROJECT: ${{ github.workspace }}
+          CARE_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
           CARE_RUN_SYNTHETIC_LOCAL: "true"
       - name: Verify records requests through actual Auth, Storage and reviewed email queue
         run: node --experimental-strip-types tests/records-requests/local-roundtrip.ts
         env:
-          RECORDS_TEST_PROJECT: ${{ github.workspace }}
+          RECORDS_TEST_PROJECT: ${{ env.LRV_HISTORICAL_PROJECT }}
           RECORDS_RUN_SYNTHETIC_LOCAL: "true"
       - name: Verify diagnostic Auth, private originals and real Patient 360 in an owned runtime
         run: python3 -B tests/diagnostics/local-disposable.py --run-synthetic-local
@@ -343,15 +359,25 @@ jobs:
         run: python3 -B tests/diagnostics/pdf-jobs-disposable.py --run-synthetic-local
 
   controlled-stock:
+    name: Historical 206 controlled-stock proofs
     # Run only the owned rehearsal stacks, without the database job's foundation.
     # Existing probe deadlines, reserves, workloads and cleanup gates remain unchanged.
     # Secondary review declares its own workload bound and cleanup reserve.
     runs-on: ubuntu-24.04-arm
+    defaults:
+      run:
+        working-directory: ../lrv-canonical206-regression
     steps:
       - uses: actions/checkout@v4
+      - name: Admit unchanged historical 206 regression source
+        working-directory: ${{ github.workspace }}
+        run: python3 -I -B scripts/narcotics-log/prepare_historical_ci.py
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        working-directory: ${{ github.workspace }}
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
       - name: Verify frozen private controlled-stock installation artifact
         run: python3 -B tests/controlled-drugs/engine/candidate/release_assembly.py --check
       - name: Verify CLI-owned controlled-stock migration body
@@ -374,10 +400,17 @@ jobs:
         run: python3 -B tests/controlled-drugs/engine/candidate/probe-secondary-review-protocol.py --run-synthetic-local --acceptance
 
   diagnostic-renderer:
+    name: Historical 206 renderer and scheduling regressions
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: ../lrv-canonical206-regression
     steps:
       - uses: actions/checkout@v4
+      - name: Admit unchanged historical 206 regression source
+        working-directory: ${{ github.workspace }}
+        run: python3 -I -B scripts/narcotics-log/prepare_historical_ci.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -409,6 +442,9 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
+      - name: Cache the approved immutable PostgreSQL image
+        working-directory: ${{ github.workspace }}
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
       - name: Verify PDF registration, staff browser download, observed locks and populated restore
         run: python3 -B tests/diagnostics/pdf-registration-disposable.py --run-synthetic-local
         env:

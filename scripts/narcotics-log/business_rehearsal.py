@@ -1,0 +1,303 @@
+"""Fixed genuine-Auth business profiles on a fresh local 208-migration database."""
+import argparse
+from collections import Counter
+from functools import partial
+import hashlib
+import importlib.util
+import json
+import os
+from pathlib import Path
+import re
+import sys
+import time
+from types import SimpleNamespace
+
+HERE = Path(__file__).resolve().parent
+WORKFLOWS = HERE / "workflows"
+sys.path.insert(0, str(HERE))
+import install_rehearsal as installation
+
+
+def source_admission():
+    _, layout, pins = installation.source_admission()
+    for name in ('pending_protocol.py', 'count_attribution.py', 'parent_projection_protocol.py'):
+        path = HERE / name
+        pins[str(path.relative_to(installation.ROOT))] = installation.sha(installation.prefix.regular(path))
+    source = installation.decode(installation.prefix.regular(HERE / "business-source.json"))
+    if source["kind"] != "narcotics-genuine-business-source-v1":
+        raise ValueError("Fixed genuine business source inventory required")
+    actual = {p.name for p in WORKFLOWS.iterdir() if p.is_file()}
+    if actual != set(source["workflows"]) or any(not p.is_file() for p in WORKFLOWS.iterdir()):
+        raise ValueError("Exact portable business source inventory required")
+    for name, wanted in {**source["workflows"], "../business_rehearsal.py": source["runner"]}.items():
+        path = (HERE / "business_rehearsal.py") if name == "../business_rehearsal.py" else WORKFLOWS / name
+        if name != "../business_rehearsal.py" and Path(name).name != name:
+            raise ValueError("Fixed portable module basename required")
+        raw = installation.prefix.regular(path)
+        if wanted != {"bytes": len(raw), "sha256": installation.sha(raw)}:
+            raise ValueError("Portable business source changed: " + name)
+        pins[str(path.relative_to(installation.ROOT))] = installation.sha(raw)
+    pins[str((HERE / "business-source.json").relative_to(installation.ROOT))] = installation.sha(installation.prefix.regular(HERE / "business-source.json"))
+    browser_names = {"tests/controlled-drugs/" + name for name in (
+        "run-local-authenticated-count-finalize.mjs", "narcotics-finalize-browser-bindings.json",
+        "narcotics-finalize-browser-input.ts", "narcotics-finalize-driver-source.test.ts",
+        "narcotics-finalize-portability-inverse.json", "narcotics-finalize-diagnostics-inverse.json")}
+    if set(source["browser_sources"]) != browser_names:
+        raise ValueError("Exact fixed authenticated browser source inventory required")
+    for name, wanted in source["browser_sources"].items():
+        raw = installation.prefix.regular(installation.ROOT / name, 2 * 1024 * 1024)
+        if wanted != {"bytes": len(raw), "sha256": installation.sha(raw)}:
+            raise ValueError("Authenticated browser source changed: " + name)
+        pins[name] = installation.sha(raw)
+    binding_name = "tests/controlled-drugs/narcotics-finalize-browser-bindings.json"
+    if pins[binding_name] != "fa3282a22c9864a979b778979d975ae1cb037d9930fedf55cd19dadeb4992d92":
+        raise ValueError("Independently frozen146 frontend source binding required")
+    binding = installation.decode(installation.prefix.regular(installation.ROOT / binding_name))
+    if len(binding["files"]) != 146:
+        raise ValueError("Complete frozen frontend dependency set required")
+    for name, wanted in binding["files"].items():
+        if Path(name).is_absolute() or ".." in Path(name).parts:
+            raise ValueError("Fixed frontend source-relative path required")
+        raw = installation.prefix.regular(installation.ROOT / name, 2 * 1024 * 1024)
+        if wanted != {"bytes": len(raw), "sha256": installation.sha(raw)}:
+            raise ValueError("Frozen frontend source changed: " + name)
+        pins[name] = installation.sha(raw)
+    return layout, pins
+
+
+def modules():
+    # These are fixed package modules; no environment-controlled module root,
+    # constructor override, old Runtime or arbitrary caller SQL is imported.
+    sys.path.insert(0, str(WORKFLOWS))
+    import auth_effects, identity_bootstrap, http_transport, owner_capture, sequence_effects, rest_defaults
+    import full121_profiles, wc_profiles, browser_runner, count_attribution, parent_effects
+    return SimpleNamespace(auth=auth_effects, identity=identity_bootstrap,
+        transport=http_transport, capture=owner_capture, sequence=sequence_effects,
+        profiles=full121_profiles, writers=wc_profiles, rest=rest_defaults, browser=browser_runner, count_audit=count_attribution, parent_effects=parent_effects)
+
+
+class Runtime:
+    """Verified owned receiver shared by actual Auth, HTTP and owner observers."""
+    decode = staticmethod(installation.decode)
+
+    def __init__(self, candidate):
+        self.install = candidate
+        self.folder = candidate.evidence
+        self.project = candidate.project
+        self.identity = candidate.identity
+        services = candidate.boot.owned_resources()["containers"]
+        self.owned_services = {row["id"]: {"name": "/" + name} for name, row in services.items()}
+        self.query_index = 0
+
+    def verify(self):
+        return self.install.boot.verify()
+
+    def remaining(self, limit):
+        return min(limit, self.install.remaining())
+
+    def command(self, argv):
+        # Source-owned Auth inspection/status only; mutations use real HTTP.
+        return SimpleNamespace(stdout=self.install.boot.command(argv, timeout=self.remaining(30)))
+
+    def write(self, name, raw):
+        if Path(name).name != name or type(raw) is not bytes:
+            raise ValueError("Fixed private evidence basename and original bytes required")
+        path = self.folder / name
+        with path.open("xb") as stream:
+            stream.write(raw)
+        path.chmod(0o600)
+
+    def raw_query(self, label, sql, stdout_cap=64 * 1024 * 1024):
+        if not label or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_" for c in label):
+            raise ValueError("Fixed private observer label required")
+        initial = re.sub(r"\A(?:\s|--[^\n]*(?:\n|$))*", "", sql)
+        if re.match(r"begin\b", initial, re.I) is None:
+            sql = ("BEGIN;SET LOCAL search_path=pg_catalog,public,pg_temp;"
+                   "SET LOCAL TimeZone='UTC';SET LOCAL DateStyle='ISO,YMD';"
+                   "SET LOCAL IntervalStyle='postgres';SET LOCAL extra_float_digits=3;"
+                   "SET LOCAL statement_timeout='30s';SET LOCAL lock_timeout='5s';\n"
+                   + sql + "\nROLLBACK;\n")
+        self.write(label + "-program.sql", sql.encode("utf-8"))
+        started = time.monotonic()
+        entry = self.verify()
+        argv = ["docker", "--host", self.install.boot.endpoint, "exec", "-i", entry["Id"],
+                "psql", "-X", "-qAt", "-U", "postgres", "-d", "postgres",
+                "-v", "ON_ERROR_STOP=1", "-v", "VERBOSITY=verbose"]
+        self.write(label + "-command.json", json.dumps(argv).encode())
+        try:
+            result = installation.process.run(argv, input=sql, env=self.install.boot.env,
+                cwd=self.folder, timeout=min(self.remaining(30), 30 - (time.monotonic() - started)), stdout_cap=stdout_cap)
+        except BaseException as error:
+            for channel in ("stdout", "stderr"):
+                raw = getattr(error, channel, b"") or b""
+                self.write(label + "-" + channel + ".bin", raw.encode("utf-8") if isinstance(raw, str) else bytes(raw))
+            raise
+        self.write(label + "-stdout.bin", result.stdout.encode("utf-8"))
+        self.write(label + "-stderr.bin", result.stderr.encode("utf-8"))
+        self.remaining(1)
+        if time.monotonic() - started >= 30 or result.returncode != 0 or result.stderr:
+            raise ValueError("Original owner30 observation failed: " + label)
+        return result.stdout
+
+    def query(self, sql):
+        self.query_index += 1
+        return self.raw_query("owner-" + str(self.query_index), sql)
+
+    def selected_query(self, label, sql):
+        raw = self.raw_query(label, sql)
+        if not raw.endswith("\n") or "\n" in raw[:-1]:
+            raise ValueError("One complete original owner JSON row required: " + label)
+        return self.decode(raw[:-1])
+
+    def verify_pending_empty(self, label):
+        observed = self.selected_query(label,
+            "SELECT jsonb_build_object('pending_products',(SELECT count(*)FROM controlled_count_v1.pending_products));")
+        if observed != {'pending_products': 0}:
+            raise ValueError('Unfinished product validation work: ' + label)
+
+    def verify_module(self, label):
+        captured = self.install.query(label, (HERE / "module-capture.sql").read_text())
+        # Expected DATA comes from the pinned literal/source-reference program.
+        # Actual metadata is queried again for every call to this method.
+        wanted = self.install.expected_module
+        if wanted is None:
+            raise ValueError("Complete independently source-created expectations required")
+        if captured["reference_absent"] is not True or installation.canonical(captured["properties"]) != installation.canonical(wanted["properties"]) or installation.canonical(captured["descriptor"]["definition"]) != installation.canonical(wanted):
+            raise ValueError("Complete installed source properties changed: " + label)
+
+
+def save(folder, name, value):
+    if Path(name).name != name:
+        raise ValueError("Fixed private business evidence basename required")
+    path = folder / (name + ".json")
+    with path.open("xb") as stream:
+        stream.write((json.dumps(value, sort_keys=True, indent=2, allow_nan=False) + "\n").encode())
+    path.chmod(0o600)
+
+
+def password_b(http, original):
+    status, signed = http.post("/auth/v1/token?grant_type=password",
+        {"email": original["email"], "password": original["private_password"]})
+    if status != 200 or signed["user"]["id"] != original["id"]:
+        raise ValueError("Genuine same-B password grant failed")
+    import base64
+    token = signed["access_token"]
+    pieces = token.split(".")
+    if len(pieces) != 3:
+        raise ValueError("Actual GoTrue token required")
+    claims = installation.decode(base64.urlsafe_b64decode(pieces[1] + "=" * (-len(pieces[1]) % 4)))
+    if claims.get("sub") != original["id"] or claims.get("role") != "authenticated":
+        raise ValueError("Genuine same-B claims differ")
+    return {**original, "token": token, "session_id": http_module_uuid(claims["session_id"]),
+            "auth_amr": claims.get("amr"), "auth_aal": claims.get("aal"),
+            "auth_last_sign_in_at": signed["user"]["last_sign_in_at"]}
+
+
+def http_module_uuid(value):
+    from uuid import UUID
+    if type(value) is not str or str(UUID(value)) != value or UUID(value).int == 0:
+        raise ValueError("Canonical genuine session identifier required")
+    return value
+
+
+
+
+class BusinessInstallation(installation.Installation):
+    def after_installation(self, runtime):
+        """Normal acceptance never instruments the installed application."""
+
+    def after_business(self, context, methods, runtime, proof):
+        """Normal acceptance has no extra diagnostic workload."""
+
+    def __init__(self, view, evidence, layout, started, *, profile):
+        super().__init__(view, evidence, layout, started)
+        self.profile = profile
+        self.result["kind"] = "narcotics-genuine-business-profile-v1"
+        self.result["profile"] = profile
+
+    def execute(self):
+        super().execute()
+        m = modules()
+        runtime = Runtime(self)
+        self.after_installation(runtime)
+        import pending_protocol
+        pending_controls = runtime.selected_query("isolated-pending-protocol-controls", pending_protocol.program())
+        if pending_controls != dict(kind='isolated-pending-protocol-controls-v1', cases=11,
+                owner_data_only=True, Auth_acceptance=False, clinical_rows_changed=0, whole_source_inverse=True):
+            raise ValueError('Complete isolated mandatory-work controls required')
+        save(self.evidence, "isolated-pending-protocol-controls", pending_controls)
+        import parent_projection_protocol
+        projection_controls = parent_projection_protocol.run(runtime)
+        save(self.evidence, "isolated-parent-projection-guard-controls", projection_controls)
+        runtime.verify_pending_empty("after-isolated-controls-pending-empty")
+        save(self.evidence, "genuine-REST-source-defaults", m.rest.effective_defaults(runtime))
+        save(self.evidence, "genuine-Auth-source-defaults", m.auth.effective_defaults(runtime))
+        auth_before = m.auth.initial(runtime)
+        sequence_before = runtime.selected_query("sequence-before", m.sequence.SQL)
+        serial_source = runtime.selected_query("sequence-prerequisite", m.sequence.prerequisite_sql())
+        m.sequence.initial(sequence_before, auth_before, serial_source)
+        rows_before = self.rows("before-business-permanent-rows")
+        status = installation.decode(runtime.command(["supabase", "status", "--workdir", str(self.project), "-o", "json"]).stdout)
+        if status["API_URL"] != "http://127.0.0.1:64661":
+            raise ValueError("Only the exact owned loopback API is admitted")
+        http = m.transport.Http(runtime, self.evidence, status["ANON_KEY"], status["SERVICE_ROLE_KEY"])
+        users = [m.transport.real_user(http, index) for index in (0, 1)]
+        # The only owner-side identity write sets initial synthetic staff roles
+        # for these actual GoTrue users. All stock and policies use HTTP.
+        runtime.raw_query("fixed-initial-staff-bootstrap", m.identity.identity_fixture(users))
+        context = {"users": users, "ids": {}, "http": http, "public_anon_key": status["ANON_KEY"], "auth_before": auth_before}
+        methods = {"password_b": password_b, "full_capture": m.capture,
+                   "full_components": None, "full_payload": None}
+        owner = m.writers if self.profile in m.writers.PROFILE_WRITERS else m.profiles
+        proof = getattr(owner, self.profile)(context, methods, runtime, self.evidence, runtime.selected_query, save)
+        if self.profile == "browser_lost_finalize":
+            proof["actual_browser"] = m.browser.run(context, m, runtime, save)
+        self.after_business(context, methods, runtime, proof)
+        runtime.verify_pending_empty("after-business-pending-empty")
+        extras = [context["current_actors"][users[1]["id"]]] if self.profile in ("count_agreement", "browser_lost_finalize") else []
+        if self.profile == "browser_lost_finalize":
+            extras += [context["current_actors"][users[0]["id"]]]
+        auth = m.auth.validate(runtime, auth_before, users, extras)
+        save(self.evidence, "genuine-Auth-complete-effects", auth)
+        if "count" in context:
+            save(self.evidence, "original-count-attribution", m.count_audit.verify(context, runtime.selected_query))
+        sequence_after = runtime.selected_query("sequence-after", m.sequence.SQL)
+        save(self.evidence, "sequence-source-effects", m.sequence.final(sequence_before, sequence_after, 2 + len(extras), clinical=self.profile == "clinical"))
+        rows_after = self.rows("after-business-permanent-rows")
+        additions = m.parent_effects.expected(self.profile, 2 + len(extras))
+        if self.profile in m.writers.PROFILE_WRITERS or self.profile in ("ordinary_none", "record_review_signing", "independent_witness", "variance_reconciliation"):
+            admissions = m.parent_effects.verify_admissions(context, proof, runtime.selected_query)
+            save(self.evidence, "source-writer-admissions", admissions)
+            additions["public.stock_writer_admissions"] = admissions["source_bound_admissions"]
+        installation.preserve(rows_before, rows_after, additions)
+        runtime.verify_module("after-business-module-properties")
+        save(self.evidence, "genuine-business-profile", proof)
+        self.result.update(application_Auth_verified=True, original_parent_rows_verified=True,
+            source_sequences_verified=True, business_profile_verified=True,
+            count_business_verified=self.profile in ("count_agreement", "browser_lost_finalize", "variance_reconciliation"),
+            authenticated_browser_verified=self.profile == "browser_lost_finalize")
+        self.result["independent_record_review_signing_verified"] = self.profile == "record_review_signing"
+        if self.profile in m.writers.PROFILE_WRITERS:
+            self.result["representative_writers_verified"] = list(m.writers.PROFILE_WRITERS[self.profile])
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--check-source", action="store_true")
+    mode.add_argument("--run-synthetic-local", action="store_true")
+    parser.add_argument("--profile", choices=("commission_all", "count_agreement", "browser_lost_finalize",
+        "ordinary_none", "record_review_signing", "independent_witness", "variance_reconciliation",
+        "scalars", "clinical", "native_pickup_annotation", "native_return_v1", "native_return_v2_discrepancy"), required=True)
+    args = parser.parse_args()
+    os.umask(0o077)
+    started = time.monotonic()
+    layout, pins = source_admission()
+    if args.check_source:
+        print(json.dumps({"source_files": len(pins), "database_operations": 0, "profile": args.profile}))
+        return
+    installation.execute_owned(layout, pins, started, partial(BusinessInstallation, profile=args.profile))
+
+
+if __name__ == "__main__":
+    main()

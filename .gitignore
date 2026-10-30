@@ -55,3 +55,6 @@ test-results/
 # Private controlled-opening research and local acceptance receipts.
 /tmp/opening-*
 /tmp/controlled-opening-*
+
+# Reproducible source-only CLI framing generated before the owned rehearsal.
+/scripts/narcotics-log/cli-framing.json

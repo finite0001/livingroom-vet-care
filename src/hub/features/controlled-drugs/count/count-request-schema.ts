@@ -258,3 +258,5 @@ function decode(raw: Uint8Array, limit: number): unknown {
 }
 export function decodeCountRequest<K extends CountAction>(action: K, raw: Uint8Array): CountRequestMap[K] { return parseCountRequest(action, decode(raw, REQUEST_BYTE_LIMIT)); }
 export function decodeCountReply(raw: Uint8Array): CountReply { return parseCountReply(decode(raw, REPLY_BYTE_LIMIT)); }
+/** Mutation RPCs return the thin receipt directly, without the internal saved envelope. */
+export function decodeCountPublicReceipt(raw: Uint8Array): CountPublicReceipt { return parseCountPublicReceipt(decode(raw, REPLY_BYTE_LIMIT)); }

@@ -1,7 +1,8 @@
+import { controlledTestFactory } from "./controlled-writer-test.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  createFulfillmentCorrectionsApi,
+  createFulfillmentCorrectionsApi as originalcreateFulfillmentCorrectionsApi,
   correctionRequestSchema,
 } from "../../src/hub/features/prescriptions/fulfillment-corrections-api.ts";
 const id = (n: number) =>
@@ -284,4 +285,11 @@ test("request identity and amendment references require canonical lowercase UUID
       },
     }),
   );
+});
+
+const createFulfillmentCorrectionsApi = controlledTestFactory(originalcreateFulfillmentCorrectionsApi);
+
+test("production annotation cannot fall back to SDK when staff identity is missing", async () => {
+  let writes=0;const api=originalcreateFulfillmentCorrectionsApi({rpc:async()=>{writes++;return{data:null,error:null};}},actor,target);
+  await assert.rejects(()=>api.execute(fixture().op));assert.equal(writes,0);
 });
