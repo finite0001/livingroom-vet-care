@@ -1,4 +1,4 @@
-"""Disposable rehearsal of authored SQL receipts followed by official CLI writes.
+"""Disposable rehearsal of mixed historical receipts and hosted audit columns.
 
 The original204 history is constructed once in a fresh, scheduler-paused local
 database. Existing history rows are never rewritten. No hosted target is used.
@@ -21,27 +21,60 @@ def literal(value):
     return "'" + value.replace("'", "''") + "'"
 
 
+def audit_column_controls(root):
+    """Owned source-only SQL controls; no application authorization is claimed."""
+    rows, variants = history.sources(root)
+    row, = [r for r in rows if r['version'] == '20260912220000']
+    assert len(row['statements']) > 1
+    predicate = history.predicate(row['version'], variants[row['version']])
+    needle = 'from supabase_migrations.schema_migrations m'
+    assert predicate.count(needle) == 1
+    predicate = predicate.replace(needle, 'from pg_temp.hosted_receipt_control m')
+    fields = ','.join(literal(s) for s in row['statements'])
+    original = literal(json.dumps(row, ensure_ascii=False, separators=(',', ':')))
+    refusal = "IF " + predicate + " THEN RAISE EXCEPTION 'tampered_source_receipt_accepted';END IF;"
+    return ("BEGIN;CREATE TEMP TABLE hosted_receipt_control(version text,statements text[],name text,created_by text,idempotency_key text,rollback text[])ON COMMIT DROP;\n"
+            "INSERT INTO hosted_receipt_control VALUES(" + literal(row['version']) + ",ARRAY[" + fields + "]::text[]," + literal(row['name']) + ",'creator','request',ARRAY['retained']::text[]);\n"
+            "DO $audit_receipt$ BEGIN "
+            "IF(SELECT to_jsonb(m)FROM pg_temp.hosted_receipt_control m)=" + original + "::jsonb THEN RAISE EXCEPTION 'extra_audit_columns_not_exercised';END IF;"
+            "IF NOT " + predicate + " THEN RAISE EXCEPTION 'canonical_source_receipt_rejected';END IF;"
+            "UPDATE pg_temp.hosted_receipt_control SET created_by='other',idempotency_key='other request',rollback=ARRAY['other retained audit']::text[];"
+            "IF NOT " + predicate + " THEN RAISE EXCEPTION 'audit_values_changed_sql_receipt';END IF;"
+            "UPDATE pg_temp.hosted_receipt_control SET name='changed';" + refusal
+            + "UPDATE pg_temp.hosted_receipt_control SET name=" + literal(row['name']) + ",version='00000000000000';" + refusal
+            + "UPDATE pg_temp.hosted_receipt_control SET version=" + literal(row['version']) + ",statements[1]=statements[1]||' ';" + refusal
+            + "UPDATE pg_temp.hosted_receipt_control SET statements=ARRAY[" + fields + "]::text[];"
+            "UPDATE pg_temp.hosted_receipt_control SET statements=ARRAY(SELECT s FROM unnest(statements)WITH ORDINALITY t(s,n)ORDER BY n DESC);" + refusal
+            + "UPDATE pg_temp.hosted_receipt_control SET statements=ARRAY[" + fields + "]::text[];"
+            "UPDATE pg_temp.hosted_receipt_control SET statements=statements[1:cardinality(statements)-1];" + refusal
+            + "END $audit_receipt$;ROLLBACK;\n")
+
+
 def initial_source(root):
     rows, variants = history.sources(root)
     sql = ["CREATE SCHEMA IF NOT EXISTS supabase_migrations;",
-           "CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations(version text NOT NULL PRIMARY KEY,statements text[],name text);",
+           "CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations(version text NOT NULL PRIMARY KEY,statements text[],name text,created_by text,idempotency_key text UNIQUE,rollback text[]);",
            "DO $empty$BEGIN IF EXISTS(SELECT 1 FROM supabase_migrations.schema_migrations)THEN RAISE EXCEPTION 'fresh history required';END IF;END$empty$;"]
     expected = []
-    for row in rows[:204]:
+    for index, row in enumerate(rows[:204]):
         source, = (Path(root) / "supabase/migrations").glob(row["version"] + "_*.sql")
         raw = history.prefix.regular(source)
         if history.prefix.digest(raw) != variants[row["version"]]["source_sha256"]:
             raise ValueError("Independently admitted original authored SQL required")
         text = raw.decode("utf-8", errors="strict")
-        # Exercise the source-authored whole-file transport, plus the exact
-        # original one-command payment receipt also found in managed history.
+        # Construct both finite source encodings in the original INSERT.
+        # No observed hosted receipt or post-install history rewrite is used.
         receipt = ("alter function public.payment_immutable() set search_path = pg_catalog;"
                    if row["version"] == history.PAYMENT_VERSION else text)
+        statements = (row["statements"] if (index % 2 == 0 or row["version"] == "20260912220000")
+                      and row["version"] != history.PAYMENT_VERSION else [receipt])
         sql += ["RESET ALL;SET statement_timeout='30s';SET lock_timeout='5s';", text,
                 ";RESET ALL;SET standard_conforming_strings=on;",
-                "INSERT INTO supabase_migrations.schema_migrations(version,name,statements)VALUES("
-                + literal(row["version"]) + "," + literal(row["name"]) + ",ARRAY[" + literal(receipt) + "]::text[]);"]
-        expected.append({"version": row["version"], "name": row["name"], **history.array_pin([receipt])})
+                "INSERT INTO supabase_migrations.schema_migrations(version,name,statements,created_by,idempotency_key,rollback)VALUES("
+                + literal(row["version"]) + "," + literal(row["name"]) + ",ARRAY[" + ",".join(literal(item) for item in statements)
+                + "]::text[],'synthetic history creator'," + literal('source-' + row["version"]) + ",ARRAY['synthetic retained audit value']::text[]);"]
+        expected.append({"version": row["version"], "name": row["name"], **history.array_pin(statements)})
+    sql.append(audit_column_controls(root))
     return ("\n".join(sql) + "\n").encode(), rows, expected
 
 
@@ -73,6 +106,7 @@ class HostedHistoryInstallation(installation.Installation):
         with (self.evidence / "authored204-initial-source.sql").open("xb") as stream:
             stream.write(program)
         self.boot.sql(program.decode("utf-8"))
+        self.result["source_only_audit_column_controls"] = {"cases": 7, "Auth_acceptance": False, "domain_writes": 0}
         before = self.rows("authored204-permanent-rows")
         variants = history.materialize()
         migrations = self.project / "supabase/migrations"

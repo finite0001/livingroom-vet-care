@@ -10,7 +10,7 @@ const base = path.join(here, "hosted-source");
 const proof = JSON.parse(readRegular(path.join(base, "source-proof.json")));
 if (proof.kind !== "secondary-review-source-receipt-variant-v1"
   || proof.original_source_sha256 !== "de8e0f4c0d2100b47a490dbd9b8e65c957fa49d003d447cb1af6f37aa8a75bfc"
-  || proof.changed_gate_count !== 204 || proof.original_non_gate_bytes_recovered_exactly !== true
+  || proof.changed_gate_count !== 205 || proof.original_non_gate_bytes_recovered_exactly !== true
   || proof.historical_rows_rewritten !== false || proof.observed_database_values_used_as_expected !== false) throw Error("Fixed source-only transport inverse required");
 const filename = "20261022010000_controlled_secondary_review_private.sql";
 const raw = readRegular(path.join(base, "migrations", filename));

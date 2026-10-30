@@ -5,8 +5,8 @@
   "migration_count": 208,
   "migrations": {
     "20261027223535_controlled_record_review_workflows.sql": {
-      "bytes": 36787822,
-      "sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
+      "bytes": 36882926,
+      "sha256": "3d55b744e459e9c6b69199ba9b22195351f19e9ac7cad50e4497c71ab9094e5e"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
       "bytes": 61937976,
@@ -163,16 +163,16 @@
     },
     "historical_transport_receipts": {
       "actual_hosted_history_rehearsal_pending": true,
-      "changed_gate_count": 410,
+      "changed_gate_count": 412,
       "historical_rows_rewritten": false,
-      "hosted206_source_framing_sha256": "7bffc4cb145172e10bb65bebdddf2c416bdfa981f6ada69a2e233df9c2e5a9a6",
+      "hosted206_source_framing_sha256": "65655b8d062f8c155e7e52e34b6bd9998d1ca96d45d992783470286bc4fc0638",
       "kind": "forward-source-receipt-variant-v1",
       "observed_database_values_used_as_expected": false,
       "original_canonical_json_literals_preserved": true,
       "original_non_gate_bytes_recovered_exactly": true,
       "original_source_sha256": "0f1330e8b9bb77043e5ed878492b6d2dfa35e2ca5c288fb6ca92df72476b92af",
-      "variant_source_bytes": 36787822,
-      "variant_source_sha256": "20abb00f40eae2b9f58482f62598e84d0d57ed7cbee46ca22dd9e2ec4a43c62f"
+      "variant_source_bytes": 36882926,
+      "variant_source_sha256": "3d55b744e459e9c6b69199ba9b22195351f19e9ac7cad50e4497c71ab9094e5e"
     },
     "immutable_parent_manifest": {
       "actual_real_Auth_verification_pending": true,
