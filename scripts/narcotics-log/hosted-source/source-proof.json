@@ -1,5 +1,5 @@
 {
-  "changed_gate_count": 204,
+  "changed_gate_count": 205,
   "historical_rows_rewritten": false,
   "kind": "secondary-review-source-receipt-variant-v1",
   "observed_database_values_used_as_expected": false,
@@ -3274,8 +3274,18 @@
       },
       "name": "clinical_call_quote_anchors",
       "source_sha256": "52d887c9079f6c7bb647325f2ce9eb0b153b0af17684415fc16362fd4ea350a2"
+    },
+    "20261020151157": {
+      "canonical_cli": {
+        "postgres_array_bytes": 1279118,
+        "postgres_array_sha256": "36313a91a82309912e12c51f0da5d5ac925721a099b2f9c2f7bd24fa8446560f",
+        "statement_count": 94
+      },
+      "encodings": {},
+      "name": "controlled_stock_private_engine",
+      "source_sha256": "9977696d3d6271cbbfe1dee3767dd71b8512d55bcec0c0d65d108745726252b3"
     }
   },
-  "variant_source_bytes": 8270632,
-  "variant_source_sha256": "5b5e080b54e16181099c291f81fe8691d8c89eb93986255db1b0069c587985b5"
+  "variant_source_bytes": 8318184,
+  "variant_source_sha256": "963ce258658d0100f4c8b6e64918d03efc29e743d3c9982fd16b2ba7c2dadc83"
 }

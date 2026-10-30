@@ -17,7 +17,7 @@ FROZEN_LEDGER_SHA = "73aa7156bebcf869a37a9f5047842c11a46079145d05674790f81d5d9da
 PAYMENT_VERSION = "20260913900000"
 FORWARD_NAME = "20261027223535_controlled_record_review_workflows.sql"
 FORWARD_ORIGINAL_SHA = "0f1330e8b9bb77043e5ed878492b6d2dfa35e2ca5c288fb6ca92df72476b92af"
-HOSTED_FRAMING_SHA = "7bffc4cb145172e10bb65bebdddf2c416bdfa981f6ada69a2e233df9c2e5a9a6"
+HOSTED_FRAMING_SHA = "65655b8d062f8c155e7e52e34b6bd9998d1ca96d45d992783470286bc4fc0638"
 ROW = re.compile(
     r"^do \$review_ledger\$ begin if \(select to_jsonb\(m\)from supabase_migrations.schema_migrations m where version='([0-9]+)'\)"
     r"is distinct from '((?:''|[^'])*)'::jsonb then raise exception 'Secondary-review exact205 ledger row mismatch' using errcode='23514';end if;end \$review_ledger\$;$", re.M,
@@ -43,13 +43,15 @@ def sources(root=prefix.ROOT):
     if len(rows) != 205 or [row["version"] for row in rows] != sorted({row["version"] for row in rows}):
         raise ValueError("Complete ordered original205 source ledger required")
     variants = {}
-    for row in rows[:204]:
+    for row in rows:
         paths = list((root / "supabase/migrations").glob(row["version"] + "_*.sql"))
         if len(paths) != 1:
             raise ValueError("Exactly one independently pinned source file required")
         raw = prefix.regular(paths[0])
         text = raw.decode("utf-8", errors="strict")
-        encodings = {"authored_complete": array_pin([text])}
+        # The engine205 receipt must remain the exact official CLI vector.
+        # Only original204 files have a reviewed managed whole-file transport.
+        encodings = {} if row is rows[-1] else {"authored_complete": array_pin([text])}
         if row["version"] == PAYMENT_VERSION:
             # This exact source is one DDL statement after two documentation
             # comments. Its bare transport encoding retains its semicolon.
@@ -69,8 +71,23 @@ def predicate(version, spec):
     hashes = sorted({pin["postgres_array_sha256"] for pin in spec["encodings"].values()})
     if any(pin["statement_count"] != 1 for pin in spec["encodings"].values()) or any(re.fullmatch(r"[0-9a-f]{64}", value) is None for value in hashes):
         raise ValueError("Only the finite source-authored single-statement encodings required")
-    return ("exists(select 1 from supabase_migrations.schema_migrations m where m.version='" + version + "'and m.name='" + name + "'and cardinality(m.statements)=1 and "
-            "encode(sha256(convert_to(to_jsonb(m.statements)::text,'UTF8')),'hex')=any(ARRAY[" + ",".join("'" + value + "'" for value in hashes) + "]::text[]))")
+    canonical = spec["canonical_cli"]
+    if (set(canonical) != {"statement_count", "postgres_array_bytes", "postgres_array_sha256"}
+            or type(canonical["statement_count"]) is not int or canonical["statement_count"] < 1
+            or type(canonical["postgres_array_bytes"]) is not int or canonical["postgres_array_bytes"] < 2
+            or re.fullmatch(r"[0-9a-f]{64}", canonical["postgres_array_sha256"]) is None):
+        raise ValueError("Finite canonical source statement-vector receipt required")
+    # Hosted CLI history also retains created_by/idempotency_key/rollback.
+    # Those audit columns are not part of the immutable SQL receipt. Admit
+    # only its already-frozen canonical vector or authored transport bytes.
+    canonical_check = ("(cardinality(m.statements)=" + str(canonical["statement_count"])
+                       + " and octet_length(to_jsonb(m.statements)::text)=" + str(canonical["postgres_array_bytes"])
+                       + " and encode(sha256(convert_to(to_jsonb(m.statements)::text,'UTF8')),'hex')='"
+                       + canonical["postgres_array_sha256"] + "')")
+    authored_check = (("(cardinality(m.statements)=1 and encode(sha256(convert_to(to_jsonb(m.statements)::text,'UTF8')),'hex')=any(ARRAY["
+                       + ",".join("'" + value + "'" for value in hashes) + "]::text[]))") if hashes else "false")
+    return ("exists(select 1 from supabase_migrations.schema_migrations m where m.version='" + version + "'and m.name='" + name
+            + "'and (" + canonical_check + " or " + authored_check + "))")
 
 
 def secondary_variant(root=prefix.ROOT):
@@ -151,7 +168,7 @@ def canonical_forward(raw, root=prefix.ROOT):
             lines[index] = line[:-(len(suffix) + len(trailing))] + ending + trailing
             counts[version] += 1
     if set(counts.values()) not in ({0}, {2}):
-        raise ValueError("Only all410 exact forward receipt alternatives are admitted")
+        raise ValueError("Only all412 exact forward receipt alternatives are admitted")
     text = "".join(lines)
     if prefix.digest(text.encode()) != FORWARD_ORIGINAL_SHA:
         raise ValueError("Original forward SQL must be recovered byte for byte")
@@ -178,7 +195,7 @@ def forward_variant(raw, root=prefix.ROOT):
     current = FORWARD_ROW.sub(replace, original).encode()
     if canonical_forward(current, root) != original.encode():
         raise ValueError("Forward historical receipt source inverse failed")
-    return current, {"kind": "forward-source-receipt-variant-v1", "changed_gate_count": 410,
+    return current, {"kind": "forward-source-receipt-variant-v1", "changed_gate_count": 412,
         "original_source_sha256": FORWARD_ORIGINAL_SHA, "variant_source_sha256": prefix.digest(current),
         "variant_source_bytes": len(current), "original_non_gate_bytes_recovered_exactly": True,
         "original_canonical_json_literals_preserved": True, "historical_rows_rewritten": False,

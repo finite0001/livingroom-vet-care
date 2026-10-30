@@ -2,7 +2,9 @@
 
 This is the Living Room Vet implementation. GreenTree and VetConnect Hub are
 separate projects. PR [314](https://github.com/finite0001/livingroom-vet-care/pull/314)
-is a draft; its merge and hosted installation require specific approval.
+was approved and merged on October 30, 2026. The frontend is deployed; backend
+activation awaits the hosted receipt compatibility correction described in
+[the October 30 note](narcotics-hosted-ledger-audit-columns-20261030.md).
 
 ## Observed production baseline
 
@@ -14,6 +16,10 @@ derived independently from repository source. No production rows were changed.
 This checks migration history; it does not replace schema, grant or backup checks.
 
 ## Ordered installation
+
+The approved October 30 attempt installed original 205 and stopped safely at
+206. The live prefix is now **205**. Continue from the recorded prefix after
+reviewing the compatibility correction; do not reinstall or rewrite 205.
 
 After complete acceptance and specific PR approval, prepare an isolated official
 CLI release directory. Preserve migrations 1–204 and their recorded history.
