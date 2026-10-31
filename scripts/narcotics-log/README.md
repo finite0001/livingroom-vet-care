@@ -117,6 +117,15 @@ the overlay's frozen snapshots reduces this statement below 10 MB. The complete
 inverse restores every PR317 byte using the independently pinned
 `module-expected.json`. The stored descriptor and its hash remain unchanged.
 
+After all installation checks and temporary-reference cleanup, the migration
+uses the existing 30-second owner budget for the CLI's final history insertion.
+`receipt_owner_budget.py` appends that single transaction-local setting; its
+whole inverse recovers every PR318 byte. The large receipt's binary parameters
+can otherwise exhaust the eight-second statement timer during transfer before
+the insert executes. Every installation validation and clinical limit stays
+at eight seconds. The setting resets at commit, and no role or database default
+changes. Receipt content is still derived and inserted by the official CLI.
+
 The authored-history rehearsal starts with the unchanged zero-project bootstrap,
 pauses the scheduler, and constructs original204 history once in its fresh local
 database. The official CLI then applies original205, the reviewed206 source

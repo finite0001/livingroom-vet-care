@@ -3,6 +3,7 @@
     false,
     true
   ],
+  "application_limits_changed": false,
   "constraint_DDL_changes": 0,
   "descriptor_literals_compacted": true,
   "equal_diagnostic_subtrees_pruned": true,
@@ -10,13 +11,14 @@
   "history_rewrites": 0,
   "installed_values_used_as_expectations": false,
   "kind": "validated-client-constraint-source-variant-v1",
-  "limits_changed": false,
+  "limits_changed": true,
+  "migration_receipt_limit_seconds": 30,
   "original_body_sha256": "a6c53c7bfac89889056f30d45273bdbf545493bfab1c1019d49daea1465580f8",
   "original_source_sha256": "779e805a63a256623d4b325f8a91924cbb8dcf69e6d8b6c59613c20f96b37dbb",
   "permission_changes": 0,
   "scope": "public.clients.clients_required_contacts_check",
   "source_guard_literals_compacted": true,
   "variant_body_sha256": "496204e7e450cf4363cd149e60c48cab2303ea3f4e149ab227277af3f6d7402e",
-  "variant_source_sha256": "15c0a7fe4016ba039189d49c1a4ef671af4a870c8fc6fbdbeb4da01a1f959c8e",
+  "variant_source_sha256": "889383a61aeb5cc008ce0df10e92725ac4c242d9f0fcf8f75c462ff9126e1dbe",
   "whole_source_inverse": true
 }

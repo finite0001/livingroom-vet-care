@@ -26506,3 +26506,6 @@ DO $fixture_require_bound$ BEGIN PERFORM controlled_count_entry_v1.require_bound
 DROP SCHEMA count_ordinary_relation_reference_v1 CASCADE;
 DROP SCHEMA controlled_count_fixture_reference_v1 CASCADE;
 SELECT jsonb_build_object('stage','installed','source_bundle_sha256','00d3769b08f9d371c0be3858b3966a8d29bc3f9383bd7983f1323dabf02392dd','trigger_addendum_sha256','6b4f17e0cdc891405a66a0f2ef461dd47e38e1a94534394cc033f482a8c17744','management_bundle_sha256','8b556cf62be90b8c784d8ba5c55358a89988083357cdfc63c17e46112356e355','reference_absent',to_regnamespace('controlled_count_fixture_reference_v1')is null);
+
+-- All installation checks have completed; only the CLI receipt remains.
+SET LOCAL statement_timeout='30s';

@@ -36,7 +36,9 @@ class ValidatedClientConstraintTests(unittest.TestCase):
     def test_all_materialized_metadata_and_source_pins_match(self):
         proof = source.materialize()
         self.assertEqual(proof["constraint_DDL_changes"], 0)
-        self.assertFalse(proof["limits_changed"])
+        self.assertTrue(proof["limits_changed"])
+        self.assertFalse(proof["application_limits_changed"])
+        self.assertEqual(proof["migration_receipt_limit_seconds"], 30)
 
 
 if __name__ == "__main__":
