@@ -9,8 +9,8 @@
       "sha256": "3d55b744e459e9c6b69199ba9b22195351f19e9ac7cad50e4497c71ab9094e5e"
     },
     "20261027223544_narcotics_count_and_stock_workflows.sql": {
-      "bytes": 61937976,
-      "sha256": "779e805a63a256623d4b325f8a91924cbb8dcf69e6d8b6c59613c20f96b37dbb"
+      "bytes": 61938380,
+      "sha256": "62663353d144d280da1cb67ccac894e135154ebd3c9d1896813094eac70fe226"
     }
   },
   "prefix_migration_count": 206,

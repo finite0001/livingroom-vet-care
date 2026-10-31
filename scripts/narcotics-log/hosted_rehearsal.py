@@ -106,6 +106,10 @@ class HostedHistoryInstallation(installation.Installation):
         with (self.evidence / "authored204-initial-source.sql").open("xb") as stream:
             stream.write(program)
         self.boot.sql(program.decode("utf-8"))
+        # Match the already-validated hosted CHECK without changing its SQL,
+        # original migration receipt, client rows, or enforcement on new rows.
+        self.boot.sql("ALTER TABLE public.clients VALIDATE CONSTRAINT clients_required_contacts_check;")
+        self.result["hosted_client_contact_check_validated_before_installation"] = True
         self.result["source_only_audit_column_controls"] = {"cases": 7, "Auth_acceptance": False, "domain_writes": 0}
         before = self.rows("authored204-permanent-rows")
         variants = history.materialize()
@@ -149,6 +153,14 @@ class HostedHistoryInstallation(installation.Installation):
         if self.boot.sql(bootstrap.DRAIN_SQL) != "t":
             raise ValueError("Owned scheduler containment changed")
         return expected
+
+    def execute(self):
+        super().execute()
+        observed = self.query("validated-client-constraint-controls",
+                              (installation.HERE / "validated-client-controls.sql").read_text())
+        if observed != {"cases": 7, "raw_client_check_still_validated": True, "same_original_metadata": True}:
+            raise ValueError("Validated-client catalog controls failed")
+        self.result["validated_client_constraint_controls"] = observed
 
 
 def main():
