@@ -4,13 +4,14 @@ import unittest
 from unittest.mock import patch
 
 import compact_descriptor as compact
+import receipt_owner_budget as receipt
 import validated_client_constraint as source
 
 
 class CompactDescriptorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.current = (source.ROOT / 'supabase/migrations' / source.MIGRATION).read_bytes()
+        cls.current = receipt.canonical((source.ROOT / 'supabase/migrations' / source.MIGRATION).read_bytes())
         cls.original = compact.canonical(cls.current)
 
     def test_whole_inverse_recovers_reviewed_pr317_source(self):
