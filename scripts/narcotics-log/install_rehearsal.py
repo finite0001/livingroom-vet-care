@@ -50,6 +50,7 @@ prefix = load("_narcotics_prefix", HERE / "prefix_view.py")
 process = load("_narcotics_process", HERE / "bounded_process.py")
 framing = load("_narcotics_sql_framing", HERE / "sql_framing.py")
 expectations = load("_narcotics_source_expectations", HERE / "source_expectations.py")
+client_constraint = load("_narcotics_validated_client_constraint", HERE / "validated_client_constraint.py")
 
 
 def sha(raw):
@@ -77,6 +78,7 @@ def canonical(value):
 
 
 def source_admission():
+    client_constraint.materialize()
     candidate = decode(prefix.regular(HERE / "release-candidate.json"))
     layout = decode(prefix.regular(HERE / "cli-framing.json"))
     data = decode(prefix.regular(HERE / "proof-data-pins.json"))
@@ -115,7 +117,9 @@ def source_admission():
                  "sql_framing.py", "frame-cli.mjs", "release-candidate.json",
                  "cli-framing.json", "proof-data-pins.json", "source_expectations.py",
                  "pending_validation.py", "pending-validation.sql", "frontier_projection.py",
-                 "history_document_reuse.py", "parent_history_projection.py"):
+                 "history_document_reuse.py", "parent_history_projection.py",
+                 "validated_client_constraint.py", "validated-client-constraint-proof.json",
+                 "validated-client-controls.sql"):
         pins[str((HERE / name).relative_to(ROOT))] = sha(prefix.regular(HERE / name))
     evidence = 'docs/controlled-drugs/product-history-readcut-20261028.json'
     pins[evidence] = sha(prefix.regular(ROOT / evidence))

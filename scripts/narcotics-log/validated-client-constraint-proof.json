@@ -1,0 +1,20 @@
+{
+  "admitted_validation_states": [
+    false,
+    true
+  ],
+  "constraint_DDL_changes": 0,
+  "equal_diagnostic_subtrees_pruned": true,
+  "expression": "CHECK (client_contacts_complete(primary_phone, primary_email))",
+  "history_rewrites": 0,
+  "installed_values_used_as_expectations": false,
+  "kind": "validated-client-constraint-source-variant-v1",
+  "limits_changed": false,
+  "original_body_sha256": "a6c53c7bfac89889056f30d45273bdbf545493bfab1c1019d49daea1465580f8",
+  "original_source_sha256": "779e805a63a256623d4b325f8a91924cbb8dcf69e6d8b6c59613c20f96b37dbb",
+  "permission_changes": 0,
+  "scope": "public.clients.clients_required_contacts_check",
+  "variant_body_sha256": "496204e7e450cf4363cd149e60c48cab2303ea3f4e149ab227277af3f6d7402e",
+  "variant_source_sha256": "62663353d144d280da1cb67ccac894e135154ebd3c9d1896813094eac70fe226",
+  "whole_source_inverse": true
+}

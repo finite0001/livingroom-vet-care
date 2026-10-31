@@ -90,6 +90,18 @@ forward 207 gates accept those exact forms. Their complete inverses recover the
 original SQL, and every original quoted canonical ledger row stays unchanged.
 No existing ledger row is updated, deleted or replaced.
 
+The client-contact CHECK may already have been validated by an owner in a
+hosted database. `validated_client_constraint.py` admits the exact original
+expression in either validation state by canonicalizing only the named
+`public.clients.clients_required_contacts_check` catalog rendering. It does
+not alter the constraint or client data. A whole migration inverse recovers
+the PR315 source, including every other function, permission and time limit.
+The canonical installation still covers the unvalidated form; the authored
+history rehearsal validates the existing CHECK before installing and runs
+seven rollback-only catalog controls. Changed expressions, missing/renamed
+checks and similarly named checks on other tables remain distinguishable.
+Mismatch reporting prunes equal object subtrees without changing refusal.
+
 The authored-history rehearsal starts with the unchanged zero-project bootstrap,
 pauses the scheduler, and constructs original204 history once in its fresh local
 database. The official CLI then applies original205, the reviewed206 source
