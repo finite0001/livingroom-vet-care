@@ -3,13 +3,14 @@ import json
 import unittest
 
 import compact_source_guard as compact
+import compact_descriptor as descriptor
 import validated_client_constraint as source
 
 
 class CompactSourceGuardTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.current = (source.ROOT / 'supabase/migrations' / source.MIGRATION).read_bytes()
+        cls.current = descriptor.canonical((source.ROOT / 'supabase/migrations' / source.MIGRATION).read_bytes())
         cls.original = compact.canonical(cls.current)
 
     def test_whole_inverse_recovers_exact_reviewed_pr316(self):

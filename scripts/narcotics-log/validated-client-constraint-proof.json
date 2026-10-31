@@ -4,6 +4,7 @@
     true
   ],
   "constraint_DDL_changes": 0,
+  "descriptor_literals_compacted": true,
   "equal_diagnostic_subtrees_pruned": true,
   "expression": "CHECK (client_contacts_complete(primary_phone, primary_email))",
   "history_rewrites": 0,
@@ -16,6 +17,6 @@
   "scope": "public.clients.clients_required_contacts_check",
   "source_guard_literals_compacted": true,
   "variant_body_sha256": "496204e7e450cf4363cd149e60c48cab2303ea3f4e149ab227277af3f6d7402e",
-  "variant_source_sha256": "c4887e00eb73682a5d61150d35bccc1effda70ea80735efe22593a3e4bead7c4",
+  "variant_source_sha256": "15c0a7fe4016ba039189d49c1a4ef671af4a870c8fc6fbdbeb4da01a1f959c8e",
   "whole_source_inverse": true
 }

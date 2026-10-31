@@ -110,6 +110,13 @@ comparison. Its complete inverse recovers every PR316 migration byte before
 the existing PR315 inverse runs. No installed function, database constraint,
 permission, historical receipt or time limit changes through this compaction.
 
+The following descriptor statement also uses local constants through
+`compact_descriptor.py`. Its initial frozen `properties` value was completely
+replaced by the existing JSONB overlay; omitting that unused copy and reusing
+the overlay's frozen snapshots reduces this statement below 10 MB. The complete
+inverse restores every PR317 byte using the independently pinned
+`module-expected.json`. The stored descriptor and its hash remain unchanged.
+
 The authored-history rehearsal starts with the unchanged zero-project bootstrap,
 pauses the scheduler, and constructs original204 history once in its fresh local
 database. The official CLI then applies original205, the reviewed206 source

@@ -118,7 +118,7 @@ def source_admission():
                  "cli-framing.json", "proof-data-pins.json", "source_expectations.py",
                  "pending_validation.py", "pending-validation.sql", "frontier_projection.py",
                  "history_document_reuse.py", "parent_history_projection.py",
-                 "validated_client_constraint.py", "compact_source_guard.py", "validated-client-constraint-proof.json",
+                 "validated_client_constraint.py", "compact_source_guard.py", "compact_descriptor.py", "validated-client-constraint-proof.json",
                  "validated-client-controls.sql"):
         pins[str((HERE / name).relative_to(ROOT))] = sha(prefix.regular(HERE / name))
     evidence = 'docs/controlled-drugs/product-history-readcut-20261028.json'
