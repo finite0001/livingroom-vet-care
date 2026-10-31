@@ -102,6 +102,14 @@ seven rollback-only catalog controls. Changed expressions, missing/renamed
 checks and similarly named checks on other tables remain distinguishable.
 Mismatch reporting prunes equal object subtrees without changing refusal.
 
+`compact_source_guard.py` stores the frozen installation snapshot once in a
+local JSONB constant. Three repeated copies of its review snapshot use that
+same constant's `original269` value. This reduces the large verification
+statement from 22.3 MB to 9.1 MB without changing its expected values or
+comparison. Its complete inverse recovers every PR316 migration byte before
+the existing PR315 inverse runs. No installed function, database constraint,
+permission, historical receipt or time limit changes through this compaction.
+
 The authored-history rehearsal starts with the unchanged zero-project bootstrap,
 pauses the scheduler, and constructs original204 history once in its fresh local
 database. The official CLI then applies original205, the reviewed206 source

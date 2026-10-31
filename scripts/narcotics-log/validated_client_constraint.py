@@ -14,6 +14,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 import prefix_view as prefix
+import compact_source_guard as compact
 MIGRATION = "20261027223544_narcotics_count_and_stock_workflows.sql"
 ORIGINAL_SQL_SHA = "779e805a63a256623d4b325f8a91924cbb8dcf69e6d8b6c59613c20f96b37dbb"
 ORIGINAL_BODY_SHA = "a6c53c7bfac89889056f30d45273bdbf545493bfab1c1019d49daea1465580f8"
@@ -50,6 +51,7 @@ def body(text):
 
 
 def canonical(raw):
+    raw = compact.canonical(raw)
     if sha(raw) == ORIGINAL_SQL_SHA:
         return raw
     text = raw.decode("utf-8", errors="strict")
@@ -81,7 +83,7 @@ def derive(raw):
     result = replace_once(result, OLD_DIAGNOSTIC, NEW_DIAGNOSTIC).encode()
     if canonical(result) != original.encode():
         raise ValueError("Whole source inverse failed")
-    return result, after_hash
+    return compact.derive(result), after_hash
 
 
 def materialize(write=False):
@@ -102,6 +104,7 @@ def materialize(write=False):
                  admitted_validation_states=[False, True], constraint_DDL_changes=0,
                  history_rewrites=0, permission_changes=0, limits_changed=False,
                  installed_values_used_as_expectations=False, equal_diagnostic_subtrees_pruned=True)
+    proof['source_guard_literals_compacted'] = True
     outputs[HERE / "validated-client-constraint-proof.json"] = (json.dumps(proof, sort_keys=True, indent=2) + "\n").encode()
     for target, value in outputs.items():
         existing = prefix.regular(target) if target.exists() or target.is_symlink() else None
