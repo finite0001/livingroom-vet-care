@@ -23,7 +23,7 @@ async function fixture(page: Page, observation = false, names: NameOptions = {})
   const selectedContext = (t: { kind: string }) => observation ? { ...context, binding: { selected_id: binding.id, selected_context_hash: binding.context_hash, current_id: binding.id, current_context_hash: binding.context_hash, child_run_id: binding.child_run_id, superseded: false }, scan: { status: "running", next_page: 2, retry_after: null, error_code: null, attempt_sequence: 1 }, observation: t.kind === "observation" ? Object.fromEntries(Object.entries(item).filter(([key]) => !["payload_current", "exact_source_current"].includes(key))) : null } : context;
   const flags = { clinical_approval_performed: false, complete_coverage_verified: false };
   const state = { loseReply: false, omitSave: false, reject: false, failContext: false, failRecovery: false, holdSave: false, release: null as (() => void) | null, releaseNames: null as (() => void) | null, requests: [] as Record<string, unknown>[], receipts: [] as Record<string, unknown>[] };
-  await page.route("**/*", route => new URL(route.request().url()).origin === "http://127.0.0.1:8080" ? route.continue() : route.abort());
+  await page.route("**/*", route => new URL(route.request().url()).origin === test.info().project.use.baseURL! ? route.continue() : route.abort());
   await page.route("http://127.0.0.1:54321/**", async route => {
     const path = new URL(route.request().url()).pathname, body = route.request().method() === "POST" ? route.request().postDataJSON() : {};
     if (path === "/auth/v1/user") return route.fulfill({ json: user });

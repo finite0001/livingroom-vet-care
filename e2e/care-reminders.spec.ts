@@ -64,7 +64,7 @@ async function fixture(page: Page, baseURL: string | undefined, admin=false) {
  const productId='55555555-5555-4555-8555-555555555555';
  const template={id:'44444444-4444-4444-8444-444444444444',group_key:'reviewed-group',name:'Reviewed synthetic group',product_ids:[productId],interval_days:30,version:1,active:true,review_note:'Clinical review'};
  const state={row:null as Record<string,unknown>|null,revisions:[] as Record<string,unknown>[],failNext:false,settings:[] as Record<string,unknown>[],saves:[] as string[],jobs:[] as Record<string,unknown>[],links:[] as Record<string,unknown>[],outcomes:[] as Record<string,unknown>[]};
- await page.route('**/*',route=>new URL(route.request().url()).origin===new URL(baseURL ?? 'http://127.0.0.1:8080').origin?route.continue():route.abort());
+ await page.route('**/*',route=>new URL(route.request().url()).origin===new URL(baseURL ?? test.info().project.use.baseURL!).origin?route.continue():route.abort());
  await page.route(`${backend}/**`,async route=>{
   const url=new URL(route.request().url());const path=url.pathname;
   if(path==='/auth/v1/token')return route.fulfill({json:session});if(path==='/auth/v1/user')return route.fulfill({json:user});

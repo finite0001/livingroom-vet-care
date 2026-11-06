@@ -46,7 +46,7 @@ async function fixture(page: Page) {
     failDocument: false,
   };
   await page.route("**/*", (route) =>
-    new URL(route.request().url()).origin === "http://127.0.0.1:8080"
+    new URL(route.request().url()).origin === test.info().project.use.baseURL!
       ? route.continue()
       : route.abort(),
   );

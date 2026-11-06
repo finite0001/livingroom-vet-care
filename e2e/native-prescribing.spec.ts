@@ -17,7 +17,7 @@ async function fixture(page:Page, options:{lostSave?:boolean;admin?:boolean;dvm?
   const usage=()=>({version:1,native_fill_accounting:"not_implemented",dispensed_quantity:null,used_fill_slots:null,remaining_quantity:null,external_fulfillment:"unknown"});
   const currentStatus=(id:string)=>{const event=state.events.find(e=>e.authorization_id===id);return {authorization_id:id,authorization_hash:hash,checked_at:time,state:event?(event.action==="cancel"?"cancelled":"replaced"):"active",reason:event?.reason??null,replacement_id:event?.replacement_id??null};};
   const changeContext=(id:string)=>{const current=state.events.find(e=>e.authorization_id===id),c=makeContext(state.drafts[0]);return {version:1,authorization:state.authorizations.get(id),head:{id:current?.id??null,version:current?.event_version??0,state:currentStatus(id).state,reason:current?.reason??null,replacement_id:current?.replacement_id??null},patient_current:{id:pet,client_id:client,version:1,archived_at:null,deceased_at:null},prescriber:c.prescriber,alerts:c.alerts,usage:usage()};};
-  await page.route("**/*",r=>new URL(r.request().url()).origin==="http://127.0.0.1:8080"?r.continue():r.abort());
+  await page.route("**/*",r=>new URL(r.request().url()).origin===test.info().project.use.baseURL!?r.continue():r.abort());
   await page.route("http://127.0.0.1:54321/**",async r=>{
     const path=new URL(r.request().url()).pathname;
     if(path==="/auth/v1/token")return r.fulfill({json:session});if(path==="/auth/v1/user")return r.fulfill({json:user});

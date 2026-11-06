@@ -20,7 +20,7 @@ async function fixture(page: Page) {
   };
   page.on("request", (r) => state.requests.push(r.url()));
   await page.route("**/*", (route) =>
-    new URL(route.request().url()).origin === "http://127.0.0.1:8080"
+    new URL(route.request().url()).origin === test.info().project.use.baseURL!
       ? route.continue()
       : route.abort(),
   );
@@ -70,7 +70,7 @@ test("collection isolates identity, strips misleading query/fragment and activat
   await expect(
     page.getByRole("heading", { name: "Your payment", exact: true }),
   ).toBeVisible();
-  expect(page.url()).toBe(`http://127.0.0.1:8080/pay/${grant}`);
+  expect(page.url()).toBe(`${test.info().project.use.baseURL}/pay/${grant}`);
   expect(state.calls).toHaveLength(0);
   await page.getByRole("button", { name: "Open payment", exact: true }).click();
   await expect(page.getByText("$125.00 USD", { exact: true })).toBeVisible();
@@ -188,7 +188,7 @@ for (const kind of ["return", "cancel"] as const)
     await expect(
       page.getByRole("heading", { name: "Check your original payment link" }),
     ).toBeVisible();
-    expect(page.url()).toBe(`http://127.0.0.1:8080/payment/${kind}`);
+    expect(page.url()).toBe(`${test.info().project.use.baseURL}/payment/${kind}`);
     expect(state.calls).toHaveLength(0);
     expect(
       state.requests.some((url) =>
@@ -301,7 +301,7 @@ for (const kind of ["collection", "status"] as const)
       },
       "p1." + "z".repeat(43),
     );
-    await expect(page).toHaveURL("http://127.0.0.1:8080" + path);
+    await expect(page).toHaveURL(test.info().project.use.baseURL! + path);
     await expect(
       page.getByRole("heading", {
         name: "Open the original link from your message",
@@ -311,7 +311,7 @@ for (const kind of ["collection", "status"] as const)
     await page.evaluate(() => {
       location.hash = "s1." + "y".repeat(43);
     });
-    await expect(page).toHaveURL("http://127.0.0.1:8080" + path);
+    await expect(page).toHaveURL(test.info().project.use.baseURL! + path);
     expect(state.calls).toHaveLength(1);
   });
 test("hash change before payment module loads erases the capability before first render", async ({
@@ -335,7 +335,7 @@ test("hash change before payment module loads erases the capability before first
     history.replaceState(null, "", location.pathname + "?paid=true");
     location.hash = "p1." + "z".repeat(43);
   });
-  await expect(page).toHaveURL(`http://127.0.0.1:8080/pay/${grant}`);
+  await expect(page).toHaveURL(`${test.info().project.use.baseURL}/pay/${grant}`);
   release();
   await expect(
     page.getByRole("heading", {

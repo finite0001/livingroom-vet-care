@@ -5,6 +5,12 @@ import { dirname, join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { mkdirSync } from 'node:fs';
 
+const configuredProject = readFileSync('supabase/config.toml', 'utf8').match(/^project_id\s*=\s*"([a-z]{20})"/m)?.[1];
+const projectRef = process.env.SUPABASE_PROJECT_REF || configuredProject;
+if (!projectRef || !/^[a-z]{20}$/.test(projectRef)) {
+  throw new Error('Set a valid Supabase project reference for schema inventory.');
+}
+
 const expectedReadinessObjects = {
   tables: [
     'public.outbound_deliveries',
@@ -162,7 +168,8 @@ const dump = run('npx', [
   'supabase',
   'db',
   'dump',
-  '--linked',
+  '--project-ref',
+  projectRef,
   '--schema',
   'public',
   '--file',
@@ -183,9 +190,10 @@ rmSync(tempDirectory, { recursive: true, force: true });
 const objects = collectSchemaObjects(rawSql);
 const inventory = {
   generatedAt: new Date().toISOString(),
+  projectRef,
   note: 'Read-only remote public schema inventory from Supabase CLI schema-only dump. Raw SQL is intentionally not written to the artifact.',
   dump: {
-    command: 'npx supabase db dump --linked --schema public --file [tempfile] --yes',
+    command: `npx supabase db dump --project-ref ${projectRef} --schema public --file [tempfile] --yes`,
     status: dump.status,
     ok: dump.ok,
     stderr: dump.stderr

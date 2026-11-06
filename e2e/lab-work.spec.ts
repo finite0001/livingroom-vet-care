@@ -62,7 +62,7 @@ async function fixture(page: Page) {
     session,
   );
  const state = { row: null as Record<string,unknown>|null, revisions: [] as Record<string,unknown>[], failNext: false, saves: [] as string[] };
- await page.route('**/*',route=>new URL(route.request().url()).origin==='http://127.0.0.1:8080'?route.continue():route.abort());
+ await page.route('**/*',route=>new URL(route.request().url()).origin===test.info().project.use.baseURL!?route.continue():route.abort());
  await page.route(`${backend}/**`,async route=>{
   const url=new URL(route.request().url());const path=url.pathname;
   if(path==='/auth/v1/token')return route.fulfill({json:session});

@@ -15,7 +15,7 @@ async function fixture(page: Page, baseURL: string | undefined, role = "DVM", in
  await page.addInitScript(value => localStorage.setItem("sb-127-auth-token", JSON.stringify(value)), session);
  const state = { plans: initialPlan ? [structuredClone(plan)] : [], templates: [structuredClone(template)], actions: [] as SavedAction[], loseAck: false, conflict: false, savedCompletions: 0, sourceRows: [structuredClone(source)], rejected: null as Record<string, unknown> | null, policy: null as Record<string, unknown> | null };
  const display = (value: typeof plan) => ({ plan: value, patient_name: "Synthetic Juniper", patient_inactive: inactive, reminder_reason: inactive ? "Patient inactive; routine reminders stopped" : value.status === "proposed" ? "Awaiting veterinarian review" : value.status === "paused" ? "Paused" : "Uses reviewed delivery policies", next_send_at: null });
- await page.route("**/*", route => new URL(route.request().url()).origin === new URL(baseURL ?? "http://127.0.0.1:8080").origin ? route.continue() : route.abort());
+ await page.route("**/*", route => new URL(route.request().url()).origin === new URL(baseURL ?? test.info().project.use.baseURL!).origin ? route.continue() : route.abort());
  await page.route(`${backend}/**`, async route => {
   const url = new URL(route.request().url()), path = url.pathname, rpc = path.replace("/rest/v1/rpc/", "");
   const body = route.request().method() === "POST" ? route.request().postDataJSON() ?? {} : {};
