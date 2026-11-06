@@ -42,7 +42,7 @@ async function fixture(page: Page, baseURL: string | undefined, options: Fixture
   const hits: Record<string, number> = {};
 
   await page.route("**/*", (route) =>
-    new URL(route.request().url()).origin === new URL(baseURL ?? "http://127.0.0.1:8080").origin
+    new URL(route.request().url()).origin === new URL(baseURL ?? test.info().project.use.baseURL!).origin
       ? route.continue()
       : route.abort(),
   );
@@ -145,4 +145,73 @@ test("the time clock reports a failed read for each of its three lists", async (
   await expect(page.getByText("Not clocked in")).toHaveCount(0);
   await expect(page.getByText("No staff clocked in.")).toHaveCount(0);
   await expect(page.getByText("No shifts in the last 30 days.")).toHaveCount(0);
+});
+
+for (const allStaff of [false, true]) {
+  test(`the ${allStaff ? "all-staff" : "personal"} timesheet refuses to report or export a failed read`, async ({ page, baseURL }) => {
+    const state = await fixture(page, baseURL, { failing: ["/rest/v1/time_entries"] });
+    await page.goto("/hub/timesheet");
+    if (allStaff) await page.getByRole("tab", { name: "All staff" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "Timesheet could not be loaded." })).toBeVisible(retryBudget);
+    await expect(page.getByRole("button", { name: "Export CSV" })).toBeDisabled();
+    await expect(page.getByText("No time entries yet")).toHaveCount(0);
+    const before = state.hits["/rest/v1/time_entries"] ?? 0;
+    await page.getByRole("button", { name: "Try again" }).click();
+    await expect.poll(() => state.hits["/rest/v1/time_entries"] ?? 0).toBeGreaterThan(before);
+  });
+}
+
+test("admin timesheets protect open shifts and match the reviewed closed entry without updating duty", async ({ page, baseURL }) => {
+  await fixture(page, baseURL);
+  const closed = {
+    id: "22222222-2222-4222-8222-222222222222", staff_id: staff,
+    clock_in_at: "2026-01-02T16:00:00.000Z", clock_out_at: "2026-01-02T17:00:00.000Z",
+    note: "Original note", created_at: "2026-01-02T16:00:00.000Z",
+  };
+  const open = { ...closed, id: "33333333-3333-4333-8333-333333333333", clock_out_at: null, note: "Active shift" };
+  let current = { ...closed };
+  let conflict = false;
+  const writes: URL[] = [];
+  const profileWrites: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/rest/v1/profiles") && request.method() === "PATCH") profileWrites.push(request.url());
+  });
+  await page.route(`${backend}/rest/v1/time_entries*`, async (route) => {
+    const request = route.request(), url = new URL(request.url());
+    if (request.method() === "PATCH") {
+      writes.push(url);
+      if (conflict) return route.fulfill({ json: [] });
+      current = { ...current, ...request.postDataJSON() };
+      return route.fulfill({ json: [{ id: closed.id }] });
+    }
+    if (url.searchParams.get("clock_out_at") === "is.null") return route.fulfill({ json: [open] });
+    return route.fulfill({ json: [open, current] });
+  });
+  await page.goto("/hub/timesheet");
+  await page.getByRole("tab", { name: "All staff" }).click();
+  const openRow = page.getByRole("row").filter({ hasText: "Active shift" });
+  await expect(openRow.getByRole("button", { name: "Edit entry" })).toBeDisabled();
+  await expect(openRow.getByRole("button", { name: "Delete entry" })).toBeDisabled();
+  await expect(page.getByText("Only closed shifts can be corrected or deleted.", { exact: false })).toBeVisible();
+
+  await page.getByRole("row").filter({ hasText: "Original note" }).getByRole("button", { name: "Edit entry" }).click();
+  await page.getByLabel("Note", { exact: true }).fill("Reviewed correction");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("row").filter({ hasText: "Reviewed correction" })).toBeVisible();
+  expect(writes).toHaveLength(1);
+  expect(writes[0].searchParams.get("id")).toBe(`eq.${closed.id}`);
+  expect(writes[0].searchParams.get("staff_id")).toBe(`eq.${staff}`);
+  expect(writes[0].searchParams.get("clock_in_at")).toBe(`eq.${closed.clock_in_at}`);
+  expect(writes[0].searchParams.getAll("clock_out_at")).toEqual(["not.is.null", `eq.${closed.clock_out_at}`]);
+  expect(writes[0].searchParams.get("note")).toBe("eq.Original note");
+  expect(profileWrites).toEqual([]);
+
+  conflict = true;
+  await page.getByRole("row").filter({ hasText: "Reviewed correction" }).getByRole("button", { name: "Edit entry" }).click();
+  await page.getByLabel("Note", { exact: true }).fill("Stale overwrite");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("This entry changed or is no longer editable. Refresh the timesheet and review it again.")).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  expect(profileWrites).toEqual([]);
 });

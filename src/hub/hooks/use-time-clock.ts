@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/auth-context";
+import { updateClosedTimeEntry, deleteClosedTimeEntry, type OriginalTimeEntry, type TimeEntryCorrection, type TimeEntryClient } from "@/hub/features/time-clock/admin-time-entry";
 
 export interface TimeEntry {
   id: string;
@@ -84,14 +85,18 @@ export function useMyShifts(days = 30) {
     enabled: !!profile?.id,
     queryFn: async () => {
       const start = new Date(Date.now() - days * 86_400_000).toISOString();
-      const { data, error } = await supabase
-        .from("time_entries")
-        .select("*")
-        .eq("staff_id", profile!.id)
-        .gte("clock_in_at", start)
-        .order("clock_in_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as TimeEntry[];
+      const all: TimeEntry[] = [];
+      for (let offset = 0; ; offset += PAGE_SIZE) {
+        const { data, error } = await supabase.from("time_entries").select("*")
+          .eq("staff_id", profile!.id)
+          .or(`clock_out_at.is.null,clock_out_at.gte.${start}`)
+          .order("clock_in_at", { ascending: false }).order("id")
+          .range(offset, offset + PAGE_SIZE - 1);
+        if (error) throw error;
+        all.push(...(data ?? []));
+        if ((data?.length ?? 0) < PAGE_SIZE) break;
+      }
+      return all;
     },
   });
 }
@@ -153,56 +158,26 @@ export function useAllShiftsRange(fromIso: string | null, toIso: string | null, 
   });
 }
 
-// Admin: correct an entry's times/note. UPDATE is admin-only in RLS; a
-// non-admin matches 0 rows with no error, so select the updated rows and
-// treat an empty result as a failure rather than reporting a false success.
-// Closed entries must stay closed (reopening would desync profiles.is_on_duty,
-// which only the clock RPCs maintain); when this edit closes a previously open
-// shift, sync is_on_duty=false here for the same reason.
+// Keep the testable mutation boundary narrow; comparing the entire generated
+// Supabase client to the transport interface exhausts TypeScript instantiation.
+const timeEntryClient = supabase as unknown as TimeEntryClient;
+
+// Admin corrections are limited to already-closed entries. Open-shift changes
+// need a transactional backend operation; a separate profile PATCH can race clock-in.
 export function useAdminUpdateTimeEntry() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, staff_id, clock_in_at, clock_out_at, note, wasOpen }: {
-      id: string; staff_id: string; clock_in_at: string; clock_out_at: string | null; note: string | null; wasOpen: boolean;
-    }) => {
-      if (!wasOpen && !clock_out_at) throw new Error("Closed entries need a clock out time");
-      const { data, error } = await supabase
-        .from("time_entries")
-        .update({ clock_in_at, clock_out_at, note })
-        .eq("id", id)
-        .select("id");
-      if (error) throw error;
-      if (!data || data.length === 0) throw new Error("You don't have permission to edit this entry");
-      if (wasOpen && clock_out_at) {
-        // The partial unique index guarantees at most one open shift per staff,
-        // so closing this one means they are off duty.
-        const { error: dutyError } = await supabase.from("profiles").update({ is_on_duty: false }).eq("id", staff_id);
-        if (dutyError) throw dutyError;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["time-clock"] });
-    },
+    mutationFn: ({ original, values }: { original: OriginalTimeEntry; values: TimeEntryCorrection }) =>
+      updateClosedTimeEntry(timeEntryClient, original, values),
+    onSettled: () => { void queryClient.invalidateQueries({ queryKey: ["time-clock"] }); },
   });
 }
 
-// Admin: delete an entry. Same RLS no-op detection as the update above.
-// Deleting an open shift also clears is_on_duty (see useAdminUpdateTimeEntry).
 export function useAdminDeleteTimeEntry() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, staff_id, wasOpen }: { id: string; staff_id: string; wasOpen: boolean }) => {
-      const { data, error } = await supabase.from("time_entries").delete().eq("id", id).select("id");
-      if (error) throw error;
-      if (!data || data.length === 0) throw new Error("You don't have permission to delete this entry");
-      if (wasOpen) {
-        const { error: dutyError } = await supabase.from("profiles").update({ is_on_duty: false }).eq("id", staff_id);
-        if (dutyError) throw dutyError;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["time-clock"] });
-    },
+    mutationFn: (original: OriginalTimeEntry) => deleteClosedTimeEntry(timeEntryClient, original),
+    onSettled: () => { void queryClient.invalidateQueries({ queryKey: ["time-clock"] }); },
   });
 }
 

@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { EmptyState } from "@/hub/components/shared/EmptyState";
+import { LoadErrorState } from "@/hub/components/shared/LoadErrorState";
 import {
   useAllShiftsRange, useAdminUpdateTimeEntry, useAdminDeleteTimeEntry,
   type StaffTimeEntry,
@@ -90,7 +91,7 @@ export function AllStaffTimesheet() {
   const fromIso = fromDate ? startOfDay(fromDate).toISOString() : null;
   const toIso = toDate ? endOfDay(toDate).toISOString() : null;
 
-  const { data, isLoading } = useAllShiftsRange(fromIso, toIso, true);
+  const { data, isLoading, isError, refetch } = useAllShiftsRange(fromIso, toIso, true);
   const updateEntry = useAdminUpdateTimeEntry();
   const deleteEntry = useAdminDeleteTimeEntry();
 
@@ -158,6 +159,7 @@ export function AllStaffTimesheet() {
   };
 
   const openEdit = (e: StaffTimeEntry) => {
+    if (!e.clock_out_at) return;
     setForm({ clockIn: isoToLocalInput(e.clock_in_at), clockOut: isoToLocalInput(e.clock_out_at), note: e.note ?? "" });
     setEditing(e);
   };
@@ -168,8 +170,8 @@ export function AllStaffTimesheet() {
     const clockOutIso = localInputToIso(form.clockOut);
     if (!clockInIso) { toast.error("Clock in time is required"); return; }
     if (form.clockOut && !clockOutIso) { toast.error("Clock out time is invalid"); return; }
-    const wasOpen = !editing.clock_out_at;
-    if (!wasOpen && !clockOutIso) { toast.error("Closed entries need a clock out time"); return; }
+    if (!editing.clock_out_at) { toast.error("Ask the staff member to clock out first"); return; }
+    if (!clockOutIso) { toast.error("Closed entries need a clock out time"); return; }
     if (clockOutIso && clockOutIso <= clockInIso) { toast.error("Clock out must be after clock in"); return; }
     const nowIso = new Date().toISOString();
     if (clockInIso > nowIso || (clockOutIso && clockOutIso > nowIso)) {
@@ -177,7 +179,7 @@ export function AllStaffTimesheet() {
       return;
     }
     updateEntry.mutate(
-      { id: editing.id, staff_id: editing.staff_id, clock_in_at: clockInIso, clock_out_at: clockOutIso, note: form.note.trim() || null, wasOpen },
+      { original: editing, values: { clock_in_at: clockInIso, clock_out_at: clockOutIso, note: form.note.trim() || null } },
       {
         onSuccess: () => { toast.success("Entry updated"); setEditing(null); },
         onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to update entry"),
@@ -187,7 +189,7 @@ export function AllStaffTimesheet() {
 
   const handleDelete = () => {
     if (!pendingDelete) return;
-    deleteEntry.mutate({ id: pendingDelete.id, staff_id: pendingDelete.staff_id, wasOpen: !pendingDelete.clock_out_at }, {
+    deleteEntry.mutate(pendingDelete, {
       onSuccess: () => { toast.success("Entry deleted"); setPendingDelete(null); },
       onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to delete entry"),
     });
@@ -203,7 +205,7 @@ export function AllStaffTimesheet() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{isLoading ? "—" : formatHours(grandMs)}</div>
+            <div className="text-3xl font-bold">{isLoading || isError ? "—" : formatHours(grandMs)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -211,7 +213,7 @@ export function AllStaffTimesheet() {
             <CardTitle className="text-sm text-muted-foreground font-medium">Shifts shown</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{isLoading ? "—" : filtered.length}</div>
+            <div className="text-3xl font-bold">{isLoading || isError ? "—" : filtered.length}</div>
           </CardContent>
         </Card>
       </div>
@@ -230,7 +232,7 @@ export function AllStaffTimesheet() {
                 variant="outline"
                 size="sm"
                 onClick={exportCsv}
-                disabled={isLoading || filtered.length === 0}
+                disabled={isLoading || isError || filtered.length === 0}
                 className="h-8"
               >
                 <Download className="h-3.5 w-3.5" /> Export CSV
@@ -294,11 +296,14 @@ export function AllStaffTimesheet() {
           </div>
         </CardHeader>
         <CardContent>
+          <p className="mb-4 text-sm text-muted-foreground">Only closed shifts can be corrected or deleted. Ask the staff member to clock out first.</p>
           {isLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
-          ) : filtered.length === 0 ? (
+          ) : isError ? (
+              <LoadErrorState label="Timesheet" detail="Time entries could not be verified. Refresh before reviewing or exporting hours." onRetry={() => void refetch()} />
+            ) : filtered.length === 0 ? (
             <EmptyState
               icon={Clock}
               title={hasFilters ? "No matching entries" : "No time entries yet"}
@@ -348,10 +353,10 @@ export function AllStaffTimesheet() {
                           <TableCell className="text-muted-foreground">{e.note ?? "—"}</TableCell>
                           <TableCell>
                             <div className="flex items-center justify-end gap-1">
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" aria-label="Edit entry" onClick={() => openEdit(e)}>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" aria-label="Edit entry" disabled={open || updateEntry.isPending || deleteEntry.isPending} onClick={() => openEdit(e)}>
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" aria-label="Delete entry" onClick={() => setPendingDelete(e)}>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" aria-label="Delete entry" disabled={open || updateEntry.isPending || deleteEntry.isPending} onClick={() => setPendingDelete(e)}>
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </div>
@@ -392,9 +397,7 @@ export function AllStaffTimesheet() {
                 onChange={(e) => setForm((f) => ({ ...f, clockOut: e.target.value }))}
               />
               <p className="text-xs text-muted-foreground">
-                {editing && !editing.clock_out_at
-                  ? "Leave blank to keep the shift open, or set a time to clock them out."
-                  : "Required — closed entries can't be reopened."}
+                Required — closed entries cannot be reopened.
               </p>
             </div>
             <div className="space-y-1.5">
