@@ -1,4 +1,4 @@
-name: Narcotics installation rehearsal
+name: Retained 209 baseline regression (not current acceptance)
 
 on:
   push:
@@ -40,10 +40,14 @@ concurrency:
 
 jobs:
   historical-source-boundary:
+    name: Retained 209 / historical-source-boundary
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Immutable retained209 source. Current acceptance is beta-candidate.yml.
+          ref: 0da567533c8877b21cf4fbe141b6c1bf3f20492c
       - name: Materialize and admit the unchanged historical release
         run: python3 -I -B scripts/narcotics-log/prepare_historical_ci.py
       - name: Verify retained installation artifacts in that historical view
@@ -55,12 +59,16 @@ jobs:
           python3 -B tests/controlled-drugs/engine/candidate/secondary_review_cli_body.py --check
 
   forward-installation:
+    name: Retained 209 / forward-installation
     # This is installation evidence only. Auth, ordinary writers, count
     # execution and staff browser acceptance have separate remaining gates.
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Immutable retained209 source. Current acceptance is beta-candidate.yml.
+          ref: 0da567533c8877b21cf4fbe141b6c1bf3f20492c
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -99,10 +107,14 @@ jobs:
             /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log
 
   authored-history-installation:
+    name: Retained 209 / authored-history-installation
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Immutable retained209 source. Current acceptance is beta-candidate.yml.
+          ref: 0da567533c8877b21cf4fbe141b6c1bf3f20492c
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -136,6 +148,7 @@ jobs:
             /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log
 
   genuine-business:
+    name: Retained 209 / genuine-business (${{ matrix.profile }})
     needs: forward-installation
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
@@ -149,6 +162,9 @@ jobs:
                   native_return_v2_discrepancy]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Immutable retained209 source. Current acceptance is beta-candidate.yml.
+          ref: 0da567533c8877b21cf4fbe141b6c1bf3f20492c
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -219,11 +235,15 @@ jobs:
             /tmp/lrv-narcotics-install-*/bootstrap/*-stderr.log
 
   register-engineering:
+    name: Retained 209 / register-engineering
     needs: forward-installation
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Immutable retained209 source. Current acceptance is beta-candidate.yml.
+          ref: 0da567533c8877b21cf4fbe141b6c1bf3f20492c
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -261,11 +281,15 @@ jobs:
             /tmp/lrv-narcotics-install-*/*-failure.txt
 
   operational-staff-browser:
+    name: Retained 209 / operational-staff-browser
     needs: forward-installation
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Immutable retained209 source. Current acceptance is beta-candidate.yml.
+          ref: 0da567533c8877b21cf4fbe141b6c1bf3f20492c
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -300,11 +324,15 @@ jobs:
             /tmp/lrv-operational-browser-*/operational-browser-proof/actual-operational-workspace.png
 
   pending-validation-rollback:
+    name: Retained 209 / pending-validation-rollback
     needs: forward-installation
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Immutable retained209 source. Current acceptance is beta-candidate.yml.
+          ref: 0da567533c8877b21cf4fbe141b6c1bf3f20492c
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -334,11 +362,15 @@ jobs:
             /tmp/lrv-narcotics-install-*/source-failure.txt
 
   populated-recovery:
+    name: Retained 209 / populated-recovery
     needs: forward-installation
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Immutable retained209 source. Current acceptance is beta-candidate.yml.
+          ref: 0da567533c8877b21cf4fbe141b6c1bf3f20492c
       - uses: actions/setup-node@v4
         with:
           node-version: 22

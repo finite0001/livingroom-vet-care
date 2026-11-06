@@ -28,6 +28,10 @@ FORWARD = (
     "20261027223535_controlled_record_review_workflows.sql",
     "20261027223544_narcotics_count_and_stock_workflows.sql",
 )
+BETA_MIGRATION = "20261106170000_atomic_time_clock_corrections.sql"
+BETA_MANIFEST = "scripts/narcotics-log/beta-migration210.json"
+BETA_FOLLOWUP_MIGRATION = "20261106173000_terminal_appointment_clinician.sql"
+BETA_FOLLOWUP_MANIFEST = "scripts/narcotics-log/beta-migration211.json"
 PROGRAMS = {
     "artifacts": (
         ("release_assembly.py", "--check"),
@@ -66,6 +70,46 @@ def regular(path, cap=64 * 1024 * 1024):
     return raw
 
 
+def beta210(root):
+    """Admit a separately framed successor, without granting it runtime acceptance."""
+    return _beta_manifest(root, BETA_MANIFEST, BETA_MIGRATION, 210, "beta-atomic-time-clock-cli210-source-v1")
+
+
+def beta211(root):
+    return _beta_manifest(root, BETA_FOLLOWUP_MANIFEST, BETA_FOLLOWUP_MIGRATION, 211,
+                          "beta-terminal-appointment-cli211-source-v1")
+
+
+def _beta_manifest(root, manifest_path, migration, count, kind):
+    root = Path(root)
+    manifest = json.loads(regular(root / manifest_path))
+    if (set(manifest) != {"kind", "cli_version", "prefix_migration_count", "migration_count",
+                          "migration", "framing", "database_operations"}
+            or manifest.get("kind") != kind
+            or manifest.get("cli_version") != "2.118.0"
+            or manifest.get("prefix_migration_count") != count - 1
+            or manifest.get("migration_count") != count
+            or manifest.get("migration") != migration
+            or manifest.get("database_operations") != 0):
+        raise ValueError("Exact separately framed beta successor manifest required")
+    body = regular(root / "supabase/migrations" / migration)
+    framing = manifest["framing"]
+    required = {"bytes", "sha256", "statement_count", "compact_array_sha256",
+                "postgres_array_sha256", "postgres_array_bytes", "statement_sha256s"}
+    if (set(framing) != required or framing["bytes"] != len(body)
+            or framing["sha256"] != digest(body)
+            or type(framing["statement_count"]) is not int
+            or not 0 < framing["statement_count"] <= 5000
+            or len(framing["statement_sha256s"]) != framing["statement_count"]
+            or type(framing["postgres_array_bytes"]) is not int
+            or framing["postgres_array_bytes"] < 2
+            or any(type(value) is not str or re.fullmatch("[0-9a-f]{64}", value) is None
+                   for value in [framing["compact_array_sha256"], framing["postgres_array_sha256"],
+                                 *framing["statement_sha256s"]])):
+        raise ValueError("Beta successor source differs from its declared official framing")
+    return manifest
+
+
 def canonical206(root):
     root = Path(root)
     raw = regular(root / CANDIDATE / "release-expected-204.json")
@@ -82,8 +126,15 @@ def canonical206(root):
         name=manifest.get("migration")
         if manifest.get("kind")!="narcotics-operational-cli209-source-v1"or manifest.get("cli_version")!="2.118.0"or manifest.get("prefix_migration_count")!=208 or manifest.get("migration_count")!=209 or manifest.get("database_operations")!=0:
             raise ValueError("Exact separately framed209 manifest required")
-        if name!="20261028170038_narcotics_register_exports_and_recovery.sql" or actual!=sorted([*expected,*FORWARD,name]):
-            raise ValueError("Only the complete206, named208 or exact source-pinned209 inventory is admitted")
+        if name!="20261028170038_narcotics_register_exports_and_recovery.sql":
+            raise ValueError("Exact operational209 migration required")
+        if actual != sorted([*expected, *FORWARD, name]):
+            beta_inventory = [*expected, *FORWARD, name, BETA_MIGRATION]
+            if actual not in (sorted(beta_inventory), sorted([*beta_inventory, BETA_FOLLOWUP_MIGRATION])):
+                raise ValueError("Only complete206, named208, pinned209 or exact pinned beta210/211 is admitted")
+            beta210(root)
+            if BETA_FOLLOWUP_MIGRATION in actual:
+                beta211(root)
         body=regular(directory/name);framing=manifest["framing"]
         if framing["bytes"]!=len(body)or framing["sha256"]!=digest(body):
             raise ValueError("Operational209 source differs from its declared framing")

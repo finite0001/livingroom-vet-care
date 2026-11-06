@@ -159,22 +159,23 @@ export function AllStaffTimesheet() {
   };
 
   const openEdit = (e: StaffTimeEntry) => {
-    if (!e.clock_out_at) return;
     setForm({ clockIn: isoToLocalInput(e.clock_in_at), clockOut: isoToLocalInput(e.clock_out_at), note: e.note ?? "" });
     setEditing(e);
   };
 
   const handleSave = () => {
     if (!editing) return;
-    const clockInIso = localInputToIso(form.clockIn);
-    const clockOutIso = localInputToIso(form.clockOut);
+    // Preserve recorded precision when only the note or the other time changed.
+    const clockInIso = form.clockIn === isoToLocalInput(editing.clock_in_at)
+      ? editing.clock_in_at : localInputToIso(form.clockIn);
+    const clockOutIso = form.clockOut === isoToLocalInput(editing.clock_out_at)
+      ? editing.clock_out_at : localInputToIso(form.clockOut);
     if (!clockInIso) { toast.error("Clock in time is required"); return; }
     if (form.clockOut && !clockOutIso) { toast.error("Clock out time is invalid"); return; }
-    if (!editing.clock_out_at) { toast.error("Ask the staff member to clock out first"); return; }
-    if (!clockOutIso) { toast.error("Closed entries need a clock out time"); return; }
-    if (clockOutIso && clockOutIso <= clockInIso) { toast.error("Clock out must be after clock in"); return; }
-    const nowIso = new Date().toISOString();
-    if (clockInIso > nowIso || (clockOutIso && clockOutIso > nowIso)) {
+    if (editing.clock_out_at && !clockOutIso) { toast.error("Closed entries need a clock out time"); return; }
+    if (clockOutIso && Date.parse(clockOutIso) <= Date.parse(clockInIso)) { toast.error("Clock out must be after clock in"); return; }
+    const now = Date.now();
+    if (Date.parse(clockInIso) > now || (clockOutIso && Date.parse(clockOutIso) > now)) {
       toast.error("Times can't be in the future");
       return;
     }
@@ -296,7 +297,7 @@ export function AllStaffTimesheet() {
           </div>
         </CardHeader>
         <CardContent>
-          <p className="mb-4 text-sm text-muted-foreground">Only closed shifts can be corrected or deleted. Ask the staff member to clock out first.</p>
+          <p className="mb-4 text-sm text-muted-foreground">Corrections update the shift and duty status together. Changed entries must be refreshed before editing.</p>
           {isLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
@@ -353,10 +354,10 @@ export function AllStaffTimesheet() {
                           <TableCell className="text-muted-foreground">{e.note ?? "—"}</TableCell>
                           <TableCell>
                             <div className="flex items-center justify-end gap-1">
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" aria-label="Edit entry" disabled={open || updateEntry.isPending || deleteEntry.isPending} onClick={() => openEdit(e)}>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" aria-label="Edit entry" disabled={updateEntry.isPending || deleteEntry.isPending} onClick={() => openEdit(e)}>
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" aria-label="Delete entry" disabled={open || updateEntry.isPending || deleteEntry.isPending} onClick={() => setPendingDelete(e)}>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" aria-label="Delete entry" disabled={updateEntry.isPending || deleteEntry.isPending} onClick={() => setPendingDelete(e)}>
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </div>
@@ -397,7 +398,7 @@ export function AllStaffTimesheet() {
                 onChange={(e) => setForm((f) => ({ ...f, clockOut: e.target.value }))}
               />
               <p className="text-xs text-muted-foreground">
-                Required — closed entries cannot be reopened.
+                {editing?.clock_out_at ? "Required — closed entries cannot be reopened." : "Leave blank to keep the shift open, or enter a time to clock this staff member out."}
               </p>
             </div>
             <div className="space-y-1.5">

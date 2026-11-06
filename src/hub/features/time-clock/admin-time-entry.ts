@@ -8,53 +8,57 @@ export interface OriginalTimeEntry {
 
 export interface TimeEntryCorrection {
   clock_in_at: string;
-  clock_out_at: string;
+  clock_out_at: string | null;
   note: string | null;
 }
 
-interface TimeEntryFilter {
-  eq(column: string, value: string): TimeEntryFilter;
-  is(column: string, value: null): TimeEntryFilter;
-  not(column: string, operator: string, value: null): TimeEntryFilter;
-  select(columns: "id"): PromiseLike<{ data: { id: string }[] | null; error: unknown }>;
+export interface TimeEntryArguments {
+  p_id: string;
+  p_staff_id: string;
+  p_expected_clock_in_at: string;
+  p_expected_clock_out_at: string | null;
+  p_expected_note: string | null;
+  p_clock_in_at: string;
+  p_clock_out_at: string | null;
+  p_note: string | null;
+  p_delete: boolean;
 }
 
 export interface TimeEntryClient {
-  from(table: "time_entries"): {
-    update(values: TimeEntryCorrection): TimeEntryFilter;
-    delete(): TimeEntryFilter;
-  };
+  rpc(name: "admin_correct_time_entry", args: TimeEntryArguments): PromiseLike<{
+    data: OriginalTimeEntry | null;
+    error: { message: string; code?: string } | null;
+  }>;
 }
 
-function requireClosed(original: OriginalTimeEntry): asserts original is OriginalTimeEntry & { clock_out_at: string } {
-  if (!original.clock_out_at)
-    throw new Error("Ask the staff member to clock out before correcting or deleting their shift.");
+async function correct(client: TimeEntryClient, original: OriginalTimeEntry, values: TimeEntryCorrection, remove: boolean) {
+  const { data, error } = await client.rpc("admin_correct_time_entry", {
+    p_id: original.id,
+    p_staff_id: original.staff_id,
+    p_expected_clock_in_at: original.clock_in_at,
+    p_expected_clock_out_at: original.clock_out_at,
+    p_expected_note: original.note,
+    p_clock_in_at: values.clock_in_at,
+    p_clock_out_at: values.clock_out_at,
+    p_note: values.note,
+    p_delete: remove,
+  });
+  if (error) throw new Error(error.message);
+  if (!data || data.id !== original.id || data.staff_id !== original.staff_id)
+    throw new Error("The correction could not be verified. Refresh the timesheet before retrying.");
 }
 
-function matchOriginal(query: TimeEntryFilter, original: OriginalTimeEntry & { clock_out_at: string }) {
-  const matched = query.eq("id", original.id).eq("staff_id", original.staff_id)
-    .not("clock_out_at", "is", null)
-    .eq("clock_in_at", original.clock_in_at).eq("clock_out_at", original.clock_out_at);
-  return original.note === null ? matched.is("note", null) : matched.eq("note", original.note);
+/** The RPC checks administrator identity, expected values and duty state in one transaction. */
+export async function updateTimeEntry(client: TimeEntryClient, original: OriginalTimeEntry, values: TimeEntryCorrection) {
+  const start = Date.parse(values.clock_in_at);
+  const end = values.clock_out_at === null ? null : Date.parse(values.clock_out_at);
+  if (!Number.isFinite(start) || start > Date.now() || (end !== null && (!Number.isFinite(end) || end <= start || end > Date.now())))
+    throw new Error("Use valid times with clock out after clock in and no future times.");
+  if (original.clock_out_at !== null && values.clock_out_at === null)
+    throw new Error("Closed entries cannot be reopened.");
+  await correct(client, original, values, false);
 }
 
-async function confirm(query: TimeEntryFilter) {
-  const { data, error } = await query.select("id");
-  if (error) throw error;
-  if (data?.length !== 1)
-    throw new Error("This entry changed or is no longer editable. Refresh the timesheet and review it again.");
-}
-
-/** Closed shifts cannot change current duty; compare the exact reviewed row in the same request. */
-export async function updateClosedTimeEntry(client: TimeEntryClient, original: OriginalTimeEntry, values: TimeEntryCorrection) {
-  requireClosed(original);
-  const start = Date.parse(values.clock_in_at), end = Date.parse(values.clock_out_at);
-  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start || end > Date.now())
-    throw new Error("Use a valid closed shift with clock out after clock in and no future times.");
-  await confirm(matchOriginal(client.from("time_entries").update(values), original));
-}
-
-export async function deleteClosedTimeEntry(client: TimeEntryClient, original: OriginalTimeEntry) {
-  requireClosed(original);
-  await confirm(matchOriginal(client.from("time_entries").delete(), original));
+export async function deleteTimeEntry(client: TimeEntryClient, original: OriginalTimeEntry) {
+  await correct(client, original, original, true);
 }

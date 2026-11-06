@@ -1,0 +1,67 @@
+{
+  "kind": "retained209-fresh-native-github-rehearsal-v1",
+  "source_sha": "0da567533c8877b21cf4fbe141b6c1bf3f20492c",
+  "run_url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379",
+  "run_id": 41219936379,
+  "attempt": 3,
+  "jobs": [
+    {
+      "name": "authored-history-installation",
+      "databaseId": 128195455944,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:36:49Z",
+      "completedAt": "2026-11-06T22:40:22Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128195455944"
+    },
+    {
+      "name": "forward-installation",
+      "databaseId": 128195456139,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:36:48Z",
+      "completedAt": "2026-11-06T22:40:57Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128195456139"
+    },
+    {
+      "name": "operational-staff-browser",
+      "databaseId": 128197199309,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:41:01Z",
+      "completedAt": "2026-11-06T22:47:22Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197199309"
+    },
+    {
+      "name": "pending-validation-rollback",
+      "databaseId": 128197199438,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:41:01Z",
+      "completedAt": "2026-11-06T22:45:43Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197199438"
+    },
+    {
+      "name": "register-engineering",
+      "databaseId": 128197199596,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:41:01Z",
+      "completedAt": "2026-11-06T22:47:47Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197199596"
+    },
+    {
+      "name": "populated-recovery",
+      "databaseId": 128197200121,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:41:01Z",
+      "completedAt": "2026-11-06T22:51:05Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197200121"
+    }
+  ],
+  "retained209_rehearsal_passed": true,
+  "current211_acceptance": false,
+  "hosted_writes": 0,
+  "scope": "Original authored-history installation, 209 operational browser and populated restore; exact source unchanged, original deadlines and cleanup enforced"
+}

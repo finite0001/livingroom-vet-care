@@ -6,7 +6,7 @@ const staff = "11111111-1111-4111-8111-111111111111";
 interface FixtureOptions {
   /** REST paths (e.g. "/rest/v1/tickets") that must answer 403. */
   failing?: string[];
-  /** Fail the on-duty staff list read (profiles without an id filter), not the signed-in profile read. */
+  /** Fail the authoritative on-duty RPC, not the signed-in profile read. */
   failOnDutyStaff?: boolean;
 }
 
@@ -55,7 +55,7 @@ async function fixture(page: Page, baseURL: string | undefined, options: Fixture
     if (path === "/auth/v1/token") return route.fulfill({ json: session });
     if (path === "/auth/v1/user") return route.fulfill({ json: user });
     if (path === "/auth/v1/logout") return route.fulfill({ status: 204, body: "" });
-    if (options.failOnDutyStaff && path === "/rest/v1/profiles" && !url.searchParams.has("id"))
+    if (options.failOnDutyStaff && path === "/rest/v1/rpc/read_on_duty_staff")
       return route.fulfill({
         status: 403,
         json: { code: "42501", message: "Synthetic read unavailable" },
@@ -161,38 +161,45 @@ for (const allStaff of [false, true]) {
   });
 }
 
-test("admin timesheets protect open shifts and match the reviewed closed entry without updating duty", async ({ page, baseURL }) => {
+test("admin timesheets use atomic corrections with reviewed values and preserve conflicts", async ({ page, baseURL }) => {
   await fixture(page, baseURL);
   const closed = {
     id: "22222222-2222-4222-8222-222222222222", staff_id: staff,
-    clock_in_at: "2026-01-02T16:00:00.000Z", clock_out_at: "2026-01-02T17:00:00.000Z",
+    clock_in_at: "2026-01-02T16:00:13.456Z", clock_out_at: "2026-01-02T17:00:27.123Z",
     note: "Original note", created_at: "2026-01-02T16:00:00.000Z",
   };
-  const open = { ...closed, id: "33333333-3333-4333-8333-333333333333", clock_out_at: null, note: "Active shift" };
+  let open = { ...closed, id: "33333333-3333-4333-8333-333333333333", clock_out_at: null, note: "Active shift" };
   let current = { ...closed };
   let conflict = false;
-  const writes: URL[] = [];
+  const writes: Record<string, unknown>[] = [];
   const profileWrites: string[] = [];
   page.on("request", (request) => {
     if (request.url().includes("/rest/v1/profiles") && request.method() === "PATCH") profileWrites.push(request.url());
   });
   await page.route(`${backend}/rest/v1/time_entries*`, async (route) => {
-    const request = route.request(), url = new URL(request.url());
-    if (request.method() === "PATCH") {
-      writes.push(url);
-      if (conflict) return route.fulfill({ json: [] });
-      current = { ...current, ...request.postDataJSON() };
-      return route.fulfill({ json: [{ id: closed.id }] });
-    }
+    expect(route.request().method()).toBe("GET");
+    const url = new URL(route.request().url());
     if (url.searchParams.get("clock_out_at") === "is.null") return route.fulfill({ json: [open] });
     return route.fulfill({ json: [open, current] });
+  });
+  await page.route(`${backend}/rest/v1/rpc/admin_correct_time_entry`, async (route) => {
+    const args = route.request().postDataJSON();
+    writes.push(args);
+    if (conflict) return route.fulfill({ status: 409, json: { code: "PT409", message: "This entry changed. Refresh the timesheet and review it again" } });
+    const values = { clock_in_at: args.p_clock_in_at, clock_out_at: args.p_clock_out_at, note: args.p_note };
+    if (args.p_id === open.id) {
+      open = { ...open, ...values };
+      return route.fulfill({ json: open });
+    }
+    current = { ...current, ...values };
+    return route.fulfill({ json: current });
   });
   await page.goto("/hub/timesheet");
   await page.getByRole("tab", { name: "All staff" }).click();
   const openRow = page.getByRole("row").filter({ hasText: "Active shift" });
-  await expect(openRow.getByRole("button", { name: "Edit entry" })).toBeDisabled();
-  await expect(openRow.getByRole("button", { name: "Delete entry" })).toBeDisabled();
-  await expect(page.getByText("Only closed shifts can be corrected or deleted.", { exact: false })).toBeVisible();
+  await expect(openRow.getByRole("button", { name: "Edit entry" })).toBeEnabled();
+  await expect(openRow.getByRole("button", { name: "Delete entry" })).toBeEnabled();
+  await expect(page.getByText("Corrections update the shift and duty status together.", { exact: false })).toBeVisible();
 
   await page.getByRole("row").filter({ hasText: "Original note" }).getByRole("button", { name: "Edit entry" }).click();
   await page.getByLabel("Note", { exact: true }).fill("Reviewed correction");
@@ -200,18 +207,25 @@ test("admin timesheets protect open shifts and match the reviewed closed entry w
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("row").filter({ hasText: "Reviewed correction" })).toBeVisible();
   expect(writes).toHaveLength(1);
-  expect(writes[0].searchParams.get("id")).toBe(`eq.${closed.id}`);
-  expect(writes[0].searchParams.get("staff_id")).toBe(`eq.${staff}`);
-  expect(writes[0].searchParams.get("clock_in_at")).toBe(`eq.${closed.clock_in_at}`);
-  expect(writes[0].searchParams.getAll("clock_out_at")).toEqual(["not.is.null", `eq.${closed.clock_out_at}`]);
-  expect(writes[0].searchParams.get("note")).toBe("eq.Original note");
+  expect(writes[0]).toMatchObject({
+    p_id: closed.id, p_staff_id: staff,
+    p_expected_clock_in_at: closed.clock_in_at,
+    p_expected_clock_out_at: closed.clock_out_at,
+    p_expected_note: "Original note", p_note: "Reviewed correction", p_delete: false,
+    p_clock_in_at: closed.clock_in_at, p_clock_out_at: closed.clock_out_at,
+  });
+  await openRow.getByRole("button", { name: "Edit entry" }).click();
+  await page.getByLabel("Note", { exact: true }).fill("Open shift corrected");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(writes[1]).toMatchObject({ p_id: open.id, p_expected_clock_out_at: null, p_clock_out_at: null, p_note: "Open shift corrected" });
   expect(profileWrites).toEqual([]);
 
   conflict = true;
   await page.getByRole("row").filter({ hasText: "Reviewed correction" }).getByRole("button", { name: "Edit entry" }).click();
   await page.getByLabel("Note", { exact: true }).fill("Stale overwrite");
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.getByText("This entry changed or is no longer editable. Refresh the timesheet and review it again.")).toBeVisible();
+  await expect(page.getByText("This entry changed. Refresh the timesheet and review it again")).toBeVisible();
   await expect(page.getByRole("dialog")).toBeVisible();
   expect(profileWrites).toEqual([]);
 });

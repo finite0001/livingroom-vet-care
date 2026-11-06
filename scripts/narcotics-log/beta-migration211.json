@@ -1,0 +1,19 @@
+{
+  "kind": "beta-terminal-appointment-cli211-source-v1",
+  "cli_version": "2.118.0",
+  "prefix_migration_count": 210,
+  "migration_count": 211,
+  "migration": "20261106173000_terminal_appointment_clinician.sql",
+  "framing": {
+    "bytes": 4558,
+    "sha256": "d61fea9edd24f4c9598307c3320b3c1a6da70dcc1a81d1d11668b66898c8ed6f",
+    "statement_count": 1,
+    "compact_array_sha256": "3a45c76d6c75b4bd65808db32609cb4ba91604933be7cd07f40a9d81a4ad123a",
+    "postgres_array_sha256": "3a45c76d6c75b4bd65808db32609cb4ba91604933be7cd07f40a9d81a4ad123a",
+    "postgres_array_bytes": 4672,
+    "statement_sha256s": [
+      "4ed837e9203a4761349b0bcaf26c4d02a68ee88bd2755549c7676a9250f1a17a"
+    ]
+  },
+  "database_operations": 0
+}

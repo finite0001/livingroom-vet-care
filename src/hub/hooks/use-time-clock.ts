@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hub/contexts/auth-context";
-import { updateClosedTimeEntry, deleteClosedTimeEntry, type OriginalTimeEntry, type TimeEntryCorrection, type TimeEntryClient } from "@/hub/features/time-clock/admin-time-entry";
+import { updateTimeEntry, deleteTimeEntry, type OriginalTimeEntry, type TimeEntryCorrection, type TimeEntryClient } from "@/hub/features/time-clock/admin-time-entry";
 
 export interface TimeEntry {
   id: string;
@@ -162,13 +162,12 @@ export function useAllShiftsRange(fromIso: string | null, toIso: string | null, 
 // Supabase client to the transport interface exhausts TypeScript instantiation.
 const timeEntryClient = supabase as unknown as TimeEntryClient;
 
-// Admin corrections are limited to already-closed entries. Open-shift changes
-// need a transactional backend operation; a separate profile PATCH can race clock-in.
+// Administrator corrections and duty state changes are one authenticated RPC.
 export function useAdminUpdateTimeEntry() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ original, values }: { original: OriginalTimeEntry; values: TimeEntryCorrection }) =>
-      updateClosedTimeEntry(timeEntryClient, original, values),
+      updateTimeEntry(timeEntryClient, original, values),
     onSettled: () => { void queryClient.invalidateQueries({ queryKey: ["time-clock"] }); },
   });
 }
@@ -176,24 +175,23 @@ export function useAdminUpdateTimeEntry() {
 export function useAdminDeleteTimeEntry() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (original: OriginalTimeEntry) => deleteClosedTimeEntry(timeEntryClient, original),
+    mutationFn: (original: OriginalTimeEntry) => deleteTimeEntry(timeEntryClient, original),
     onSettled: () => { void queryClient.invalidateQueries({ queryKey: ["time-clock"] }); },
   });
 }
 
-// Admin: who is currently on duty (profiles.is_on_duty maintained by clock in/out).
+// Read the authoritative open shifts; a stale legacy profile flag cannot change this list.
+interface OnDutyClient {
+  rpc(name: "read_on_duty_staff"): PromiseLike<{ data: OnDutyStaff[] | null; error: unknown }>;
+}
+const onDutyClient = supabase as unknown as OnDutyClient;
 export function useOnDutyStaff(enabled: boolean) {
   return useQuery<OnDutyStaff[]>({
     queryKey: ["time-clock", "on-duty"],
     enabled,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .eq("is_on_duty", true)
-        .eq("is_active", true)
-        .order("full_name");
+      const { data, error } = await onDutyClient.rpc("read_on_duty_staff");
       if (error) throw error;
       return (data ?? []) as OnDutyStaff[];
     },

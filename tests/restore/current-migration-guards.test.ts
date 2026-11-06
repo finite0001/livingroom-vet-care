@@ -74,16 +74,22 @@ test("latest migration guards recognize actual ledger queries and exclude other 
   `), ["20261022010000"]);
 });
 
-test("current inventory preserves the exact 206 prefix and names all three forward migrations", () => {
+test("current inventory preserves the exact historical releases and names both beta migrations", () => {
   const inventory = readdirSync(new URL("../../supabase/migrations/", import.meta.url))
     .filter((name) => /^\d+_.+\.sql$/.test(name)).sort();
   const candidate = JSON.parse(readFileSync(new URL("../../scripts/narcotics-log/release-candidate.json", import.meta.url), "utf8"));
   const operational = JSON.parse(readFileSync(new URL("../../scripts/narcotics-log/operational-release.json", import.meta.url), "utf8"));
-  assert.equal(inventory.length, 209);
+  assert.equal(inventory.length, 211);
   assert.equal(candidate.migration_count, 208);
   assert.equal(candidate.prefix_migration_count, 206);
   assert.equal(inventory[205], "20261022010000_controlled_secondary_review_private.sql");
-  assert.deepEqual(inventory.slice(206), ["20261027223535_controlled_record_review_workflows.sql", "20261027223544_narcotics_count_and_stock_workflows.sql", "20261028170038_narcotics_register_exports_and_recovery.sql"]);
+  assert.deepEqual(inventory.slice(206), [
+    "20261027223535_controlled_record_review_workflows.sql",
+    "20261027223544_narcotics_count_and_stock_workflows.sql",
+    "20261028170038_narcotics_register_exports_and_recovery.sql",
+    "20261106170000_atomic_time_clock_corrections.sql",
+    "20261106173000_terminal_appointment_clinician.sql",
+  ]);
   assert.deepEqual(Object.keys(candidate.migrations).sort(), inventory.slice(206, 208));
   assert.equal(operational.kind, "narcotics-operational-cli209-source-v1");
   assert.equal(operational.prefix_migration_count, 208);
@@ -96,6 +102,20 @@ test("current inventory preserves the exact 206 prefix and names all three forwa
   const raw = readFileSync(new URL(`../../supabase/migrations/${operational.migration}`, import.meta.url));
   assert.equal(operational.framing.bytes, raw.length);
   assert.equal(operational.framing.sha256, createHash("sha256").update(raw).digest("hex"));
+  for (const [count, kind] of [
+    [210, "beta-atomic-time-clock-cli210-source-v1"],
+    [211, "beta-terminal-appointment-cli211-source-v1"],
+  ] as const) {
+    const manifest = JSON.parse(readFileSync(new URL(`../../scripts/narcotics-log/beta-migration${count}.json`, import.meta.url), "utf8"));
+    assert.equal(manifest.kind, kind);
+    assert.equal(manifest.prefix_migration_count, count - 1);
+    assert.equal(manifest.migration_count, count);
+    assert.equal(manifest.migration, inventory[count - 1]);
+    assert.equal(manifest.database_operations, 0);
+    const betaRaw = readFileSync(new URL(`../../supabase/migrations/${manifest.migration}`, import.meta.url));
+    assert.equal(manifest.framing.bytes, betaRaw.length);
+    assert.equal(manifest.framing.sha256, createHash("sha256").update(betaRaw).digest("hex"));
+  }
 });
 
 test("retained scalar ledger guards require historical 206 and its exact version", () => {

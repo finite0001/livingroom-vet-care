@@ -1,0 +1,20 @@
+{
+  "kind": "atomic-time-clock-postgres-v1",
+  "passed": true,
+  "checks": [
+    "active-admin-only RPC, anonymous and direct-write denial, stale legacy flag cannot falsify duty list",
+    "stale note/staff/time and invalid interval reject without changing duty",
+    "open correction closes atomically; closed entry cannot reopen",
+    "open deletion clears duty atomically",
+    "profile failure rolls back time-entry correction",
+    "concurrent admin-close/staff-clock-in serializes; delayed legacy duty write cannot change authoritative read",
+    "inactive self-clock rejected; profile privilege and actor audit preserved",
+    "both incorrect legacy flag directions ignored; inactive staff excluded; frozen profile guard unchanged"
+  ],
+  "hostedWrites": 0,
+  "syntheticAuth": true,
+  "ownedCleanup": true,
+  "recordedAt": "2026-11-06T22:30:44.819478+00:00",
+  "scope": "Isolated PostgreSQL17 grants/RLS/transactions/row locking with synthetic auth.uid settings. Exercises the clock SQL core, not the later controlled-module compatibility extension or hosted Supabase Auth.",
+  "testedClockSqlSha256": "0cbb8076575dbeb36d1d0dee010ee3b643b083cadb7a0df7e674546df96dfcca"
+}

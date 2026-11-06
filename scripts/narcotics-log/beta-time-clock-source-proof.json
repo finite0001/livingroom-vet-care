@@ -1,0 +1,21 @@
+{
+  "ambient_catalog_used_as_expected": false,
+  "changed_properties": [
+    "ordinary_relations.time_entries.acl",
+    "ordinary_relations.time_entries.policies",
+    "functions.controlled_count_entry_v1.require_bound_module().body_sha256"
+  ],
+  "core_sha256": "0cbb8076575dbeb36d1d0dee010ee3b643b083cadb7a0df7e674546df96dfcca",
+  "database_operations": 0,
+  "expected_projection_inline": true,
+  "external_expected_accessor": false,
+  "historical_descriptors_rewritten": false,
+  "historical_receipts_rewritten": false,
+  "immutable_admission_body_sha256": "e5a5b32210d1660ba58c46854b92189f5d998ad47e449b8c8c0d055644f3952f",
+  "kind": "finite-beta-time-clock-metadata-successor-source-v1",
+  "migration_bytes": 176972,
+  "migration_sha256": "1e92fcc69ec4de1f410c7fff3c0f25825151c0bddfa231abf9fbeccad62b5e02",
+  "original_require_bound_body_sha256": "f6feeae8a261d68cbd2c674d0c8d6dafcb2de7dfd1b628b39dd62d1c99376380",
+  "successor_require_bound_body_sha256": "f3f995edde47fea226f32b3c1f30db2e40fed72c5a6b7ae235c66f881fd34de9",
+  "whole_comparison_body_inverse": true
+}

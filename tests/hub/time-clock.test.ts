@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { timeClockTotals, shiftOverlapSeconds } from "../../src/hub/features/time-clock/time-totals.ts";
-import { updateClosedTimeEntry, deleteClosedTimeEntry, type OriginalTimeEntry, type TimeEntryClient } from "../../src/hub/features/time-clock/admin-time-entry.ts";
+import { updateTimeEntry, deleteTimeEntry, type OriginalTimeEntry, type TimeEntryClient, type TimeEntryArguments } from "../../src/hub/features/time-clock/admin-time-entry.ts";
 
 test("overnight and long-running shifts contribute only the time inside each reporting window", () => {
   const now = Date.parse("2026-11-06T08:00:00Z"); // 01:00 Denver
@@ -32,63 +32,45 @@ test("reporting excludes future, non-overlapping and malformed intervals", () =>
 
 const original: OriginalTimeEntry = { id: "shift", staff_id: "staff", clock_in_at: "2026-10-01T07:00:00Z", clock_out_at: "2026-10-01T08:00:00Z", note: null };
 
-// Model PostgREST's same-request predicates against a row changed since it was read.
-function store(initial: OriginalTimeEntry) {
-  let row: OriginalTimeEntry | null = { ...initial };
-  const tables: string[] = [];
-  const client: TimeEntryClient = { from(table) {
-    tables.push(table);
-    const filters: ((value: OriginalTimeEntry) => boolean)[] = [];
-    let change: Partial<OriginalTimeEntry> | null = null;
-    const query = {
-      eq(column: string, value: string) { filters.push((row) => row[column as keyof OriginalTimeEntry] === value); return query; },
-      is(column: string, value: null) { filters.push((row) => row[column as keyof OriginalTimeEntry] === value); return query; },
-      not(column: string, _operator: string, value: null) { filters.push((row) => row[column as keyof OriginalTimeEntry] !== value); return query; },
-      async select() {
-        if (!row || !filters.every((filter) => filter(row!))) return { data: [], error: null };
-        const id = row.id;
-        row = change ? { ...row, ...change } : null;
-        return { data: [{ id }], error: null };
-      },
-    };
-    return { update(values) { change = values; return query; }, delete() { return query; } };
+// Database concurrency and authorization are tested by scripts/time-clock/verify.py.
+// These adapter checks verify the reviewed values survive the client boundary.
+test("corrections and deletions carry exact reviewed values through the atomic RPC", async () => {
+  const calls: TimeEntryArguments[] = [];
+  const client: TimeEntryClient = { async rpc(name, args) {
+    assert.equal(name, "admin_correct_time_entry"); calls.push(args);
+    return { data: original, error: null };
   } };
-  return { client, tables, read: () => row };
-}
-
-test("closed shift correction/deletion never writes duty status", async () => {
-  const saved = store(original);
-  await updateClosedTimeEntry(saved.client, original, { clock_in_at: original.clock_in_at, clock_out_at: "2026-10-01T09:00:00Z", note: "Corrected" });
-  assert.equal(saved.read()?.clock_out_at, "2026-10-01T09:00:00Z");
-  await deleteClosedTimeEntry(saved.client, saved.read()!);
-  assert.equal(saved.read(), null);
-  assert.deepEqual(saved.tables, ["time_entries", "time_entries"]);
+  await updateTimeEntry(client, original, { ...original, note: "Correction" });
+  await deleteTimeEntry(client, original);
+  assert.equal(calls[0].p_expected_note, null);
+  assert.equal(calls[0].p_expected_clock_out_at, original.clock_out_at);
+  assert.equal(calls[0].p_staff_id, original.staff_id);
+  assert.equal(calls[0].p_note, "Correction");
+  assert.equal(calls[0].p_delete, false);
+  assert.equal(calls[1].p_delete, true);
 });
 
-test("open shifts are refused before transport; corrections cannot reopen a closed shift", async () => {
+test("open shifts use the same atomic RPC; invalid times and reopening are refused", async () => {
   const open = { ...original, clock_out_at: null };
-  const saved = store(open);
-  await assert.rejects(deleteClosedTimeEntry(saved.client, open), /clock out/);
-  await assert.rejects(updateClosedTimeEntry(saved.client, open, { clock_in_at: original.clock_in_at, clock_out_at: original.clock_out_at!, note: null }), /clock out/);
-  assert.deepEqual(saved.tables, []);
-  await assert.rejects(updateClosedTimeEntry(saved.client, original, { clock_in_at: original.clock_in_at, clock_out_at: "", note: null }), /valid closed shift/);
+  let calls = 0;
+  const client: TimeEntryClient = { async rpc() { calls++; return { data: open, error: null }; } };
+  await updateTimeEntry(client, open, open);
+  await deleteTimeEntry(client, open);
+  assert.equal(calls, 2);
+  await assert.rejects(updateTimeEntry(client, original, open), /cannot be reopened/);
+  await assert.rejects(updateTimeEntry(client, open, { ...open, clock_in_at: "invalid" }), /valid times/);
+  await assert.rejects(updateTimeEntry(client, open, { ...open, clock_out_at: "2026-09-01T00:00:00Z" }), /valid times/);
+  assert.equal(calls, 2);
 });
 
-test("stale timestamp, note, staff binding and reopened rows reject update and delete", async () => {
-  for (const changed of [
-    { ...original, clock_in_at: "2026-10-01T06:00:00Z" },
-    { ...original, clock_out_at: "2026-10-01T10:00:00Z" },
-    { ...original, note: "Another admin correction" },
-    { ...original, staff_id: "another-staff" },
-    { ...original, clock_out_at: null },
-  ]) {
-    const saved = store(changed);
-    await assert.rejects(updateClosedTimeEntry(saved.client, original, { clock_in_at: original.clock_in_at, clock_out_at: original.clock_out_at!, note: "Overwrite" }), /changed or is no longer editable/);
-    await assert.rejects(deleteClosedTimeEntry(saved.client, original), /changed or is no longer editable/);
-    assert.deepEqual(saved.read(), changed);
+test("server conflicts, authorization failures and unverifiable responses never report success", async () => {
+  for (const message of ["This entry changed. Refresh the timesheet and review it again", "Only active administrators can correct time entries"]) {
+    const client: TimeEntryClient = { async rpc() { return { data: null, error: { message } }; } };
+    await assert.rejects(updateTimeEntry(client, original, original), { message });
+    await assert.rejects(deleteTimeEntry(client, original), { message });
   }
-  const note = { ...original, note: "Original note" };
-  const saved = store(note);
-  await deleteClosedTimeEntry(saved.client, note);
-  assert.equal(saved.read(), null);
+  for (const data of [null, { ...original, id: "wrong" }, { ...original, staff_id: "wrong" }]) {
+    const client: TimeEntryClient = { async rpc() { return { data, error: null }; } };
+    await assert.rejects(deleteTimeEntry(client, original), /could not be verified/);
+  }
 });

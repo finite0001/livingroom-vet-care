@@ -1,0 +1,24 @@
+{
+  "kind": "finite-beta-metadata-postgres-component-v1",
+  "passed": true,
+  "checks": [
+    "exact current delta accepted from immutable original descriptor",
+    "restored direct write ACL refused",
+    "changed comparison function source refused",
+    "admission schema exposure refused",
+    "admission table exposure refused",
+    "disabled admission RLS refused",
+    "disabled immutable trigger refused",
+    "replaced immutable function refused",
+    "admission data mutation refused",
+    "admission data mutation refused",
+    "admission data mutation refused",
+    "self-consistent unrelated expectation tamper refused",
+    "all application roles denied private admission access"
+  ],
+  "migration_sha256": "1e92fcc69ec4de1f410c7fff3c0f25825151c0bddfa231abf9fbeccad62b5e02",
+  "hosted_writes": 0,
+  "application_Auth_verified": false,
+  "full_controlled_business_verified": false,
+  "owned_cleanup": true
+}
