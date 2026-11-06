@@ -8,6 +8,28 @@ const requestedProjectRef = getFlagValue('--project-ref');
 const allowedProjects = new Set(['mgadheotkdnrsatfivjy', 'kothoqicubowyhwfsrte']);
 const acceptableTerminalDecisions = new Set(['Accept', 'Not in pilot scope']);
 const allowedDecisions = new Set(['Pending', 'Accept', 'Accept after correction', 'Reject', 'Not in pilot scope']);
+const validationTime = Date.now();
+
+function hasText(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function actualTimestamp(value) {
+  if (!hasText(value) || !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,3})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.test(value)) return false;
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed) || parsed > validationTime) return false;
+  const date = value.slice(0, 10);
+  const calendarDate = Date.parse(`${date}T00:00:00Z`);
+  return Number.isFinite(calendarDate) && new Date(calendarDate).toISOString().slice(0, 10) === date;
+}
+
+function frontendUrl(value) {
+  if (!hasText(value)) return false;
+  try {
+    const url = new URL(value);
+    return ['https:', 'http:'].includes(url.protocol) && Boolean(url.hostname);
+  } catch { return false; }
+}
 
 function getFlagValue(flag) {
   const index = process.argv.indexOf(flag);
@@ -139,10 +161,13 @@ for (const [field, label] of [
   ['frontendUrl', 'frontend URL'],
   ['commitOrDeployment', 'commit/deployment'],
 ]) {
-  if (!staffRun[field]) {
+  if (!hasText(staffRun[field])) {
     staffMetadataBlockers.push(`Staff acceptance ${label} is not recorded.`);
   }
 }
+
+if (!actualTimestamp(staffRun.dateTime)) staffMetadataBlockers.push('Staff acceptance date/time must be a valid completed timestamp with a timezone.');
+if (!frontendUrl(staffRun.frontendUrl)) staffMetadataBlockers.push('Staff acceptance frontend URL must be an HTTP(S) URL.');
 
 if (staffRun.supabaseProject !== targetProjectRef) {
   staffMetadataBlockers.push(`Staff acceptance Supabase project is ${staffRun.supabaseProject ?? 'missing'}, expected ${targetProjectRef}.`);
@@ -192,7 +217,7 @@ for (const [items, blockers, label] of [[clinical, clinicalBlockers, 'Clinical']
     if (!item.id || ids.has(item.id)) blockers.push(`${label} decision IDs must be present and unique.`);
     ids.add(item.id);
     if (acceptableTerminalDecisions.has(item.decision) &&
-        (!item.reviewer || !Number.isFinite(Date.parse(item.reviewedAt ?? '')))) {
+        (!hasText(item.reviewer) || !actualTimestamp(item.reviewedAt))) {
       blockers.push(`${label} decision ${item.id} needs its actual reviewer and review date.`);
     }
     if (item.decision === 'Not in pilot scope' && !hasEvidence(item)) {
