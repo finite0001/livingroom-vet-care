@@ -1,3 +1,4 @@
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { snapshotControlledLegacyIntent } from "../controlled-drugs/entry/legacy-intent";
 import { useControlledWriterIdentity } from "../controlled-drugs/entry/use-controlled-writer-identity";
 import { ControlledStockWriteError } from "../controlled-drugs/entry/gateway";
@@ -78,6 +79,7 @@ export function useStockMutation(scope = "inventory") {
       setSuccess("Saved.");
       void queryClient.invalidateQueries({ queryKey: ["inventory"] });
       void queryClient.invalidateQueries({ queryKey: ["treatments"] });
+      void refreshPatientReleases(queryClient);
       void queryClient.invalidateQueries({ queryKey: ["vaccine-status"] });
       void queryClient.invalidateQueries({ queryKey: ["billing"] });
       for (const prefix of ["household-invoices", "invoice", "invoice-details"])

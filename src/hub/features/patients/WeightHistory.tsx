@@ -1,3 +1,4 @@
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { useRef, useState } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,7 +86,7 @@ export function WeightHistory({
       });
       if (error) throw error;
       setWeight("");
-      await cache.invalidateQueries({ queryKey: ["patient-weights", petId] });
+      await Promise.all([refreshPatientReleases(cache, petId), cache.invalidateQueries({ queryKey: ["patient-weights", petId] })]);
       toast.success("Weight recorded");
     } catch (cause) {
       setSaveError(

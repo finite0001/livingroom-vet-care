@@ -141,8 +141,8 @@ function Review({ jobId, petId, actor, loadOnDemand }: ReviewProps) {
       )}
       {error && <p role="alert">{error}</p>}
       <p className="text-sm text-muted-foreground">
-        Excluded from outgoing record packages until record sharing is
-        available.
+        Include a verified PDF through Records requests after reviewing its
+        sharing scope and confirming the numbered package.
       </p>
     </section>
   );

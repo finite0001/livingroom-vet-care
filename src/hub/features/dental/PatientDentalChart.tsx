@@ -1,3 +1,4 @@
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -171,6 +172,7 @@ export function PatientDentalChart({
   }
   async function refresh() {
     await Promise.all([
+      refreshPatientReleases(cache, petId),
       cache.invalidateQueries({ queryKey: ["dental-charts", petId] }),
       cache.invalidateQueries({ queryKey: ["dental-revisions"] }),
       cache.invalidateQueries({ queryKey: ["dental-addenda"] }),
