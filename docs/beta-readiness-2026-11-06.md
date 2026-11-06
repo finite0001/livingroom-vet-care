@@ -1,5 +1,7 @@
 # Living Room Vet beta readiness audit — November 6, 2026
 
+This is the initial audit snapshot. See the [subsequent remediation report](beta-remediation-2026-11-06.md) for fixes, owner decisions and new verification.
+
 ## Decision
 
 **Do not treat the entire application as cleared for unrestricted beta.** The repository contains extensive implemented and tested workflows, and production metadata matches the audited source inventory. Staging is not equivalent, several automations are disabled, dependency advisories remain, and clinical/staff acceptance is unrecorded. A bounded beta needs a named environment, explicit feature scope, synthetic/approved records and recorded acceptance for that scope.

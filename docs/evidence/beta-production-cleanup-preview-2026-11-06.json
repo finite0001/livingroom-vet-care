@@ -1,0 +1,175 @@
+{
+  "projectRef": "mgadheotkdnrsatfivjy",
+  "observedAt": "2026-11-06T23:16:56.339649+00:00",
+  "reviewedBaseline": "fb645a74",
+  "preflightDownloadedFiles": [
+    {
+      "path": "supabase/functions/_shared/attachment-cleanup-storage.ts",
+      "remoteSha256": "58f2f44c02c9245c37e0935ac5281ce54dffbfab38dbea9cb667c1806b496871",
+      "reviewedBaselineSha256": "58f2f44c02c9245c37e0935ac5281ce54dffbfab38dbea9cb667c1806b496871",
+      "candidateSha256": "58f2f44c02c9245c37e0935ac5281ce54dffbfab38dbea9cb667c1806b496871",
+      "baselineMatch": true,
+      "candidateDiffers": false
+    },
+    {
+      "path": "supabase/functions/_shared/worker-auth.ts",
+      "remoteSha256": "9f017d50410bbf5e52681ffe5ab3f7945f6df08aab19bafa9d0b360d698ec896",
+      "reviewedBaselineSha256": "9f017d50410bbf5e52681ffe5ab3f7945f6df08aab19bafa9d0b360d698ec896",
+      "candidateSha256": "9f017d50410bbf5e52681ffe5ab3f7945f6df08aab19bafa9d0b360d698ec896",
+      "baselineMatch": true,
+      "candidateDiffers": false
+    },
+    {
+      "path": "supabase/functions/_shared/cleanup-abandoned-handler.ts",
+      "remoteSha256": "f06d968ebd8ab69145f3493079983ac1d3a415dc664969213f3e39f834f8fac0",
+      "reviewedBaselineSha256": "f06d968ebd8ab69145f3493079983ac1d3a415dc664969213f3e39f834f8fac0",
+      "candidateSha256": "a9178d7bb0b2b256a60ef29edce5beb44430b1174d9aff85fa3ff99543bb3ad8",
+      "baselineMatch": true,
+      "candidateDiffers": true
+    },
+    {
+      "path": "supabase/functions/_shared/abandoned-cleanup-adapter.ts",
+      "remoteSha256": "5214c73a06b7dd0306862e13b4abda1b0229e9b3d861fb618127f4b64d46a9e3",
+      "reviewedBaselineSha256": "5214c73a06b7dd0306862e13b4abda1b0229e9b3d861fb618127f4b64d46a9e3",
+      "candidateSha256": "5214c73a06b7dd0306862e13b4abda1b0229e9b3d861fb618127f4b64d46a9e3",
+      "baselineMatch": true,
+      "candidateDiffers": false
+    },
+    {
+      "path": "supabase/functions/_shared/worker-batch.ts",
+      "remoteSha256": "28dacaeb3ac494769b19a6d8a94595bc9cc386068ffab57fc85d217c5b5d4b6a",
+      "reviewedBaselineSha256": "28dacaeb3ac494769b19a6d8a94595bc9cc386068ffab57fc85d217c5b5d4b6a",
+      "candidateSha256": "28dacaeb3ac494769b19a6d8a94595bc9cc386068ffab57fc85d217c5b5d4b6a",
+      "baselineMatch": true,
+      "candidateDiffers": false
+    },
+    {
+      "path": "supabase/functions/_shared/cleanup-abandoned-attachment.ts",
+      "remoteSha256": "c186d9c1b85d4906ddc4a5fa0f33977362f80666cfe3fea09fa45ec184c8c79e",
+      "reviewedBaselineSha256": "c186d9c1b85d4906ddc4a5fa0f33977362f80666cfe3fea09fa45ec184c8c79e",
+      "candidateSha256": "c186d9c1b85d4906ddc4a5fa0f33977362f80666cfe3fea09fa45ec184c8c79e",
+      "baselineMatch": true,
+      "candidateDiffers": false
+    },
+    {
+      "path": "supabase/functions/cleanup-abandoned-attachment/index.ts",
+      "remoteSha256": "21c0d63d3078a2b819d56c2422f8f7b99c47264873836287ccbea4432f1a1b59",
+      "reviewedBaselineSha256": "21c0d63d3078a2b819d56c2422f8f7b99c47264873836287ccbea4432f1a1b59",
+      "candidateSha256": "21c0d63d3078a2b819d56c2422f8f7b99c47264873836287ccbea4432f1a1b59",
+      "baselineMatch": true,
+      "candidateDiffers": false
+    },
+    {
+      "path": "supabase/functions/_shared/inbound/verification.ts",
+      "remoteSha256": "822410e6f39df08ce3cbdfbba49d6fc24816760d69c1fe3743b90dcacce4265b",
+      "reviewedBaselineSha256": "822410e6f39df08ce3cbdfbba49d6fc24816760d69c1fe3743b90dcacce4265b",
+      "candidateSha256": "822410e6f39df08ce3cbdfbba49d6fc24816760d69c1fe3743b90dcacce4265b",
+      "baselineMatch": true,
+      "candidateDiffers": false
+    }
+  ],
+  "allBaselineFilesExact": true,
+  "candidateChangedOnlyReviewedHandler": true,
+  "beforeVersion": 21,
+  "beforeVerifyJwt": false,
+  "beforeBundleSha256": "f109c9635d21d9a4ab2f2dea8883551dcd92ee316db36063d683d5cd694c4003",
+  "storageClaimsOrDeletes": 0,
+  "cronChanges": 0,
+  "providerWrites": 0,
+  "configurationBefore": {
+    "cleanupGateAbsentDefaultDisabled": true,
+    "graceAbsent": true,
+    "existingSecrets": 39
+  },
+  "configurationAfter": {
+    "cleanupExplicitlyDisabled": true,
+    "graceHours": 168,
+    "allExistingSecretDigestsPreserved": true,
+    "addedOnlyPreviouslyAbsentPreviewConfiguration": true
+  },
+  "deployedAt": "2026-11-06T23:20:13.053126+00:00",
+  "deployment": {
+    "version": 23,
+    "ezbr_sha256": "dcf9cb3d46fa7f725eb6334692baf5633e131cd0cb54f58e115d8bd1cfa3f3bd",
+    "verify_jwt": false,
+    "status": "ACTIVE"
+  },
+  "otherFunctionBundleHashesJwtAndStatusPreserved": true,
+  "secretUpdateRevisionSideEffect": {
+    "otherFunctions": 55,
+    "revisionIncrementEach": 1,
+    "bundleSourceUnchanged": true
+  },
+  "downloadedCandidateFiles": [
+    {
+      "path": "supabase/functions/_shared/attachment-cleanup-storage.ts",
+      "sha256": "58f2f44c02c9245c37e0935ac5281ce54dffbfab38dbea9cb667c1806b496871",
+      "exactCandidate": true
+    },
+    {
+      "path": "supabase/functions/_shared/worker-auth.ts",
+      "sha256": "9f017d50410bbf5e52681ffe5ab3f7945f6df08aab19bafa9d0b360d698ec896",
+      "exactCandidate": true
+    },
+    {
+      "path": "supabase/functions/_shared/cleanup-abandoned-handler.ts",
+      "sha256": "a9178d7bb0b2b256a60ef29edce5beb44430b1174d9aff85fa3ff99543bb3ad8",
+      "exactCandidate": true
+    },
+    {
+      "path": "supabase/functions/_shared/abandoned-cleanup-adapter.ts",
+      "sha256": "5214c73a06b7dd0306862e13b4abda1b0229e9b3d861fb618127f4b64d46a9e3",
+      "exactCandidate": true
+    },
+    {
+      "path": "supabase/functions/_shared/worker-batch.ts",
+      "sha256": "28dacaeb3ac494769b19a6d8a94595bc9cc386068ffab57fc85d217c5b5d4b6a",
+      "exactCandidate": true
+    },
+    {
+      "path": "supabase/functions/_shared/cleanup-abandoned-attachment.ts",
+      "sha256": "c186d9c1b85d4906ddc4a5fa0f33977362f80666cfe3fea09fa45ec184c8c79e",
+      "exactCandidate": true
+    },
+    {
+      "path": "supabase/functions/cleanup-abandoned-attachment/index.ts",
+      "sha256": "21c0d63d3078a2b819d56c2422f8f7b99c47264873836287ccbea4432f1a1b59",
+      "exactCandidate": true
+    },
+    {
+      "path": "supabase/functions/_shared/inbound/verification.ts",
+      "sha256": "822410e6f39df08ce3cbdfbba49d6fc24816760d69c1fe3743b90dcacce4265b",
+      "exactCandidate": true
+    }
+  ],
+  "httpAcceptance": [
+    {
+      "case": "unauthenticated",
+      "status": 401,
+      "body": {
+        "error": "Worker authentication required"
+      }
+    },
+    {
+      "case": "authenticated-preview",
+      "status": 200,
+      "body": {
+        "mode": "preview",
+        "dry_run": true,
+        "grace_hours": 168,
+        "candidates": 0,
+        "limit": 25,
+        "complete": 0
+      }
+    },
+    {
+      "case": "authenticated-cleanup-disabled",
+      "status": 503,
+      "body": {
+        "error": "Attachment cleanup is disabled"
+      }
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-11-06T23:20:56.346852+00:00"
+}

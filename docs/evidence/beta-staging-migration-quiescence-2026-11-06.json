@@ -1,0 +1,124 @@
+{
+  "cron": [
+    {
+      "jobid": 1,
+      "active": true,
+      "jobname": "dispatch-outbox"
+    },
+    {
+      "jobid": 2,
+      "active": true,
+      "jobname": "process-inbound"
+    },
+    {
+      "jobid": 3,
+      "active": true,
+      "jobname": "process-stripe-events"
+    },
+    {
+      "jobid": 4,
+      "active": true,
+      "jobname": "queue-reminders"
+    },
+    {
+      "jobid": 5,
+      "active": true,
+      "jobname": "cleanup-abandoned-attachment"
+    },
+    {
+      "jobid": 6,
+      "active": true,
+      "jobname": "scheduler-reconcile"
+    },
+    {
+      "jobid": 7,
+      "active": true,
+      "jobname": "purge-expired-email-payloads"
+    },
+    {
+      "jobid": 8,
+      "active": true,
+      "jobname": "reconcile-operational-tasks"
+    },
+    {
+      "jobid": 9,
+      "active": true,
+      "jobname": "queue-invoice-reminders"
+    }
+  ],
+  "running_cron": 0,
+  "active_clients": [],
+  "projectRef": "kothoqicubowyhwfsrte",
+  "pausedAt": "2026-11-06T22:57:47.093164+00:00",
+  "restored": true,
+  "reason": "exclusive guarded205-to209 installation window after206 preservation rejection",
+  "diagnosticStartedAt": "2026-11-06T23:04:41.385170+00:00",
+  "quiescentSnapshotsIdentical": true,
+  "snapshotSha256": [
+    "79a0a15bc91b53f74a9d293e72f8f3f9dfab8a0e857a4f9494d9782ecdb31f59",
+    "79a0a15bc91b53f74a9d293e72f8f3f9dfab8a0e857a4f9494d9782ecdb31f59"
+  ],
+  "snapshotTableCount": 457,
+  "originalFailureCause": "Unknown; overlapping scheduler/renderer writes plausible, failed transaction before-image unavailable.",
+  "cronRestoreExitCode": 0,
+  "finishedAt": "2026-11-06T23:07:08.244312+00:00",
+  "previousTransportAttempt": {
+    "exitCode": 1,
+    "stdout": "{\"_tag\":\"Error\",\"error\":{\"code\":\"DbQueryUnexpectedStatusError\",\"message\":\"unexpected status 413: {\\\"message\\\":\\\"request entity too large\\\"}\"}}\n",
+    "stderr": "Initialising login role...\n",
+    "sourceSqlSha256": "963ce258658d0100f4c8b6e64918d03efc29e743d3c9982fd16b2ba7c2dadc83",
+    "diagnosticSqlSha256": "7bfe8e9ac797369cde11d34f0eb62b00d67dfb80c4c46f3c3b8c174e3af86bcd",
+    "originalGuardConditionUnchanged": true,
+    "explicitRollback": true
+  },
+  "diagnosticAttempts": [
+    {
+      "startedAt": "2026-11-06T23:01:42.989545+00:00",
+      "finishedAt": "2026-11-06T23:03:48.076914+00:00",
+      "result": {
+        "exitCode": 3,
+        "stdout": "\n",
+        "stderr": "ERROR:  canceling statement due to statement timeout\nCONTEXT:  SQL function \"beta_release_diff\" statement 1\n",
+        "sourceSqlSha256": "963ce258658d0100f4c8b6e64918d03efc29e743d3c9982fd16b2ba7c2dadc83",
+        "diagnosticSqlSha256": "7bfe8e9ac797369cde11d34f0eb62b00d67dfb80c4c46f3c3b8c174e3af86bcd",
+        "originalGuardConditionUnchanged": true,
+        "explicitRollback": true
+      }
+    }
+  ],
+  "rollbackDiagnostic": {
+    "exitCode": 0,
+    "stdout": "\n{\"rollback_follows\": true, \"original_preservation_guard_passed\": true}\n",
+    "stderr": "",
+    "sourceSqlSha256": "963ce258658d0100f4c8b6e64918d03efc29e743d3c9982fd16b2ba7c2dadc83",
+    "diagnosticSqlSha256": "60ece5b3ea93230485e9361ebccffa91b62d3e7b2f9245a56a9d5babd4c5860a",
+    "originalGuardConditionUnchanged": true,
+    "explicitRollback": true,
+    "rows": {
+      "rollback_follows": true,
+      "original_preservation_guard_passed": true
+    }
+  },
+  "rollbackNoPermanent206State": true,
+  "retryDryRun": {
+    "upToDate": false,
+    "dryRun": true,
+    "migrations": [
+      "20261022010000_controlled_secondary_review_private.sql",
+      "20261027223535_controlled_record_review_workflows.sql",
+      "20261027223544_narcotics_count_and_stock_workflows.sql",
+      "20261028170038_narcotics_register_exports_and_recovery.sql"
+    ],
+    "seeds": [],
+    "roles": [],
+    "message": "Finished supabase db push."
+  },
+  "unchangedRetryStartedAt": "2026-11-06T23:06:08.813298+00:00",
+  "unchangedRetry": {
+    "exitCode": 1,
+    "stdout": "{\"_tag\":\"Error\",\"error\":{\"code\":\"DbPushApplyError\",\"message\":\"ERROR: count_fixture_preflight_invalid (SQLSTATE P0001)\\nAt statement: 11\\nDO $fixture_preflight$ BEGIN\\n if session_user<>'postgres'or current_user<>'postgres'or current_database()<>'postgres'\\n or current_setting('transaction_isolation')<>'read committed'or current_setting('role')<>'none'\\n or to_regnamespace('controlled_count_v1')is not null or to_regnamespace('controlled_count_entry_v1')is not null\\n or to_regnamespace('controlled_count_fixture_reference_v1')is not null\\n or exists(select 1 from public.controlled_stock_execution_contexts)\\n or(select encode(sha256(convert_to(prosrc,'UTF8')),'hex')from pg_proc where oid='public.controlled_stock_execution_guard()'::regprocedure)is distinct from '39f641dfcff049e26958a6fbead5375b59669406c3e1d9aaa8d7499158b1e865'\\n or(select count(*)from pg_attribute where attrelid='public.controlled_stock_execution_contexts'::regclass and attnum>0 and not attisdropped)<>11 then\\n raise exception 'count_fixture_preflight_invalid'using errcode='P0001',detail='',hint='';end if;\\nEND $fixture_preflight$\"}}\n",
+    "stderr": "Initialising login role...\nConnecting to remote database...\nDo you want to push these migrations to the remote database?\n \u2022 20261022010000_controlled_secondary_review_private.sql\n \u2022 20261027223535_controlled_record_review_workflows.sql\n \u2022 20261027223544_narcotics_count_and_stock_workflows.sql\n \u2022 20261028170038_narcotics_register_exports_and_recovery.sql\n [Y/n] y\nApplying migration 20261022010000_controlled_secondary_review_private.sql...\nApplying migration 20261027223535_controlled_record_review_workflows.sql...\nApplying migration 20261027223544_narcotics_count_and_stock_workflows.sql...\n"
+  },
+  "full209InstallationPassed": false,
+  "currentCheckpointReceipt": "docs/evidence/beta-staging-migration-transport-2026-11-06.json"
+}

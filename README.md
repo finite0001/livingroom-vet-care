@@ -1,8 +1,8 @@
 # The Living Room Vet
 
-**Beta audit:** [November 6 readiness decision, fixes, checks and remaining gates](docs/beta-readiness-2026-11-06.md).
+**Beta status:** [Current remediation and acceptance work](docs/beta-remediation-2026-11-06.md). [Initial audit and evidence](docs/beta-readiness-2026-11-06.md).
 
-Boulder veterinary practice website and staff workspace. Home base: 2619 Spruce Street. Owned domain: **thelivingroom.vet**. Launch stages remain planned in `src/config/practice.ts`; the late-October housecall target needs an owner update before beta messaging. The clinic target is early 2027.
+Boulder veterinary practice website and staff workspace. Home base: 2619 Spruce Street. Owned domain: **thelivingroom.vet**. Launch stages remain planned in `src/config/practice.ts`; the owner confirmed a late-2027 housecall target on November 6. The clinic target remains early 2027. If the practice cannot be reached, contact the nearest local 24-hour emergency veterinary service.
 
 The application uses React 18, TypeScript, Vite, Tailwind, shadcn/ui, React Router 7 and Supabase. Lovable remains connected through GitHub. Start with the [beta documentation and feature map](docs/beta-readiness-documentation-2026-11-06.md) for current implementation boundaries, verification sources and outstanding acceptance work.
 
@@ -44,6 +44,8 @@ Implementation status spans current hosted evidence and historical branch receip
 The selected production Supabase project is `mgadheotkdnrsatfivjy`; staging is `kothoqicubowyhwfsrte`. Legacy Lovable `ugpyjacqganaqtsiekay` is retained historical state. The [November 6 metadata check](docs/evidence/beta-hosted-metadata-2026-11-06.json) found production with all 209 repository migration versions and 56 active function slugs; staging has 204 versions and lacks `invite-staff`. Version/slug presence does not prove deployed source or functioning workflows. The [runtime check](docs/evidence/beta-backend-runtime-metadata-2026-11-06.json) also found missing staging scheduler configuration and production attachment cleanup explicitly disabled. Follow the [current deployment procedure](docs/deployment-runbook.md), including its specialized narcotics release sequence.
 
 ## Clinical workspace and acceptance
+
+David Edler is the assigned beta reviewer. Use the [current acceptance walkthrough](docs/beta-acceptance-walkthrough-2026-11-06.md) and record actual decisions; assignments and automated tests do not constitute sign-off.
 
 The patient workspace includes identity details, weight history, SOAP drafts/signing/addenda, important historical problems, dental and qualitative QOL/body-map charts, native anesthesia records, due plans and certificates. Household contacts and addresses can be edited with server search and duplicate review. These forms await Dr. Susan Edler’s acceptance through the [editable clinical review pack](docs/clinical-review/README.md) and [synthetic offline examples](docs/clinical-review/review-examples.html). Native manual anesthesia records do not imply automatic vendor import, and Antech selection does not imply an active lab connection. See [clinical workflow and deployment gates](docs/clinical-core.md); hosted migration parity does not replace clinical/provider acceptance.
 

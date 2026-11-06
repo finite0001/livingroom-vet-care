@@ -24,6 +24,15 @@
       "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128195456139"
     },
     {
+      "name": "historical-source-boundary",
+      "databaseId": 128195456175,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:36:47Z",
+      "completedAt": "2026-11-06T22:37:05Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128195456175"
+    },
+    {
       "name": "operational-staff-browser",
       "databaseId": 128197199309,
       "status": "completed",
@@ -51,6 +60,105 @@
       "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197199596"
     },
     {
+      "name": "genuine-business (commission_all)",
+      "databaseId": 128197199851,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:41:01Z",
+      "completedAt": "2026-11-06T22:45:46Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197199851"
+    },
+    {
+      "name": "genuine-business (scalars)",
+      "databaseId": 128197199869,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:51:48Z",
+      "completedAt": "2026-11-06T22:56:37Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197199869"
+    },
+    {
+      "name": "genuine-business (count_agreement)",
+      "databaseId": 128197199884,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:41:01Z",
+      "completedAt": "2026-11-06T22:49:33Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197199884"
+    },
+    {
+      "name": "genuine-business (browser_lost_finalize)",
+      "databaseId": 128197199886,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:41:01Z",
+      "completedAt": "2026-11-06T22:46:55Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197199886"
+    },
+    {
+      "name": "genuine-business (independent_witness)",
+      "databaseId": 128197199903,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:49:37Z",
+      "completedAt": "2026-11-06T22:54:34Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197199903"
+    },
+    {
+      "name": "genuine-business (record_review_signing)",
+      "databaseId": 128197199943,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:47:00Z",
+      "completedAt": "2026-11-06T22:51:44Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197199943"
+    },
+    {
+      "name": "genuine-business (native_return_v2_discrepancy)",
+      "databaseId": 128197199962,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T23:01:41Z",
+      "completedAt": "2026-11-06T23:06:58Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197199962"
+    },
+    {
+      "name": "genuine-business (clinical)",
+      "databaseId": 128197199976,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:54:38Z",
+      "completedAt": "2026-11-06T23:02:10Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197199976"
+    },
+    {
+      "name": "genuine-business (variance_reconciliation)",
+      "databaseId": 128197199979,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:50:43Z",
+      "completedAt": "2026-11-06T23:00:40Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197199979"
+    },
+    {
+      "name": "genuine-business (native_return_v1)",
+      "databaseId": 128197200073,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T23:00:45Z",
+      "completedAt": "2026-11-06T23:05:32Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197200073"
+    },
+    {
+      "name": "genuine-business (native_pickup_annotation)",
+      "databaseId": 128197200108,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:56:41Z",
+      "completedAt": "2026-11-06T23:01:37Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197200108"
+    },
+    {
       "name": "populated-recovery",
       "databaseId": 128197200121,
       "status": "completed",
@@ -58,10 +166,22 @@
       "startedAt": "2026-11-06T22:41:01Z",
       "completedAt": "2026-11-06T22:51:05Z",
       "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197200121"
+    },
+    {
+      "name": "genuine-business (ordinary_none)",
+      "databaseId": 128197200153,
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-11-06T22:45:50Z",
+      "completedAt": "2026-11-06T22:50:38Z",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/41219936379/job/128197200153"
     }
   ],
   "retained209_rehearsal_passed": true,
   "current211_acceptance": false,
   "hosted_writes": 0,
-  "scope": "Original authored-history installation, 209 operational browser and populated restore; exact source unchanged, original deadlines and cleanup enforced"
+  "scope": "Original authored-history installation, 209 operational browser and populated restore; exact source unchanged, original deadlines and cleanup enforced",
+  "complete_workflow_status": "success",
+  "complete_workflow_jobs": 19,
+  "last_verified_at": "2026-11-06T23:17:20.673673+00:00"
 }
