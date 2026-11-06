@@ -1,0 +1,668 @@
+{
+  "observedAt": "2026-11-06T22:27:58.465517+00:00",
+  "projectRef": "kothoqicubowyhwfsrte",
+  "deploy": {
+    "observedAt": "2026-11-06T22:26:09.039219+00:00",
+    "projectRef": "kothoqicubowyhwfsrte",
+    "deploy": {
+      "project_ref": "kothoqicubowyhwfsrte",
+      "functions": [
+        "capture-conversation-email",
+        "clinical-audio-process",
+        "clinical-call-capture",
+        "clinical-call-note-process",
+        "clinical-note-process",
+        "clinical-recap-process",
+        "dispatch-outbox",
+        "download-diagnostic-pdf",
+        "estimate-decision",
+        "prepare-document-link",
+        "prepare-estimate-decision-grant",
+        "prepare-estimate-publication",
+        "prepare-invoice-email",
+        "prepare-payment-delivery",
+        "prepare-release-email",
+        "queue-invoice-reminders",
+        "read-estimate-publication-artifact",
+        "reconcile-operational-tasks",
+        "recover-document-link",
+        "recover-estimate-decision-grant",
+        "recover-estimate-publication-preparation",
+        "retrieve-document-link",
+        "verify-patient-photo"
+      ],
+      "dashboard_url": "https://supabase.com/dashboard/project/kothoqicubowyhwfsrte/functions",
+      "message": "Deployed Functions."
+    },
+    "predeployFileHashesVerified": 330,
+    "candidateSha256": "6567bf747eedbc15d217140185afe423855103199c831a9656fdc5c49bc4f9d4"
+  },
+  "remoteDownloadedSource": [
+    {
+      "slug": "capture-conversation-email",
+      "downloadExit": 0,
+      "identicalFiles": 25,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/capture-conversation-email/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "clinical-audio-process",
+      "downloadExit": 0,
+      "identicalFiles": 5,
+      "missingFromDownload": [
+        "supabase/functions/clinical-audio-process/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "clinical-call-capture",
+      "downloadExit": 0,
+      "identicalFiles": 4,
+      "missingFromDownload": [
+        "supabase/functions/clinical-call-capture/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "clinical-call-note-process",
+      "downloadExit": 0,
+      "identicalFiles": 10,
+      "missingFromDownload": [
+        "supabase/functions/clinical-call-note-process/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "clinical-note-process",
+      "downloadExit": 0,
+      "identicalFiles": 6,
+      "missingFromDownload": [
+        "supabase/functions/clinical-note-process/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "clinical-recap-process",
+      "downloadExit": 0,
+      "identicalFiles": 6,
+      "missingFromDownload": [
+        "supabase/functions/clinical-recap-process/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "dispatch-outbox",
+      "downloadExit": 0,
+      "identicalFiles": 28,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/_shared/stripe-provider.ts",
+        "supabase/functions/dispatch-outbox/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/_shared/stripe-provider.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "download-diagnostic-pdf",
+      "downloadExit": 0,
+      "identicalFiles": 5,
+      "missingFromDownload": [
+        "supabase/functions/download-diagnostic-pdf/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "estimate-decision",
+      "downloadExit": 0,
+      "identicalFiles": 8,
+      "missingFromDownload": [
+        "supabase/functions/estimate-decision/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "prepare-document-link",
+      "downloadExit": 0,
+      "identicalFiles": 26,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/prepare-document-link/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "prepare-estimate-decision-grant",
+      "downloadExit": 0,
+      "identicalFiles": 9,
+      "missingFromDownload": [
+        "supabase/functions/_shared/estimate-publication-http.ts",
+        "supabase/functions/prepare-estimate-decision-grant/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/estimate-publication-http.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "prepare-estimate-publication",
+      "downloadExit": 0,
+      "identicalFiles": 5,
+      "missingFromDownload": [
+        "supabase/functions/prepare-estimate-publication/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "prepare-invoice-email",
+      "downloadExit": 0,
+      "identicalFiles": 24,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/prepare-invoice-email/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "prepare-payment-delivery",
+      "downloadExit": 0,
+      "identicalFiles": 26,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/_shared/payment-access-staff.ts",
+        "supabase/functions/_shared/stripe-provider.ts",
+        "supabase/functions/prepare-payment-delivery/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/_shared/payment-access-staff.ts",
+        "supabase/functions/_shared/stripe-provider.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "prepare-release-email",
+      "downloadExit": 0,
+      "identicalFiles": 22,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/prepare-release-email/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "queue-invoice-reminders",
+      "downloadExit": 0,
+      "identicalFiles": 4,
+      "missingFromDownload": [
+        "supabase/functions/queue-invoice-reminders/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "read-estimate-publication-artifact",
+      "downloadExit": 0,
+      "identicalFiles": 5,
+      "missingFromDownload": [
+        "supabase/functions/read-estimate-publication-artifact/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "reconcile-operational-tasks",
+      "downloadExit": 0,
+      "identicalFiles": 5,
+      "missingFromDownload": [
+        "supabase/functions/reconcile-operational-tasks/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "recover-document-link",
+      "downloadExit": 0,
+      "identicalFiles": 26,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/recover-document-link/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "recover-estimate-decision-grant",
+      "downloadExit": 0,
+      "identicalFiles": 9,
+      "missingFromDownload": [
+        "supabase/functions/_shared/estimate-publication-http.ts",
+        "supabase/functions/recover-estimate-decision-grant/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/estimate-publication-http.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "recover-estimate-publication-preparation",
+      "downloadExit": 0,
+      "identicalFiles": 5,
+      "missingFromDownload": [
+        "supabase/functions/recover-estimate-publication-preparation/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "retrieve-document-link",
+      "downloadExit": 0,
+      "identicalFiles": 26,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/retrieve-document-link/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "verify-patient-photo",
+      "downloadExit": 0,
+      "identicalFiles": 5,
+      "missingFromDownload": [
+        "supabase/functions/verify-patient-photo/deno.lock"
+      ],
+      "differentFiles": [],
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    }
+  ],
+  "sourceParityPass": true,
+  "limitation": "Server downloads omit local Deno lockfiles and erased type-only dependencies. All downloaded source files and deno.json maps match candidate hashes; omitted locks are not remotely verified.",
+  "runtimeDependencyAnalysis": "TypeScript AST traversed value imports, value re-exports, and literal dynamic imports. Erased type-only dependencies excluded from runtime parity.",
+  "remoteLockfilesVerified": false,
+  "httpAcceptance": {
+    "projectRef": "kothoqicubowyhwfsrte",
+    "observedAt": "2026-11-06T22:29:58.177459+00:00",
+    "unauthenticated": [
+      {
+        "slug": "capture-conversation-email",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "clinical-audio-process",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "clinical-call-capture",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "clinical-call-note-process",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "clinical-note-process",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "clinical-recap-process",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "dispatch-outbox",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "download-diagnostic-pdf",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "estimate-decision",
+        "status": 404,
+        "rejected": true
+      },
+      {
+        "slug": "prepare-document-link",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "prepare-estimate-decision-grant",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "prepare-estimate-publication",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "prepare-invoice-email",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "prepare-payment-delivery",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "prepare-release-email",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "queue-invoice-reminders",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "read-estimate-publication-artifact",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "reconcile-operational-tasks",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "recover-document-link",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "recover-estimate-decision-grant",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "recover-estimate-publication-preparation",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "retrieve-document-link",
+        "status": 503,
+        "rejected": false
+      },
+      {
+        "slug": "verify-patient-photo",
+        "status": 401,
+        "rejected": true
+      }
+    ],
+    "authenticated": [
+      {
+        "slug": "dispatch-outbox",
+        "status": 200,
+        "receipt": {
+          "processed": false,
+          "disabled": true
+        }
+      },
+      {
+        "slug": "queue-invoice-reminders",
+        "status": 200,
+        "receipt": {
+          "run_id": "6689a3bb-fc9d-40ef-bcd3-43cf4bd4928f",
+          "requested_limit": 5,
+          "queued": 0,
+          "dispatched": false
+        },
+        "sameIdentityReplay": true
+      },
+      {
+        "slug": "reconcile-operational-tasks",
+        "status": 200,
+        "receipt": {
+          "run_id": "c9b183f5-246d-441b-9885-3f166e9df88e",
+          "requested_limit": 5,
+          "outcome": "completed",
+          "counts": {
+            "examined": 1,
+            "generated": 0,
+            "revised": 0,
+            "unresolved": 0
+          },
+          "sweep_complete": true,
+          "reconciled": true
+        },
+        "sameIdentityReplay": true
+      }
+    ],
+    "providerWrites": false,
+    "passed": false,
+    "authenticatedWorkerPass": true,
+    "limitations": [
+      "retrieve-document-link public endpoint returned503 Document link unavailable under preexisting gate/config; this is not counted as authorization acceptance."
+    ]
+  },
+  "deployedFunctionMetadata": [
+    {
+      "slug": "capture-conversation-email",
+      "status": "ACTIVE",
+      "version": 23,
+      "verifyJwt": true
+    },
+    {
+      "slug": "clinical-audio-process",
+      "status": "ACTIVE",
+      "version": 6,
+      "verifyJwt": true
+    },
+    {
+      "slug": "clinical-call-capture",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": true
+    },
+    {
+      "slug": "clinical-call-note-process",
+      "status": "ACTIVE",
+      "version": 6,
+      "verifyJwt": true
+    },
+    {
+      "slug": "clinical-note-process",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": true
+    },
+    {
+      "slug": "clinical-recap-process",
+      "status": "ACTIVE",
+      "version": 6,
+      "verifyJwt": true
+    },
+    {
+      "slug": "dispatch-outbox",
+      "status": "ACTIVE",
+      "version": 37,
+      "verifyJwt": false
+    },
+    {
+      "slug": "download-diagnostic-pdf",
+      "status": "ACTIVE",
+      "version": 11,
+      "verifyJwt": true
+    },
+    {
+      "slug": "estimate-decision",
+      "status": "ACTIVE",
+      "version": 20,
+      "verifyJwt": false
+    },
+    {
+      "slug": "prepare-document-link",
+      "status": "ACTIVE",
+      "version": 35,
+      "verifyJwt": true
+    },
+    {
+      "slug": "prepare-estimate-decision-grant",
+      "status": "ACTIVE",
+      "version": 20,
+      "verifyJwt": true
+    },
+    {
+      "slug": "prepare-estimate-publication",
+      "status": "ACTIVE",
+      "version": 20,
+      "verifyJwt": true
+    },
+    {
+      "slug": "prepare-invoice-email",
+      "status": "ACTIVE",
+      "version": 34,
+      "verifyJwt": true
+    },
+    {
+      "slug": "prepare-payment-delivery",
+      "status": "ACTIVE",
+      "version": 34,
+      "verifyJwt": true
+    },
+    {
+      "slug": "prepare-release-email",
+      "status": "ACTIVE",
+      "version": 34,
+      "verifyJwt": true
+    },
+    {
+      "slug": "queue-invoice-reminders",
+      "status": "ACTIVE",
+      "version": 6,
+      "verifyJwt": false
+    },
+    {
+      "slug": "read-estimate-publication-artifact",
+      "status": "ACTIVE",
+      "version": 20,
+      "verifyJwt": true
+    },
+    {
+      "slug": "reconcile-operational-tasks",
+      "status": "ACTIVE",
+      "version": 6,
+      "verifyJwt": false
+    },
+    {
+      "slug": "recover-document-link",
+      "status": "ACTIVE",
+      "version": 35,
+      "verifyJwt": true
+    },
+    {
+      "slug": "recover-estimate-decision-grant",
+      "status": "ACTIVE",
+      "version": 20,
+      "verifyJwt": true
+    },
+    {
+      "slug": "recover-estimate-publication-preparation",
+      "status": "ACTIVE",
+      "version": 20,
+      "verifyJwt": true
+    },
+    {
+      "slug": "retrieve-document-link",
+      "status": "ACTIVE",
+      "version": 35,
+      "verifyJwt": false
+    },
+    {
+      "slug": "verify-patient-photo",
+      "status": "ACTIVE",
+      "version": 11,
+      "verifyJwt": true
+    }
+  ],
+  "JWTConfigurationPreserved": true,
+  "candidateStatus": "intermediate; final PostgreSQL UUID domain compatibility correction pending",
+  "currentSourceParityClaim": false,
+  "historicalParityScope": "Exact deployed source captured at this receipt; subsequent source edits require refreshed deployment/parity"
+}

@@ -1,0 +1,86 @@
+{
+  "projectRef": "kothoqicubowyhwfsrte",
+  "startedAt": "2026-11-06T22:29:32.162664+00:00",
+  "physicalBackups": {
+    "region": "us-west-1",
+    "walg_enabled": true,
+    "pitr_enabled": false,
+    "backups": [
+      {
+        "id": 2183736901,
+        "is_physical_backup": true,
+        "status": "COMPLETED",
+        "inserted_at": "2026-11-06T08:04:06.007Z"
+      },
+      {
+        "id": 2173829702,
+        "is_physical_backup": true,
+        "status": "COMPLETED",
+        "inserted_at": "2026-11-05T08:04:23.627Z"
+      },
+      {
+        "id": 2163855063,
+        "is_physical_backup": true,
+        "status": "COMPLETED",
+        "inserted_at": "2026-11-04T08:04:05.479Z"
+      },
+      {
+        "id": 2153867068,
+        "is_physical_backup": true,
+        "status": "COMPLETED",
+        "inserted_at": "2026-11-03T08:04:14.979Z"
+      },
+      {
+        "id": 2144093393,
+        "is_physical_backup": true,
+        "status": "COMPLETED",
+        "inserted_at": "2026-11-02T08:04:06.572Z"
+      },
+      {
+        "id": 2134261629,
+        "is_physical_backup": true,
+        "status": "COMPLETED",
+        "inserted_at": "2026-11-01T08:05:25.661Z"
+      },
+      {
+        "id": 2124515016,
+        "is_physical_backup": true,
+        "status": "COMPLETED",
+        "inserted_at": "2026-10-31T08:04:08.544Z"
+      },
+      {
+        "id": 2114741251,
+        "is_physical_backup": true,
+        "status": "COMPLETED",
+        "inserted_at": "2026-10-30T08:04:11.008Z"
+      }
+    ],
+    "physical_backup_data": {},
+    "message": ""
+  },
+  "logicalFiles": [
+    {
+      "kind": "schema",
+      "exitCode": 0,
+      "bytes": 3942348,
+      "sha256": "570f7d7923d25040c661ef1634498a3d24843b31d5fc6b85a953d380104b4dd8",
+      "permissions": "0o600"
+    },
+    {
+      "kind": "data",
+      "exitCode": 0,
+      "bytes": 9834097,
+      "sha256": "74ea6dd6ae0745252764db71cb6bb3e8a619b7c77b1e30564935eb7ea74dfea0",
+      "permissions": "0o600"
+    }
+  ],
+  "dryRun": {
+    "projectRef": "kothoqicubowyhwfsrte",
+    "observedAt": "2026-11-06T22:32:34.053793+00:00",
+    "exitCode": 0,
+    "stdout": "{\"upToDate\":false,\"dryRun\":true,\"migrations\":[\"20261020151157_controlled_stock_private_engine.sql\",\"20261022010000_controlled_secondary_review_private.sql\",\"20261027223535_controlled_record_review_workflows.sql\",\"20261027223544_narcotics_count_and_stock_workflows.sql\",\"20261028170038_narcotics_register_exports_and_recovery.sql\"],\"seeds\":[],\"roles\":[],\"message\":\"Finished supabase db push.\"}\n",
+    "stderr": "Initialising login role...\nDRY RUN: migrations will *not* be pushed to the database.\nConnecting to remote database...\nWould push these migrations:\n \u2022 20261020151157_controlled_stock_private_engine.sql\n \u2022 20261022010000_controlled_secondary_review_private.sql\n \u2022 20261027223535_controlled_record_review_workflows.sql\n \u2022 20261027223544_narcotics_count_and_stock_workflows.sql\n \u2022 20261028170038_narcotics_register_exports_and_recovery.sql\nA new version of Supabase CLI is available: v3.0.0 (currently installed v2.118.0)\nWe recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli\n"
+  },
+  "applied": false,
+  "storageObjectBytesIncluded": false
+}

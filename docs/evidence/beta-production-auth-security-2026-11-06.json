@@ -1,0 +1,29 @@
+{
+  "projectRef": "mgadheotkdnrsatfivjy",
+  "observedAt": "2026-11-06T22:30:33.587031+00:00",
+  "before": {
+    "password_hibp_enabled": false,
+    "password_min_length": 6,
+    "password_required_characters": null,
+    "disable_signup": true,
+    "mailer_autoconfirm": false,
+    "mailer_notifications_password_changed_enabled": false
+  },
+  "after": {
+    "password_hibp_enabled": true,
+    "password_min_length": 6,
+    "password_required_characters": null,
+    "disable_signup": true,
+    "mailer_autoconfirm": false,
+    "mailer_notifications_password_changed_enabled": false
+  },
+  "changedFields": [
+    "password_hibp_enabled"
+  ],
+  "verifiedEnabled": true,
+  "billingChanged": false,
+  "emailsSent": false,
+  "passwordsChanged": false,
+  "providerGatesChanged": false,
+  "authorization": "Parent reviewed staging pwned422 proof and approved only this production Auth flag"
+}

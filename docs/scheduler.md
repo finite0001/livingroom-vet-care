@@ -9,6 +9,8 @@ The database scheduler (migration `20260922120000_b1_scheduler.sql`, design in `
 | `process-stripe-events` | every minute | applies Stripe events |
 | `queue-reminders` | every 15 minutes | `queue_due_reminders()`: appointment, vaccine and lab reminders into `communication_outbox` |
 | `cleanup-abandoned-attachment` | every 30 minutes | attachment housekeeping |
+| `reconcile-operational-tasks` | every 5 minutes, activated separately | bounded task reconciliation under the reviewed database policy/window and `OPERATIONAL_RECONCILIATION_ENABLED` |
+| `queue-invoice-reminders` | hourly, 09:00–16:59 America/Denver | eligible enrolled unpaid invoices under the practice policy and `INVOICE_REMINDERS_ENABLED`; queues only |
 | `scheduler-reconcile` | every minute | database only; records the HTTP outcome of each request |
 | `purge-expired-email-payloads` | daily, 09:17 UTC | database only (migration `20260930130000`); `scheduler_purge_expired_email_payloads()` clears frozen release/invoice email bytes 90 days after an abandoned request or a provider-accepted send. Never pending, failed or uncertain sends; hashes, manifests and audit rows are kept. Its outcome is in `cron.job_run_details`, not on the ops card. |
 
@@ -73,7 +75,7 @@ The same data appears on the **Scheduled jobs** card in `/hub/admin/operations`.
 | --- | --- | --- |
 | `receipt_outcome = configuration_missing` | a secret is absent | expected before commissioning; after it, recheck the names |
 | `dispatched (awaiting reconcile)` | request sent, response not yet recorded | wait one minute |
-| `ok`, HTTP 2xx | worker accepted the call | healthy |
+| `ok`, HTTP 2xx | worker accepted the call; a disabled worker also returns 200 | inspect the worker receipt and feature policy to establish actual execution |
 | `failed`, HTTP 401 | the key is not in `SUPABASE_SECRET_KEYS` | rotate the Vault key or the function secret |
 | `failed`, HTTP 404 | function not deployed at that slug, or wrong `project_url` | check the ref and deployment |
 | `cron_status` not `succeeded` | `pg_cron` could not run the SQL | read `cron_message` |
@@ -91,3 +93,26 @@ delete from vault.secrets where name in ('project_url', 'scheduler_worker_key');
 Do not unschedule the cron jobs to stop traffic: replaying migrations would reinstall them, and removing them hides the state from the operations card.
 
 `public.apply_retention_policies()` must never be scheduled (B1 contract §7).
+
+## Attachment cleanup preview
+
+The cleanup worker accepts authenticated `{"dry_run":true}` requests while
+`ATTACHMENT_CLEANUP_ENABLED=false`. Configure `ATTACHMENT_CLEANUP_GRACE_HOURS`
+explicitly (24–720 hours; staging beta uses 168). Preview calls only the candidate
+discovery RPC: it never claims uploads, reads Storage objects, or deletes files.
+The response reports `mode:"preview"`, the server grace, and a candidate count
+capped at 25; a count of 25 is not an exhaustive total. Invalid worker credentials
+still return 401. Ordinary `{}` calls remain disabled until the destructive gate
+is explicitly enabled.
+
+Eligibility is limited to abandoned uploads in `conversation-attachment-uploads`,
+excludes uploads referenced by frozen email manifests, and requires both upload
+and object to exceed the configured grace. Expired cleanup claims can be recovered
+only for the same recorded path/object identity. Every actual cleanup must still
+claim, revalidate, remove, and confirm absence before recording completion.
+
+November 6 staging commissioning and synthetic acceptance are recorded in
+[the backend remediation report](beta-backend-remediation-2026-11-06.md).
+Invoice reminders use their own immutable `invoice_reminder_runs` receipts and
+are not listed in `scheduler_job_results`; inspect both the cron execution and
+that feature's receipt when checking the complete schedule path.

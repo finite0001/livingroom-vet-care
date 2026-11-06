@@ -1,0 +1,17 @@
+{
+  "observedAt": "2026-11-06",
+  "scope": "owned local PostgreSQL17 synthetic fixture; exact hosted clock functions/protect trigger",
+  "scriptSha256": "f21f7e9330a125a6e55ce2acaee0429e3b2aca55549fbd8975cb7fff92858667",
+  "scriptBytes": 4537,
+  "observedOutcome": {
+    "is_on_duty": false,
+    "open_shifts": 1
+  },
+  "sequence": [
+    "Admin closes original open shift transaction",
+    "Staff clock_in creates another open shift and sets duty true",
+    "Delayed admin profile PATCH sets duty false"
+  ],
+  "scopeLimit": "Not a full Auth/PostgREST/RLS acceptance; demonstrates committed interleaving using actual clock functions. Parent owns atomic210 fix.",
+  "ownedContainerRemoved": true
+}

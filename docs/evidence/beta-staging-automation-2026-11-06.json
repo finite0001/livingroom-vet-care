@@ -1,0 +1,398 @@
+{
+  "observedAt": "2026-11-06T22:14:14.225735+00:00",
+  "projectRef": "kothoqicubowyhwfsrte",
+  "scope": "staging only; production unchanged",
+  "vault": {
+    "observedAt": "2026-11-06T22:07:27.581694+00:00",
+    "projectRef": "kothoqicubowyhwfsrte",
+    "exitCode": 0,
+    "namesCreated": [
+      "project_url",
+      "scheduler_worker_key"
+    ],
+    "existingKeyReused": true,
+    "existingKeysRotated": false,
+    "existingSecretsOverwritten": false
+  },
+  "precommissionProbes": {
+    "observedAt": "2026-11-06T22:04:19.426003+00:00",
+    "projectRef": "kothoqicubowyhwfsrte",
+    "verifiedGates": {
+      "STRIPE_EVENT_PROCESSING_ENABLED": "false",
+      "ATTACHMENT_CLEANUP_ENABLED": "false",
+      "INVOICE_REMINDERS_ENABLED": "false",
+      "OUTBOUND_DELIVERY_MODE": "disabled",
+      "APP_ENV": "staging",
+      "STRIPE_LIVEMODE": "false",
+      "REMINDER_SCHEDULER_ENABLED": "false",
+      "OPERATIONAL_RECONCILIATION_ENABLED": "false"
+    },
+    "workerProbes": [
+      {
+        "function": "dispatch-outbox",
+        "status": 200,
+        "body": {
+          "processed": false,
+          "disabled": true,
+          "items": 0,
+          "states": {},
+          "stopped": "empty",
+          "elapsed_ms": 0
+        },
+        "authenticated": true
+      },
+      {
+        "function": "process-inbound",
+        "status": 200,
+        "body": {
+          "processed": 0,
+          "items": 0,
+          "stopped": "empty",
+          "elapsed_ms": 420
+        },
+        "authenticated": true
+      },
+      {
+        "function": "process-stripe-events",
+        "status": 200,
+        "body": {
+          "state": "disabled"
+        },
+        "authenticated": true
+      },
+      {
+        "function": "queue-reminders",
+        "status": 200,
+        "body": {
+          "disabled": true,
+          "queued": 0,
+          "dispatched": false
+        },
+        "authenticated": true
+      },
+      {
+        "function": "cleanup-abandoned-attachment",
+        "status": 503,
+        "body": {
+          "error": "Attachment cleanup is disabled"
+        },
+        "authenticated": true
+      },
+      {
+        "function": "reconcile-operational-tasks",
+        "status": 200,
+        "body": {
+          "disabled": true,
+          "reconciled": false
+        },
+        "authenticated": true
+      },
+      {
+        "function": "queue-invoice-reminders",
+        "status": 200,
+        "body": {
+          "disabled": true,
+          "queued": 0,
+          "dispatched": false
+        },
+        "authenticated": true
+      },
+      {
+        "function": "invite-staff",
+        "status": 401,
+        "body": {
+          "code": "UNAUTHORIZED_NO_AUTH_HEADER",
+          "message": "Missing authorization header"
+        },
+        "authenticated": false
+      }
+    ],
+    "keySource": "existing staging managed default secret; not rotated; never emitted",
+    "providerWrites": false,
+    "messagesSent": false
+  },
+  "syntheticAcceptance": {
+    "projectRef": "kothoqicubowyhwfsrte",
+    "observedAt": "2026-11-06T22:11:39.411941+00:00",
+    "providerWrites": false,
+    "messagesSent": false,
+    "syntheticActor": "02fb6d21-5a5c-4153-9971-765f1759d229",
+    "realAuthSignIn": true,
+    "syntheticInvoice": "a1849210-fc39-4efa-bcda-d43043d9c244",
+    "operationalRun": {
+      "run_id": "24cd9e0c-3994-4906-bf87-d9e3d97eb51e",
+      "requested_limit": 25,
+      "policy_version": 8,
+      "window_from": "2099-01-01T00:00:00+00:00",
+      "window_until": "2099-01-02T00:00:00+00:00",
+      "fan_out_limit": 256,
+      "budget_ms": 5000,
+      "sweep_id": "9d5baeae-94bc-458f-a7c3-30aeccc88edb",
+      "sweep_started_at": "2026-11-06T22:12:00.150062+00:00",
+      "checkpoint_version": 27,
+      "before": {
+        "lane": "appointment",
+        "after_id": null
+      },
+      "started_at": "2026-11-06T22:12:00.15118+00:00",
+      "outcome": "completed",
+      "finished_at": "2026-11-06T22:12:00.29368+00:00",
+      "counts": {
+        "examined": 5,
+        "generated": 0,
+        "revised": 0,
+        "unresolved": 0
+      },
+      "checkpoint": {
+        "version": 28,
+        "lane": "complete",
+        "after_id": null
+      },
+      "sweep_complete": true,
+      "failure_code": null,
+      "reconciled": true
+    },
+    "operationalReplayIdentical": true,
+    "invoiceRun": {
+      "run_id": "c429b483-cfec-4ab2-a716-c4aa150aa8f0",
+      "requested_limit": 25,
+      "queued": 1,
+      "dispatched": false
+    },
+    "invoiceReplayIdentical": true,
+    "invoiceNextRunQueued": 0,
+    "outboxDisabled": {
+      "processed": false,
+      "disabled": true,
+      "items": 0,
+      "states": {},
+      "stopped": "empty",
+      "elapsed_ms": 0
+    },
+    "cleanupPreview": {
+      "mode": "preview",
+      "dry_run": true,
+      "grace_hours": 168,
+      "candidates": 0,
+      "limit": 25,
+      "complete": 0
+    },
+    "passed": true,
+    "syntheticTermsPaused": true,
+    "syntheticActorDeactivated": true,
+    "syntheticCatalogProductRetired": "dd7d86ae-e9b9-4f62-8a30-976f1a4b662d"
+  },
+  "scheduler": {
+    "scheduler": {
+      "jobs": [
+        {
+          "job": "dispatch-outbox",
+          "active": true,
+          "schedule": "* * * * *"
+        },
+        {
+          "job": "process-inbound",
+          "active": true,
+          "schedule": "* * * * *"
+        },
+        {
+          "job": "process-stripe-events",
+          "active": true,
+          "schedule": "* * * * *"
+        },
+        {
+          "job": "queue-reminders",
+          "active": true,
+          "schedule": "*/15 * * * *"
+        },
+        {
+          "job": "cleanup-abandoned-attachment",
+          "active": true,
+          "schedule": "*/30 * * * *"
+        },
+        {
+          "job": "scheduler-reconcile",
+          "active": true,
+          "schedule": "* * * * *"
+        },
+        {
+          "job": "purge-expired-email-payloads",
+          "active": true,
+          "schedule": "17 9 * * *"
+        },
+        {
+          "job": "reconcile-operational-tasks",
+          "active": true,
+          "schedule": "*/5 * * * *"
+        },
+        {
+          "job": "queue-invoice-reminders",
+          "active": true,
+          "schedule": "0 * * * *"
+        }
+      ],
+      "receipts": [
+        {
+          "job": "dispatch-outbox",
+          "count": 5,
+          "outcome": "ok",
+          "status_code": 200
+        },
+        {
+          "job": "process-inbound",
+          "count": 5,
+          "outcome": "ok",
+          "status_code": 200
+        },
+        {
+          "job": "process-stripe-events",
+          "count": 5,
+          "outcome": "ok",
+          "status_code": 200
+        },
+        {
+          "job": "reconcile-operational-tasks",
+          "count": 1,
+          "outcome": "ok",
+          "status_code": 200
+        }
+      ]
+    },
+    "invoiceRuns": [
+      {
+        "id": "c429b483-cfec-4ab2-a716-c4aa150aa8f0",
+        "requested_limit": 25,
+        "queued": 1,
+        "recorded_at": "2026-11-06 22:12:01.9798+00"
+      },
+      {
+        "id": "6089208c-e71c-45c5-aec3-1e6dd74b4bd4",
+        "requested_limit": 25,
+        "queued": 0,
+        "recorded_at": "2026-11-06 22:12:02.607425+00"
+      },
+      {
+        "id": "68fddcea-c424-4836-9b36-209863518e40",
+        "requested_limit": 25,
+        "queued": 0,
+        "recorded_at": "2026-11-06 22:12:51.637964+00"
+      }
+    ]
+  },
+  "source": {
+    "supabase/functions/_shared/cleanup-abandoned-handler.ts": "a9178d7bb0b2b256a60ef29edce5beb44430b1174d9aff85fa3ff99543bb3ad8",
+    "supabase/functions/invite-staff/index.ts": "c0cf21b9072f51d40301d21d4d17b3306cb8d597ad2aabe0a302574aa951ceb3"
+  },
+  "cleanupTests": {
+    "passed": 25,
+    "failed": 0,
+    "node": "22",
+    "denoFrozenCheck": true
+  },
+  "limitations": [
+    "Synthetic reconciliation appointment window is2099-01-01 through2099-01-02, not a reviewed clinical operating window.",
+    "Invoice test account was deactivated, synthetic terms paused, catalog product retired; queued test message cannot be delivered under current disabled transport and fails current eligibility.",
+    "Clinical reminder policy/wording and production activation still require real workflow sign-off.",
+    "Staging migration prefix remains204 pending strict hosted installation proof."
+  ],
+  "fixtureCleanupVerification": {
+    "syntheticInvoiceDeliveryAttempts": 0,
+    "syntheticInvoiceAccepted": 0,
+    "syntheticActorActive": false,
+    "syntheticCatalogProductActive": false
+  },
+  "positiveTaskGeneration": {
+    "projectRef": "kothoqicubowyhwfsrte",
+    "startedAt": "2026-11-06T22:16:21.943494+00:00",
+    "providerWrites": false,
+    "synthetic": true,
+    "actor": "50d280f6-da95-407f-9f49-74b954138673",
+    "appointment": "5f77ffc4-09ca-46b2-adbb-6530b74888e4",
+    "template": "bb2b979f-2584-4826-9e87-77f284e8ce93",
+    "beforeTasks": 0,
+    "generatedTask": {
+      "event": "generated",
+      "id": "c646f713-4060-40f3-92d0-c090afe2a4ca",
+      "state": "pending"
+    },
+    "run": {
+      "run_id": "af73fdbc-9795-4785-9d71-864b18dfc5f1",
+      "requested_limit": 25,
+      "policy_version": 8,
+      "window_from": "2099-01-01T00:00:00+00:00",
+      "window_until": "2099-01-02T00:00:00+00:00",
+      "fan_out_limit": 256,
+      "budget_ms": 5000,
+      "sweep_id": "987cfdc3-66d7-4ca8-93e4-52b880d31af0",
+      "sweep_started_at": "2026-11-06T22:16:53.799038+00:00",
+      "checkpoint_version": 30,
+      "before": {
+        "lane": "appointment",
+        "after_id": null
+      },
+      "started_at": "2026-11-06T22:16:53.799925+00:00",
+      "outcome": "completed",
+      "finished_at": "2026-11-06T22:16:53.938745+00:00",
+      "counts": {
+        "examined": 6,
+        "generated": 1,
+        "revised": 0,
+        "unresolved": 0
+      },
+      "checkpoint": {
+        "version": 31,
+        "lane": "complete",
+        "after_id": null
+      },
+      "sweep_complete": true,
+      "failure_code": null,
+      "reconciled": true
+    },
+    "replayIdentical": true,
+    "passed": true,
+    "syntheticTemplateRetired": true,
+    "generationPolicyRestored": true,
+    "actorDeactivated": true,
+    "cleanupErrors": [
+      "{'status': 404, 'path': '/rest/v1/rpc/cancel_appointment', 'code': 'PGRST202', 'message': 'Could not find the function public.cancel_appointment(p_expected_version, p_id, p_reason) in the schema cache'}"
+    ],
+    "syntheticAppointmentCancelled": true,
+    "generatedTaskFinalState": "superseded",
+    "cleanupErrorsResolved": true
+  },
+  "advisors": {
+    "security": [
+      {
+        "name": "rls_enabled_no_policy",
+        "level": "INFO",
+        "count": 258,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+      },
+      {
+        "name": "extension_in_public",
+        "level": "WARN",
+        "count": 1,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public"
+      },
+      {
+        "name": "anon_security_definer_function_executable",
+        "level": "WARN",
+        "count": 8,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable"
+      },
+      {
+        "name": "authenticated_security_definer_function_executable",
+        "level": "WARN",
+        "count": 576,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+      },
+      {
+        "name": "auth_leaked_password_protection",
+        "level": "WARN",
+        "count": 1,
+        "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection"
+      }
+    ],
+    "health": []
+  }
+}
