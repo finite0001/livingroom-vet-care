@@ -4,8 +4,11 @@ Auth identities are synthetic JWT settings. This verifies SQL/RLS/locking, not
 Supabase Auth issuance or provider behavior. Always removes its own container.
 """
 import argparse
+import hashlib
 import json
+import os
 import pathlib
+import selectors
 import subprocess
 import time
 import uuid
@@ -17,6 +20,30 @@ INACTIVE = '33333333-3333-4333-8333-333333333333'
 BASE = ROOT / 'supabase/migrations/20260614171114_5b96273b-12b6-48bc-8ff1-d89edc292f62.sql'
 
 
+def wait_for_marker(process, marker, seconds=10):
+    """Bound both Docker transport and SQL startup, without buffered-read races."""
+    deadline = time.monotonic() + seconds
+    output = {'stdout': bytearray(), 'stderr': bytearray()}
+    with selectors.DefaultSelector() as selector:
+        selector.register(process.stdout, selectors.EVENT_READ, 'stdout')
+        selector.register(process.stderr, selectors.EVENT_READ, 'stderr')
+        while marker not in bytes(output['stdout']).splitlines():
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError('Owned clock writer did not reach its lock marker')
+            if not selector.get_map():
+                raise AssertionError('Owned clock writer exited before its lock marker: '
+                                     + output['stderr'].decode(errors='replace'))
+            for key, _ in selector.select(min(remaining, .1)):
+                chunk = os.read(key.fileobj.fileno(), 4096)
+                if not chunk:
+                    selector.unregister(key.fileobj)
+                else:
+                    output[key.data].extend(chunk)
+                    if len(output[key.data]) > 65536:
+                        raise AssertionError('Owned clock writer output exceeded its bound')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--migration', default='scripts/time-clock/atomic-time-clock.sql')
@@ -26,7 +53,9 @@ def main():
         raise ValueError('Expected a repository migration file')
     name = 'lrv-clock-test-' + uuid.uuid4().hex[:12]
     receipt = {'kind': 'atomic-time-clock-postgres-v1', 'passed': False, 'checks': [],
-               'hostedWrites': 0, 'syntheticAuth': True, 'ownedCleanup': False}
+               'hostedWrites': 0, 'syntheticAuth': True, 'ownedCleanup': False,
+               'runnerSha256': hashlib.sha256(pathlib.Path(__file__).read_bytes()).hexdigest(),
+               'sqlSha256': hashlib.sha256(migration.read_bytes()).hexdigest()}
     running = []
 
     def command(sql, actor=None, role=None, expected=None):
@@ -66,11 +95,21 @@ def main():
                         '--network', 'none', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', 'postgres:17-alpine'],
                        check=True, capture_output=True, text=True, timeout=60)
         ready = False
-        for _ in range(100):
-            result = subprocess.run(['docker', 'exec', name, 'pg_isready', '-U', 'postgres'], capture_output=True, timeout=5)
-            if result.returncode == 0:
-                ready = True
-                break
+        ready_until = time.monotonic() + 20
+        while time.monotonic() < ready_until:
+            # The entrypoint's temporary initialization server also answers
+            # pg_isready. Only the final server replaces PID1 with postgres.
+            leader = subprocess.run(['docker', 'exec', name, 'cat', '/proc/1/comm'],
+                                    capture_output=True, text=True, timeout=min(5, ready_until-time.monotonic()))
+            if leader.returncode == 0 and leader.stdout.strip() == 'postgres':
+                remaining = ready_until - time.monotonic()
+                if remaining <= 0:
+                    break
+                result = subprocess.run(['docker', 'exec', name, 'pg_isready', '-U', 'postgres'],
+                                        capture_output=True, timeout=min(5, remaining))
+                if result.returncode == 0:
+                    ready = True
+                    break
             time.sleep(.1)
         assert ready, 'Owned database did not become ready'
         command(f"""
@@ -129,18 +168,36 @@ def main():
         command(correct(entry), actor=ADMIN, role='authenticated', expected='synthetic failure'); invariant(1)
         command('drop trigger test_fail_duty on profiles; drop function test_fail_duty();')
         receipt['checks'].append('profile failure rolls back time-entry correction')
-        # Hold a successful admin correction transaction; staff clock-in must wait
-        # for its profile lock, then see the committed closed shift.
+        # Keep the admin transaction open until PostgreSQL itself confirms that
+        # the concurrent staff connection waits on its lock. Docker startup time
+        # is not evidence of serialization.
         entry = opened()
-        sql = f"set statement_timeout=10000; begin; set role authenticated; set request.jwt.claim.sub='{ADMIN}';" + correct(entry) + "select 'LOCKED'; select pg_sleep(1); commit;"
-        writer = subprocess.Popen(['docker','exec','-i',name,'psql','-X','-qAt','-v','ON_ERROR_STOP=1','-U','postgres'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-        running.append(writer); writer.stdin.write(sql); writer.stdin.close()
-        for line in writer.stdout:
-            if line.strip() == 'LOCKED': break
-        started = time.monotonic()
-        command('select id from clock_in();',actor=STAFF,role='authenticated')
-        assert time.monotonic()-started > .5, 'Concurrent clock-in did not wait for correction'
+        sql = f"set application_name='lrv-clock-admin'; set statement_timeout=10000; begin; set role authenticated; set request.jwt.claim.sub='{ADMIN}';" + correct(entry) + "select 'LOCKED';\n"
+        writer = subprocess.Popen(['docker','exec','-i',name,'psql','-X','-qAt','-v','ON_ERROR_STOP=1','-U','postgres'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        running.append(writer); writer.stdin.write(sql.encode()); writer.stdin.flush()
+        wait_for_marker(writer, b'LOCKED')
+        staff = subprocess.Popen(['docker','exec','-i',name,'psql','-X','-qAt','-v','ON_ERROR_STOP=1','-U','postgres'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        running.append(staff)
+        staff.stdin.write((f"set application_name='lrv-clock-staff'; set statement_timeout=15000; set role authenticated; set request.jwt.claim.sub='{STAFF}'; select id from clock_in();\n").encode())
+        staff.stdin.close()
+        lock_started = time.monotonic()
+        lock_seen = False
+        while time.monotonic() - lock_started < 10:
+            if staff.poll() is not None:
+                raise AssertionError('Staff clock-in completed without the held admin lock: ' + staff.stderr.read().decode(errors='replace'))
+            lock_seen = command("select exists(select 1 from pg_stat_activity s where s.application_name='lrv-clock-staff' and s.wait_event_type='Lock' and exists(select 1 from pg_stat_activity a where a.application_name='lrv-clock-admin' and a.state='idle in transaction' and a.pid=any(pg_blocking_pids(s.pid))));") == 't'
+            if lock_seen:
+                break
+            time.sleep(.05)
+        assert lock_seen, 'PostgreSQL never observed staff blocked by the held admin transaction'
+        receipt['concurrentLockObservation'] = {
+            'staffWaitEventType': 'Lock', 'adminState': 'idle in transaction',
+            'adminPidInPgBlockingPids': True, 'beforeAdminCommit': True,
+            'elapsedSeconds': time.monotonic() - lock_started,
+        }
+        writer.stdin.write(b'commit;\n'); writer.stdin.close()
         assert writer.wait(timeout=10) == 0, writer.stderr.read()
+        assert staff.wait(timeout=10) == 0, staff.stderr.read()
         invariant(1)
         command(f"update profiles set is_on_duty=false where id='{STAFF}';",actor=ADMIN,role='authenticated')
         assert command('select count(*) from read_on_duty_staff();',actor=ADMIN,role='authenticated') == '1'

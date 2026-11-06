@@ -14,7 +14,13 @@
   "hostedWrites": 0,
   "syntheticAuth": true,
   "ownedCleanup": true,
-  "recordedAt": "2026-11-06T22:30:44.819478+00:00",
-  "scope": "Isolated PostgreSQL17 grants/RLS/transactions/row locking with synthetic auth.uid settings. Exercises the clock SQL core, not the later controlled-module compatibility extension or hosted Supabase Auth.",
-  "testedClockSqlSha256": "0cbb8076575dbeb36d1d0dee010ee3b643b083cadb7a0df7e674546df96dfcca"
+  "runnerSha256": "f5b566522d1a506979c2c12049c684e646f1126531fbbd1cab69ecec35a55277",
+  "sqlSha256": "0cbb8076575dbeb36d1d0dee010ee3b643b083cadb7a0df7e674546df96dfcca",
+  "concurrentLockObservation": {
+    "staffWaitEventType": "Lock",
+    "adminState": "idle in transaction",
+    "adminPidInPgBlockingPids": true,
+    "beforeAdminCommit": true,
+    "elapsedSeconds": 0.30570674990303814
+  }
 }
