@@ -2,7 +2,7 @@
   "projectRef": "kothoqicubowyhwfsrte",
   "startedAt": "2026-11-06T22:52:14.053785+00:00",
   "releaseManifestSha256": "4abbbe66e2c7fe6bef484ab7cffdc6167da4ab550e629bc0165166a28617466c",
-  "nativeProofReceipt": "docs/evidence/beta-retained209-native-ci-2026-11-06.json",
+  "nativeProofReceipt": "docs/evidence/beta-retained209-native-gates-2026-11-06.json",
   "nativeProofReceiptSha256": "5927e20da3edc57f3fc1ed022924662088bbdb19e49242729cfb00f8f6e60506",
   "schemaWritesAttempted": true,
   "prior204ReceiptsUnchanged": true,
@@ -1470,5 +1470,7 @@
   ],
   "finishedAt": "2026-11-06T22:55:14.363998+00:00",
   "full209InstallationPassed": false,
-  "currentCheckpointReceipt": "docs/evidence/beta-staging-migration-transport-2026-11-06.json"
+  "currentCheckpointReceipt": "docs/evidence/beta-staging-migration-transport-2026-11-06.json",
+  "nativeProofReceiptOriginalPath": "docs/evidence/beta-retained209-native-ci-2026-11-06.json",
+  "nativeProofReceiptOriginalRevision": "f969fca731d5c36cf0957ed02ef96645df3c7328"
 }
