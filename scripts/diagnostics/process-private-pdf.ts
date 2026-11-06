@@ -9,7 +9,7 @@ const config = z
   .object({
     url: z.string().url(),
     key: z.string().min(20),
-    job_id: z.string().uuid(),
+    job_id: z.string().guid(),
   })
   .strict()
   .parse({
