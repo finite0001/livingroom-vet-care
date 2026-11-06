@@ -20,6 +20,11 @@ test("current offline plan preserves ten exact requests and cannot inherit histo
     assert.equal(plan.provider_admission, false);
     assert.equal(plan.contract, "lrv-call-provider-offline-input-v1");
     assert.deepEqual(plan.source_sha256, binding.source_sha256);
+    const ciBinding = JSON.parse(readFileSync(new URL("./beta-ci-candidate-2026-11-06.json", import.meta.url), "utf8"));
+    assert.equal(ciBinding.contract, "lrv-call-beta-offline-ci-candidate-v1");
+    assert.equal(ciBinding.provider_admission, false);
+    assert.equal(ciBinding.bundle_sha256, binding.bundle_sha256);
+    assert.deepEqual(plan.transport_source_sha256, ciBinding.transport_source_sha256);
     assert.notEqual(plan.bundle_sha256, CALL_PROVIDER_BUNDLE_SHA256);
     await assert.rejects(planCallProviderBundle(bytes), /only the reviewed ten-case/);
     assert.equal(plan.cases.length, 10);

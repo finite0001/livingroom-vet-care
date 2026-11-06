@@ -13,6 +13,7 @@ from unittest.mock import patch
 SPEC = importlib.util.spec_from_file_location("call_synthetic_provider", Path(__file__).with_name("synthetic-provider.py"))
 runner = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(runner)
+HISTORICAL_PROVIDER_BUNDLE = runner.BUNDLE
 BUNDLE_PATH = runner.ROOT / "tmp/call-fidelity-final-v1/bundle.json"
 
 
@@ -48,14 +49,42 @@ class OfflineTransportTests(unittest.TestCase):
         if output.returncode:
             raise RuntimeError("Offline fictional bundle build failed")
         cls.bundle_path.write_bytes(output.stdout)
-        cls.frozen = runner.local_bundle_plan(cls.bundle_path)
+        # Production admission remains pinned to the historical reviewed bundle.
+        # Exercise current requests through the explicitly non-admitting offline
+        # planner, then inject only this test-loaded module's expected bundle ID.
+        offline = "import {readFileSync} from 'node:fs';import {planOfflineCallProviderBundle} from './tests/clinical-calls/synthetic-provider-plan.ts';process.stdout.write(JSON.stringify(await planOfflineCallProviderBundle(readFileSync(process.argv[1]))));"
+        planned = subprocess.run(["node", "--experimental-strip-types", "--input-type=module", "-e", offline, str(cls.bundle_path)], cwd=runner.ROOT, capture_output=True, timeout=60)
+        if planned.returncode:
+            cls.temporary.cleanup()
+            raise RuntimeError("Current non-admitting offline plan failed")
+        cls.frozen = json.loads(planned.stdout)
+        if cls.frozen["contract"] != "lrv-call-provider-offline-input-v1" or cls.frozen["provider_admission"] is not False:
+            cls.temporary.cleanup()
+            raise RuntimeError("Test fixture must not admit hosted provider execution")
+        ci_binding = json.loads(Path(__file__).with_name("beta-ci-candidate-2026-11-06.json").read_text())
+        if (ci_binding["contract"] != "lrv-call-beta-offline-ci-candidate-v1"
+                or ci_binding["provider_admission"] is not False
+                or ci_binding["bundle_sha256"] != cls.frozen["bundle_sha256"]
+                or ci_binding["transport_source_sha256"] != cls.frozen["transport_source_sha256"]):
+            cls.temporary.cleanup()
+            raise RuntimeError("Exact offline CI transport binding differs")
+        cls.bundle_binding = patch.object(runner, "BUNDLE", cls.frozen["bundle_sha256"])
+        cls.bundle_binding.start()
         cls.expiry_text = "2033-05-18T03:33:20Z"
         cls.expiry = runner.timestamp_ms(cls.expiry_text)
         cls.ticket = "a" * 20
 
     @classmethod
     def tearDownClass(cls):
+        cls.bundle_binding.stop()
         cls.temporary.cleanup()
+
+    def test_current_offline_fixture_cannot_pass_real_hosted_admission(self):
+        self.assertNotEqual(self.frozen["bundle_sha256"], HISTORICAL_PROVIDER_BUNDLE)
+        self.assertEqual(self.frozen["contract"], "lrv-call-provider-offline-input-v1")
+        self.assertIs(self.frozen["provider_admission"], False)
+        with self.assertRaisesRegex(ValueError, "offline_bundle_or_transport_source_validation_failed"):
+            runner.local_bundle_plan(self.bundle_path)
 
     def candidate(self, priced=False):
         with patch.object(runner, "local_bundle_plan", return_value=deepcopy(self.frozen)):
