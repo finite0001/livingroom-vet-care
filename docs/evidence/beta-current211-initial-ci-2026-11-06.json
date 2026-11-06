@@ -1,0 +1,381 @@
+{
+  "kind": "current211-initial-native-ci-evidence-v1",
+  "head_sha": "e709160ecf706bedc08e10e525c1a1f2fd542da2",
+  "run_id": 42312652067,
+  "run_url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067",
+  "attempt": 1,
+  "overall_acceptance": false,
+  "source_manifest_sha256": "7bd40565f64cfb8882f6ddaddfcfb268856f0210056acdfa23eb8d94ec94278f",
+  "jobs": [
+    {
+      "name": "source",
+      "databaseId": 128217605769,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128217605769",
+      "startedAt": "2026-11-06T23:33:08Z",
+      "completedAt": "2026-11-06T23:34:52Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (record_review_signing)",
+      "databaseId": 128218266538,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266538",
+      "startedAt": "2026-11-06T23:34:56Z",
+      "completedAt": "2026-11-06T23:37:41Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (browser_lost_finalize)",
+      "databaseId": 128218266554,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266554",
+      "startedAt": "2026-11-06T23:34:56Z",
+      "completedAt": "2026-11-06T23:37:55Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (native_return_v2_discrepancy)",
+      "databaseId": 128218266557,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266557",
+      "startedAt": "2026-11-06T23:34:57Z",
+      "completedAt": "2026-11-06T23:37:42Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (clinical)",
+      "databaseId": 128218266568,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266568",
+      "startedAt": "2026-11-06T23:34:56Z",
+      "completedAt": "2026-11-06T23:37:31Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (ordinary_none)",
+      "databaseId": 128218266571,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266571",
+      "startedAt": "2026-11-06T23:34:57Z",
+      "completedAt": "2026-11-06T23:37:38Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (operational-browser)",
+      "databaseId": 128218266576,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266576",
+      "startedAt": "2026-11-06T23:34:57Z",
+      "completedAt": "2026-11-06T23:41:10Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (scalars)",
+      "databaseId": 128218266590,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266590",
+      "startedAt": "2026-11-06T23:34:57Z",
+      "completedAt": "2026-11-06T23:37:27Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (independent_witness)",
+      "databaseId": 128218266615,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266615",
+      "startedAt": "2026-11-06T23:34:57Z",
+      "completedAt": "2026-11-06T23:37:37Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (native_return_v1)",
+      "databaseId": 128218266647,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266647",
+      "startedAt": "2026-11-06T23:34:56Z",
+      "completedAt": "2026-11-06T23:37:40Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (native_pickup_annotation)",
+      "databaseId": 128218266669,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266669",
+      "startedAt": "2026-11-06T23:34:56Z",
+      "completedAt": "2026-11-06T23:37:40Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (variance_reconciliation)",
+      "databaseId": 128218266678,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266678",
+      "startedAt": "2026-11-06T23:34:56Z",
+      "completedAt": "2026-11-06T23:37:35Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (current-tamper-rollback)",
+      "databaseId": 128218266703,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266703",
+      "startedAt": "2026-11-06T23:34:57Z",
+      "completedAt": "2026-11-06T23:37:35Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (populated-recovery)",
+      "databaseId": 128218266720,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266720",
+      "startedAt": "2026-11-06T23:34:56Z",
+      "completedAt": "2026-11-06T23:40:43Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (commission_all)",
+      "databaseId": 128218266766,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266766",
+      "startedAt": "2026-11-06T23:34:57Z",
+      "completedAt": "2026-11-06T23:37:45Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (count_agreement)",
+      "databaseId": 128218266772,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312652067/job/128218266772",
+      "startedAt": "2026-11-06T23:34:57Z",
+      "completedAt": "2026-11-06T23:37:38Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    }
+  ],
+  "operational_browser_pass": {
+    "actual_CSV_and_original_file_downloads_verified": true,
+    "actual_SDK_fourth_password_grant": true,
+    "all_ten_writers_verified": false,
+    "application_Auth_verified": true,
+    "authenticated_browser_verified": false,
+    "authenticated_operational_browser_verified": true,
+    "beta210_only_three_reviewed_controlled_property_changes": true,
+    "beta210_original_controlled_descriptor_unchanged": true,
+    "beta210_original_rows_and_sequences_preserved": true,
+    "beta211_controlled_properties_rows_and_sequences_preserved": true,
+    "beta_candidate_profile": "operational-browser",
+    "beta_candidate_source_sha256": "7bd40565f64cfb8882f6ddaddfcfb268856f0210056acdfa23eb8d94ec94278f",
+    "business_profile_verified": true,
+    "common269_source_properties": true,
+    "complete_independent_source_reference_properties": true,
+    "complete_source_derived208_ledger": true,
+    "complete_source_derived209_ledger": true,
+    "complete_source_derived210_ledger": true,
+    "complete_source_derived211_ledger": true,
+    "copied_migrations_rechecked": true,
+    "count_business_verified": true,
+    "elapsed_seconds": 305.26558938899996,
+    "failure_types": [],
+    "full121_source_module_properties": true,
+    "historical_ledger_rows_rewritten": false,
+    "hosted_client_contact_check_validated_before_installation": true,
+    "hosted_writes": 0,
+    "independent_record_review_signing_verified": false,
+    "kind": "narcotics-genuine-business-profile-v1",
+    "new_count_tables_empty_except_source_descriptor": true,
+    "normal_owned_cleanup": true,
+    "old_rows_preserved_exact_declared_additions_only": true,
+    "original204_rows_preserved_with_source_declared_appends": true,
+    "original_arm_and_form_acknowledgment_loss_recovered": true,
+    "original_parent_rows_verified": true,
+    "original_source_rows_preserved": true,
+    "passed": true,
+    "prefix_sources_rechecked": true,
+    "production_deployed": false,
+    "profile": "count_agreement",
+    "provider_requests": 0,
+    "scheduler_paused_before_first_project_SQL": true,
+    "source_only_audit_column_controls": {
+      "Auth_acceptance": false,
+      "cases": 7,
+      "domain_writes": 0
+    },
+    "source_rechecked": true,
+    "source_sequences_verified": true,
+    "validated_client_constraint_controls": {
+      "cases": 7,
+      "raw_client_check_still_validated": true,
+      "same_original_metadata": true
+    }
+  },
+  "business_failure": {
+    "result": {
+      "all_ten_writers_verified": false,
+      "application_Auth_verified": false,
+      "authenticated_browser_verified": false,
+      "beta_candidate_profile": "count_agreement",
+      "beta_candidate_source_sha256": "7bd40565f64cfb8882f6ddaddfcfb268856f0210056acdfa23eb8d94ec94278f",
+      "common269_source_properties": true,
+      "complete_independent_source_reference_properties": true,
+      "complete_source_derived208_ledger": true,
+      "copied_migrations_rechecked": true,
+      "count_business_verified": false,
+      "elapsed_seconds": 109.616834614,
+      "failure_types": [
+        "ValueError"
+      ],
+      "full121_source_module_properties": true,
+      "historical_ledger_rows_rewritten": false,
+      "hosted_client_contact_check_validated_before_installation": true,
+      "hosted_writes": 0,
+      "kind": "narcotics-genuine-business-profile-v1",
+      "new_count_tables_empty_except_source_descriptor": true,
+      "normal_owned_cleanup": true,
+      "old_rows_preserved_exact_declared_additions_only": true,
+      "original204_rows_preserved_with_source_declared_appends": true,
+      "passed": false,
+      "prefix_sources_rechecked": true,
+      "production_deployed": false,
+      "profile": "count_agreement",
+      "provider_requests": 0,
+      "scheduler_paused_before_first_project_SQL": true,
+      "source_only_audit_column_controls": {
+        "Auth_acceptance": false,
+        "cases": 7,
+        "domain_writes": 0
+      },
+      "source_rechecked": true,
+      "validated_client_constraint_controls": {
+        "cases": 7,
+        "raw_client_check_still_validated": true,
+        "same_original_metadata": true
+      }
+    },
+    "traceback": "Traceback (most recent call last):\n  File \"/home/runner/work/livingroom-vet-care/livingroom-vet-care/scripts/narcotics-log/install_rehearsal.py\", line 402, in execute_owned\n    runtime.execute()\n  File \"/home/runner/work/livingroom-vet-care/livingroom-vet-care/scripts/narcotics-log/business_rehearsal.py\", line 222, in execute\n    self.after_installation(runtime)\n  File \"/home/runner/work/livingroom-vet-care/livingroom-vet-care/scripts/narcotics-log/beta_rehearsal.py\", line 222, in after_installation\n    release.install(runtime)\n  File \"/home/runner/work/livingroom-vet-care/livingroom-vet-care/scripts/narcotics-log/operational_release.py\", line 137, in install\n    controls=runtime.selected_query('historical-policy-grammar-controls',prefix.regular(HERE/'policy-reuse-controls.sql').decode())\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/livingroom-vet-care/livingroom-vet-care/scripts/narcotics-log/business_rehearsal.py\", line 147, in selected_query\n    raw = self.raw_query(label, sql)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/livingroom-vet-care/livingroom-vet-care/scripts/narcotics-log/business_rehearsal.py\", line 139, in raw_query\n    raise ValueError(\"Original owner30 observation failed: \" + label)\nValueError: Original owner30 observation failed: historical-policy-grammar-controls\n",
+    "diagnosis": "Populated-only209 adapter invoked before genuine policy publication; exact208 installed,209 not reached"
+  },
+  "recovery_failure": {
+    "result": {
+      "all_ten_writers_verified": false,
+      "application_Auth_verified": true,
+      "authenticated_browser_verified": false,
+      "beta210_only_three_reviewed_controlled_property_changes": true,
+      "beta210_original_controlled_descriptor_unchanged": true,
+      "beta210_original_rows_and_sequences_preserved": true,
+      "beta211_controlled_properties_rows_and_sequences_preserved": true,
+      "beta_candidate_profile": "populated-recovery",
+      "beta_candidate_source_sha256": "7bd40565f64cfb8882f6ddaddfcfb268856f0210056acdfa23eb8d94ec94278f",
+      "business_profile_verified": true,
+      "common269_source_properties": true,
+      "complete_independent_source_reference_properties": true,
+      "complete_source_derived208_ledger": true,
+      "complete_source_derived209_ledger": true,
+      "complete_source_derived210_ledger": true,
+      "complete_source_derived211_ledger": true,
+      "copied_migrations_rechecked": true,
+      "count_business_verified": true,
+      "elapsed_seconds": 296.78435610199995,
+      "failure_types": [
+        "ValueError"
+      ],
+      "full121_source_module_properties": true,
+      "historical_ledger_rows_rewritten": false,
+      "hosted_client_contact_check_validated_before_installation": true,
+      "hosted_writes": 0,
+      "independent_record_review_signing_verified": false,
+      "kind": "narcotics-populated-receiver-rehearsal-v1",
+      "new_count_tables_empty_except_source_descriptor": true,
+      "normal_owned_cleanup": true,
+      "old_rows_preserved_exact_declared_additions_only": true,
+      "original204_rows_preserved_with_source_declared_appends": true,
+      "original_parent_rows_verified": true,
+      "passed": false,
+      "populated_receiver_verified": false,
+      "prefix_sources_rechecked": true,
+      "production_deployed": false,
+      "profile": "count_agreement",
+      "provider_requests": 0,
+      "scheduler_paused_before_first_project_SQL": true,
+      "source_only_audit_column_controls": {
+        "Auth_acceptance": false,
+        "cases": 7,
+        "domain_writes": 0
+      },
+      "source_rechecked": true,
+      "source_sequences_verified": true,
+      "validated_client_constraint_controls": {
+        "cases": 7,
+        "raw_client_check_still_validated": true,
+        "same_original_metadata": true
+      }
+    },
+    "traceback": "Traceback (most recent call last):\n  File \"/home/runner/work/livingroom-vet-care/livingroom-vet-care/scripts/narcotics-log/install_rehearsal.py\", line 402, in execute_owned\n    runtime.execute()\n  File \"/home/runner/work/livingroom-vet-care/livingroom-vet-care/scripts/narcotics-log/receiver_rehearsal.py\", line 216, in execute\n    lost = gateway.run(ctx, self.methods, source_runtime, self.evidence, source_runtime.selected_query, business.save)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/livingroom-vet-care/livingroom-vet-care/scripts/narcotics-log/workflows/full121_gateway.py\", line 52, in run\n    saved=reply(p,rpc('execute','execute_managed_stock_intent_v1',p),'saved',probe_request['legacy_arguments'])\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/livingroom-vet-care/livingroom-vet-care/scripts/narcotics-log/workflows/full121_gateway.py\", line 44, in rpc\n    runtime.remaining(1);r=http.rpc(name,{'p_request':q},a);save(folder,'gateway-'+label,r);steps.append(dict(label=label,rpc=name,actor_id=a['id'],session_id=a['session_id']));return r\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/livingroom-vet-care/livingroom-vet-care/scripts/narcotics-log/workflows/http_transport.py\", line 92, in rpc\n    raise ValueError('Unexpected fixed RPC status: '+name+' '+str(status))\nValueError: Unexpected fixed RPC status: execute_managed_stock_intent_v1 400\n",
+    "rpc": {
+      "error": {
+        "code": "P0001",
+        "details": "",
+        "hint": "",
+        "message": "stock_entry_request_failed"
+      },
+      "rpc": "execute_managed_stock_intent_v1",
+      "status": 400
+    },
+    "diagnosis": "Exact211 installed and preserved; post-backup managed execute fails with masked native exception; underlying cause not established"
+  },
+  "github_run_status": "completed",
+  "github_run_conclusion": "failure",
+  "github_run_created_at": "2026-11-06T23:33:03Z",
+  "github_run_updated_at": "2026-11-06T23:41:10Z",
+  "github_metadata_captured_at": "2026-11-06T23:49:16.579556+00:00",
+  "summary": {
+    "sourceJobsPassed": 1,
+    "runtimeProfilesPassed": 1,
+    "runtimeProfilesFailed": 14
+  },
+  "runtime_acceptance": false,
+  "readiness_admission": false
+}

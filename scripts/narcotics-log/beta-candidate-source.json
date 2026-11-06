@@ -2,8 +2,8 @@
   "database_operations": 0,
   "files": {
     ".github/workflows/beta-candidate.yml": {
-      "bytes": 4837,
-      "sha256": "75a0407ffa299589cf460625da4068686918588a6c90e0a2ebd235d94d04c9a9"
+      "bytes": 6649,
+      "sha256": "098bc4202320bb803ea52ea3dc801ba2c5effed54653de94d14fa01147f83511"
     },
     "index.html": {
       "bytes": 1771,
@@ -25,6 +25,10 @@
       "bytes": 771,
       "sha256": "90c236f9104f13a931251b3d2e1faf60325e63463f0a45c682a2e6cf370c4a61"
     },
+    "scripts/narcotics-log/beta-cold-release-source-proof.json": {
+      "bytes": 633,
+      "sha256": "05e2515399d74d9e1546474ae0f24ace9bbb143217e7248af86ca1e71c90f754"
+    },
     "scripts/narcotics-log/beta-migration210.json": {
       "bytes": 2869,
       "sha256": "9a8d0da7ef2747445548ef86d973a85534ccf38d343fbeb69e1b2770a28aefa7"
@@ -45,9 +49,21 @@
       "bytes": 4634,
       "sha256": "dd0d13bf7df041ac67a90e0a6d67d22359d2069254eda365b306ba7a9514948f"
     },
+    "scripts/narcotics-log/beta_cold_release.py": {
+      "bytes": 11535,
+      "sha256": "70f6486f61aeb46aacf8dc4e0bb642a9b97dbe7ec3c4d4c1fc264ed0615246b5"
+    },
+    "scripts/narcotics-log/beta_recovery_diagnostic.py": {
+      "bytes": 6619,
+      "sha256": "8eb2d1166e3a4ff8a2ba2fb410bb0fb28c0c4834283448a0feb3e77aca1b3512"
+    },
     "scripts/narcotics-log/beta_rehearsal.py": {
-      "bytes": 18747,
-      "sha256": "75a11782dfb6a52d2d4aeeb06b74ca57b8d83c27668af389a7c06563245d2918"
+      "bytes": 23767,
+      "sha256": "e5bbc3610b23837dded3002ec9473fc021886e10fd056416fcc6dd885f34258b"
+    },
+    "scripts/narcotics-log/beta_release_source.py": {
+      "bytes": 3520,
+      "sha256": "b894a552d7ef9b724e68d35e2f8b302d6ca9803ceba9b7e5e1e8031669e0a894"
     },
     "scripts/narcotics-log/beta_time_clock_source.py": {
       "bytes": 15373,
@@ -341,9 +357,17 @@
       "bytes": 6339,
       "sha256": "dce9bc4df128cde16770c78025d373dc64de62ce9c6520a3aeed978fb99b680d"
     },
+    "scripts/narcotics-log/test_beta_recovery_diagnostic.py": {
+      "bytes": 3535,
+      "sha256": "c95269e613003ab97e8de399298ca8b45bd6ea7b67a8d80b7ee879003001af72"
+    },
     "scripts/narcotics-log/test_beta_rehearsal.py": {
       "bytes": 3745,
       "sha256": "841f43caa4bb189e02e47ce304f7f6acd2cac225be3e2f020dbd8c85cde3404c"
+    },
+    "scripts/narcotics-log/test_beta_release.py": {
+      "bytes": 5216,
+      "sha256": "d37fdcecdca16e6344e0df30e6ad2956aab97b0e1c7e315ac2dd148e65ac62f0"
     },
     "scripts/narcotics-log/test_beta_source.py": {
       "bytes": 3219,

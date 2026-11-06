@@ -1,0 +1,11 @@
+{
+  "current_sha256": "70f6486f61aeb46aacf8dc4e0bb642a9b97dbe7ec3c4d4c1fc264ed0615246b5",
+  "database_operations": 0,
+  "exact_empty_policy_and_snapshot_precondition": true,
+  "genuine_policy_grammar_controls": "Executed unchanged after genuine policy profiles; retained populated paths still run before upgrade",
+  "kind": "current-beta-empty-count209-source-v1",
+  "original_CLI_ledger_metadata_rows_Auth_sequences_ingress_deadlines_cleanup_unchanged": true,
+  "original_populated_installer_unchanged": true,
+  "original_sha256": "09981a53cd25cda27136b704fc43e99765042fa6434862f2509bf312267ac23f",
+  "whole_source_inverse": true
+}

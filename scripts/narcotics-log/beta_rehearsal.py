@@ -27,6 +27,9 @@ import receiver_rehearsal
 import receiver_auth
 import beta_time_clock_source as clock_source
 import beta_browser_source
+import beta_release_source
+import beta_cold_release
+import beta_recovery_diagnostic
 
 installation = business.installation
 ROOT = installation.ROOT
@@ -79,6 +82,7 @@ def admit_source():
     # original SQL, parser and source construction contracts.
     release.pin_sources(pins)
     beta_browser_source.materialize()
+    beta_release_source.materialize()
     current_sql, current_proof = clock_source.build()
     if (current_sql != installation.prefix.regular(ROOT / "supabase/migrations" / installation.prefix.BETA_MIGRATION)
             or current_proof != installation.decode(installation.prefix.regular(HERE / "beta-time-clock-source-proof.json"))):
@@ -106,7 +110,50 @@ def current_modules():
     modules = business.modules()
     import beta_browser_runner
     modules.browser = beta_browser_runner
+    modules.rest = SimpleNamespace(**{**vars(modules.rest), "effective_defaults": current_rest_defaults})
     return modules
+
+
+def current_rest_defaults(runtime):
+    target = runtime.install
+    actual = getattr(target, "operational_ledger", None)
+    if actual is None:
+        if target.result.get("complete_source_derived209_ledger"):
+            raise ValueError("Verified operational ledger missing before REST validation")
+        return business.modules().rest.effective_defaults(runtime)
+    expected = release.expected_ledger(target.operational_prefix_ledger,
+        installation.decode(installation.prefix.regular(HERE / "operational-release.json")))
+    if len(actual) not in (209, 210, 211):
+        raise ValueError("Exact verified current source ledger required before REST validation")
+    for count, read_manifest in ((210, installation.prefix.beta210), (211, installation.prefix.beta211)):
+        if len(actual) >= count:
+            manifest = read_manifest(ROOT)
+            expected.append(dict(version=manifest["migration"][:14], name=manifest["migration"][15:-4],
+                **{key: manifest["framing"][key] for key in ("statement_count", "postgres_array_sha256", "postgres_array_bytes")}))
+    if actual != expected or any(not target.result.get("complete_source_derived" + str(count) + "_ledger")
+                                 for count in range(209, len(actual) + 1)):
+        raise ValueError("Exact verified current source ledger required before REST validation")
+    # This retains the original strict validator and its single exact source
+    # override. No arbitrary/extra hook or role configuration becomes allowed.
+    return business.modules().rest.effective_defaults(runtime, recovery=True)
+
+
+def current_policy_controls(runtime, profile):
+    if profile in ("count_agreement", "browser_lost_finalize", "variance_reconciliation"):
+        controls = runtime.selected_query("beta-genuine-policy-grammar-controls",
+            installation.prefix.regular(HERE / "policy-reuse-controls.sql").decode())
+        expected = dict(kind="historical-policy-grammar-controls-v1", cases=23,
+            original_and_context_results_exact=True, captured_capability_decisions_recomputed=True,
+            domain_writes=0, Auth_acceptance=False)
+        if controls != expected:
+            raise ValueError("All original23 policy grammar controls required after genuine policy publication")
+    else:
+        controls = runtime.selected_query("beta-no-policy-profile-control",
+            "SELECT jsonb_build_object('policies',(SELECT count(*)FROM controlled_count_v1.policies),'snapshots',(SELECT count(*)FROM controlled_count_v1.snapshots));")
+        if controls != dict(policies=0, snapshots=0):
+            raise ValueError("Profile without policy publication must retain empty count policy/snapshot state")
+    business.save(runtime.folder, "beta-genuine-policy-controls", controls)
+    runtime.install.result["genuine_policy_grammar_controls"] = 23 if "cases" in controls else 0
 
 
 def with_factories(function, factories):
@@ -219,11 +266,14 @@ class BetaBusiness(release.SourceLedger, CurrentBusiness, hosted.HostedHistoryIn
         if status["API_URL"] != "http://127.0.0.1:64661":
             raise ValueError("Exact owned loopback source required")
         self.source_context = {"public_anon_key": status["ANON_KEY"]}
-        release.install(runtime)
+        beta_cold_release.install(runtime)
         if self.current_tail:
             install210(runtime)
             install211(runtime)
         self.result["kind"] = "livingroom-beta" + ("211" if self.current_tail else "209") + "-genuine-business-profile-v1"
+
+    def after_business(self, context, methods, runtime, proof):
+        current_policy_controls(runtime, self.profile)
 
     cleanup = operational_browser.OperationalBrowser.cleanup
 
@@ -300,13 +350,39 @@ class BetaRecovery(receiver_rehearsal.PopulatedRecovery, CurrentBusiness, hosted
          "business": SimpleNamespace(**{**vars(business), "Runtime": BetaRuntime}), "Receiver": BetaReceiver})
 
 
+def install_diagnostic_release(runtime):
+    install_current_release(runtime)
+    beta_recovery_diagnostic.bind(runtime)
+    context = runtime.install.source_context
+    context["http"] = beta_recovery_diagnostic.TimedHttp(context["http"], runtime)
+
+
+class BetaRecoveryDiagnostic(BetaRecovery):
+    protocol = with_factories(receiver_rehearsal.PopulatedRecovery.execute,
+        {"operational_release": SimpleNamespace(install=install_diagnostic_release, verify_ledger=release.verify_ledger),
+         "business": SimpleNamespace(**{**vars(business), "Runtime": BetaRuntime}), "Receiver": BetaReceiver})
+
+    def execute(self):
+        try:
+            self.protocol()
+        except BaseException as error:
+            if beta_recovery_diagnostic.preserve_failure(self):
+                raise beta_recovery_diagnostic.DiagnosticComplete() from error
+            raise
+        finally:
+            self.result.update(engineering_only=True, current211_normal_acceptance=False,
+                application_Auth_verified=False, business_profile_verified=False, count_business_verified=False,
+                authenticated_browser_verified=False, populated_receiver_verified=False)
+        raise RuntimeError("Engineering tracing cannot grant normal current211 acceptance")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     modes = parser.add_mutually_exclusive_group(required=True)
     modes.add_argument("--capture-source", action="store_true")
     modes.add_argument("--check-source", action="store_true")
     modes.add_argument("--run-synthetic-local", action="store_true")
-    parser.add_argument("--profile", choices=(*PROFILES, "hosted-release209", "operational-browser", "populated-recovery", "current-tamper-rollback"))
+    parser.add_argument("--profile", choices=(*PROFILES, "hosted-release209", "operational-browser", "populated-recovery", "current-tamper-rollback", "recovery-diagnostic"))
     args = parser.parse_args()
     os.umask(0o077)
     if args.capture_source:
@@ -320,7 +396,8 @@ def main():
         return
     if args.profile is None:
         parser.error("--run-synthetic-local requires --profile")
-    factory = (BetaTamperRollback if args.profile == "current-tamper-rollback" else
+    factory = (BetaRecoveryDiagnostic if args.profile == "recovery-diagnostic" else
+               BetaTamperRollback if args.profile == "current-tamper-rollback" else
                BetaOperationalBrowser if args.profile == "operational-browser" else
                BetaRecovery if args.profile == "populated-recovery" else
                partial(BetaBusiness, profile="count_agreement", current_tail=False) if args.profile == "hosted-release209" else
@@ -332,7 +409,14 @@ def main():
         runtime.result.update(beta_candidate_source_sha256=source_hash, beta_candidate_profile=args.profile)
         return runtime
 
-    installation.execute_owned(layout, pins, started, bound_factory)
+    try:
+        installation.execute_owned(layout, pins, started, bound_factory)
+    except beta_recovery_diagnostic.DiagnosticComplete:
+        if args.profile != "recovery-diagnostic":
+            raise
+        # A cleanup/deadline/source ExceptionGroup is deliberately not caught.
+        # The persisted runner receipt remains passed=false, engineering_only.
+        print(json.dumps(dict(engineering_native_error_captured=True, normal_acceptance=False)))
 
 
 if __name__ == "__main__":
