@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-09-24",
-  "scope": "pre-phone-cloudtalk-commercial-readiness",
-  "targetProjectRef": "mgadheotkdnrsatfivjy",
+  "updatedAt": "2026-11-06",
+  "scope": "current-beta-workflows-with-explicit-provider-and-clinic-commissioning",
+  "targetProjectRef": "kothoqicubowyhwfsrte",
   "allowedDecisions": [
     "Pending",
     "Accept",
@@ -13,167 +13,307 @@
     {
       "id": "C-PILOT-01",
       "reviewArea": "SOAP/signing/addenda for housecall visits",
-      "reviewer": "Dr. Susan Edler",
+      "reviewer": "David Edler",
       "decision": "Pending",
       "evidence": [],
-      "requestedChange": "Link exact patient/example/revision."
+      "requestedChange": "Link exact patient/example/revision.",
+      "reviewedAt": null
     },
     {
       "id": "C-PILOT-02",
       "reviewArea": "Serious alerts and critical history display",
-      "reviewer": "Dr. Susan Edler",
+      "reviewer": "David Edler",
       "decision": "Pending",
       "evidence": [],
-      "requestedChange": "Confirm severity wording and correction path."
+      "requestedChange": "Confirm severity wording and correction path.",
+      "reviewedAt": null
     },
     {
       "id": "C-PILOT-03",
       "reviewArea": "Vaccine/treatment administration records",
-      "reviewer": "Dr. Susan Edler",
+      "reviewer": "David Edler",
       "decision": "Pending",
       "evidence": [],
-      "requestedChange": "Confirm required fields, correction policy, and source separation."
+      "requestedChange": "Confirm required fields, correction policy, and source separation.",
+      "reviewedAt": null
     },
     {
       "id": "C-PILOT-04",
       "reviewArea": "Preventive due/overdue/unknown/suppressed/completed states",
-      "reviewer": "Dr. Susan Edler",
+      "reviewer": "David Edler",
       "decision": "Pending",
       "evidence": [],
-      "requestedChange": "Confirm no unapproved interval is hardcoded."
+      "requestedChange": "Confirm no unapproved interval is hardcoded.",
+      "reviewedAt": null
     },
     {
       "id": "C-PILOT-05",
       "reviewArea": "General vaccine/rabies certificate templates",
-      "reviewer": "Dr. Susan Edler",
+      "reviewer": "David Edler",
       "decision": "Pending",
       "evidence": [],
-      "requestedChange": "Confirm exact wording, signature, issued snapshot, and reissue policy."
+      "requestedChange": "Confirm exact wording, signature, issued snapshot, and reissue policy.",
+      "reviewedAt": null
     },
     {
       "id": "C-PILOT-06",
       "reviewArea": "Record-release selection and client disclosure rules",
-      "reviewer": "Owner + Dr. Susan Edler",
+      "reviewer": "David Edler",
       "decision": "Pending",
       "evidence": [],
-      "requestedChange": "Confirm what can be sent, to whom, and with which attestation."
+      "requestedChange": "Confirm what can be sent, to whom, and with which attestation.",
+      "reviewedAt": null
     },
     {
       "id": "C-PILOT-07",
       "reviewArea": "Invoice/payment language and client-facing balance/status wording",
-      "reviewer": "Owner/operator",
+      "reviewer": "David Edler",
       "decision": "Pending",
       "evidence": [],
-      "requestedChange": "Confirm refunds, voids, credits, and sandbox-vs-live disclosure."
+      "requestedChange": "Confirm refunds, voids, credits, and sandbox-vs-live disclosure.",
+      "reviewedAt": null
     },
     {
       "id": "C-PILOT-08",
       "reviewArea": "Reminder wording and delivery-state labels",
-      "reviewer": "Owner/operator + Dr. Susan Edler",
+      "reviewer": "David Edler",
       "decision": "Pending",
       "evidence": [],
-      "requestedChange": "Confirm wording before provider commissioning, including email appointment reminders (subject + body) and when staff should turn on per-order lab reminders (docs/reminder-dispatch.md)."
+      "requestedChange": "Confirm wording before provider commissioning, including email appointment reminders (subject + body) and when staff should turn on per-order lab reminders (docs/reminder-dispatch.md).",
+      "reviewedAt": null
     },
     {
       "id": "C-VACCINE-01",
       "reviewArea": "Patient vaccine status summary (last given / next due / state per vaccine group)",
-      "reviewer": "Dr. Susan Edler",
+      "reviewer": "David Edler",
       "decision": "Pending",
       "evidence": [],
-      "requestedChange": "Confirm source precedence (current reviewed due plan over recorded next due date; proposed plans never supply a date), outside-record labelling, and the due-soon display window (built-in display default 30 days until set in Settings)."
+      "requestedChange": "Confirm source precedence (current reviewed due plan over recorded next due date; proposed plans never supply a date), outside-record labelling, and the due-soon display window (built-in display default 30 days until set in Settings).",
+      "reviewedAt": null
     },
     {
       "id": "C-VACCINE-02",
       "reviewArea": "Vaccine catalog metadata, due-date pre-fill, and rabies certificate serial number",
-      "reviewer": "Dr. Susan Edler",
+      "reviewer": "David Edler",
       "decision": "Pending",
       "evidence": [],
-      "requestedChange": "Enter or approve per-product group, species, labeled duration and default booster interval (none are seeded); confirm the explicit pre-fill button and the separate rabies serial-number field and its 'not recorded' wording."
+      "requestedChange": "Enter or approve per-product group, species, labeled duration and default booster interval (none are seeded); confirm the explicit pre-fill button and the separate rabies serial-number field and its 'not recorded' wording.",
+      "reviewedAt": null
     },
     {
       "id": "C-PILOT-09",
       "reviewArea": "HHHHHMM quality-of-life scale assessments, trend and optional reference line",
-      "reviewer": "Dr. Susan Edler",
+      "reviewer": "David Edler",
       "decision": "Pending",
       "evidence": [],
-      "requestedChange": "Confirm category wording/source citation, sign/addendum policy, and whether any reference total or wording may be displayed (none is configured by default)."
+      "requestedChange": "Confirm category wording/source citation, sign/addendum policy, and whether any reference total or wording may be displayed (none is configured by default).",
+      "reviewedAt": null
     },
     {
       "id": "C-PILOT-ANES-01",
       "reviewArea": "Anesthesia drugs charged from stock (lot debit + invoice line) and signed-record lock",
-      "reviewer": "Dr. Susan Edler",
+      "reviewer": "David Edler",
       "decision": "Pending",
       "evidence": [],
-      "requestedChange": "Confirm required fields and wording, the block-after-signing policy (Treatments + addendum), and correction path. No dose/drug defaults are supplied; DEA controlled-substance logs are out of scope."
+      "requestedChange": "Confirm required fields and wording, the block-after-signing policy (Treatments + addendum), and correction path. No dose/drug defaults are supplied; Controlled-stock acceptance is tracked separately in C-BETA-NARCOTICS.",
+      "reviewedAt": null
+    },
+    {
+      "id": "C-BETA-DENTAL",
+      "reviewArea": "Dental chart signing, amendment and released snapshots",
+      "reviewer": "David Edler",
+      "reviewedAt": null,
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Confirm tooth/surface findings, prior versions and correction history."
+    },
+    {
+      "id": "C-BETA-DIAGNOSTICS",
+      "reviewArea": "Manual laboratory, diagnostic PDF and imaging records",
+      "reviewer": "David Edler",
+      "reviewedAt": null,
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Review patient matching, originals, amended findings, private PDF and manual-vs-vendor availability."
+    },
+    {
+      "id": "C-BETA-PRESCRIBING",
+      "reviewArea": "Prescribing, refills, fulfillment and returns",
+      "reviewer": "David Edler",
+      "reviewedAt": null,
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Review authorizer roles, stock/charge linkage, frozen printed records and reversal history."
+    },
+    {
+      "id": "C-BETA-ASSISTANCE",
+      "reviewArea": "Dictation, clinical recaps, templates and call assistance",
+      "reviewer": "David Edler",
+      "reviewedAt": null,
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Review source attribution, recording permission, draft acceptance and private-role boundaries; actual device/provider acceptance is separate."
+    },
+    {
+      "id": "C-BETA-NARCOTICS",
+      "reviewArea": "Controlled-stock, independent review, count, register and recovery",
+      "reviewer": "David Edler",
+      "reviewedAt": null,
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Review synthetic engineering workflows. Physical opening stock, drug classifications and clinic operating procedures must not be inferred."
+    },
+    {
+      "id": "C-BETA-CARE-PLANS",
+      "reviewArea": "Next-visit planning and clinical handoff into scheduled care",
+      "reviewer": "David Edler",
+      "reviewedAt": null,
+      "decision": "Pending",
+      "evidence": [],
+      "requestedChange": "Review plan-to-booking linkage, warnings, completion and correction history."
     }
   ],
   "staffAcceptanceRun": {
     "operator": null,
     "dateTime": null,
     "frontendUrl": null,
-    "supabaseProject": "mgadheotkdnrsatfivjy",
+    "supabaseProject": "kothoqicubowyhwfsrte",
     "commitOrDeployment": null,
     "outboundMode": "Disabled/test-only",
     "knownExceptions": [
-      "Phone number and CloudTalk deferred"
+      "Live-provider activation is separate from mocked/disabled-mode engineering verification.",
+      "Physical opening stock and clinical commissioning require actual recorded practice inputs."
     ],
     "steps": [
       {
         "id": "S-PILOT-01",
         "workflow": "Staff account invite, password setup, sign-in, recovery, deactivation, and session loss",
         "decision": "Pending",
-        "evidence": []
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
       },
       {
         "id": "S-PILOT-02",
         "workflow": "Household, patient, housecall address, access notes, and cross-household denial",
         "decision": "Pending",
-        "evidence": []
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
       },
       {
         "id": "S-PILOT-03",
         "workflow": "Housecall scheduling through /hub/schedule with warnings and disabled/test reminders",
         "decision": "Pending",
-        "evidence": []
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
       },
       {
         "id": "S-PILOT-04",
         "workflow": "SOAP/care-chart draft, reopen, signing, addendum, stale-save, and navigation guard",
         "decision": "Pending",
-        "evidence": []
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
       },
       {
         "id": "S-PILOT-05",
         "workflow": "Synthetic stock, administration/dispense, invoice line, due-plan/certificate impact, and duplicate prevention",
         "decision": "Pending",
-        "evidence": []
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
       },
       {
         "id": "S-PILOT-06",
         "workflow": "Invoice, sandbox/test payment collection, webhook idempotency, refunds, credits, voids, and issued snapshots",
         "decision": "Pending",
-        "evidence": []
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
       },
       {
         "id": "S-PILOT-07",
         "workflow": "Certificate/document package and disabled/test delivery operations states",
         "decision": "Pending",
-        "evidence": []
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
       },
       {
         "id": "S-PILOT-08",
-        "workflow": "Synthetic Resend/Twilio callback and inbound STOP/START handling without CloudTalk/live phone dependency",
+        "workflow": "CloudTalk/AgentMail/Resend consent, inbound threading, attachments, delivery-state and STOP/resubscribe workflows; distinguish mocked from authorized recipient tests",
         "decision": "Pending",
-        "evidence": []
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
+      },
+      {
+        "id": "S-BETA-TASKS",
+        "workflow": "Operational task creation, source changes, reconciliation, completion and uncertain-response recovery",
+        "decision": "Pending",
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
+      },
+      {
+        "id": "S-BETA-PLANS",
+        "workflow": "Next-visit plan into scheduled appointment, resources and Denver time-zone handling",
+        "decision": "Pending",
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
+      },
+      {
+        "id": "S-BETA-TIME",
+        "workflow": "Own clock-in/out, administrator concurrent correction/deletion, failed-read handling, totals and export boundaries",
+        "decision": "Pending",
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
+      },
+      {
+        "id": "S-BETA-INTAKE",
+        "workflow": "Public request intake through New inquiries and correct household/patient handoff",
+        "decision": "Pending",
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
+      },
+      {
+        "id": "S-BETA-OPERATIONS",
+        "workflow": "Scheduler results, safe retries, care/invoice reminder suppression, backup/restore and alert ownership",
+        "decision": "Pending",
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
+      },
+      {
+        "id": "S-BETA-DEVICES",
+        "workflow": "Actual staff phone microphone, barcode scanner and private document download",
+        "decision": "Pending",
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
+      },
+      {
+        "id": "S-BETA-RELEASES",
+        "workflow": "Records requests, selected release sources, frozen preview, revoked/expired links and cross-patient denial",
+        "decision": "Pending",
+        "evidence": [],
+        "reviewer": "David Edler",
+        "reviewedAt": null
       }
-    ]
+    ],
+    "assignedReviewer": "David Edler"
   },
   "deferredFinalGates": [
-    "Public practice phone",
-    "Public emergency phone/instructions",
-    "CloudTalk",
-    "Live SMS number/A2P activation",
-    "Live voice/voicemail",
-    "Final owner go/no-go"
-  ]
+    "Live-provider activation and approved recipient round trips",
+    "Physical narcotics opening stock and clinic procedures",
+    "Actual-device acceptance",
+    "Final owner beta go/no-go"
+  ],
+  "assignedReviewer": "David Edler",
+  "reviewerAssignmentSource": "Owner instruction on 2026-11-06: I will sign off on those workflows."
 }

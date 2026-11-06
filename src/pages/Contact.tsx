@@ -611,9 +611,7 @@ const Contact = () => {
                       </p>
                     )}
                     <p className="text-sm text-muted-foreground mt-4">
-                      This form is not monitored for emergencies. For urgent
-                      care, contact an open veterinary emergency hospital
-                      directly.
+                      This form is not monitored for emergencies. {practice.emergencyInstructions}
                     </p>
                   </CardContent>
                 </Card>

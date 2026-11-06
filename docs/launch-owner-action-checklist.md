@@ -11,9 +11,9 @@ The request covers reference-lab ordering/results and imaging, with possible EKG
 ## Practice decisions
 
 - [ ] Confirm the beta scope and whether it uses synthetic staging records or approved real practice workflows.
-- [ ] Update the elapsed **Late October 2026** housecall target in `src/config/practice.ts`; both launch stages remain `planned`. Do not infer opening from the date.
-- [ ] Approve emergency contact/instructions. `emergencyPhone` remains null. Phone `(720) 764-6677` and `admin@thelivingroom.vet` are already configured; the old request to supply both is superseded.
-- [ ] Record Susan's clinical decisions and the staff rehearsal results in [the acceptance register](clinical-staff-acceptance-register.json). At this audit baseline all 12 clinical decisions and 8 staff steps are Pending, and run metadata is absent. The register's pre-CloudTalk scope also needs explicit expanded feature coverage, linked from the [beta feature map](beta-readiness-documentation-2026-11-06.md).
+- [x] Owner confirmed housecalls target **Late 2027** on November 6; implemented in source. Both stages remain planned. Publish with the reviewed candidate; do not infer opening from the date.
+- [x] Owner approved: “If you can’t reach us, contact your nearest local 24-hour emergency veterinary service.” Implemented as shared `emergencyInstructions`; a named hospital phone is not required for this approved guidance. Publish with the reviewed candidate.
+- [ ] Record David Edler’s clinical and staff beta review decisions and rehearsal results in [the acceptance register](clinical-staff-acceptance-register.json). The expanded current register contains 18 clinical and 15 staff rows, all Pending. Use the [current walkthrough](beta-acceptance-walkthrough-2026-11-06.md); reviewer assignment is not sign-off.
 - [ ] Approve any selected clinical note/audio/call processing policies, templates, recording/retention terms and actual device workflows before enabling processing. Captured audio or a generated draft does not constitute clinical sign-off.
 - [ ] For narcotics operation, supply approved staff assignments, drug classifications, independent physical opening counts and clinic procedures. Do not use synthetic acceptance quantities as opening stock.
 

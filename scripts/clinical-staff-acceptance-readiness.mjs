@@ -4,7 +4,8 @@ import { dirname, resolve } from 'node:path';
 
 const defaultRegisterPath = 'docs/clinical-staff-acceptance-register.json';
 const registerPath = getFlagValue('--register') ?? defaultRegisterPath;
-const targetProjectRef = 'mgadheotkdnrsatfivjy';
+const requestedProjectRef = getFlagValue('--project-ref');
+const allowedProjects = new Set(['mgadheotkdnrsatfivjy', 'kothoqicubowyhwfsrte']);
 const acceptableTerminalDecisions = new Set(['Accept', 'Not in pilot scope']);
 const allowedDecisions = new Set(['Pending', 'Accept', 'Accept after correction', 'Reject', 'Not in pilot scope']);
 
@@ -63,10 +64,11 @@ function itemRefs(items) {
 }
 
 function hasEvidence(item) {
-  return Array.isArray(item.evidence) && item.evidence.length > 0;
+  return Array.isArray(item.evidence) && item.evidence.some(value => typeof value === 'string' && value.trim().length > 0);
 }
 
 const register = readJson(registerPath);
+const targetProjectRef = requestedProjectRef ?? register.targetProjectRef;
 const clinical = Array.isArray(register.clinicalDecisions) ? register.clinicalDecisions : [];
 const staffRun = register.staffAcceptanceRun ?? {};
 const staffSteps = Array.isArray(staffRun.steps) ? staffRun.steps : [];
@@ -74,7 +76,7 @@ const staffSteps = Array.isArray(staffRun.steps) ? staffRun.steps : [];
 const registerBlockers = [];
 const registerWarnings = [];
 
-if (register.targetProjectRef !== targetProjectRef) {
+if (!allowedProjects.has(targetProjectRef) || register.targetProjectRef !== targetProjectRef) {
   registerBlockers.push(`Acceptance register target project is ${register.targetProjectRef ?? 'missing'}, expected ${targetProjectRef}.`);
 }
 
@@ -84,6 +86,17 @@ if (clinical.length === 0) {
 
 if (staffSteps.length === 0) {
   registerBlockers.push('Acceptance register has no staff workflow rows.');
+}
+
+// Alternate run files must retain the current checklist; omission is not approval.
+const checklist = readJson(defaultRegisterPath);
+for (const [required, actual, label] of [
+  [checklist.clinicalDecisions, clinical, 'Clinical'],
+  [checklist.staffAcceptanceRun.steps, staffSteps, 'Staff'],
+]) {
+  const actualIds = new Set(actual.map(item => item.id));
+  const missing = required.filter(item => !actualIds.has(item.id)).map(item => item.id);
+  if (missing.length) registerBlockers.push(`${label} acceptance rows missing: ${missing.join(', ')}.`);
 }
 
 const clinicalBuckets = decisionBuckets(clinical);
@@ -110,7 +123,7 @@ if (clinicalBuckets.rejected.length > 0) {
 
 const acceptedClinicalWithoutEvidence = clinicalBuckets.accepted.filter((item) => !hasEvidence(item));
 if (acceptedClinicalWithoutEvidence.length > 0) {
-  clinicalWarnings.push(`Accepted clinical decisions without linked evidence: ${itemRefs(acceptedClinicalWithoutEvidence).join(', ')}.`);
+  clinicalBlockers.push(`Accepted clinical decisions without linked evidence: ${itemRefs(acceptedClinicalWithoutEvidence).join(', ')}.`);
 }
 
 if (clinicalBuckets.notInPilotScope.length > 0) {
@@ -139,11 +152,6 @@ if (!/^disabled\/test-only$/i.test(staffRun.outboundMode ?? '')) {
   staffMetadataBlockers.push('Staff acceptance outbound mode must remain Disabled/test-only before provider commissioning.');
 }
 
-const knownExceptions = Array.isArray(staffRun.knownExceptions) ? staffRun.knownExceptions.join(' ') : '';
-if (!/phone/i.test(knownExceptions) || !/cloudtalk/i.test(knownExceptions)) {
-  staffMetadataWarnings.push('Known exceptions should explicitly preserve deferred phone and CloudTalk gates.');
-}
-
 const staffBuckets = decisionBuckets(staffSteps);
 const staffWorkflowBlockers = [];
 const staffWorkflowWarnings = [];
@@ -168,7 +176,7 @@ if (staffBuckets.rejected.length > 0) {
 
 const acceptedStaffWithoutEvidence = staffBuckets.accepted.filter((item) => !hasEvidence(item));
 if (acceptedStaffWithoutEvidence.length > 0) {
-  staffWorkflowWarnings.push(`Accepted staff workflow steps without linked evidence: ${itemRefs(acceptedStaffWithoutEvidence).join(', ')}.`);
+  staffWorkflowBlockers.push(`Accepted staff workflow steps without linked evidence: ${itemRefs(acceptedStaffWithoutEvidence).join(', ')}.`);
 }
 
 if (staffBuckets.notInPilotScope.length > 0) {
@@ -178,8 +186,19 @@ if (staffBuckets.notInPilotScope.length > 0) {
 const deferredFinalGates = Array.isArray(register.deferredFinalGates) ? register.deferredFinalGates : [];
 const deferredWarnings = [];
 
-if (!deferredFinalGates.some((gate) => /phone/i.test(gate)) || !deferredFinalGates.some((gate) => /cloudtalk/i.test(gate))) {
-  deferredWarnings.push('Deferred final gates should explicitly include phone and CloudTalk.');
+for (const [items, blockers, label] of [[clinical, clinicalBlockers, 'Clinical'], [staffSteps, staffWorkflowBlockers, 'Staff']]) {
+  const ids = new Set();
+  for (const item of items) {
+    if (!item.id || ids.has(item.id)) blockers.push(`${label} decision IDs must be present and unique.`);
+    ids.add(item.id);
+    if (acceptableTerminalDecisions.has(item.decision) &&
+        (!item.reviewer || !Number.isFinite(Date.parse(item.reviewedAt ?? '')))) {
+      blockers.push(`${label} decision ${item.id} needs its actual reviewer and review date.`);
+    }
+    if (item.decision === 'Not in pilot scope' && !hasEvidence(item)) {
+      blockers.push(`${label} exclusion ${item.id} needs a recorded scope decision.`);
+    }
+  }
 }
 
 const checks = [
@@ -225,7 +244,7 @@ const checks = [
       invalid: staffBuckets.invalid.length,
     },
   }),
-  check('deferred-final-gates', 'Deferred final phone and CloudTalk gates', statusFrom([], deferredWarnings), [], deferredWarnings, {
+  check('deferred-final-gates', 'Explicit remaining commissioning gates', statusFrom([], deferredWarnings), [], deferredWarnings, {
     deferredFinalGates,
   }),
 ];
@@ -237,7 +256,7 @@ const status = blockers.length > 0 ? 'blocked' : warnings.length > 0 ? 'warning'
 const report = {
   generatedAt: new Date().toISOString(),
   status,
-  scope: 'Clinical and staff acceptance readiness before phone number and CloudTalk commissioning.',
+  scope: register.scope,
   registerPath,
   targetProjectRef,
   checks,
