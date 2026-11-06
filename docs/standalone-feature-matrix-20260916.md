@@ -1,4 +1,6 @@
-# Standalone platform feature audit
+# Standalone platform feature audit — historical September 16 baseline
+
+This is the original gap inventory, retained to preserve requirements and evidence. Its “missing,” “unassessed,” deployment and next-step statements are dated findings, not the November beta status. Later work includes estimates/client decisions, CloudTalk, dictation, barcode scanning, daily tasks and narcotics workflows. Use the [current beta feature map](beta-readiness-documentation-2026-11-06.md) before planning work from this inventory; retain genuinely unassessed requirements until independently reviewed.
 
 Status: initial code-backed inventory, not a claim of complete feature parity or commercial acceptance. The owner requires an independent Living Room Vet ecosystem, ezyVet feature parity and Vet Connect Hub communications. See [the recorded direction](standalone-platform-direction-20260916.md). No ongoing ezyVet connection is required. Original clinical, housecall and communications requirements remain in scope.
 

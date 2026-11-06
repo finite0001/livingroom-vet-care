@@ -1,0 +1,160 @@
+{
+  "capturedAt": "2026-11-06T20:48:42.310Z",
+  "scope": "Read-only public routes; no form submission or authenticated session",
+  "evidence": [
+    {
+      "width": 390,
+      "route": "/",
+      "status": 200,
+      "finalUrl": "https://thelivingroom.vet/",
+      "title": "Housecall & Clinic Veterinary Care Coming to Boulder | The Living Room Vet",
+      "headings": [
+        "The Living Room Vet"
+      ],
+      "horizontalOverflow": false,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "route": "/contact",
+      "status": 200,
+      "finalUrl": "https://thelivingroom.vet/contact",
+      "title": "Contact Us | The Living Room Vet",
+      "headings": [
+        "We'd Love to Hear From You"
+      ],
+      "horizontalOverflow": true,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "route": "/hub/login",
+      "status": 200,
+      "finalUrl": "https://thelivingroom.vet/hub/login",
+      "title": "The Living Room Vet \u2014 Housecalls & Clinic Care in Boulder",
+      "headings": [
+        "The Living Room Vet"
+      ],
+      "horizontalOverflow": false,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "route": "/hub",
+      "status": 200,
+      "finalUrl": "https://thelivingroom.vet/hub/login",
+      "title": "The Living Room Vet \u2014 Housecalls & Clinic Care in Boulder",
+      "headings": [
+        "The Living Room Vet"
+      ],
+      "horizontalOverflow": false,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "/",
+      "status": 200,
+      "finalUrl": "https://thelivingroom.vet/",
+      "title": "Housecall & Clinic Veterinary Care Coming to Boulder | The Living Room Vet",
+      "headings": [
+        "The Living Room Vet"
+      ],
+      "horizontalOverflow": false,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "/contact",
+      "status": 200,
+      "finalUrl": "https://thelivingroom.vet/contact",
+      "title": "Contact Us | The Living Room Vet",
+      "headings": [
+        "We'd Love to Hear From You"
+      ],
+      "horizontalOverflow": false,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "/hub/login",
+      "status": 200,
+      "finalUrl": "https://thelivingroom.vet/hub/login",
+      "title": "The Living Room Vet \u2014 Housecalls & Clinic Care in Boulder",
+      "headings": [
+        "The Living Room Vet"
+      ],
+      "horizontalOverflow": false,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "/hub",
+      "status": 200,
+      "finalUrl": "https://thelivingroom.vet/hub/login",
+      "title": "The Living Room Vet \u2014 Housecalls & Clinic Care in Boulder",
+      "headings": [
+        "The Living Room Vet"
+      ],
+      "horizontalOverflow": false,
+      "errors": []
+    }
+  ],
+  "auditedBase": "b8767ff2e560f23d884194b5e9f875c0c647532a",
+  "productionDeployment": {
+    "githubDeploymentId": 7462012590,
+    "state": "success",
+    "sha": "b8767ff2e560f23d884194b5e9f875c0c647532a",
+    "createdAt": "2026-10-31T17:35:32Z",
+    "evidence": "GitHub deployments API read 2026-11-06; status metadata does not verify all deployed bytes"
+  },
+  "localContactAfterFix": [
+    {
+      "width": 320,
+      "initial": {
+        "width": 320,
+        "scrollWidth": 320
+      },
+      "scrolled": {
+        "width": 320,
+        "scrollWidth": 320
+      },
+      "pass": true
+    },
+    {
+      "width": 390,
+      "initial": {
+        "width": 390,
+        "scrollWidth": 390
+      },
+      "scrolled": {
+        "width": 390,
+        "scrollWidth": 390
+      },
+      "pass": true
+    },
+    {
+      "width": 768,
+      "initial": {
+        "width": 768,
+        "scrollWidth": 768
+      },
+      "scrolled": {
+        "width": 768,
+        "scrollWidth": 768
+      },
+      "pass": true
+    },
+    {
+      "width": 1440,
+      "initial": {
+        "width": 1440,
+        "scrollWidth": 1440
+      },
+      "scrolled": {
+        "width": 1440,
+        "scrollWidth": 1440
+      },
+      "pass": true
+    }
+  ]
+}

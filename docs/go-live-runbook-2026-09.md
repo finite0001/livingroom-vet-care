@@ -1,4 +1,6 @@
-# Go-live runbook — September 2026
+# Go-live runbook — September 2026 release archive
+
+**November 6 reconciliation:** this records the September ready-state train and its October 1 rollout, not the current release checklist. Use [deployment-runbook.md](deployment-runbook.md) and the [beta feature map](beta-readiness-documentation-2026-11-06.md) for a new release. Do not execute the old migration list or infer present deployment/secret state from unchecked boxes below. The repo now contains 209 migrations; narcotics 206–209 require the [specialized release sequence](controlled-drugs/narcotics-release-sequence-20261028.md). Phone and email are configured in `src/config/practice.ts`; only `emergencyPhone` remains null. The statements below about absent Vault secrets, no messages ever sent, 167 matching migrations, and undeployed functions describe old checkpoints and require fresh verification. In particular, `process-stripe-events` appears in the old C1 list despite W2 recording its later deployment.
 
 One owner checklist for everything between the app and a ready state. Steps are in order: each one depends on the steps above it. It covers the ready-state train (integration branch `integration/2026-09-28-ready`): CloudTalk outbound SMS, the CloudTalk unified inbox, vaccine status and catalog, the HHHHHMM quality-of-life scale, anesthesia drug billing, the reminder pipeline, and AgentMail inbound email (with Resend outbound only and the legacy `send-email`/`send-sms` functions retired).
 
@@ -82,19 +84,8 @@ These are the 15 pending migrations, applied in this order:
 
 If you hand-applied either hotfix (`20260928190000`, `20260930100000`) through the SQL editor, it has no ledger row, so the dry run will still list it. `20260930100000` is not re-runnable: first mark it with `npx supabase migration repair --status applied <version> --project-ref <ref>`, then repeat the dry run.
 
-```sh
-cd ~/Developer/livingroom-vet-care && git switch main && git pull --ff-only
-git rev-parse HEAD                      # must equal the merged SHA from §1
+> The September deployment command block has been retired. Its fixed 15-file expectation and 167-migration count no longer describe this repository. Use the current [deployment procedure](deployment-runbook.md); do not run a generic database push through the narcotics boundary.
 
-# Staging
-npx supabase db push --project-ref kothoqicubowyhwfsrte --skip-vault --dry-run
-#   expect a tail of the 15 files above, in order, and nothing else. Stop on any file not in the list.
-npx supabase db push --project-ref kothoqicubowyhwfsrte --skip-vault
-
-# Primary: only after the staging probes below pass
-npx supabase db push --project-ref mgadheotkdnrsatfivjy --skip-vault --dry-run
-npx supabase db push --project-ref mgadheotkdnrsatfivjy --skip-vault
-```
 
 Read-only probes to run after each push (SQL editor or `psql "$LRV_DB_URL"`):
 

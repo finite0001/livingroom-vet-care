@@ -1,0 +1,211 @@
+{
+  "capturedAt": "2026-11-06T20:46:28.290Z",
+  "method": "Read-only catalog and scheduler receipt projections via Supabase execute_sql; no secret values or business records read.",
+  "queryScope": "Public table RLS flags; public SECURITY DEFINER search_path presence; literal retryable SQLSTATE raises; cron names/schedules/active; aggregate scheduler outcomes in preceding 2 hours excluding newest 2 minutes.",
+  "limitations": [
+    "RLS enabled does not establish correctness of every policy.",
+    "HTTP 200 worker outcomes may represent disabled/no-op workers; this is transport evidence, not provider delivery acceptance.",
+    "Literal source scan does not prove every possible dynamic SQL error path."
+  ],
+  "projects": [
+    {
+      "projectRef": "mgadheotkdnrsatfivjy",
+      "metadata": {
+        "scheduler_jobs": [
+          {
+            "name": "dispatch-outbox",
+            "active": true,
+            "schedule": "* * * * *"
+          },
+          {
+            "name": "process-inbound",
+            "active": true,
+            "schedule": "* * * * *"
+          },
+          {
+            "name": "process-stripe-events",
+            "active": true,
+            "schedule": "* * * * *"
+          },
+          {
+            "name": "queue-reminders",
+            "active": true,
+            "schedule": "*/15 * * * *"
+          },
+          {
+            "name": "cleanup-abandoned-attachment",
+            "active": true,
+            "schedule": "*/30 * * * *"
+          },
+          {
+            "name": "scheduler-reconcile",
+            "active": true,
+            "schedule": "* * * * *"
+          },
+          {
+            "name": "purge-expired-email-payloads",
+            "active": true,
+            "schedule": "17 9 * * *"
+          },
+          {
+            "name": "reconcile-operational-tasks",
+            "active": false,
+            "schedule": "*/5 * * * *"
+          },
+          {
+            "name": "queue-invoice-reminders",
+            "active": false,
+            "schedule": "0 * * * *"
+          }
+        ],
+        "public_tables_without_rls": null,
+        "retryable_public_function_count": 0,
+        "public_security_definer_without_search_path": null
+      },
+      "schedulerOutcomes": [
+        {
+          "job": "cleanup-abandoned-attachment",
+          "outcome": "failed",
+          "status_code": 503,
+          "runs": 4,
+          "latest": "2026-11-06 20:30:00.068752+00"
+        },
+        {
+          "job": "dispatch-outbox",
+          "outcome": "ok",
+          "status_code": 200,
+          "runs": 118,
+          "latest": "2026-11-06 20:44:00.05689+00"
+        },
+        {
+          "job": "process-inbound",
+          "outcome": "ok",
+          "status_code": 200,
+          "runs": 118,
+          "latest": "2026-11-06 20:44:00.044386+00"
+        },
+        {
+          "job": "process-stripe-events",
+          "outcome": "ok",
+          "status_code": 200,
+          "runs": 118,
+          "latest": "2026-11-06 20:44:00.065474+00"
+        },
+        {
+          "job": "queue-reminders",
+          "outcome": "ok",
+          "status_code": 200,
+          "runs": 7,
+          "latest": "2026-11-06 20:30:00.095406+00"
+        }
+      ],
+      "cleanupResponseClassification": {
+        "method": "Read-only net._http_response projection limited to four known safe error strings; no arbitrary response content collected",
+        "observedResponses": 4,
+        "statusCode": 503,
+        "error": "Attachment cleanup is disabled",
+        "classification": "configured feature gate; not evidence of a worker outage"
+      }
+    },
+    {
+      "projectRef": "kothoqicubowyhwfsrte",
+      "metadata": {
+        "scheduler_jobs": [
+          {
+            "name": "dispatch-outbox",
+            "active": true,
+            "schedule": "* * * * *"
+          },
+          {
+            "name": "process-inbound",
+            "active": true,
+            "schedule": "* * * * *"
+          },
+          {
+            "name": "process-stripe-events",
+            "active": true,
+            "schedule": "* * * * *"
+          },
+          {
+            "name": "queue-reminders",
+            "active": true,
+            "schedule": "*/15 * * * *"
+          },
+          {
+            "name": "cleanup-abandoned-attachment",
+            "active": true,
+            "schedule": "*/30 * * * *"
+          },
+          {
+            "name": "scheduler-reconcile",
+            "active": true,
+            "schedule": "* * * * *"
+          },
+          {
+            "name": "purge-expired-email-payloads",
+            "active": true,
+            "schedule": "17 9 * * *"
+          },
+          {
+            "name": "reconcile-operational-tasks",
+            "active": false,
+            "schedule": "*/5 * * * *"
+          },
+          {
+            "name": "queue-invoice-reminders",
+            "active": false,
+            "schedule": "0 * * * *"
+          }
+        ],
+        "public_tables_without_rls": null,
+        "retryable_public_function_count": 0,
+        "public_security_definer_without_search_path": null
+      },
+      "schedulerOutcomes": [
+        {
+          "job": "cleanup-abandoned-attachment",
+          "outcome": "configuration_missing",
+          "status_code": null,
+          "runs": 1,
+          "latest": "2026-11-06 19:30:00.16297+00"
+        },
+        {
+          "job": "dispatch-outbox",
+          "outcome": "configuration_missing",
+          "status_code": null,
+          "runs": 2,
+          "latest": "2026-11-06 19:52:00.132752+00"
+        },
+        {
+          "job": "process-inbound",
+          "outcome": "configuration_missing",
+          "status_code": null,
+          "runs": 1,
+          "latest": "2026-11-06 19:46:00.099562+00"
+        },
+        {
+          "job": "process-stripe-events",
+          "outcome": "configuration_missing",
+          "status_code": null,
+          "runs": 2,
+          "latest": "2026-11-06 19:51:00.085066+00"
+        },
+        {
+          "job": "queue-reminders",
+          "outcome": "configuration_missing",
+          "status_code": null,
+          "runs": 1,
+          "latest": "2026-11-06 19:45:00.131172+00"
+        }
+      ],
+      "schedulerVaultNames": {
+        "method": "Read only name from vault.secrets filtered to project_url and scheduler_worker_key; secret values not selected",
+        "present": [],
+        "missing": [
+          "project_url",
+          "scheduler_worker_key"
+        ]
+      }
+    }
+  ]
+}

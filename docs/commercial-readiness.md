@@ -1,6 +1,12 @@
 # Commercial-readiness evidence tracker
 
-## September 25 correction
+## Beta audit entry point — November 6, 2026
+
+Use the [beta documentation and feature map](beta-readiness-documentation-2026-11-06.md) for current repository coverage and the [deployment runbook](deployment-runbook.md) for release order. All snapshots below retain their original date and scope; their “current,” “pending,” and gate-count statements are historical. In particular, the September 25 failures were followed by the [September 26 repair](launch-evidence/2026-09-26-hosted-repair-deployment.md) and [October 1 linkage rollout](launch-evidence/2026-10-01-linkage-audit-rollout.md). Those receipts do not establish November parity.
+
+The November 6 source baseline contains 209 migrations and 56 Edge entrypoints. The [October 30 narcotics receipt](controlled-drugs/narcotics-hosted-ledger-audit-columns-20261030.md) records a hosted stop after migration 205, with 206–209 unapplied in that attempt. The [November 6 hosted metadata](evidence/beta-hosted-metadata-2026-11-06.json) supersedes the old prefix: production lists all 209 versions and 56 active slugs; staging lists 204 versions and 55 slugs, missing 205–209 and `invite-staff`. This verifies metadata presence, not SQL/bundle equality or functional acceptance. The [November 6 runtime metadata](evidence/beta-backend-runtime-metadata-2026-11-06.json) also records missing staging scheduler configuration, production attachment-cleanup 503s explicitly reporting that cleanup is disabled and inactive task/invoice reminder jobs on both targets. Fresh deployed-source and workflow verification is still required. The clinical/staff register still has 12 clinical decisions and 8 staff steps marked Pending, with no completed staff-run metadata; new-feature acceptance must also be recorded separately. Do not carry forward the old 3/6 score as a present readiness result.
+
+## Historical September 25 correction
 
 The [independent commercial audit](launch-evidence/2026-09-25-independent-commercial-audit.md) supersedes the September 24 gate summary below. Commercial operation remains blocked: deployed messaging/contact functions do not match current callers, direct anonymous inquiry inserts bypass verified intake, production lacks two audited migrations, staging lacks 31, scheduler outcomes report missing configuration, and the latest audited CI failed. This repair branch adds a forward intake migration and tightens release reporting; those local changes are not hosted deployment or acceptance evidence. CloudTalk remains deferred.
 
@@ -8,13 +14,13 @@ The [independent commercial audit](launch-evidence/2026-09-25-independent-commer
 
 The owner and Dr. Edler no longer want ongoing ezyVet integration. After packaging the current local phase, the next step is native ezyVet feature parity plus Vet Connect Hub communications in an independent Living Room Vet platform. [The recorded direction](standalone-platform-direction-20260916.md) supersedes historical integration commissioning and migration-report launch gates below. Existing ezyVet access may inform a read-only feature/workflow audit; the current source setup remains unchanged. Clinical review, other provider commissioning and complete native hosted staff acceptance are still required.
 
-## Current native candidate — September 16, 2026
+## Historical native candidate — September 16, 2026
 
 PR147–149 have passing CI for physical returns and shared quantity replay. [Draft PR151](https://github.com/finite0001/livingroom-vet-care/pull/151) adds attributed return corrections, discrepancy decisions, lot holds and current print4/schema13 records. CI35086396244 passed lint, TypeScript,858 unit tests, production build, Edge checks,100 SQL suites/4078 assertions,83 reconciliation contention checks,461 actual native Auth/browser checks and84 populated restore checks. The385-case browser run included one retry success; its saved-history selector is corrected and both affected scenarios passed three fresh repetitions (6/6), with follow-up CI pending. [Draft evidence](evidence/native-return-reconciliation-draft-20260916.json) and [Dr. Edler review checklist](../plans/20260916-native-prescribing/reconciliation-review.md) distinguish these checks from hosted and clinical acceptance. This candidate has not been deployed.
 
 The [standalone feature matrix](standalone-feature-matrix-20260916.md) preserves outstanding native estimates, dispense-linked credits/refunds, communications, reporting and unassessed parity workflows. Completion of the medication phase does not establish complete practice-software parity.
 
-## Current hosted readiness snapshot — September 24, 2026
+## Historical hosted readiness snapshot — September 24, 2026
 
 The selected hosted backend remains `mgadheotkdnrsatfivjy`. After PR #204 merged, the remaining 25 migrations were applied to that project; the recorded hosted checkpoint had 148 matching migrations, 0 remote-only, and 0 local-only. The current local stack now reaches `20260924130000_inbound_sms_service_rpc_security.sql`; local verification includes focused Phase 2/3 pgTAP plus the no-live-send local drill. That is local proof, not hosted apply evidence. Stage 2 readiness evidence was refreshed before hosted apply, and the explicit linked dry run with `--skip-vault` would apply exactly `20260924120000_canonical_housecall_appointment_contract.sql` and `20260924130000_inbound_sms_service_rpc_security.sql`, with no seeds or roles. Hosted apply still requires explicit owner approval. The generated commercial-readiness summary now records 3/6 gates passing:
 

@@ -1,92 +1,79 @@
 # Living Room Vet deployment runbook
 
-## September 25 correction
+Current procedure reviewed against repository baseline `b8767ff2e560f23d884194b5e9f875c0c647532a` on November 6, 2026. This is a release procedure, not evidence that a release has passed. For feature coverage and outstanding acceptance, see the [beta documentation map](beta-readiness-documentation-2026-11-06.md).
 
-The [independent commercial audit](launch-evidence/2026-09-25-independent-commercial-audit.md) supersedes the September 24 readiness claims below. The deployed staff-message and public-contact endpoints return 410 despite ACTIVE inventory entries, the production contact form is disabled, direct anonymous inquiry insertion is open through column grants, scheduler workers are unconfigured or disabled, and audited CI failed. Use the [repair progress and release order](launch-evidence/2026-09-25-repair-progress.md) before any staging or production deployment. The older 3/6 gate summary is historical evidence.
+## Targets and prerequisites
 
-## Current rollout direction — September 24, 2026
+| Target | Identity | Use |
+| --- | --- | --- |
+| Production | Supabase `mgadheotkdnrsatfivjy`; Vercel `livingroom-vet-care`; `thelivingroom.vet` | Approved production release only |
+| Staging | Supabase `kothoqicubowyhwfsrte` | Candidate verification before production |
+| Legacy Lovable | `ugpyjacqganaqtsiekay` | Retained history; not a deployment target |
+| Local disposable | Explicitly owned local database and synthetic values | Tests, restore rehearsal and failure/recovery checks |
 
-This section supersedes the September 12 and September 16 commissioning snapshots below. Verify external state again before any production-affecting action; dated receipts are evidence, not permission to skip a fresh check.
+Use the npm lockfile and Node 22.12 or newer. Work from an isolated checkout of the exact release SHA; fetch before choosing it, then keep it pinned while verifying and deploying. Preserve ignored configuration and secrets. Staff/browser configuration contains only the public allowlisted values in [deployment-environment.md](deployment-environment.md). Provider and service credentials belong in the selected Supabase secret store.
 
-- **Primary application backend:** `livingroom-vet-care` / `mgadheotkdnrsatfivjy`, per the owner's approved rollout and `AGENTS.md`. Legacy `ugpyjacqganaqtsiekay` is retained as historical state and is not a target for new application writes.
-- **Hosted database state:** the post-PR #204 rollout checkpoint recorded 148 matching migrations, 0 remote-only migrations and 0 local-only migrations. The current local readiness stack has since added two unapplied hosted migrations, `20260924120000` and `20260924130000`. Use `npm run supabase:migration-drift --silent` before and after any schema operation.
-- **Public deployment:** Vercel Production is configured for `mgadheotkdnrsatfivjy`; `thelivingroom.vet`, `www.thelivingroom.vet` and `/hub` return HTTP/2 200 over HTTPS. See [public domain HTTPS smoke](launch-evidence/2026-09-24-public-domain-https-smoke.md).
-- **Readiness status:** the generated summary records 3/6 gates passing. Hub/frontend workflows, external services/deployment and verification/release control pass. Supabase/database is blocked by the two unapplied readiness migrations; clinical/staff acceptance is blocked by pending clinical decisions, staff run metadata and workflow decisions; public website launch is blocked by owner-approved public-contact content: `phone`, `email` and `emergencyPhone` in `src/config/practice.ts`.
-- **Provider gates:** outbound delivery stays disabled by default. Scheduler jobs exist, but DB Vault names `project_url` and `scheduler_worker_key` remain absent, so database cron cannot call scheduler workers until explicit scheduler/provider commissioning. CloudTalk and the public phone number remain deferred.
-- **Monitoring:** the `health` Edge Function is deployed with JWT disabled and smoke-tested over GET and HEAD. It proves only that the function and database answer; provider readiness and scheduler health remain staff/admin observations. See [health Edge smoke](launch-evidence/2026-09-24-health-edge-smoke.md).
+Agents prepare and verify reviewed PRs; Dave authorizes merging a specific PR. Source merge, database installation, Edge deployment, frontend publication and provider activation are separate events. Record each with its SHA, target, operator and UTC time.
 
-The September 16 attachment, staging and preview receipts below are historical implementation evidence. Do not use them as current instructions for the primary rollout unless a fresh audit proves they still describe the target state.
+## 1. Establish the actual target state
 
-## Historical commissioning snapshot
+Before planning writes, capture the current migration ledger, relevant schema/grants, deployed Edge source and JWT settings, frontend deployment SHA/backend, scheduler receipts and configuration presence. Inspect secret names or safe digests, never secret values. Compare both staging and production to the release candidate; an ACTIVE function listing alone does not prove matching behavior.
 
-The following September12 notes explain the original setup. Their environment states, counts, provider prerequisites and outstanding-work statements are historical and may be superseded by the current direction and later dated receipts above.
+The source baseline has 209 migrations and 56 Edge `index.ts` entrypoints. The [October 30 hosted receipt](controlled-drugs/narcotics-hosted-ledger-audit-columns-20261030.md) records original migration 205 installed, migration 206 rolled back, and 207–209 not run. The [November 6 hosted metadata](evidence/beta-hosted-metadata-2026-11-06.json) supersedes that prefix observation: production lists all 209 repository versions and 56 active function slugs; staging lists 204 versions and 55 slugs, missing migrations 205–209 and `invite-staff`. Matching version/slug/JWT metadata does not establish SQL/bundle equality or business-workflow success. Neither old counts nor a successful frontend deploy establishes full parity.
 
-## Confirmed environments (2026-09-12)
+The [November 6 runtime metadata](evidence/beta-backend-runtime-metadata-2026-11-06.json) found staging missing both scheduler Vault names, with settled workers reporting `configuration_missing`; production attachment cleanup had four HTTP 503 outcomes in the observed two-hour window, explicitly saying “Attachment cleanup is disabled.” This is an intentional feature gate, not evidence of an unexplained worker outage. Operational-task reconciliation and invoice-reminder cron jobs were inactive on both projects. Resolve or explicitly exclude the affected beta workflows, then verify fresh outcomes. Successful HTTP transport for other workers is not proof of completed business work.
 
-- Source: `finite0001/livingroom-vet-care`; foundation branch `codex/practice-foundation`.
-- Owned domain: `thelivingroom.vet`. Domain ownership is confirmed by the owner; the three Resend sending records are saved and verified. Website cutover, receiving mailboxes and Auth SMTP remain uncommissioned.
-- New dedicated Supabase project: `mgadheotkdnrsatfivjy` / `livingroom-vet-care`, US West, in the owner-approved Camp Sequoia Lake organization. Its data/auth/storage are isolated from the camp projects; organization billing and administrators are shared. Owner approved the quoted $10/month project cost.
-- Original Lovable backend as of the September 12 audit: `ugpyjacqganaqtsiekay`. The Supabase connector could not access it; the Lovable connector was subsequently verified to have SQL access (see commercial-readiness.md). Later readiness work moved the tracked local CLI target and Vercel Production browser environment to `mgadheotkdnrsatfivjy`.
-- Local validation stack: `/private/tmp/livingroom-vet-foundation`, database port 56322, API port 56321. Disposable synthetic data only; never use its development keys in cloud environments.
-- Vercel was available but not yet commissioned in this historical snapshot. Current Vercel/domain state is recorded in the September 24 rollout direction above.
+**Narcotics release boundary:** follow the [narcotics release sequence](controlled-drugs/narcotics-release-sequence-20261028.md) and reviewed hosted-source assembly. Do not substitute a generic `supabase db push` from the normal migration directory, rewrite migration receipts, or reinstall 205. The specialized 206/207 source and receipt checks are part of the release contract.
 
-The [clinical-core increment](clinical-core.md) originally brought the dedicated project to 16 migrations. [Hosted schema commissioning](hosted-schema-commissioning.md) subsequently applied the remaining 31 migrations through invoice email: 47 total, with 120 RLS-enabled public tables. Compatible Edge handlers, hosted staff acceptance and the frontend/backend switch remain separate rollout steps.
+For general inventory, the `supabase:migration-drift`, `supabase:functions-inventory`, `supabase:functions-review`, and `supabase:schema-inventory` package scripts document existing inspection paths. Inspect their selected target/output before execution. A generic migration dry run does not validate the specialized narcotics release directory.
 
-## Local verification
+## 2. Verify the candidate locally and in CI
 
-Use `npm ci`, then `npm run check`. Browser tests: `npx playwright install chromium`, then `npx playwright test`. Tests set synthetic environment values and mock network traffic; do not reuse a running dev server pointed at real data.
-
-The database test file is `supabase/tests/staff_access.test.sql`. Run it only on an isolated database after all migrations. It uses synthetic records inside a transaction and rolls them back. It checks staff gating, metadata role injection, last-admin protection, anonymous contact inserts and removal of TRUNCATE privileges. The migration `20260912193000_explicit_application_grants.sql` is required on fresh projects; RLS policies alone do not confer table access.
-
-## Vercel commissioning
-
-1. Import this GitHub repository into the selected Vercel team; use Vite preset, `npm ci --ignore-scripts`, `npm run build:deployment`, `dist`. Keep the checked-in build command; the guarded command runs Vite only after configuration checks pass.
-2. Configure `VITE_SUPABASE_PROJECT_ID`, `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` explicitly for each environment. The ignored local `.env` / `.env.local` files are not production configuration templates. Never add service-role/provider secrets to browser variables. See [deployment configuration checks](deployment-environment.md) for exact requirements and limitations.
-3. Use a separate staging backend for arbitrary previews, or the isolated local database. Do not point automatically generated previews at a populated production backend. Until a paid staging environment is approved, keep integration tests local and production sending disabled.
-4. Test direct entry to `/hub/login`, `/hub/reset-password`, and protected routes. Verify unknown routes render the application 404. Check assets resolve and sign-out/account switches clear cached client records.
-5. The custom domain is already attached for the selected Production deployment. Reconfigure DNS or aliases only after a fresh owner/domain review. A preview deployment alone is not commercial launch approval.
-
-## Supabase commissioning
-
-Public self-signup is disabled on the new project. Site URL is `https://thelivingroom.vet`; the exact allowed recovery redirect is `https://thelivingroom.vet/hub/reset-password`. Anonymous sign-in remains disabled and email confirmation remains enabled. No staff accounts have been created.
-
-Apply checked-in migrations in chronological order. Prefer authenticated CLI deployment when available; always specify and verify the target project. Run CLI database operations sequentially because concurrent temporary login-role initialization can invalidate another operation’s credentials. Use `--skip-vault` for schema-only commissioning. The MCP migration tool generates receipt timestamps, so this initial empty-project commissioning reconciles each receipt to the exact repository migration version/name after successful execution. Never replay a migration merely because its receipt timestamp differs: inspect history first. Record any reconciliation in the commissioning report.
-
-The September 24 Edge Function inventory records 35 hosted functions, including the current launch worker/webhook slugs and the public `health` probe. The three server workers use managed secret API-key authentication; staff endpoints retain JWT verification. `send-email` and `send-sms` are retired 410 endpoints directing callers to the reviewed queue workflow. `APP_URL=https://thelivingroom.vet`, `APP_ENV=staging`, and `OUTBOUND_DELIVERY_MODE=disabled` are the intended safe defaults unless a controlled test changes them deliberately. No provider credentials are required for disabled-mode readiness. Deploy only reviewed Edge Functions. `invite-staff` requires fixed `APP_URL` and active-admin authentication. Production Auth SMTP and real invitations are separate operational acceptance steps; configure them using [staff-access.md](staff-access.md). Keep client/provider delivery disabled by default using [messaging-environments.md](messaging-environments.md). Provider round-trips and actual staff workflows remain unverified.
-
-`send-provider-email` and `suggest-replies` were deleted from the repository on 2026-09-30 (no caller). If either is still deployed on a hosted project, delete it there; never redeploy it.
-
-## Before switching from the old backend
-
-Inventory existing clients, pets, documents, auth users, secrets, scheduled jobs and vendor callbacks through authorized access to the old project. Determine whether data is disposable or needs migration. Export privately, rehearse import, compare row counts/relationships and file checksums, plan password reset where required, and coordinate a writer/send-worker freeze. Update Lovable and Vercel together to the chosen destination only after verification. Never run two delivery workers during cutover.
-
-## Provider setup still required
-
-Follow the [mail commissioning proposal](mail-commissioning-plan.md): preserve verified sending DNS, establish private root-domain staff mailboxes, and commission isolated client receiving and Auth SMTP before publication. The website does not currently publish an unconfigured mailbox. Provision Twilio and SMS consent/opt-out, Stripe account/test keys, and authorized ezyVet API access in their respective services. Keep secrets out of chat and Git. ezyVet is confirmed as the requested API; no API credentials or live source records have been used.
-
-## Uptime monitoring
-
-The `health` Edge Function is a public liveness probe. Point a monitor at:
-
+```sh
+npm ci
+npm run check
+npx playwright install chromium
+npm run test:e2e
 ```
+
+`check` includes lint, application/config/renderer TypeScript, Node tests and a production build. The browser suite uses synthetic backend responses; it is not real hosted staff or provider acceptance. Check the Playwright server configuration and use a free port so an existing server cannot supply the wrong app.
+
+Read `.github/workflows/ci.yml` for the exact checks. At this baseline the database job is named **Historical 206 database regressions** and prepares an archived canonical-206 checkout. Its success does not prove migration 207–209 business workflows on the current candidate. Include the current narcotics installation, real-Auth, browser, contention and restore proof required by its release sequence. Edge typechecking and isolated dependency tests are separate from frontend TypeScript.
+
+Capture failures and unresolved skips; do not replace a failing workload with a diagnostic-only run and report it as acceptance. Use isolated synthetic databases for write tests. A hosted production audit should remain read-only unless a separately authorized rehearsal/release specifies the exact records and cleanup.
+
+## 3. Stage and verify backend changes
+
+Confirm backup/recovery access and rehearse the exact candidate installation before hosted writes. Apply reviewed migrations in dependency order on staging first. Preserve historical clinical data, private files, grants and original ledger receipts. Deploy only the matching changed Edge functions, with the `verify_jwt` settings from `supabase/config.toml` and the relevant worker authentication contract.
+
+Before advancing, exercise the candidate's authenticated staff calls, denial paths, stale/replayed requests, lost-response recovery, files and scheduler outcomes. Missing provider configuration must produce the intended unavailable/disabled state. Do not enable provider flags, clinical processing or narcotics opening stock as a side effect of installation.
+
+The [environment manifest](environment-manifest.md), [scheduler verification](scheduler.md), [service-worker authentication](service-worker-authentication.md) and each feature's rollout receipt describe separate prerequisites. Delete obsolete hosted functions only after confirming their retirement and absence of callers; do not redeploy deleted `send-email`, `send-sms`, `send-provider-email` or `suggest-replies` source from old snapshots.
+
+## 4. Release and verify the frontend
+
+Vercel uses `npm ci --ignore-scripts`, `npm run build:deployment` and `dist`. Production must select `mgadheotkdnrsatfivjy`; previews must use separately verified staging. Preserve the six reviewed public variables and the guarded build described in [deployment-environment.md](deployment-environment.md).
+
+Once the required backend is verified and the specific PR merge is authorized, verify the resulting Vercel deployment against that exact merged SHA. Test public pages, `/hub/login`, password recovery, protected-route denial, authenticated feature entry points, account switching and mobile layouts. Check schema-dependent panels and explicit unavailable states. A public HTTP 200 does not prove an authenticated workflow.
+
+Record frontend revision, database prefix, Edge source and configuration together. If a frontend regression requires rollback, select the previous compatible frontend deployment; preserve clinical history and migration receipts. Follow feature-specific recovery procedures for backend failures rather than deleting rows or reversing append-only clinical history.
+
+## 5. Beta and provider acceptance
+
+Use synthetic/local or explicitly bounded staging records for engineering beta scenarios. Record the tested role, environment, revision, feature flag, steps, expected result, actual result and recovery outcome. Complete the [clinical/staff register](clinical-staff-acceptance-register.json) with actual reviewer decisions; no automated check can supply them. The [beta feature map](beta-readiness-documentation-2026-11-06.md) extends coverage to newer features.
+
+CloudTalk is the selected SMS provider; Resend sends email, AgentMail receives client replies, and Fastmail remains staff mail. Ongoing ezyVet integration is not a standalone launch requirement. Antech/other automatic diagnostics, clinical AI/audio processing, Stripe live payments and narcotics clinic operation each require their own commissioning evidence. Preserve disabled/test gates until their explicit activation criteria are met.
+
+Before real practice use, resolve emergency-contact guidance and the elapsed housecall target, staff/clinical acceptance, current provider round trips, backup restoration and alert ownership. See the [owner action checklist](launch-owner-action-checklist.md).
+
+## Monitoring and evidence
+
+The `health` Edge Function is a public liveness probe:
+
+```text
 https://<project-ref>.supabase.co/functions/v1/health
 ```
 
-- **Healthy:** HTTP 200 with `{"status":"ok","checked_at":"…"}`.
-- **Not healthy:** HTTP 503 with `{"status":"unavailable","checked_at":"…"}`. The
-  body never says why - a public endpoint's error text is reconnaissance, and the
-  regression test enforces that it stays absent.
-- It answers `GET` and `HEAD` (monitors use both) and refuses anything else with
-  405. The response is `no-store`, so a monitor is never shown a cached answer
-  from a healthier minute.
+GET/HEAD return 200 with an `ok` status when the function can query the database, or 503 with an `unavailable` status; other methods return 405. It intentionally reveals no internal failure reason. Its 200 does not prove provider, scheduler or staff-workflow health. Review those in `/hub/admin/operations` and the [read-only scheduler check](scheduler.md#verify-read-only).
 
-**What a 200 proves:** the function is deployed and serving, and the database
-answered a query. **What it does not prove:** that providers are configured, that
-outbound delivery is enabled, or that the scheduler is running. Those are visible
-to administrators on `/hub/admin/operations`, which is where the practice's real
-operational state belongs.
-
-Deployed with `verify_jwt = false` on purpose: a monitor holds no credential. Do
-not add authentication to it, and do not make it report more than up or down.
-
-Suggested cadence: every minute, alerting after two consecutive failures.
+Store dated sanitized release receipts under `docs/launch-evidence/`. Preserve older receipts as history. The [September go-live archive](go-live-runbook-2026-09.md), [September 26 repair receipt](launch-evidence/2026-09-26-hosted-repair-deployment.md) and [October 1 linkage rollout](launch-evidence/2026-10-01-linkage-audit-rollout.md) explain prior releases; they are not fresh target-state observations.

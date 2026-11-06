@@ -1,31 +1,34 @@
 # Living Room Vet environment manifest
 
-Last updated: 2026-10-18 (call-generation release checkpoint; earlier observations retain their original dates).
+Last reconciled: 2026-11-06 against repository configuration. Live state must be verified for the selected release; dated observations below retain their original scope.
 
 This manifest records what each environment must own before commercial launch. It intentionally contains placeholders only; secrets belong in Vercel or Supabase secret stores, never in Git or chat.
 
-## Environment State
+## Environment targets
 
-| Environment | Current status | Browser backend | Server secrets | Outbound delivery |
-| --- | --- | --- | --- | --- |
-| Local disposable | Available for tests only | Local Supabase stack, e.g. `http://127.0.0.1:56321` | Local-only synthetic values | Disabled or mocked |
-| Original Lovable backend | Historical backend `ugpyjacqganaqtsiekay`; no longer the tracked local CLI target after the 2026-09-22 readiness wave | Historical browser target until frontend env cutover is deliberately performed | Unknown from repo | Do not enable during cutover work |
-| Dedicated Supabase staging candidate | Project `mgadheotkdnrsatfivjy` is the tracked local CLI target in `supabase/config.toml`; hosted migrations are at parity with 148 matching versions, and launch-readiness schema/function inventories pass | Vercel Production envs point at this backend; Lovable/browser alternates still require deliberate cutover | `APP_ENV=staging`, `OUTBOUND_DELIVERY_MODE=disabled` unless testing | Disabled by default |
-| Dedicated Supabase staging alternate | Project `kothoqicubowyhwfsrte` / `livingroom-vet-staging` is visible to the authenticated Supabase CLI and reports `ACTIVE_HEALTHY`; source of truth must be chosen before use | Must not be used accidentally beside `mgadheotkdnrsatfivjy` | Unknown from repo | Disabled unless deliberately commissioned |
-| Vercel production | Production deployment `dpl_EnvwqCoXkakCik1Sd6A7yyq6kxAY` is `READY`; project alias is `https://livingroom-vet-care.vercel.app`; `thelivingroom.vet` and `www.thelivingroom.vet` are attached, Vercel reports `configured_correctly`, and HTTPS smoke returns HTTP/2 200 | Dedicated Supabase project `mgadheotkdnrsatfivjy` via Production `VITE_SUPABASE_*` env vars | No service-role/provider secrets in Vercel browser env | Must not send to real recipients |
-| Public production cutover | Not complete | Chosen hosted backend after DNS/content/provider acceptance | Production Supabase secrets and provider credentials | Disabled until provider round trips and callbacks pass |
-
-## Public Browser Variables
-
-These are the only variables that belong in Vercel browser environments.
-
-| Variable | Required | Notes |
+| Environment | Backend / deployment identity | Boundary |
 | --- | --- | --- |
-| `VITE_SUPABASE_URL` | Yes | Authoritative browser API origin. Must point at the intended backend for that deployment. |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase publishable/anon key for the same project as `VITE_SUPABASE_URL`. |
-| `VITE_SUPABASE_PROJECT_ID` | Optional | Informational/tooling label only; do not use it to infer the active backend. |
+| Local disposable | Explicit local Supabase stack and synthetic browser settings | Tests only; disabled/mocked providers |
+| Production | Supabase `mgadheotkdnrsatfivjy`; Vercel `livingroom-vet-care`; `thelivingroom.vet` | Approved production target; verify current deployed SHA, ledger, Edge source and gates |
+| Staging | Supabase `kothoqicubowyhwfsrte` / `livingroom-vet-staging` | Separate candidate verification; not an alternate production source of truth |
+| Legacy Lovable | `ugpyjacqganaqtsiekay` | Retained historical data; not a new deployment target |
 
-The repository no longer tracks a real `.env` file. Keep local developer values in ignored `.env`/`.env.local` files and production/preview values in Vercel environment settings. `.env.example` is the only committed browser-environment template.
+The repo contains 209 migrations at the November 6 source baseline. The [October 30 receipt](controlled-drugs/narcotics-hosted-ledger-audit-columns-20261030.md) records a hosted prefix of 205 after 206 rolled back. The [November 6 hosted metadata](evidence/beta-hosted-metadata-2026-11-06.json) supersedes that prefix: production lists all 209 versions and 56 active function slugs; staging lists 204 versions and lacks the five controlled migrations plus `invite-staff` (55 slugs). Metadata presence does not verify deployed source equality. Use the [specialized narcotics release sequence](controlled-drugs/narcotics-release-sequence-20261028.md) from the actual target prefix. The [November 6 runtime metadata](evidence/beta-backend-runtime-metadata-2026-11-06.json) records missing staging scheduler Vault names, production cleanup 503s explicitly reporting that cleanup is disabled and inactive task/invoice reminder jobs on both targets; no provider or full-workflow success is inferred.
+
+## Public browser variables
+
+The guarded deployment build requires explicit environment-scoped values; see [deployment-environment.md](deployment-environment.md).
+
+| Variable | Requirement | Notes |
+| --- | --- | --- |
+| `VITE_SUPABASE_URL` | Required | Exact selected project HTTPS origin |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Required | Matching public publishable/anon key |
+| `VITE_SUPABASE_PROJECT_ID` | Required by deployment guard | Must agree with URL; production and preview targets are separated |
+| `VITE_CONTACT_INTAKE_URL` | Optional | Selected backend's `/functions/v1/public-contact`; absent means intake disabled |
+| `VITE_CONTACT_TURNSTILE_SITE_KEY` | Optional | Requires intake URL; absent site key with configured intake requires server `CONTACT_VERIFICATION=none` |
+| `VITE_CLOUDTALK_ENABLED` | Optional | Exactly `true` or `false` when set; controls phone surfaces, not provider authorization |
+
+No other public `VITE_` names are allowed by `scripts/deployment-environment.mjs`. Keep local `.env`/`.env.local` ignored; `.env.example` is the tracked template. Never expose provider/service credentials through public settings.
 
 ## Supabase Edge Function Secrets
 
@@ -83,18 +86,18 @@ Set these per Supabase project with the Supabase dashboard/CLI secret store.
 | Domain/DNS | `thelivingroom.vet` DNS controlled by owner; Vercel domain verification passes; HTTPS smoke returns HTTP/2 200 for apex, `www`, and `/hub`; old preview image/URLs absent from production metadata. |
 | Supabase Auth SMTP | Sender domain configured; invite and recovery tested on staging; signup disabled; redirect allowlist exact. |
 | Resend/email | Sending domain verified; reply mailbox receives replies; bounce/callback plan documented. |
-| Twilio/SMS | Number provisioned; SMS consent and STOP/START policy accepted; inbound and status webhooks verified. |
+| CloudTalk/SMS | Selected practice number, consent and STOP/resubscribe behavior, inbound threading and provider status verified. Twilio remains retained but unselected code. |
 | Stripe | Account, sandbox keys, webhook signing secret, refund/tax/manual payment policy and reconciliation flow. |
-| ezyVet/lab/anesthesia | Authorized account/API access, source-of-truth decision, non-destructive samples and clinician/vendor acceptance. |
+| Automatic lab/imaging/anesthesia integration | Vendor contract/access, authorized test samples and clinician/vendor acceptance for the selected integration. Native manual records do not prove vendor automation. Ongoing ezyVet integration is not a standalone launch gate. |
 | Backups/restore | Restore rehearsal proves database rows, Auth mapping, RLS, audit history and private document bytes. |
 
-## Launch Cutover Rules
+## Release and activation rules
 
 - Choose exactly one active browser backend before Vercel/domain cutover.
 - Freeze old writers and delivery workers before migration or DNS switch.
 - Never run old and new delivery workers against the same recipients.
 - Keep previews pointed at staging or disposable data, never production.
-- Enable production outbound delivery only after `dispatch-outbound-deliveries` is deployed/scheduled with `OUTBOUND_DISPATCHER_TOKEN`, provider credentials and webhook secrets are installed, provider callback and inbound handlers are registered, replay/idempotency checks pass, STOP/START behavior is accepted, and settlement through `record_outbound_delivery_result(...)` / `record_outbound_delivery_callback(...)` plus inbound recording through `record_inbound_sms(...)` are accepted.
+- Verify the active outbox path (`enqueue-message` → `communication_outbox` → `dispatch-outbox`), its scheduler worker authentication, provider credentials, signed callbacks, inbound processing, replay/recovery and STOP/resubscribe behavior before activating live delivery. The older `dispatch-outbound-deliveries` path has a separate token and is not a substitute for proving the active queue. See [scheduler.md](scheduler.md) and [communications-outbox.md](communications-outbox.md).
 - Record the exact operator, timestamp, target project IDs, migration receipts and rollback path in `docs/launch-evidence/`.
 
 ## Read-Only Probe Evidence

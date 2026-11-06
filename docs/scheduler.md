@@ -14,7 +14,7 @@ The database scheduler (migration `20260922120000_b1_scheduler.sql`, design in `
 
 Each call posts `{}` with a 30 s `pg_net` timeout (`20260930130000`; it was 5 s). The queue workers (`dispatch-outbox`, `process-inbound`, `process-stripe-events`, `cleanup-abandoned-attachment`) each process a bounded batch per call: they claim until the queue is empty, 25 items, or a 20 s budget, and stop early at the first failed or uncertain item, so a provider or configuration fault still fails at most one item per call. Their response body is a count summary (`items`, per-state counts, `stopped`, `elapsed_ms`); reconcile records only the HTTP status.
 
-Until both Vault secrets exist, every HTTP job records `configuration_missing` (at most once an hour per job) and calls nothing. That is the current hosted state.
+Until both Vault secrets exist, every HTTP job records `configuration_missing` (at most once an hour per job) and calls nothing. This describes the missing-configuration behavior, not a current hosted observation. Use the read-only verification below to inspect the selected project before creating or rotating any secret. The table documents the original scheduler jobs; later feature migrations add diagnostic PDF, operational-task and invoice-reminder work. Check the live job inventory against the exact candidate migrations.
 
 ## What the two secrets are
 

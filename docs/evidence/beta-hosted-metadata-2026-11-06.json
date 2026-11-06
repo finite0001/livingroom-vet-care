@@ -1,0 +1,2456 @@
+{
+  "capturedAt": "2026-11-06T20:44:03.694Z",
+  "sourceCommit": "b8767ff2e560f23d884194b5e9f875c0c647532a",
+  "method": "Supabase connected tools: list_migrations and list_edge_functions; read-only metadata, no business records or secret values",
+  "limitations": [
+    "Migration version presence does not verify stored migration SQL equality or full schema equivalence.",
+    "Function names, ACTIVE status and JWT settings do not verify deployed bundle equality or provider operation."
+  ],
+  "projects": [
+    {
+      "environment": "production",
+      "projectRef": "mgadheotkdnrsatfivjy",
+      "migrations": [
+        {
+          "version": "20260308184039",
+          "name": "cbd27973-fb79-4b1b-9fe4-3036b0fc4640"
+        },
+        {
+          "version": "20260308194312",
+          "name": "688620cd-8ef1-4782-bb44-a5b6b5355eac"
+        },
+        {
+          "version": "20260308215204",
+          "name": "ca5349ea-d2b2-4f7b-bd73-c46c19dfadb6"
+        },
+        {
+          "version": "20260308231655",
+          "name": "aa98042d-5e6d-4530-8cc2-b66f9581b35d"
+        },
+        {
+          "version": "20260309034659",
+          "name": "7490047a-6052-4ad6-9f68-9a16b0851759"
+        },
+        {
+          "version": "20260309045202",
+          "name": "7de7ae36-24fd-46b2-9fe5-ddd9e38ff237"
+        },
+        {
+          "version": "20260309045831",
+          "name": "031a7a42-a506-4c29-bce7-e20869ded224"
+        },
+        {
+          "version": "20260613183224",
+          "name": "9575f409-8565-4e33-ab7a-1a004e11a670"
+        },
+        {
+          "version": "20260613184005",
+          "name": "cbe9bfe4-734b-4f1e-ac8e-854a19ad7864"
+        },
+        {
+          "version": "20260613195035",
+          "name": "768d08b4-e93d-4eb6-8f21-ca48b39d895f"
+        },
+        {
+          "version": "20260613223600",
+          "name": "0b5db918-2014-43cf-aaf0-08cdccbc4d96"
+        },
+        {
+          "version": "20260613225133",
+          "name": "e28d9447-249a-4821-9614-c088efb2f9b8"
+        },
+        {
+          "version": "20260614151553",
+          "name": "376b87c5-04a7-4f77-8386-321af04d2cfe"
+        },
+        {
+          "version": "20260614171114",
+          "name": "5b96273b-12b6-48bc-8ff1-d89edc292f62"
+        },
+        {
+          "version": "20260912193000",
+          "name": "explicit_application_grants"
+        },
+        {
+          "version": "20260912210000",
+          "name": "clinical_core"
+        },
+        {
+          "version": "20260912220000",
+          "name": "patient_documents"
+        },
+        {
+          "version": "20260912230000",
+          "name": "scheduling"
+        },
+        {
+          "version": "20260913000000",
+          "name": "inventory_billing"
+        },
+        {
+          "version": "20260913010000",
+          "name": "ezyvet_import"
+        },
+        {
+          "version": "20260913020000",
+          "name": "communications_outbox"
+        },
+        {
+          "version": "20260913030000",
+          "name": "inventory_read_models"
+        },
+        {
+          "version": "20260913040000",
+          "name": "ezyvet_review_import"
+        },
+        {
+          "version": "20260913050000",
+          "name": "inbound_delivery"
+        },
+        {
+          "version": "20260913060000",
+          "name": "care_charts"
+        },
+        {
+          "version": "20260913070000",
+          "name": "dental_chart"
+        },
+        {
+          "version": "20260913080000",
+          "name": "vaccine_certificates"
+        },
+        {
+          "version": "20260913095000",
+          "name": "inbox_workspace"
+        },
+        {
+          "version": "20260913095500",
+          "name": "sms_consent_workspace"
+        },
+        {
+          "version": "20260913100000",
+          "name": "lab_work"
+        },
+        {
+          "version": "20260913110000",
+          "name": "anesthesia_records"
+        },
+        {
+          "version": "20260913120000",
+          "name": "message_recovery"
+        },
+        {
+          "version": "20260913130000",
+          "name": "record_releases"
+        },
+        {
+          "version": "20260913140000",
+          "name": "care_reminders"
+        },
+        {
+          "version": "20260913150000",
+          "name": "invoice_documents"
+        },
+        {
+          "version": "20260913160000",
+          "name": "record_release_charts"
+        },
+        {
+          "version": "20260913170000",
+          "name": "website_inquiries"
+        },
+        {
+          "version": "20260913180000",
+          "name": "reminder_outbox"
+        },
+        {
+          "version": "20260913190000",
+          "name": "certificate_due_plans"
+        },
+        {
+          "version": "20260913200000",
+          "name": "record_release_history"
+        },
+        {
+          "version": "20260913210000",
+          "name": "public_intake"
+        },
+        {
+          "version": "20260913220000",
+          "name": "release_email_delivery"
+        },
+        {
+          "version": "20260913230000",
+          "name": "reviewed_weight_import"
+        },
+        {
+          "version": "20260913240000",
+          "name": "disable_reminder_policy"
+        },
+        {
+          "version": "20260913250000",
+          "name": "release_weight_provenance"
+        },
+        {
+          "version": "20260913260000",
+          "name": "treatment_alert_review"
+        },
+        {
+          "version": "20260913270000",
+          "name": "invoice_email"
+        },
+        {
+          "version": "20260913280000",
+          "name": "document_links"
+        },
+        {
+          "version": "20260913290000",
+          "name": "document_link_sms"
+        },
+        {
+          "version": "20260913300000",
+          "name": "payment_ledger"
+        },
+        {
+          "version": "20260913310000",
+          "name": "stripe_event_inbox"
+        },
+        {
+          "version": "20260913320000",
+          "name": "document_link_history"
+        },
+        {
+          "version": "20260913330000",
+          "name": "payment_reconciliation_observations"
+        },
+        {
+          "version": "20260913340000",
+          "name": "payment_collection_access"
+        },
+        {
+          "version": "20260913350000",
+          "name": "payment_reconciliation_resolution"
+        },
+        {
+          "version": "20260913360000",
+          "name": "payment_capability_persistence"
+        },
+        {
+          "version": "20260913370000",
+          "name": "payment_link_delivery"
+        },
+        {
+          "version": "20260913380000",
+          "name": "payment_reconciliation_discovery"
+        },
+        {
+          "version": "20260913390000",
+          "name": "payment_delivery_history"
+        },
+        {
+          "version": "20260913400000",
+          "name": "stripe_event_retry_cycles"
+        },
+        {
+          "version": "20260913410000",
+          "name": "lab_result_provenance"
+        },
+        {
+          "version": "20260913420000",
+          "name": "external_record_provenance"
+        },
+        {
+          "version": "20260913430000",
+          "name": "inbound_processing_recovery"
+        },
+        {
+          "version": "20260913440000",
+          "name": "operations_visibility"
+        },
+        {
+          "version": "20260913450000",
+          "name": "outbox_retry_recovery"
+        },
+        {
+          "version": "20260913460000",
+          "name": "explicit_staff_rpc_grants"
+        },
+        {
+          "version": "20260913470000",
+          "name": "release_source_provenance"
+        },
+        {
+          "version": "20260913480000",
+          "name": "release_source_byte_binding"
+        },
+        {
+          "version": "20260913490000",
+          "name": "ezyvet_clinical_runs"
+        },
+        {
+          "version": "20260913500000",
+          "name": "reviewed_imported_history"
+        },
+        {
+          "version": "20260913510000",
+          "name": "release_imported_history"
+        },
+        {
+          "version": "20260913520000",
+          "name": "consult_scoped_vaccination_import"
+        },
+        {
+          "version": "20260913530000",
+          "name": "reviewed_imported_vaccinations"
+        },
+        {
+          "version": "20260913540000",
+          "name": "record_release_vaccination_history"
+        },
+        {
+          "version": "20260913550000",
+          "name": "patient_scoped_prescription_import"
+        },
+        {
+          "version": "20260913560000",
+          "name": "parent_scoped_prescription_items"
+        },
+        {
+          "version": "20260913570000",
+          "name": "prescription_reference_reconciliation"
+        },
+        {
+          "version": "20260913580000",
+          "name": "prescription_source_review_context"
+        },
+        {
+          "version": "20260913590000",
+          "name": "prescription_review_preparation"
+        },
+        {
+          "version": "20260913600000",
+          "name": "prescription_interpretation_context"
+        },
+        {
+          "version": "20260913610000",
+          "name": "reviewed_imported_prescriptions"
+        },
+        {
+          "version": "20260913620000",
+          "name": "prescription_review_discovery"
+        },
+        {
+          "version": "20260913630000",
+          "name": "record_release_prescription_history"
+        },
+        {
+          "version": "20260913650000",
+          "name": "prescription_release_reference_hardening"
+        },
+        {
+          "version": "20260913690000",
+          "name": "attachment_metadata_runs"
+        },
+        {
+          "version": "20260913700000",
+          "name": "attachment_original_capture"
+        },
+        {
+          "version": "20260913900000",
+          "name": "payment_immutable_search_path"
+        },
+        {
+          "version": "20260914010000",
+          "name": "reviewed_canonical_api_originals"
+        },
+        {
+          "version": "20260914020000",
+          "name": "canonical_api_approval_cancellation"
+        },
+        {
+          "version": "20260914030000",
+          "name": "canonical_api_review_history"
+        },
+        {
+          "version": "20260914040000",
+          "name": "canonical_api_patient_chart"
+        },
+        {
+          "version": "20260914050000",
+          "name": "canonical_reviewed_original_context"
+        },
+        {
+          "version": "20260914060000",
+          "name": "canonical_release_attachment_validation"
+        },
+        {
+          "version": "20260914070000",
+          "name": "canonical_api_release_preview"
+        },
+        {
+          "version": "20260914080000",
+          "name": "canonical_release_original_verification"
+        },
+        {
+          "version": "20260914090000",
+          "name": "canonical_api_release_confirmation"
+        },
+        {
+          "version": "20260914100000",
+          "name": "canonical_api_release_discovery"
+        },
+        {
+          "version": "20260914110000",
+          "name": "document_link_retrieval_wait_authorization"
+        },
+        {
+          "version": "20260914120000",
+          "name": "explicit_public_creation_privileges"
+        },
+        {
+          "version": "20260914130000",
+          "name": "ezyvet_migration_manifests"
+        },
+        {
+          "version": "20260914140000",
+          "name": "ezyvet_migration_bindings"
+        },
+        {
+          "version": "20260914150000",
+          "name": "ezyvet_migration_progress"
+        },
+        {
+          "version": "20260914160000",
+          "name": "ezyvet_migration_attempt_events"
+        },
+        {
+          "version": "20260914170000",
+          "name": "ezyvet_claim_wait_authorization"
+        },
+        {
+          "version": "20260914180000",
+          "name": "ezyvet_stage_failure_wait_authorization"
+        },
+        {
+          "version": "20260914190000",
+          "name": "ezyvet_migration_items"
+        },
+        {
+          "version": "20260914200000",
+          "name": "ezyvet_migration_capture_evidence"
+        },
+        {
+          "version": "20260914210000",
+          "name": "ezyvet_migration_history_evidence"
+        },
+        {
+          "version": "20260914220000",
+          "name": "ezyvet_migration_vaccination_evidence"
+        },
+        {
+          "version": "20260914230000",
+          "name": "ezyvet_migration_prescription_evidence"
+        },
+        {
+          "version": "20260916000000",
+          "name": "ezyvet_migration_prescription_item_evidence"
+        },
+        {
+          "version": "20260916010000",
+          "name": "ezyvet_migration_identity_evidence"
+        },
+        {
+          "version": "20260916020000",
+          "name": "ezyvet_migration_weight_evidence"
+        },
+        {
+          "version": "20260916033310",
+          "name": "ezyvet_migration_weight_evidence"
+        },
+        {
+          "version": "20260916043949",
+          "name": "ezyvet_migration_resolutions"
+        },
+        {
+          "version": "20260916055043",
+          "name": "native_prescriptions_lifecycle"
+        },
+        {
+          "version": "20260916062136",
+          "name": "native_prescription_authorization_events"
+        },
+        {
+          "version": "20260916063857",
+          "name": "native_refill_operational_intake"
+        },
+        {
+          "version": "20260916070108",
+          "name": "inventory_product_before_lot_locking"
+        },
+        {
+          "version": "20260916072509",
+          "name": "native_fulfillment"
+        },
+        {
+          "version": "20260916080105",
+          "name": "native_record_releases"
+        },
+        {
+          "version": "20260916083056",
+          "name": "native_dispense_corrections"
+        },
+        {
+          "version": "20260916090000",
+          "name": "native_dispense_returns"
+        },
+        {
+          "version": "20260916093000",
+          "name": "native_return_quantity_replay"
+        },
+        {
+          "version": "20260916094500",
+          "name": "native_return_reconciliation"
+        },
+        {
+          "version": "20260916100000",
+          "name": "native_return_reconciliation_releases"
+        },
+        {
+          "version": "20260916100001",
+          "name": "conversation_attachment_uploads"
+        },
+        {
+          "version": "20260916110000",
+          "name": "native_dispense_finance"
+        },
+        {
+          "version": "20260916110001",
+          "name": "conversation_email_preparation"
+        },
+        {
+          "version": "20260916120000",
+          "name": "inbound_attachment_capture"
+        },
+        {
+          "version": "20260916120716",
+          "name": "native_estimate_drafts"
+        },
+        {
+          "version": "20260916123017",
+          "name": "native_estimate_publications"
+        },
+        {
+          "version": "20260916130000",
+          "name": "abandoned_attachment_cleanup"
+        },
+        {
+          "version": "20260916144117",
+          "name": "native_estimate_decisions"
+        },
+        {
+          "version": "20260919120000",
+          "name": "new_auth_users_inactive"
+        },
+        {
+          "version": "20260921120000",
+          "name": "a5_on_duty_guard"
+        },
+        {
+          "version": "20260921130000",
+          "name": "a4_consent_submission_columns"
+        },
+        {
+          "version": "20260922120000",
+          "name": "b1_scheduler"
+        },
+        {
+          "version": "20260922170000",
+          "name": "outbound_deliveries"
+        },
+        {
+          "version": "20260922183000",
+          "name": "contact_submission_triage"
+        },
+        {
+          "version": "20260922190000",
+          "name": "appointment_reminder_outbound_deliveries"
+        },
+        {
+          "version": "20260922203000",
+          "name": "appointment_write_safety"
+        },
+        {
+          "version": "20260922210000",
+          "name": "outbound_delivery_worker_results"
+        },
+        {
+          "version": "20260922213000",
+          "name": "outbound_delivery_callbacks"
+        },
+        {
+          "version": "20260922220000",
+          "name": "inbound_sms_processing"
+        },
+        {
+          "version": "20260922223000",
+          "name": "staff_outbound_message_queue"
+        },
+        {
+          "version": "20260922224500",
+          "name": "outbound_delivery_staff_controls"
+        },
+        {
+          "version": "20260922230000",
+          "name": "contact_submission_abuse_controls"
+        },
+        {
+          "version": "20260924120000",
+          "name": "canonical_housecall_appointment_contract"
+        },
+        {
+          "version": "20260924130000",
+          "name": "inbound_sms_service_rpc_security"
+        },
+        {
+          "version": "20260926031324",
+          "name": "restore_verified_contact_intake_boundary"
+        },
+        {
+          "version": "20260926090000",
+          "name": "cloudtalk_activity"
+        },
+        {
+          "version": "20260927120000",
+          "name": "contact_sms_consent"
+        },
+        {
+          "version": "20260928100000",
+          "name": "cloudtalk_outbound_sms"
+        },
+        {
+          "version": "20260928110000",
+          "name": "cloudtalk_unified_inbox"
+        },
+        {
+          "version": "20260928120000",
+          "name": "vaccine_catalog_profiles_and_status"
+        },
+        {
+          "version": "20260928121000",
+          "name": "rabies_certificate_serial_number"
+        },
+        {
+          "version": "20260928130000",
+          "name": "qol_hhhhhmm_scale"
+        },
+        {
+          "version": "20260928140000",
+          "name": "anesthesia_drug_administrations"
+        },
+        {
+          "version": "20260928150000",
+          "name": "reminder_pipeline_readiness"
+        },
+        {
+          "version": "20260928160000",
+          "name": "cloudtalk_capability_redaction"
+        },
+        {
+          "version": "20260928170000",
+          "name": "patient_360_read_model"
+        },
+        {
+          "version": "20260928180000",
+          "name": "agentmail_inbound"
+        },
+        {
+          "version": "20260928190000",
+          "name": "no_retryable_sqlstate_for_permanent_conditions"
+        },
+        {
+          "version": "20260930100000",
+          "name": "sms_resubscribe_after_stop"
+        },
+        {
+          "version": "20260930120000",
+          "name": "linkage_integrity"
+        },
+        {
+          "version": "20260930130000",
+          "name": "scheduler_timeout_and_payload_purge"
+        },
+        {
+          "version": "20261009011500",
+          "name": "client_contact_integrity"
+        },
+        {
+          "version": "20261009160543",
+          "name": "patient_identity_photos"
+        },
+        {
+          "version": "20261010021254",
+          "name": "whogot_and_performed_services"
+        },
+        {
+          "version": "20261010034500",
+          "name": "daily_communications"
+        },
+        {
+          "version": "20261010170259",
+          "name": "care_plan_recurrence"
+        },
+        {
+          "version": "20261011025251",
+          "name": "records_requests_and_packages"
+        },
+        {
+          "version": "20261011181722",
+          "name": "manual_diagnostic_panels"
+        },
+        {
+          "version": "20261011203250",
+          "name": "diagnostic_pdf_jobs"
+        },
+        {
+          "version": "20261012035948",
+          "name": "diagnostic_pdf_artifact_processing"
+        },
+        {
+          "version": "20261012153518",
+          "name": "diagnostic_pdf_staff_review"
+        },
+        {
+          "version": "20261012210016",
+          "name": "diagnostic_pdf_release_scope"
+        },
+        {
+          "version": "20261013003556",
+          "name": "diagnostic_pdf_record_packages"
+        },
+        {
+          "version": "20261013181721",
+          "name": "appointment_catalog_and_bindings"
+        },
+        {
+          "version": "20261013214300",
+          "name": "catalog_patient_eligibility_lock"
+        },
+        {
+          "version": "20261013220500",
+          "name": "next_visit_outcomes"
+        },
+        {
+          "version": "20261013233839",
+          "name": "next_visit_staff_recovery"
+        },
+        {
+          "version": "20261014022511",
+          "name": "operational_tasks"
+        },
+        {
+          "version": "20261014154223",
+          "name": "operational_task_reconciliation"
+        },
+        {
+          "version": "20261014202235",
+          "name": "supplier_product_identity"
+        },
+        {
+          "version": "20261015011200",
+          "name": "controlled_draft_configuration"
+        },
+        {
+          "version": "20261015020722",
+          "name": "stock_writer_provenance"
+        },
+        {
+          "version": "20261015055007",
+          "name": "native_custody_provenance"
+        },
+        {
+          "version": "20261015235157",
+          "name": "unpaid_invoice_reminders"
+        },
+        {
+          "version": "20261016004714",
+          "name": "invoice_reminder_care_gate_order"
+        },
+        {
+          "version": "20261016020711",
+          "name": "invoice_reminder_practice_settings"
+        },
+        {
+          "version": "20261016040402",
+          "name": "clinical_dictation_review"
+        },
+        {
+          "version": "20261016143618",
+          "name": "clinical_audio_soap"
+        },
+        {
+          "version": "20261016162448",
+          "name": "clinical_audio_veterinary_context"
+        },
+        {
+          "version": "20261016200826",
+          "name": "appointment_dictation"
+        },
+        {
+          "version": "20261016215048",
+          "name": "patient_imaging_studies"
+        },
+        {
+          "version": "20261016224741",
+          "name": "clinical_note_templates"
+        },
+        {
+          "version": "20261017015543",
+          "name": "clinical_record_recap"
+        },
+        {
+          "version": "20261017042009",
+          "name": "clinical_recap_prompt_v2"
+        },
+        {
+          "version": "20261017042642",
+          "name": "clinical_call_sources"
+        },
+        {
+          "version": "20261017135245",
+          "name": "clinical_call_note_sources"
+        },
+        {
+          "version": "20261018032610",
+          "name": "clinical_call_note_generation"
+        },
+        {
+          "version": "20261018150000",
+          "name": "clinical_call_quote_anchors"
+        },
+        {
+          "version": "20261020151157",
+          "name": "controlled_stock_private_engine"
+        },
+        {
+          "version": "20261022010000",
+          "name": "controlled_secondary_review_private"
+        },
+        {
+          "version": "20261027223535",
+          "name": "controlled_record_review_workflows"
+        },
+        {
+          "version": "20261027223544",
+          "name": "narcotics_count_and_stock_workflows"
+        },
+        {
+          "version": "20261028170038",
+          "name": "narcotics_register_exports_and_recovery"
+        }
+      ],
+      "functions": [
+        {
+          "name": "invite-staff",
+          "status": "ACTIVE",
+          "version": 25,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-15T02:12:54.583Z"
+        },
+        {
+          "name": "ezyvet-import",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-02T04:22:20.483Z"
+        },
+        {
+          "name": "enqueue-message",
+          "status": "ACTIVE",
+          "version": 27,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-28T03:58:32.523Z"
+        },
+        {
+          "name": "dispatch-outbox",
+          "status": "ACTIVE",
+          "version": 31,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-13T17:32:27.623Z"
+        },
+        {
+          "name": "process-inbound",
+          "status": "ACTIVE",
+          "version": 28,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-02T04:22:20.483Z"
+        },
+        {
+          "name": "queue-reminders",
+          "status": "ACTIVE",
+          "version": 26,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-26T05:55:49.120Z"
+        },
+        {
+          "name": "prepare-release-email",
+          "status": "ACTIVE",
+          "version": 27,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-13T17:32:27.623Z"
+        },
+        {
+          "name": "prepare-invoice-email",
+          "status": "ACTIVE",
+          "version": 26,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-13T17:32:27.623Z"
+        },
+        {
+          "name": "resend-webhook",
+          "status": "ACTIVE",
+          "version": 26,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-28T03:58:29.391Z"
+        },
+        {
+          "name": "twilio-webhook",
+          "status": "ACTIVE",
+          "version": 26,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-02T04:22:20.483Z"
+        },
+        {
+          "name": "public-contact",
+          "status": "ACTIVE",
+          "version": 27,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-27T19:59:18.542Z"
+        },
+        {
+          "name": "invoice-checkout",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-14T20:47:05.793Z"
+        },
+        {
+          "name": "invoice-refund",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-14T20:47:05.793Z"
+        },
+        {
+          "name": "stripe-webhook",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-14T20:47:05.793Z"
+        },
+        {
+          "name": "process-stripe-events",
+          "status": "ACTIVE",
+          "version": 25,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-14T20:47:05.793Z"
+        },
+        {
+          "name": "payment-collection",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-14T20:47:05.793Z"
+        },
+        {
+          "name": "payment-status",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-14T20:47:05.793Z"
+        },
+        {
+          "name": "capture-ezyvet-attachment",
+          "status": "ACTIVE",
+          "version": 19,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-15T02:12:54.583Z"
+        },
+        {
+          "name": "prepare-document-link",
+          "status": "ACTIVE",
+          "version": 23,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-13T17:32:27.623Z"
+        },
+        {
+          "name": "prepare-external-record",
+          "status": "ACTIVE",
+          "version": 20,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-02T04:22:20.483Z"
+        },
+        {
+          "name": "prepare-lab-report",
+          "status": "ACTIVE",
+          "version": 20,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-02T04:22:20.483Z"
+        },
+        {
+          "name": "prepare-payment-collection",
+          "status": "ACTIVE",
+          "version": 21,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-14T20:47:05.793Z"
+        },
+        {
+          "name": "prepare-payment-delivery",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-14T20:47:05.793Z"
+        },
+        {
+          "name": "recover-document-link",
+          "status": "ACTIVE",
+          "version": 23,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-13T17:32:27.623Z"
+        },
+        {
+          "name": "recover-payment-collection",
+          "status": "ACTIVE",
+          "version": 21,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-14T20:47:05.793Z"
+        },
+        {
+          "name": "retrieve-document-link",
+          "status": "ACTIVE",
+          "version": 23,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-13T17:32:27.623Z"
+        },
+        {
+          "name": "retrieve-reviewed-ezyvet-original",
+          "status": "ACTIVE",
+          "version": 19,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-15T02:12:54.583Z"
+        },
+        {
+          "name": "verify-payment-reconciliation",
+          "status": "ACTIVE",
+          "version": 21,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-14T20:47:05.793Z"
+        },
+        {
+          "name": "dispatch-outbound-deliveries",
+          "status": "ACTIVE",
+          "version": 22,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-28T21:25:57.236Z"
+        },
+        {
+          "name": "resend-delivery-webhook",
+          "status": "ACTIVE",
+          "version": 22,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-29T01:52:55.146Z"
+        },
+        {
+          "name": "twilio-message-status-callback",
+          "status": "ACTIVE",
+          "version": 22,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-02T04:22:20.483Z"
+        },
+        {
+          "name": "twilio-inbound-sms",
+          "status": "ACTIVE",
+          "version": 21,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-02T04:22:20.483Z"
+        },
+        {
+          "name": "health",
+          "status": "ACTIVE",
+          "version": 20,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-26T05:55:49.120Z"
+        },
+        {
+          "name": "verify-conversation-attachment",
+          "status": "ACTIVE",
+          "version": 20,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-28T03:58:37.639Z"
+        },
+        {
+          "name": "capture-conversation-email",
+          "status": "ACTIVE",
+          "version": 21,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-13T17:32:27.623Z"
+        },
+        {
+          "name": "capture-inbound-attachment",
+          "status": "ACTIVE",
+          "version": 21,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-02T04:22:20.483Z"
+        },
+        {
+          "name": "read-inbound-attachment",
+          "status": "ACTIVE",
+          "version": 20,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-28T03:58:23.249Z"
+        },
+        {
+          "name": "cleanup-abandoned-attachment",
+          "status": "ACTIVE",
+          "version": 21,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-02T04:22:20.483Z"
+        },
+        {
+          "name": "prepare-estimate-publication",
+          "status": "ACTIVE",
+          "version": 19,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-26T05:55:49.120Z"
+        },
+        {
+          "name": "recover-estimate-publication-preparation",
+          "status": "ACTIVE",
+          "version": 19,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-26T05:55:49.120Z"
+        },
+        {
+          "name": "read-estimate-publication-artifact",
+          "status": "ACTIVE",
+          "version": 19,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-26T05:55:49.120Z"
+        },
+        {
+          "name": "estimate-decision",
+          "status": "ACTIVE",
+          "version": 19,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-26T05:55:49.120Z"
+        },
+        {
+          "name": "prepare-estimate-decision-grant",
+          "status": "ACTIVE",
+          "version": 19,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-26T05:55:49.120Z"
+        },
+        {
+          "name": "recover-estimate-decision-grant",
+          "status": "ACTIVE",
+          "version": 19,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-26T05:55:49.120Z"
+        },
+        {
+          "name": "cloudtalk-webhook",
+          "status": "ACTIVE",
+          "version": 21,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-28T03:58:11.280Z"
+        },
+        {
+          "name": "cloudtalk-call-media",
+          "status": "ACTIVE",
+          "version": 19,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-26T16:26:22.055Z"
+        },
+        {
+          "name": "agentmail-inbound-webhook",
+          "status": "ACTIVE",
+          "version": 13,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-02T04:22:20.483Z"
+        },
+        {
+          "name": "verify-patient-photo",
+          "status": "ACTIVE",
+          "version": 4,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-09T21:05:14.523Z"
+        },
+        {
+          "name": "download-diagnostic-pdf",
+          "status": "ACTIVE",
+          "version": 4,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-12T21:00:15.073Z"
+        },
+        {
+          "name": "reconcile-operational-tasks",
+          "status": "ACTIVE",
+          "version": 3,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-14T20:04:45.538Z"
+        },
+        {
+          "name": "queue-invoice-reminders",
+          "status": "ACTIVE",
+          "version": 3,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-16T00:51:59.955Z"
+        },
+        {
+          "name": "clinical-audio-process",
+          "status": "ACTIVE",
+          "version": 3,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-16T17:36:42.551Z"
+        },
+        {
+          "name": "clinical-note-process",
+          "status": "ACTIVE",
+          "version": 2,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-17T01:21:43.801Z"
+        },
+        {
+          "name": "clinical-recap-process",
+          "status": "ACTIVE",
+          "version": 3,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-17T05:34:24.994Z"
+        },
+        {
+          "name": "clinical-call-capture",
+          "status": "ACTIVE",
+          "version": 2,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-17T14:38:12.730Z"
+        },
+        {
+          "name": "clinical-call-note-process",
+          "status": "ACTIVE",
+          "version": 3,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-18T17:07:05.737Z"
+        }
+      ]
+    },
+    {
+      "environment": "staging",
+      "projectRef": "kothoqicubowyhwfsrte",
+      "migrations": [
+        {
+          "version": "20260308184039",
+          "name": "cbd27973-fb79-4b1b-9fe4-3036b0fc4640"
+        },
+        {
+          "version": "20260308194312",
+          "name": "688620cd-8ef1-4782-bb44-a5b6b5355eac"
+        },
+        {
+          "version": "20260308215204",
+          "name": "ca5349ea-d2b2-4f7b-bd73-c46c19dfadb6"
+        },
+        {
+          "version": "20260308231655",
+          "name": "aa98042d-5e6d-4530-8cc2-b66f9581b35d"
+        },
+        {
+          "version": "20260309034659",
+          "name": "7490047a-6052-4ad6-9f68-9a16b0851759"
+        },
+        {
+          "version": "20260309045202",
+          "name": "7de7ae36-24fd-46b2-9fe5-ddd9e38ff237"
+        },
+        {
+          "version": "20260309045831",
+          "name": "031a7a42-a506-4c29-bce7-e20869ded224"
+        },
+        {
+          "version": "20260613183224",
+          "name": "9575f409-8565-4e33-ab7a-1a004e11a670"
+        },
+        {
+          "version": "20260613184005",
+          "name": "cbe9bfe4-734b-4f1e-ac8e-854a19ad7864"
+        },
+        {
+          "version": "20260613195035",
+          "name": "768d08b4-e93d-4eb6-8f21-ca48b39d895f"
+        },
+        {
+          "version": "20260613223600",
+          "name": "0b5db918-2014-43cf-aaf0-08cdccbc4d96"
+        },
+        {
+          "version": "20260613225133",
+          "name": "e28d9447-249a-4821-9614-c088efb2f9b8"
+        },
+        {
+          "version": "20260614151553",
+          "name": "376b87c5-04a7-4f77-8386-321af04d2cfe"
+        },
+        {
+          "version": "20260614171114",
+          "name": "5b96273b-12b6-48bc-8ff1-d89edc292f62"
+        },
+        {
+          "version": "20260912193000",
+          "name": "explicit_application_grants"
+        },
+        {
+          "version": "20260912210000",
+          "name": "clinical_core"
+        },
+        {
+          "version": "20260912220000",
+          "name": "patient_documents"
+        },
+        {
+          "version": "20260912230000",
+          "name": "scheduling"
+        },
+        {
+          "version": "20260913000000",
+          "name": "inventory_billing"
+        },
+        {
+          "version": "20260913010000",
+          "name": "ezyvet_import"
+        },
+        {
+          "version": "20260913020000",
+          "name": "communications_outbox"
+        },
+        {
+          "version": "20260913030000",
+          "name": "inventory_read_models"
+        },
+        {
+          "version": "20260913040000",
+          "name": "ezyvet_review_import"
+        },
+        {
+          "version": "20260913050000",
+          "name": "inbound_delivery"
+        },
+        {
+          "version": "20260913060000",
+          "name": "care_charts"
+        },
+        {
+          "version": "20260913070000",
+          "name": "dental_chart"
+        },
+        {
+          "version": "20260913080000",
+          "name": "vaccine_certificates"
+        },
+        {
+          "version": "20260913095000",
+          "name": "inbox_workspace"
+        },
+        {
+          "version": "20260913095500",
+          "name": "sms_consent_workspace"
+        },
+        {
+          "version": "20260913100000",
+          "name": "lab_work"
+        },
+        {
+          "version": "20260913110000",
+          "name": "anesthesia_records"
+        },
+        {
+          "version": "20260913120000",
+          "name": "message_recovery"
+        },
+        {
+          "version": "20260913130000",
+          "name": "record_releases"
+        },
+        {
+          "version": "20260913140000",
+          "name": "care_reminders"
+        },
+        {
+          "version": "20260913150000",
+          "name": "invoice_documents"
+        },
+        {
+          "version": "20260913160000",
+          "name": "record_release_charts"
+        },
+        {
+          "version": "20260913170000",
+          "name": "website_inquiries"
+        },
+        {
+          "version": "20260913180000",
+          "name": "reminder_outbox"
+        },
+        {
+          "version": "20260913190000",
+          "name": "certificate_due_plans"
+        },
+        {
+          "version": "20260913200000",
+          "name": "record_release_history"
+        },
+        {
+          "version": "20260913210000",
+          "name": "public_intake"
+        },
+        {
+          "version": "20260913220000",
+          "name": "release_email_delivery"
+        },
+        {
+          "version": "20260913230000",
+          "name": "reviewed_weight_import"
+        },
+        {
+          "version": "20260913240000",
+          "name": "disable_reminder_policy"
+        },
+        {
+          "version": "20260913250000",
+          "name": "release_weight_provenance"
+        },
+        {
+          "version": "20260913260000",
+          "name": "treatment_alert_review"
+        },
+        {
+          "version": "20260913270000",
+          "name": "invoice_email"
+        },
+        {
+          "version": "20260913280000",
+          "name": "document_links"
+        },
+        {
+          "version": "20260913290000",
+          "name": "document_link_sms"
+        },
+        {
+          "version": "20260913300000",
+          "name": "payment_ledger"
+        },
+        {
+          "version": "20260913310000",
+          "name": "stripe_event_inbox"
+        },
+        {
+          "version": "20260913320000",
+          "name": "document_link_history"
+        },
+        {
+          "version": "20260913330000",
+          "name": "payment_reconciliation_observations"
+        },
+        {
+          "version": "20260913340000",
+          "name": "payment_collection_access"
+        },
+        {
+          "version": "20260913350000",
+          "name": "payment_reconciliation_resolution"
+        },
+        {
+          "version": "20260913360000",
+          "name": "payment_capability_persistence"
+        },
+        {
+          "version": "20260913370000",
+          "name": "payment_link_delivery"
+        },
+        {
+          "version": "20260913380000",
+          "name": "payment_reconciliation_discovery"
+        },
+        {
+          "version": "20260913390000",
+          "name": "payment_delivery_history"
+        },
+        {
+          "version": "20260913400000",
+          "name": "stripe_event_retry_cycles"
+        },
+        {
+          "version": "20260913410000",
+          "name": "lab_result_provenance"
+        },
+        {
+          "version": "20260913420000",
+          "name": "external_record_provenance"
+        },
+        {
+          "version": "20260913430000",
+          "name": "inbound_processing_recovery"
+        },
+        {
+          "version": "20260913440000",
+          "name": "operations_visibility"
+        },
+        {
+          "version": "20260913450000",
+          "name": "outbox_retry_recovery"
+        },
+        {
+          "version": "20260913460000",
+          "name": "explicit_staff_rpc_grants"
+        },
+        {
+          "version": "20260913470000",
+          "name": "release_source_provenance"
+        },
+        {
+          "version": "20260913480000",
+          "name": "release_source_byte_binding"
+        },
+        {
+          "version": "20260913490000",
+          "name": "ezyvet_clinical_runs"
+        },
+        {
+          "version": "20260913500000",
+          "name": "reviewed_imported_history"
+        },
+        {
+          "version": "20260913510000",
+          "name": "release_imported_history"
+        },
+        {
+          "version": "20260913520000",
+          "name": "consult_scoped_vaccination_import"
+        },
+        {
+          "version": "20260913530000",
+          "name": "reviewed_imported_vaccinations"
+        },
+        {
+          "version": "20260913540000",
+          "name": "record_release_vaccination_history"
+        },
+        {
+          "version": "20260913550000",
+          "name": "patient_scoped_prescription_import"
+        },
+        {
+          "version": "20260913560000",
+          "name": "parent_scoped_prescription_items"
+        },
+        {
+          "version": "20260913570000",
+          "name": "prescription_reference_reconciliation"
+        },
+        {
+          "version": "20260913580000",
+          "name": "prescription_source_review_context"
+        },
+        {
+          "version": "20260913590000",
+          "name": "prescription_review_preparation"
+        },
+        {
+          "version": "20260913600000",
+          "name": "prescription_interpretation_context"
+        },
+        {
+          "version": "20260913610000",
+          "name": "reviewed_imported_prescriptions"
+        },
+        {
+          "version": "20260913620000",
+          "name": "prescription_review_discovery"
+        },
+        {
+          "version": "20260913630000",
+          "name": "record_release_prescription_history"
+        },
+        {
+          "version": "20260913650000",
+          "name": "prescription_release_reference_hardening"
+        },
+        {
+          "version": "20260913690000",
+          "name": "attachment_metadata_runs"
+        },
+        {
+          "version": "20260913700000",
+          "name": "attachment_original_capture"
+        },
+        {
+          "version": "20260913900000",
+          "name": "payment_immutable_search_path"
+        },
+        {
+          "version": "20260914010000",
+          "name": "reviewed_canonical_api_originals"
+        },
+        {
+          "version": "20260914020000",
+          "name": "canonical_api_approval_cancellation"
+        },
+        {
+          "version": "20260914030000",
+          "name": "canonical_api_review_history"
+        },
+        {
+          "version": "20260914040000",
+          "name": "canonical_api_patient_chart"
+        },
+        {
+          "version": "20260914050000",
+          "name": "canonical_reviewed_original_context"
+        },
+        {
+          "version": "20260914060000",
+          "name": "canonical_release_attachment_validation"
+        },
+        {
+          "version": "20260914070000",
+          "name": "canonical_api_release_preview"
+        },
+        {
+          "version": "20260914080000",
+          "name": "canonical_release_original_verification"
+        },
+        {
+          "version": "20260914090000",
+          "name": "canonical_api_release_confirmation"
+        },
+        {
+          "version": "20260914100000",
+          "name": "canonical_api_release_discovery"
+        },
+        {
+          "version": "20260914110000",
+          "name": "document_link_retrieval_wait_authorization"
+        },
+        {
+          "version": "20260914120000",
+          "name": "explicit_public_creation_privileges"
+        },
+        {
+          "version": "20260914130000",
+          "name": "ezyvet_migration_manifests"
+        },
+        {
+          "version": "20260914140000",
+          "name": "ezyvet_migration_bindings"
+        },
+        {
+          "version": "20260914150000",
+          "name": "ezyvet_migration_progress"
+        },
+        {
+          "version": "20260914160000",
+          "name": "ezyvet_migration_attempt_events"
+        },
+        {
+          "version": "20260914170000",
+          "name": "ezyvet_claim_wait_authorization"
+        },
+        {
+          "version": "20260914180000",
+          "name": "ezyvet_stage_failure_wait_authorization"
+        },
+        {
+          "version": "20260914190000",
+          "name": "ezyvet_migration_items"
+        },
+        {
+          "version": "20260914200000",
+          "name": "ezyvet_migration_capture_evidence"
+        },
+        {
+          "version": "20260914210000",
+          "name": "ezyvet_migration_history_evidence"
+        },
+        {
+          "version": "20260914220000",
+          "name": "ezyvet_migration_vaccination_evidence"
+        },
+        {
+          "version": "20260914230000",
+          "name": "ezyvet_migration_prescription_evidence"
+        },
+        {
+          "version": "20260916000000",
+          "name": "ezyvet_migration_prescription_item_evidence"
+        },
+        {
+          "version": "20260916010000",
+          "name": "ezyvet_migration_identity_evidence"
+        },
+        {
+          "version": "20260916020000",
+          "name": "ezyvet_migration_weight_evidence"
+        },
+        {
+          "version": "20260916033310",
+          "name": "ezyvet_migration_weight_evidence"
+        },
+        {
+          "version": "20260916043949",
+          "name": "ezyvet_migration_resolutions"
+        },
+        {
+          "version": "20260916055043",
+          "name": "native_prescriptions_lifecycle"
+        },
+        {
+          "version": "20260916062136",
+          "name": "native_prescription_authorization_events"
+        },
+        {
+          "version": "20260916063857",
+          "name": "native_refill_operational_intake"
+        },
+        {
+          "version": "20260916070108",
+          "name": "inventory_product_before_lot_locking"
+        },
+        {
+          "version": "20260916072509",
+          "name": "native_fulfillment"
+        },
+        {
+          "version": "20260916080105",
+          "name": "native_record_releases"
+        },
+        {
+          "version": "20260916083056",
+          "name": "native_dispense_corrections"
+        },
+        {
+          "version": "20260916090000",
+          "name": "native_dispense_returns"
+        },
+        {
+          "version": "20260916093000",
+          "name": "native_return_quantity_replay"
+        },
+        {
+          "version": "20260916094500",
+          "name": "native_return_reconciliation"
+        },
+        {
+          "version": "20260916100000",
+          "name": "native_return_reconciliation_releases"
+        },
+        {
+          "version": "20260916100001",
+          "name": "conversation_attachment_uploads"
+        },
+        {
+          "version": "20260916110000",
+          "name": "native_dispense_finance"
+        },
+        {
+          "version": "20260916110001",
+          "name": "conversation_email_preparation"
+        },
+        {
+          "version": "20260916120000",
+          "name": "inbound_attachment_capture"
+        },
+        {
+          "version": "20260916120716",
+          "name": "native_estimate_drafts"
+        },
+        {
+          "version": "20260916123017",
+          "name": "native_estimate_publications"
+        },
+        {
+          "version": "20260916130000",
+          "name": "abandoned_attachment_cleanup"
+        },
+        {
+          "version": "20260916144117",
+          "name": "native_estimate_decisions"
+        },
+        {
+          "version": "20260919120000",
+          "name": "new_auth_users_inactive"
+        },
+        {
+          "version": "20260921120000",
+          "name": "a5_on_duty_guard"
+        },
+        {
+          "version": "20260921130000",
+          "name": "a4_consent_submission_columns"
+        },
+        {
+          "version": "20260922120000",
+          "name": "b1_scheduler"
+        },
+        {
+          "version": "20260922170000",
+          "name": "outbound_deliveries"
+        },
+        {
+          "version": "20260922183000",
+          "name": "contact_submission_triage"
+        },
+        {
+          "version": "20260922190000",
+          "name": "appointment_reminder_outbound_deliveries"
+        },
+        {
+          "version": "20260922203000",
+          "name": "appointment_write_safety"
+        },
+        {
+          "version": "20260922210000",
+          "name": "outbound_delivery_worker_results"
+        },
+        {
+          "version": "20260922213000",
+          "name": "outbound_delivery_callbacks"
+        },
+        {
+          "version": "20260922220000",
+          "name": "inbound_sms_processing"
+        },
+        {
+          "version": "20260922223000",
+          "name": "staff_outbound_message_queue"
+        },
+        {
+          "version": "20260922224500",
+          "name": "outbound_delivery_staff_controls"
+        },
+        {
+          "version": "20260922230000",
+          "name": "contact_submission_abuse_controls"
+        },
+        {
+          "version": "20260924120000",
+          "name": "canonical_housecall_appointment_contract"
+        },
+        {
+          "version": "20260924130000",
+          "name": "inbound_sms_service_rpc_security"
+        },
+        {
+          "version": "20260926031324",
+          "name": "restore_verified_contact_intake_boundary"
+        },
+        {
+          "version": "20260926090000",
+          "name": "cloudtalk_activity"
+        },
+        {
+          "version": "20260927120000",
+          "name": "contact_sms_consent"
+        },
+        {
+          "version": "20260928100000",
+          "name": "cloudtalk_outbound_sms"
+        },
+        {
+          "version": "20260928110000",
+          "name": "cloudtalk_unified_inbox"
+        },
+        {
+          "version": "20260928120000",
+          "name": "vaccine_catalog_profiles_and_status"
+        },
+        {
+          "version": "20260928121000",
+          "name": "rabies_certificate_serial_number"
+        },
+        {
+          "version": "20260928130000",
+          "name": "qol_hhhhhmm_scale"
+        },
+        {
+          "version": "20260928140000",
+          "name": "anesthesia_drug_administrations"
+        },
+        {
+          "version": "20260928150000",
+          "name": "reminder_pipeline_readiness"
+        },
+        {
+          "version": "20260928160000",
+          "name": "cloudtalk_capability_redaction"
+        },
+        {
+          "version": "20260928170000",
+          "name": "patient_360_read_model"
+        },
+        {
+          "version": "20260928180000",
+          "name": "agentmail_inbound"
+        },
+        {
+          "version": "20260928190000",
+          "name": "no_retryable_sqlstate_for_permanent_conditions"
+        },
+        {
+          "version": "20260930100000",
+          "name": "sms_resubscribe_after_stop"
+        },
+        {
+          "version": "20260930120000",
+          "name": "linkage_integrity"
+        },
+        {
+          "version": "20260930130000",
+          "name": "scheduler_timeout_and_payload_purge"
+        },
+        {
+          "version": "20261009011500",
+          "name": "client_contact_integrity"
+        },
+        {
+          "version": "20261009160543",
+          "name": "patient_identity_photos"
+        },
+        {
+          "version": "20261010021254",
+          "name": "whogot_and_performed_services"
+        },
+        {
+          "version": "20261010034500",
+          "name": "daily_communications"
+        },
+        {
+          "version": "20261010170259",
+          "name": "care_plan_recurrence"
+        },
+        {
+          "version": "20261011025251",
+          "name": "records_requests_and_packages"
+        },
+        {
+          "version": "20261011181722",
+          "name": "manual_diagnostic_panels"
+        },
+        {
+          "version": "20261011203250",
+          "name": "diagnostic_pdf_jobs"
+        },
+        {
+          "version": "20261012035948",
+          "name": "diagnostic_pdf_artifact_processing"
+        },
+        {
+          "version": "20261012153518",
+          "name": "diagnostic_pdf_staff_review"
+        },
+        {
+          "version": "20261012210016",
+          "name": "diagnostic_pdf_release_scope"
+        },
+        {
+          "version": "20261013003556",
+          "name": "diagnostic_pdf_record_packages"
+        },
+        {
+          "version": "20261013181721",
+          "name": "appointment_catalog_and_bindings"
+        },
+        {
+          "version": "20261013214300",
+          "name": "catalog_patient_eligibility_lock"
+        },
+        {
+          "version": "20261013220500",
+          "name": "next_visit_outcomes"
+        },
+        {
+          "version": "20261013233839",
+          "name": "next_visit_staff_recovery"
+        },
+        {
+          "version": "20261014022511",
+          "name": "operational_tasks"
+        },
+        {
+          "version": "20261014154223",
+          "name": "operational_task_reconciliation"
+        },
+        {
+          "version": "20261014202235",
+          "name": "supplier_product_identity"
+        },
+        {
+          "version": "20261015011200",
+          "name": "controlled_draft_configuration"
+        },
+        {
+          "version": "20261015020722",
+          "name": "stock_writer_provenance"
+        },
+        {
+          "version": "20261015055007",
+          "name": "native_custody_provenance"
+        },
+        {
+          "version": "20261015235157",
+          "name": "unpaid_invoice_reminders"
+        },
+        {
+          "version": "20261016004714",
+          "name": "invoice_reminder_care_gate_order"
+        },
+        {
+          "version": "20261016020711",
+          "name": "invoice_reminder_practice_settings"
+        },
+        {
+          "version": "20261016040402",
+          "name": "clinical_dictation_review"
+        },
+        {
+          "version": "20261016143618",
+          "name": "clinical_audio_soap"
+        },
+        {
+          "version": "20261016162448",
+          "name": "clinical_audio_veterinary_context"
+        },
+        {
+          "version": "20261016200826",
+          "name": "appointment_dictation"
+        },
+        {
+          "version": "20261016215048",
+          "name": "patient_imaging_studies"
+        },
+        {
+          "version": "20261016224741",
+          "name": "clinical_note_templates"
+        },
+        {
+          "version": "20261017015543",
+          "name": "clinical_record_recap"
+        },
+        {
+          "version": "20261017042009",
+          "name": "clinical_recap_prompt_v2"
+        },
+        {
+          "version": "20261017042642",
+          "name": "clinical_call_sources"
+        },
+        {
+          "version": "20261017135245",
+          "name": "clinical_call_note_sources"
+        },
+        {
+          "version": "20261018032610",
+          "name": "clinical_call_note_generation"
+        },
+        {
+          "version": "20261018150000",
+          "name": "clinical_call_quote_anchors"
+        }
+      ],
+      "functions": [
+        {
+          "name": "dispatch-outbox",
+          "status": "ACTIVE",
+          "version": 33,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-13T17:21:29.585Z"
+        },
+        {
+          "name": "enqueue-message",
+          "status": "ACTIVE",
+          "version": 25,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-29T20:50:00.880Z"
+        },
+        {
+          "name": "ezyvet-import",
+          "status": "ACTIVE",
+          "version": 27,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-02T03:37:00.516Z"
+        },
+        {
+          "name": "invoice-checkout",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-14T20:46:47.050Z"
+        },
+        {
+          "name": "invoice-refund",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-14T20:46:47.050Z"
+        },
+        {
+          "name": "payment-collection",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-14T20:46:47.050Z"
+        },
+        {
+          "name": "payment-status",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-14T20:46:47.050Z"
+        },
+        {
+          "name": "prepare-document-link",
+          "status": "ACTIVE",
+          "version": 31,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-13T17:21:29.585Z"
+        },
+        {
+          "name": "prepare-external-record",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-02T03:37:00.516Z"
+        },
+        {
+          "name": "prepare-invoice-email",
+          "status": "ACTIVE",
+          "version": 30,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-13T17:21:29.585Z"
+        },
+        {
+          "name": "prepare-lab-report",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-02T03:37:00.516Z"
+        },
+        {
+          "name": "prepare-payment-collection",
+          "status": "ACTIVE",
+          "version": 25,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-14T20:46:47.050Z"
+        },
+        {
+          "name": "prepare-payment-delivery",
+          "status": "ACTIVE",
+          "version": 30,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-14T20:46:47.050Z"
+        },
+        {
+          "name": "prepare-release-email",
+          "status": "ACTIVE",
+          "version": 30,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-13T17:21:29.585Z"
+        },
+        {
+          "name": "process-inbound",
+          "status": "ACTIVE",
+          "version": 27,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-02T03:37:00.516Z"
+        },
+        {
+          "name": "process-stripe-events",
+          "status": "ACTIVE",
+          "version": 25,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-14T20:46:47.050Z"
+        },
+        {
+          "name": "public-contact",
+          "status": "ACTIVE",
+          "version": 23,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-13T17:53:24.833Z"
+        },
+        {
+          "name": "queue-reminders",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-26T05:50:48.094Z"
+        },
+        {
+          "name": "recover-document-link",
+          "status": "ACTIVE",
+          "version": 31,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-13T17:21:29.585Z"
+        },
+        {
+          "name": "recover-payment-collection",
+          "status": "ACTIVE",
+          "version": 25,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-14T20:46:47.050Z"
+        },
+        {
+          "name": "resend-webhook",
+          "status": "ACTIVE",
+          "version": 26,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-29T20:49:54.785Z"
+        },
+        {
+          "name": "retrieve-document-link",
+          "status": "ACTIVE",
+          "version": 31,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-13T17:21:29.585Z"
+        },
+        {
+          "name": "stripe-webhook",
+          "status": "ACTIVE",
+          "version": 24,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-14T20:46:47.050Z"
+        },
+        {
+          "name": "twilio-webhook",
+          "status": "ACTIVE",
+          "version": 25,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-02T03:37:00.516Z"
+        },
+        {
+          "name": "verify-payment-reconciliation",
+          "status": "ACTIVE",
+          "version": 25,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-14T20:46:47.050Z"
+        },
+        {
+          "name": "capture-ezyvet-attachment",
+          "status": "ACTIVE",
+          "version": 21,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-14T11:06:05.191Z"
+        },
+        {
+          "name": "retrieve-reviewed-ezyvet-original",
+          "status": "ACTIVE",
+          "version": 21,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-14T11:06:05.191Z"
+        },
+        {
+          "name": "verify-conversation-attachment",
+          "status": "ACTIVE",
+          "version": 18,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-29T20:50:10.754Z"
+        },
+        {
+          "name": "capture-conversation-email",
+          "status": "ACTIVE",
+          "version": 19,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-13T17:21:29.585Z"
+        },
+        {
+          "name": "capture-inbound-attachment",
+          "status": "ACTIVE",
+          "version": 18,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-29T20:49:41.486Z"
+        },
+        {
+          "name": "read-inbound-attachment",
+          "status": "ACTIVE",
+          "version": 18,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-29T20:49:45.918Z"
+        },
+        {
+          "name": "cleanup-abandoned-attachment",
+          "status": "ACTIVE",
+          "version": 19,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-02T03:37:00.516Z"
+        },
+        {
+          "name": "dispatch-outbound-deliveries",
+          "status": "ACTIVE",
+          "version": 17,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-29T20:47:26.764Z"
+        },
+        {
+          "name": "resend-delivery-webhook",
+          "status": "ACTIVE",
+          "version": 17,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-29T20:49:49.891Z"
+        },
+        {
+          "name": "twilio-message-status-callback",
+          "status": "ACTIVE",
+          "version": 18,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-02T03:37:00.516Z"
+        },
+        {
+          "name": "twilio-inbound-sms",
+          "status": "ACTIVE",
+          "version": 17,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-02T03:37:00.516Z"
+        },
+        {
+          "name": "prepare-estimate-publication",
+          "status": "ACTIVE",
+          "version": 16,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-26T05:50:48.094Z"
+        },
+        {
+          "name": "recover-estimate-publication-preparation",
+          "status": "ACTIVE",
+          "version": 16,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-26T05:50:48.094Z"
+        },
+        {
+          "name": "read-estimate-publication-artifact",
+          "status": "ACTIVE",
+          "version": 16,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-26T05:50:48.094Z"
+        },
+        {
+          "name": "estimate-decision",
+          "status": "ACTIVE",
+          "version": 16,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-26T05:50:48.094Z"
+        },
+        {
+          "name": "prepare-estimate-decision-grant",
+          "status": "ACTIVE",
+          "version": 16,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-26T05:50:48.094Z"
+        },
+        {
+          "name": "recover-estimate-decision-grant",
+          "status": "ACTIVE",
+          "version": 16,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-26T05:50:48.094Z"
+        },
+        {
+          "name": "health",
+          "status": "ACTIVE",
+          "version": 16,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-26T05:50:48.094Z"
+        },
+        {
+          "name": "cloudtalk-webhook",
+          "status": "ACTIVE",
+          "version": 17,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-29T20:48:33.954Z"
+        },
+        {
+          "name": "cloudtalk-call-media",
+          "status": "ACTIVE",
+          "version": 16,
+          "verifyJwt": true,
+          "updatedAt": "2026-09-26T16:25:36.388Z"
+        },
+        {
+          "name": "agentmail-inbound-webhook",
+          "status": "ACTIVE",
+          "version": 7,
+          "verifyJwt": false,
+          "updatedAt": "2026-09-29T20:48:41.906Z"
+        },
+        {
+          "name": "verify-patient-photo",
+          "status": "ACTIVE",
+          "version": 7,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-09T20:53:11.800Z"
+        },
+        {
+          "name": "download-diagnostic-pdf",
+          "status": "ACTIVE",
+          "version": 7,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-12T20:53:35.970Z"
+        },
+        {
+          "name": "reconcile-operational-tasks",
+          "status": "ACTIVE",
+          "version": 2,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-14T19:57:21.915Z"
+        },
+        {
+          "name": "queue-invoice-reminders",
+          "status": "ACTIVE",
+          "version": 2,
+          "verifyJwt": false,
+          "updatedAt": "2026-10-16T00:30:52.830Z"
+        },
+        {
+          "name": "clinical-audio-process",
+          "status": "ACTIVE",
+          "version": 2,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-16T16:38:27.042Z"
+        },
+        {
+          "name": "clinical-note-process",
+          "status": "ACTIVE",
+          "version": 1,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-16T23:33:58.870Z"
+        },
+        {
+          "name": "clinical-recap-process",
+          "status": "ACTIVE",
+          "version": 2,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-17T04:33:46.608Z"
+        },
+        {
+          "name": "clinical-call-capture",
+          "status": "ACTIVE",
+          "version": 1,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-17T05:09:38.253Z"
+        },
+        {
+          "name": "clinical-call-note-process",
+          "status": "ACTIVE",
+          "version": 2,
+          "verifyJwt": true,
+          "updatedAt": "2026-10-18T16:54:04.245Z"
+        }
+      ]
+    }
+  ]
+}
