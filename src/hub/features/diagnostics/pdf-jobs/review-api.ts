@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { verifiedDiagnosticPdfResponse } from "../../../../../supabase/functions/_shared/diagnostic-pdf-bytes.ts";
-const uuid = z.string().uuid(),
+const uuid = z.string().guid(),
   hash = z.string().regex(/^[a-f0-9]{64}$/);
 export const pdfReviewSchema = z
   .object({

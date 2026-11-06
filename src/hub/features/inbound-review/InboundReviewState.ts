@@ -1,5 +1,5 @@
 import { z } from "zod";
-const id = z.string().uuid(),
+const id = z.string().guid(),
   version = z.number().int().positive(),
   date = z.string().datetime({ offset: true });
 export const inboundSchema = z.object({

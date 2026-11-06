@@ -18,7 +18,7 @@ interface NextVisitRpc {
   ): PromiseLike<{ data: unknown; error: unknown }>;
 }
 const db = supabase as unknown as NextVisitRpc;
-const uuid = z.string().uuid(),
+const uuid = z.string().guid(),
   version = z.number().int().nonnegative();
 async function rpc(name: string, args: Record<string, unknown>) {
   const { data, error } = await db.rpc(name, args);

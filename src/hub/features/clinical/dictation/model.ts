@@ -6,7 +6,7 @@ export const soapFields = [
   "assessment",
   "plan",
 ] as const;
-export const uuid = z.string().uuid();
+export const uuid = z.string().guid();
 const version = z.number().int().min(1).max(2147483647);
 const text = (maximum: number) =>
   z

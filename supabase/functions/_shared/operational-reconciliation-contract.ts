@@ -8,7 +8,7 @@ export const reconciliationLimits = {
   maxBudgetMs: 5000,
   maxBodyBytes: 1024,
 } as const;
-const uuid = z.string().uuid().transform((value) => value.toLowerCase());
+const uuid = z.string().guid().transform((value) => value.toLowerCase());
 const count = z.number().int().nonnegative().safe();
 const instant = z.string().datetime({ offset: true }).refine((value) => Number.isFinite(Date.parse(value)));
 

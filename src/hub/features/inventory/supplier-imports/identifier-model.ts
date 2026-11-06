@@ -16,7 +16,7 @@ export const supplierSkuSchema = z
 export const supplierIdentitySchema = z
   .object({
     supplier: supplierSchema,
-    namespace_id: z.string().uuid(),
+    namespace_id: z.string().guid(),
     sku: supplierSkuSchema,
   })
   .strict();

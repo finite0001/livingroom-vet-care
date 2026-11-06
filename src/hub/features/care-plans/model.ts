@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { calendarDateSchema, recurrenceSchema, intervalUnitSchema, anchorModeSchema, monthEndSchema } from "./calendar.ts";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const instant = z.string().datetime({ offset: true });
 const review = z.string().trim().min(1, "Record your review").max(2000);
 export const careKindSchema = z.enum(["wellness", "bloodwork", "vaccine", "custom"]);

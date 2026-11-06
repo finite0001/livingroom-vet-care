@@ -100,7 +100,7 @@ export async function cancelNextVisitReview(meta: ReviewMetadata) {
 export async function appointmentCompletion(id: string, version: number) {
   return nextVisitContextSchema.nullable().parse(
     await rpc("read_appointment_completion", {
-      p_appointment_id: z.string().uuid().parse(id),
+      p_appointment_id: z.string().guid().parse(id),
       p_completed_version: z.number().int().positive().parse(version),
     }),
   );
@@ -111,7 +111,7 @@ export async function patientNextVisits(
 ) {
   return nextVisitQueueSchema.parse(
     await rpc("list_patient_next_visits", {
-      p_pet_id: z.string().uuid().parse(petId),
+      p_pet_id: z.string().guid().parse(petId),
       p_after_at: after?.at ?? null,
       p_after_id: after?.id ?? null,
       p_limit: 50,

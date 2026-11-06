@@ -33,7 +33,7 @@ export const RECAP_REASONS = [
   "problem_eligibility_changed",
   "source_unavailable",
 ] as const;
-export const recapUuidSchema = z.string().uuid().refine(
+export const recapUuidSchema = z.string().guid().refine(
   (s) => s === s.toLowerCase(),
   "Canonical UUID required.",
 );

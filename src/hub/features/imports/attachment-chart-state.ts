@@ -7,7 +7,7 @@ import {
 import type { ReviewCursor } from "./attachment-review-history.ts";
 const pageSchema = z
   .object({
-    pet_id: z.string().uuid(),
+    pet_id: z.string().guid(),
     records: z
       .array(
         z

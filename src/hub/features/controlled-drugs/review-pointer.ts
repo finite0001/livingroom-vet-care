@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { draftCanonical, draftOperationSchema, type DraftActionMetadata, type DraftRequest } from "./draft-model.ts";
-const uuid = z.string().uuid().refine((value) => value === value.toLowerCase());
+const uuid = z.string().guid().refine((value) => value === value.toLowerCase());
 export const draftPointerSchema = z.object({
   id: uuid, actor_id: uuid, operation: draftOperationSchema,
   request_hash: z.string().regex(/^[a-f0-9]{64}$/),

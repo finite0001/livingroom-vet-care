@@ -13,32 +13,32 @@ import { denverDateTime, denverInstant } from "../clinical/editor-state";
 import { errorMessage } from "../inventory/stock-policy";
 import { searchWhogotProducts, whogotRpc } from "./api";
 const serviceSchema = z.object({
-  id: z.string().uuid(),
-  pet_id: z.string().uuid(),
-  encounter_id: z.string().uuid(),
-  product_id: z.string().uuid(),
+  id: z.string().guid(),
+  pet_id: z.string().guid(),
+  encounter_id: z.string().guid(),
+  product_id: z.string().guid(),
   product_name: z.string(),
-  clinician_id: z.string().uuid(),
+  clinician_id: z.string().guid(),
   clinician_name: z.string(),
   performed_at: z.string().datetime({ offset: true }),
   notes: z.string(),
-  created_by: z.string().uuid(),
+  created_by: z.string().guid(),
   created_at: z.string(),
   correction: z
     .object({
-      id: z.string().uuid(),
+      id: z.string().guid(),
       reason: z.string(),
-      replacement_id: z.string().uuid().nullable(),
+      replacement_id: z.string().guid().nullable(),
       created_at: z.string(),
-      created_by: z.string().uuid(),
+      created_by: z.string().guid(),
     })
     .nullable(),
 });
 const requestSchema = z.object({
-  pet_id: z.string().uuid(),
-  encounter_id: z.string().uuid(),
-  product_id: z.string().uuid(),
-  clinician_id: z.string().uuid(),
+  pet_id: z.string().guid(),
+  encounter_id: z.string().guid(),
+  product_id: z.string().guid(),
+  clinician_id: z.string().guid(),
   performed_at: z.string().datetime(),
   notes: z.string().max(2000),
   invoice_id: z.null(),
@@ -114,7 +114,7 @@ export function PerformedServices({
     queryKey: ["service-clinicians", session?.user.id],
     queryFn: async () =>
       z
-        .array(z.object({ id: z.string().uuid(), name: z.string() }))
+        .array(z.object({ id: z.string().guid(), name: z.string() }))
         .parse(await whogotRpc("list_service_clinicians", {})),
   });
   const send = async (operation: ServiceOperation) => {
@@ -199,9 +199,9 @@ export function PerformedServices({
       if (!session?.user.id) throw new Error("Sign in to record a correction.");
       const parsed = z
         .object({
-          eventId: z.string().uuid(),
+          eventId: z.string().guid(),
           reason: z.string().trim().min(1).max(2000),
-          replacementId: z.union([z.literal(""), z.string().uuid()]),
+          replacementId: z.union([z.literal(""), z.string().guid()]),
         })
         .parse({ eventId: correctionId, reason, replacementId });
       const id = crypto.randomUUID();

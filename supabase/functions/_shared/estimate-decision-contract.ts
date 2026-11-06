@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const uuid = z.string().uuid().refine((v) => v === v.toLowerCase());
+const uuid = z.string().guid().refine((v) => v === v.toLowerCase());
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const sequence = z.number().int().min(1).max(2147483647);
 const instant = z.string().datetime().refine((v) =>

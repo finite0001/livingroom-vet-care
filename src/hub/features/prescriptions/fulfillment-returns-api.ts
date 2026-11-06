@@ -14,7 +14,7 @@ import {
 } from "./fulfillment-corrections-api.ts";
 const uuid = z
     .string()
-    .uuid()
+    .guid()
     .refine((v) => v === v.toLowerCase()),
   hash = z.string().regex(/^[a-f0-9]{64}$/),
   version = z.number().int().min(0).max(2147483647),

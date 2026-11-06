@@ -1,5 +1,5 @@
 import { z } from "zod";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const date = z.string().refine((v) => Number.isFinite(Date.parse(v)));
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const sourceId = z

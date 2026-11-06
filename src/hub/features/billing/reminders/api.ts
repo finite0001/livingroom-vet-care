@@ -20,7 +20,7 @@ async function call(name: string, args: Record<string, unknown>) {
   if (error) throw error;
   return data;
 }
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 export async function readPracticeReminders(actor: string) {
   const result = practicePolicySchema.parse(
     await call("read_invoice_reminder_practice", {

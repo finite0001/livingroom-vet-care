@@ -4,7 +4,7 @@ import {
   importedPrescriptionSchema,
   prescriptionItemEvidenceSchema,
 } from "./prescription-review-state.ts";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const positive = z.number().int().positive().max(2147483647);
 const timestamp = z
@@ -16,9 +16,8 @@ const exactText = (min: number, max: number) =>
     .min(min)
     .max(max)
     .refine((v) => v === v.trim());
-const contextSchema = importedPrescriptionSchema.innerType().shape.context;
+const contextSchema = importedPrescriptionSchema.shape.context;
 const itemPayload = prescriptionItemEvidenceSchema
-  .innerType()
   .shape.reviewed.extend({
     snapshot_id: uuid,
     product_id: uuid.nullable(),

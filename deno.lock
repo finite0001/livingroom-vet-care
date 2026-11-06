@@ -32,7 +32,7 @@
     "packageJson": {
       "dependencies": [
         "npm:@eslint/js@^9.32.0",
-        "npm:@hookform/resolvers@^3.10.0",
+        "npm:@hookform/resolvers@^5.2.2",
         "npm:@playwright/test@^1.63.0",
         "npm:@radix-ui/react-accordion@^1.2.11",
         "npm:@radix-ui/react-alert-dialog@^1.1.14",
@@ -102,10 +102,18 @@
         "npm:typescript-eslint@^8.38.0",
         "npm:typescript@^5.8.3",
         "npm:vaul@~0.9.9",
-        "npm:vite@^7.3.6",
-        "npm:zod@^3.25.76",
+        "npm:vite@^7.3.7",
+        "npm:zod@^4.6.7",
         "npm:zxing-wasm@3.1.5"
-      ]
+      ],
+      "overrides": {
+        "@typescript-eslint/typescript-estree": {
+          "minimatch": "11.0.5"
+        },
+        "@tailwindcss/typography": {
+          "postcss-selector-parser": "6.1.5"
+        }
+      }
     }
   }
 }

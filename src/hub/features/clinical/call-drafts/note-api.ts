@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { currentEncounterSchema } from "../dictation/model";
 import { callNoteGenerationPolicySchema, callNoteIntentSchema, callNoteProcessingReadSchema, callNoteReserveSchema, callNoteReviewSchema, callNoteReviewRequestSchema, callNoteWorkspaceSchema, validateCallNoteProcessingRead } from "../../../../../supabase/functions/_shared/clinical-call-note-processing-model.ts";
 import { callPolicyRequestSchema, CallSourceError, verifyCallPolicy, type PendingCallPolicy, type CallPolicyRequest } from "./model";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 interface PrivateRpc { rpc(name: string, args: Record<string, unknown>): PromiseLike<{ data: unknown; error: unknown }> }
 async function rpc(name: string, args: Record<string, unknown>) {
   const { data, error } = await (supabase as unknown as PrivateRpc).rpc(name, args);

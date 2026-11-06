@@ -48,7 +48,7 @@ export const inventoryIdentityApi = {
     return call(actor, "list_inventory_identities", { p_kind: kind, p_search: search, p_after: after, p_limit: 50 }, identityPageSchema);
   },
   history(actor: string, id: string, before: number | null = null) {
-    z.string().uuid().parse(id);
+    z.string().guid().parse(id);
     return call(actor, "read_inventory_identity", { p_id: id, p_before_version: before, p_limit: 20 }, identityHistorySchema.nullable());
   },
   lookup(actor: string, kind: "supplier_sku" | "supplier_barcode" | "gtin", value: string, namespaceId: string | null = null) {

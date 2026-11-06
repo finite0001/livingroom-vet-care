@@ -23,7 +23,7 @@ import {
 } from "./clinical-note-model.ts";
 
 export const CALL_NOTE_PROCESSING_CONTRACT = "clinical-call-note-processing-v1";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const version = z.number().int().min(1).max(2147483646);
 const text = (maximum: number) => z.string().max(maximum).refine((value) => !value.includes("\0"));
 const nonempty = (maximum: number) => text(maximum).refine((value) => !!value.trim());
@@ -42,7 +42,7 @@ export const callNoteReserveSchema = z.object({
 }).strict();
 
 // Derive the stored columns without changing the strict legacy typed/audio readers.
-export const callNoteJobSchema = noteJobSchema.innerType().omit({ attempts: true }).extend({
+export const callNoteJobSchema = z.strictObject(noteJobSchema.shape).omit({ attempts: true }).extend({
   source_kind: z.literal("call_transcript"),
   audio_job_id: z.null(),
   source_audio_policy_version: z.null(),
@@ -58,7 +58,7 @@ export const callNoteBindingSchema = z.object({
 const callNoteResultBaseSchema = z.object({
   request_id: text(200),
   response_id: nonempty(200),
-  requested_model: notePolicySchema.innerType().shape.soap_model,
+  requested_model: notePolicySchema.shape.soap_model,
   provider_model: text(200),
   job_id: uuid,
   source_id: uuid,
@@ -152,7 +152,7 @@ export const callNoteEventSchema = z.object({
   attempt_id: uuid.nullable(),
   actor_id: uuid,
   kind: nonempty(100),
-  details: z.record(z.unknown()),
+  details: z.record(z.string(), z.unknown()),
   created_at: z.string(),
 }).strict();
 export const callNoteTemplateRootSchema = z.object({

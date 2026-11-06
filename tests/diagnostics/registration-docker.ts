@@ -60,7 +60,7 @@ async function isolated(raw: unknown, bytes?: Uint8Array) {
     const d = z
       .object({
         Config: z
-          .object({ Labels: z.record(z.string()), User: z.string() })
+          .object({ Labels: z.record(z.string(), z.string()), User: z.string() })
           .strict(),
         HostConfig: z
           .object({
@@ -69,7 +69,7 @@ async function isolated(raw: unknown, bytes?: Uint8Array) {
             Privileged: z.boolean(),
             CapDrop: z.array(z.string()).nullable(),
             IpcMode: z.string(),
-            PortBindings: z.record(z.unknown()).nullable(),
+            PortBindings: z.record(z.string(), z.unknown()).nullable(),
           })
           .strict(),
       })

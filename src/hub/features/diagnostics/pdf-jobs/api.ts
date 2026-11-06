@@ -24,8 +24,8 @@ function bound(data: unknown, id: string, pet: string) {
   return result;
 }
 export async function readPdfJob(id: string, pet: string) {
-  z.string().uuid().parse(id);
-  z.string().uuid().parse(pet);
+  z.string().guid().parse(id);
+  z.string().guid().parse(pet);
   const data = await rpc("read_diagnostic_pdf_job", {
     p_id: id,
     p_pet_id: pet,

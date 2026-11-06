@@ -15,7 +15,7 @@ export const administrationConfigurationRequestSchema = z.object({ ...administra
     if (!valid) context.addIssue({ code: "custom", message: "Configuration lookup scope differs from its kind." });
   });
 export interface AdministrationConfigurationRequest extends z.infer<typeof administrationConfigurationRequestSchema> {}
-const storedPolicy = reviewPolicyBodySchema.innerType().extend({ effective_from: administrationInstant }).strict().superRefine((body, context) => {
+const storedPolicy = z.strictObject(reviewPolicyBodySchema.shape).extend({ effective_from: administrationInstant }).strict().superRefine((body, context) => {
   if (!reviewPolicyBodySchema.safeParse({ ...body, effective_from: { mode: "at", at: body.effective_from } }).success) context.addIssue({ code: "custom", message: "Stored review policy differs from the original rule grammar." });
 });
 const body = z.union([z.object({ members: reviewAdministrationMembersSchema }).strict(), z.object({ members: reviewMembersSchema }).strict(), storedPolicy, reviewCalendarBodySchema]);

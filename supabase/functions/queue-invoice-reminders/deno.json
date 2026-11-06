@@ -1,1 +1,1 @@
-{"imports":{"zod":"npm:zod@3.25.76"},"lock":"./deno.lock"}
+{"imports":{"zod":"npm:zod@4.6.7"},"lock":"./deno.lock"}

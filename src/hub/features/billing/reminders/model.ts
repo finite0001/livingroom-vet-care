@@ -1,5 +1,5 @@
 import { z } from "zod";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 export const policySchema = z
   .object({
     enabled: z.boolean(),

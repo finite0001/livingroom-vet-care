@@ -31,7 +31,7 @@ async function rpc(name: string, args: Record<string, unknown>) {
   if (error) throw error;
   return data;
 }
-const uuid = z.string().uuid(),
+const uuid = z.string().guid(),
   instant = z.string().datetime({ offset: true });
 const reconciliationCursorSchema = z.object({
   before: instant,

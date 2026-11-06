@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { bindingSchema } from "../scheduling/catalog-model.ts";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const version = z.number().int().positive().max(2147483647);
 const instant = z.string().datetime({ offset: true });
 const reconciliationInstant = instant.refine((value) =>

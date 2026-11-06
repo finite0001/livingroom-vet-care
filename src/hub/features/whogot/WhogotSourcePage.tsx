@@ -8,7 +8,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { errorMessage } from "../inventory/stock-policy";
 import { whogotRpc } from "./api";
 const instant = z.string().datetime({ offset: true });
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const correction = z.object({
   id: uuid,
   created_at: instant,

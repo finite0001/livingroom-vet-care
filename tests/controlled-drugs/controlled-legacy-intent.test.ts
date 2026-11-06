@@ -42,7 +42,12 @@ test("only explicitly bounded numeric schema fields convert; decimals and unknow
   const schema=z.object({version:z.literal(1),index:z.number().int().min(0).max(1000),quantity:z.string(),nested:z.array(z.object({revision:z.number().int().min(1).max(2147483647)}).strict())}).strict();
   assert.deepEqual(admitLegacyResult(schema,decode('{"version":1,"index":2,"quantity":"1.000230","nested":[{"revision":3}]}')),{version:1,index:2,quantity:"1.000230",nested:[{revision:3}]});
   for (const raw of ['{"version":1,"index":1001,"quantity":"1","nested":[]}','{"version":1,"index":2.5,"quantity":"1","nested":[]}','{"version":1,"index":9007199254740993,"quantity":"1","nested":[]}','{"version":1,"index":2,"quantity":1.000230,"nested":[]}','{"version":1,"index":2,"quantity":"1","nested":[],"extra":1}']) assert.throws(()=>admitLegacyResult(schema,decode(raw)));
-  assert.throws(()=>admitLegacyResult(z.number(),decode('1')));
+  for (const unbounded of [z.number(), z.number().int(), z.number().int().max(100), z.number().min(0).max(100)])
+    assert.throws(()=>admitLegacyResult(unbounded,decode('1')), /Native number schema is not bounded/);
+  const refined = z.object({ n: z.number().int().min(0).max(100).optional().nullable() }).strict().refine(value => value.n !== 7);
+  assert.equal(admitLegacyResult(refined, decode('{"n":6}')).n, 6);
+  assert.throws(() => admitLegacyResult(refined, decode('{"n":7}')));
+  assert.equal(admitLegacyResult(refined, decode('{"n":null}')).n, null);
 });
 test("missing/other-actor identity cannot reach an injected writer; stale pre-await identity remains stale", async () => {
   const identity={actorId:id,sessionId:other,generation:1};let calls=0;

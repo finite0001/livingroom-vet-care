@@ -19,11 +19,11 @@ const name = (max: number) => z.string().max(max).refine((v) => !!v.trim() && !v
 
 /** Server-resolved input only; PostgreSQL owns canonical manifest hashes and authority. */
 export const callNoteProviderContextSchema = z.object({
-  job_id: z.string().uuid(), source: callSourceSchema,
+  job_id: z.string().guid(), source: callSourceSchema,
   projection_sha256: noteHashSchema,
-  patient: z.object({ id: z.string().uuid(), name: name(120), species: name(80) }).strict(),
+  patient: z.object({ id: z.string().guid(), name: name(120), species: name(80) }).strict(),
   template: noteTemplateVersionSchema,
-  model: notePolicySchema.innerType().shape.soap_model,
+  model: notePolicySchema.shape.soap_model,
   note_policy_version: version, call_generation_policy_version: version,
 }).strict();
 
@@ -94,11 +94,11 @@ export async function clinicalCallNoteRequest(value: unknown) {
 }
 
 const providerSupportSchema = z.object({
-  segment_ordinal: callNoteSupportSchema.innerType().shape.segment_ordinal,
-  quote: callNoteSupportSchema.innerType().shape.quote,
+  segment_ordinal: callNoteSupportSchema.shape.segment_ordinal,
+  quote: callNoteSupportSchema.shape.quote,
 }).strict();
 const providerClaimSchema = callNoteClaimSchema.extend({ supports: z.array(providerSupportSchema).min(1).max(8) });
-const providerFieldSchema = callNoteFieldSchema.innerType().extend({ claims: z.array(providerClaimSchema).max(24) });
+const providerFieldSchema = z.strictObject(callNoteFieldSchema.shape).extend({ claims: z.array(providerClaimSchema).max(24) });
 export const callNoteProviderPayloadSchema = callNotePayloadSchema.extend({
   contract_version: z.literal(CALL_NOTE_PROVIDER_PAYLOAD_CONTRACT), fields: z.array(providerFieldSchema).min(1).max(48),
 });

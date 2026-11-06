@@ -12,7 +12,7 @@ export const noteSoapFields = [
   "assessment",
   "plan",
 ] as const;
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const version = z.number().int().min(1).max(2147483646);
 export const noteHashSchema = z.string().regex(/^[a-f0-9]{64}$/);
 const text = (max: number) =>

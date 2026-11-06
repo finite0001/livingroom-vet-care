@@ -5,7 +5,7 @@ import { appointmentDictationSchema } from "./model";
 interface AppointmentRpc {
   rpc(name: string, args: Record<string, unknown>): PromiseLike<{ data: unknown; error: unknown }>;
 }
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const encounterSchema = z.object({
   id: uuid, pet_id: uuid, visit_at: z.string().datetime({ offset: true }),
   visit_type: z.enum(["clinic", "housecall"]), location: z.string(),

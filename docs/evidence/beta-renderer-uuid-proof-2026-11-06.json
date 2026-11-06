@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Synthetic native renderer PostgreSQL UUID domain-preserving successor; no clinical policy activation",
+  "priorCandidateEvidence": "docs/evidence/beta-renderer-dependency-proof-2026-11-06.json",
+  "priorAcceptedImage": "lrv-diagnostic-pdf@sha256:bb7c28784d3245fc49f4d3f02b0a408c29d0608cc9b27429b046c9149bf8c644",
+  "acceptedCandidateImage": "lrv-diagnostic-pdf@sha256:a8ce75e5241a44d1f566eafde611c77414e2f9106e6ee58f3fad34ce319bf22b",
+  "published": {
+    "project": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7",
+    "team": "team_BDI4hvAq1AWGIREoc8sRwNLH",
+    "repository": "lrv-diagnostic-pdf",
+    "tag": "proof-20261106-uuid-caac56435196",
+    "image": "lrv-diagnostic-pdf@sha256:a8ce75e5241a44d1f566eafde611c77414e2f9106e6ee58f3fad34ce319bf22b",
+    "source_sha256": "caac56435196c36b6b6d2b2d99cdfa1ec6da807cd1e0e4d0a933651b379f11c3",
+    "file_hashes": {
+      "Dockerfile": "2b7ed4f677774238aa0968a4f771ee0a61931e855a39655ca5e094e846ebdea3",
+      "worker.mjs": "0ceed44d2e9941f23e6eeb066fa07531cb52b661d6abab1afd195e39a29186ce",
+      "pdf_admission.py": "ac1f2695539b0fc2d0ab72d423c21091f5c97071693f94738d239846a635bdc2",
+      "package.json": "de46b36d30d499c262c7f78b35a85bbbf8c0844f7286fd237418b4670ac6b861",
+      "package-lock.json": "842e8e0c82586d98d090954bc3199506f5ee7625bc82d2c36d3a7f044e68a446"
+    }
+  },
+  "nativeProof": {
+    "schemaVersion": 1,
+    "image": "lrv-diagnostic-pdf@sha256:a8ce75e5241a44d1f566eafde611c77414e2f9106e6ee58f3fad34ce319bf22b",
+    "project": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7",
+    "team": "team_BDI4hvAq1AWGIREoc8sRwNLH",
+    "capturedAt": "2026-11-06T22:43:42.959Z",
+    "inventory": {
+      "platform": "linux",
+      "arch": "x64",
+      "node": "v24.20.0",
+      "zod": "4.6.7",
+      "fileSha256": {
+        "worker.mjs": "0ceed44d2e9941f23e6eeb066fa07531cb52b661d6abab1afd195e39a29186ce",
+        "pdf_admission.py": "ac1f2695539b0fc2d0ab72d423c21091f5c97071693f94738d239846a635bdc2",
+        "package.json": "de46b36d30d499c262c7f78b35a85bbbf8c0844f7286fd237418b4670ac6b861",
+        "package-lock.json": "842e8e0c82586d98d090954bc3199506f5ee7625bc82d2c36d3a7f044e68a446"
+      },
+      "fontSha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "packages": "fonts-noto-core\t20201225-2\npoppler-utils\t24.02.0-1ubuntu9.11\nqpdf\t11.9.0-1.1ubuntu0.1\nsudo\t1.9.15p5-3ubuntu5.24.04.4\n"
+    },
+    "admissionCounterexamples": "sudo: unable to resolve host fc6ecc74-bfd: Name or service not known\n....................\n----------------------------------------------------------------------\nRan 20 tests in 0.116s\n\nOK\n",
+    "render": {
+      "receipt": {
+        "version": 1,
+        "job_id": "00000000-0000-0000-0000-000000000001",
+        "source_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "snapshot_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "html_sha256": "f707931ff6cdf2d216948eede8c4b6c6018847f110f54d7df5efbb0917319341",
+        "validation": {
+          "sha256": "8f7679ec1ed29c79e4d0113d29dfc5507de6b44fd3dfac8f044ad50ef4de328c",
+          "byte_length": 112710,
+          "page_count": 22,
+          "object_count": 67,
+          "stream_count": 28,
+          "inflated_bytes": 1290340,
+          "admission": "chromium-classic-pdf1.4-v1",
+          "qpdf_clean": true
+        },
+        "node": "v24.20.0",
+        "chromium": "153.0.8010.12",
+        "browser_sandbox": "Sandbox Status\nLayer 1 Sandbox\tNamespace\nPID namespaces\tYes\nNetwork namespaces\tYes\nSeccomp-BPF sandbox\tYes\nSeccomp-BPF sandbox supports TSYNC\tYes\nPtrace Protection with Yama LSM (Broker)\tNo\nPtrace Protection with Yama LSM (Non-broker)\tNo\n\nYou are adequately sandboxed.",
+        "uid": 12001,
+        "credentials_absent": true,
+        "sudo_denied": true,
+        "network": {
+          "dns_denied": true,
+          "tcp_denied": true,
+          "metadata_denied": true
+        },
+        "semantic_text_checks": 205
+      },
+      "runtime": {
+        "name": "lrv-pdf-627efcea-dcfe-42b0-bee5-8bc1f0c57f1b",
+        "image": "lrv-diagnostic-pdf@sha256:a8ce75e5241a44d1f566eafde611c77414e2f9106e6ee58f3fad34ce319bf22b",
+        "network_policy": "deny-all",
+        "persistent": false,
+        "ports": [],
+        "vcpus": 1,
+        "timeout_ms": 120000,
+        "status": "stopped",
+        "snapshot_created": false
+      }
+    },
+    "independent": {
+      "sha256": "8f7679ec1ed29c79e4d0113d29dfc5507de6b44fd3dfac8f044ad50ef4de328c",
+      "byte_length": 112710,
+      "page_count": 22,
+      "object_count": 67,
+      "stream_count": 28,
+      "inflated_bytes": 1290340,
+      "admission": "chromium-classic-pdf1.4-v1",
+      "qpdf_clean": true
+    },
+    "recovered": {
+      "sha256": "8f7679ec1ed29c79e4d0113d29dfc5507de6b44fd3dfac8f044ad50ef4de328c",
+      "byte_length": 112710,
+      "page_count": 22,
+      "object_count": 67,
+      "stream_count": 28,
+      "inflated_bytes": 1290340,
+      "admission": "chromium-classic-pdf1.4-v1",
+      "qpdf_clean": true
+    },
+    "lifecycle": {
+      "image": "lrv-diagnostic-pdf@sha256:a8ce75e5241a44d1f566eafde611c77414e2f9106e6ee58f3fad34ce319bf22b",
+      "name": "lrv-pdf-lifecycle-83150426-334b-4f16-80f5-0291cec8c23e",
+      "whole_vm_deadline_ms": 15000,
+      "detached_descendant_verified_before_expiry": true,
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "clinical_input": false
+    },
+    "sourceInputSha256": "483d74cf88c8d1faa496a65de52cf5198a4c817d27ba21a01c18189d1be10f36",
+    "retainedPostgresUuidPassed": true,
+    "syntheticOnly": true,
+    "clinicalWorkerActivated": false,
+    "acceptanceChanged": false,
+    "snapshotsCreated": false
+  },
+  "trustedSourceSha256": "9cad173543bf60b89f4f9dd6f40c9cf152c440fee46dbc849d27d579b59b54b3",
+  "limitations": [
+    "Synthetic native proof is not hosted clinical workflow acceptance",
+    "No runtime/worker policy enabled by this proof",
+    "Prior immutable images, receipts and captured-job provenance remain unchanged"
+  ]
+}

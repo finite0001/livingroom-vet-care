@@ -15,13 +15,13 @@ export interface InvoiceReminderDatabase {
 }
 const requestSchema = z
   .object({
-    run_id: z.string().uuid().optional(),
+    run_id: z.string().guid().optional(),
     limit: z.number().int().min(1).max(100).default(25),
   })
   .strict();
 const receiptSchema = z
   .object({
-    run_id: z.string().uuid(),
+    run_id: z.string().guid(),
     requested_limit: z.number().int().min(1).max(100),
     queued: z.number().int().min(0).max(100),
     dispatched: z.literal(false),

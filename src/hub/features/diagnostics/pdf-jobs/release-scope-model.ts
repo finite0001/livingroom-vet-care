@@ -1,5 +1,5 @@
 import { z } from "zod";
-const uuid = z.string().uuid(),
+const uuid = z.string().guid(),
   hash = z.string().regex(/^[a-f0-9]{64}$/);
 export const diagnosticReleaseScopeSchema = z
   .object({

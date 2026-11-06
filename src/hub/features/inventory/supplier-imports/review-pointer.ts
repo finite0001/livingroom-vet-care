@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { identityCanonical, identityOperationSchema, type IdentityActionMetadata, type IdentityRequest } from "./package-model.ts";
-const uuid = z.string().uuid().refine((value) => value === value.toLowerCase());
+const uuid = z.string().guid().refine((value) => value === value.toLowerCase());
 export const identityPointerSchema = z.object({
   id: uuid, actor_id: uuid, operation: identityOperationSchema,
   request_hash: z.string().regex(/^[a-f0-9]{64}$/),

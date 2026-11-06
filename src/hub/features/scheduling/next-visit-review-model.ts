@@ -7,7 +7,7 @@ import {
   customBookingSchema,
   nextVisitAppointmentSchema,
 } from "./next-visit-model.ts";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 export const completionRequestSchema = z
   .object({ id: uuid, expected_version: z.number().int().positive() })
   .strict();

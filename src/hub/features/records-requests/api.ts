@@ -18,7 +18,7 @@ import {
   receiptSchema,
   type RequestAction,
 } from "./model";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 interface RequestRpc {
   rpc(
     name: string,
@@ -143,7 +143,7 @@ export async function evidence(
 ) {
   return z
     .object({
-      items: z.array(z.record(z.unknown())).max(50),
+      items: z.array(z.record(z.string(), z.unknown())).max(50),
       next: z.number().int().nonnegative().nullable(),
     })
     .parse(

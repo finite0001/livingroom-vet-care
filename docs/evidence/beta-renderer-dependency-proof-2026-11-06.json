@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Synthetic native renderer dependency refresh; no clinical policy activation",
+  "historicalAcceptedImage": "lrv-diagnostic-pdf@sha256:e74492886124237c6fdeb1b887709f9dd08778f0713ef7998dee9f1a1d1520c0",
+  "acceptedCandidateImage": "lrv-diagnostic-pdf@sha256:bb7c28784d3245fc49f4d3f02b0a408c29d0608cc9b27429b046c9149bf8c644",
+  "published": {
+    "project": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7",
+    "team": "team_BDI4hvAq1AWGIREoc8sRwNLH",
+    "repository": "lrv-diagnostic-pdf",
+    "tag": "proof-20261106-dependency-bab8a529db96",
+    "image": "lrv-diagnostic-pdf@sha256:bb7c28784d3245fc49f4d3f02b0a408c29d0608cc9b27429b046c9149bf8c644",
+    "source_sha256": "bab8a529db96aee2115d7550485eaa4aaeb8fd74209bce37a28f96604e79c3d9",
+    "file_hashes": {
+      "Dockerfile": "2b7ed4f677774238aa0968a4f771ee0a61931e855a39655ca5e094e846ebdea3",
+      "worker.mjs": "9cc103aa331e71e6160ba92b705152d6da514bc95a2a66333b535fbfd3b6fd5f",
+      "pdf_admission.py": "ac1f2695539b0fc2d0ab72d423c21091f5c97071693f94738d239846a635bdc2",
+      "package.json": "de46b36d30d499c262c7f78b35a85bbbf8c0844f7286fd237418b4670ac6b861",
+      "package-lock.json": "842e8e0c82586d98d090954bc3199506f5ee7625bc82d2c36d3a7f044e68a446"
+    }
+  },
+  "registryImage": {
+    "id": "image_uxgmtkAGNKEJReaZr9K5CPMnVzgF",
+    "repositoryId": "repo_b7jsbP26UnZWbqOlHO7j68EGu8VX",
+    "manifestDigest": "sha256:bb7c28784d3245fc49f4d3f02b0a408c29d0608cc9b27429b046c9149bf8c644",
+    "kind": "manifest",
+    "platform": "linux",
+    "arch": "amd64",
+    "pushedBy": "u7WdkbkRqLPnyAeCIm0nGpei",
+    "sizeInBytes": 927180120,
+    "status": "ready",
+    "createdAt": "2026-11-06T22:31:11.509Z",
+    "tags": []
+  },
+  "nativeProof": {
+    "schemaVersion": 1,
+    "image": "lrv-diagnostic-pdf@sha256:bb7c28784d3245fc49f4d3f02b0a408c29d0608cc9b27429b046c9149bf8c644",
+    "project": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7",
+    "team": "team_BDI4hvAq1AWGIREoc8sRwNLH",
+    "capturedAt": "2026-11-06T22:32:19.098Z",
+    "inventory": {
+      "platform": "linux",
+      "arch": "x64",
+      "node": "v24.20.0",
+      "zod": "4.6.7",
+      "fileSha256": {
+        "worker.mjs": "9cc103aa331e71e6160ba92b705152d6da514bc95a2a66333b535fbfd3b6fd5f",
+        "pdf_admission.py": "ac1f2695539b0fc2d0ab72d423c21091f5c97071693f94738d239846a635bdc2",
+        "package.json": "de46b36d30d499c262c7f78b35a85bbbf8c0844f7286fd237418b4670ac6b861",
+        "package-lock.json": "842e8e0c82586d98d090954bc3199506f5ee7625bc82d2c36d3a7f044e68a446"
+      },
+      "fontSha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "packages": "fonts-noto-core\t20201225-2\npoppler-utils\t24.02.0-1ubuntu9.11\nqpdf\t11.9.0-1.1ubuntu0.1\nsudo\t1.9.15p5-3ubuntu5.24.04.4\n"
+    },
+    "admissionCounterexamples": "sudo: unable to resolve host 9cd2d898-698: Name or service not known\n....................\n----------------------------------------------------------------------\nRan 20 tests in 0.185s\n\nOK\n",
+    "render": {
+      "receipt": {
+        "version": 1,
+        "job_id": "b3100000-0000-4000-8000-000000000010",
+        "source_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "snapshot_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "html_sha256": "f707931ff6cdf2d216948eede8c4b6c6018847f110f54d7df5efbb0917319341",
+        "validation": {
+          "sha256": "f5fd66e0ae864915b8b5f3182a383f6ba4e7ca9302c67c5099fc53b6a728e556",
+          "byte_length": 112710,
+          "page_count": 22,
+          "object_count": 67,
+          "stream_count": 28,
+          "inflated_bytes": 1290340,
+          "admission": "chromium-classic-pdf1.4-v1",
+          "qpdf_clean": true
+        },
+        "node": "v24.20.0",
+        "chromium": "153.0.8010.12",
+        "browser_sandbox": "Sandbox Status\nLayer 1 Sandbox\tNamespace\nPID namespaces\tYes\nNetwork namespaces\tYes\nSeccomp-BPF sandbox\tYes\nSeccomp-BPF sandbox supports TSYNC\tYes\nPtrace Protection with Yama LSM (Broker)\tNo\nPtrace Protection with Yama LSM (Non-broker)\tNo\n\nYou are adequately sandboxed.",
+        "uid": 12001,
+        "credentials_absent": true,
+        "sudo_denied": true,
+        "network": {
+          "dns_denied": true,
+          "tcp_denied": true,
+          "metadata_denied": true
+        },
+        "semantic_text_checks": 205
+      },
+      "runtime": {
+        "name": "lrv-pdf-b3a91051-b18a-45dc-9edf-3db7dcc8aaca",
+        "image": "lrv-diagnostic-pdf@sha256:bb7c28784d3245fc49f4d3f02b0a408c29d0608cc9b27429b046c9149bf8c644",
+        "network_policy": "deny-all",
+        "persistent": false,
+        "ports": [],
+        "vcpus": 1,
+        "timeout_ms": 120000,
+        "status": "stopped",
+        "snapshot_created": false
+      }
+    },
+    "independent": {
+      "sha256": "f5fd66e0ae864915b8b5f3182a383f6ba4e7ca9302c67c5099fc53b6a728e556",
+      "byte_length": 112710,
+      "page_count": 22,
+      "object_count": 67,
+      "stream_count": 28,
+      "inflated_bytes": 1290340,
+      "admission": "chromium-classic-pdf1.4-v1",
+      "qpdf_clean": true
+    },
+    "recovered": {
+      "sha256": "f5fd66e0ae864915b8b5f3182a383f6ba4e7ca9302c67c5099fc53b6a728e556",
+      "byte_length": 112710,
+      "page_count": 22,
+      "object_count": 67,
+      "stream_count": 28,
+      "inflated_bytes": 1290340,
+      "admission": "chromium-classic-pdf1.4-v1",
+      "qpdf_clean": true
+    },
+    "lifecycle": {
+      "image": "lrv-diagnostic-pdf@sha256:bb7c28784d3245fc49f4d3f02b0a408c29d0608cc9b27429b046c9149bf8c644",
+      "name": "lrv-pdf-lifecycle-92c73480-edf1-4b25-9ecb-a87863e736f9",
+      "whole_vm_deadline_ms": 15000,
+      "detached_descendant_verified_before_expiry": true,
+      "status": "stopped",
+      "persistent": false,
+      "snapshot_created": false,
+      "clinical_input": false
+    },
+    "sourceInputSha256": "84307572ec22873d939b2e22f7814f631c29456ba3e21456161dd4d332ed5114",
+    "syntheticOnly": true,
+    "clinicalWorkerActivated": false,
+    "acceptanceChanged": false,
+    "snapshotsCreated": false
+  },
+  "acceptedSourceSha256": "9d019fdd4b1fab8f467cc8d83bc185f8400d1c0016041810735eeaea15ef51bb",
+  "limitations": [
+    "Synthetic rendering and parser/isolation/recovery proof; not clinical content approval",
+    "Application source admission updated only after native proof passed",
+    "Existing backend runtime policy must be aligned separately without changing its enabled state",
+    "Historical immutable image and historical proof receipts retained"
+  ]
+}

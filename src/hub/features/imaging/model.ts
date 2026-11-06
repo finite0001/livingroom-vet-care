@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { calendarDateSchema } from "../care-plans/calendar.ts";
 
-export const uuid = z.string().uuid();
+export const uuid = z.string().guid();
 export const version = z.number().int().min(1).max(999999999);
 const documentaryText = (maximum: number) => z.string().max(maximum).refine(value => Array.from(value).every(character => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127), "Use a single paragraph without control characters");
 const exact = (maximum: number) => documentaryText(maximum).refine(value => value.trim() === value && value.trim().length > 0, "Enter exact text without surrounding spaces");

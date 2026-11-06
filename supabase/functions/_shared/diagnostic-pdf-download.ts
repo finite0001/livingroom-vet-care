@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { verifiedDiagnosticPdfResponse } from "./diagnostic-pdf-bytes.ts";
 import { boundedBody } from "./inbound/verification.ts";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 export const diagnosticPdfDownloadRequestSchema = z
   .object({ id: uuid, job_id: uuid, pet_id: uuid })

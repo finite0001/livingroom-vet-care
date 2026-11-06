@@ -11,7 +11,7 @@ const recoverRun = {
   prescriptionitem: "recover_ezyvet_prescriptionitem_run",
   attachment: "recover_ezyvet_attachment_run",
 } as const;
-const uuid = z.string().uuid(), date = z.string().datetime({ offset: true });
+const uuid = z.string().guid(), date = z.string().datetime({ offset: true });
 export interface MigrationResumeIdentity { manifest_id: string; scope_id: string; binding_id: string }
 export interface MigrationResumeTransport extends MigrationRpc {
   readGenericRun: (id: string, actor: string) => Promise<unknown>;

@@ -47,7 +47,7 @@ export const controlledDraftApi = {
     return call(actor, "list_controlled_drafts", { p_search: search, p_after: after, p_limit: 50 }, draftPageSchema);
   },
   history(actor: string, id: string, before: number | null = null) {
-    z.string().uuid().parse(id);
+    z.string().guid().parse(id);
     return call(actor, "read_controlled_draft", { p_id: id, p_before_version: before, p_limit: 20 }, draftHistorySchema.nullable());
   },
 };

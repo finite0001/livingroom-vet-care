@@ -7,7 +7,7 @@ import {
   previewSchema, historyPageSchema, duePageSchema, dueCursorSchema, windowSchema, sourceSchema,
   type TemplateValues, type PlanValues, type CompletionValues, type DeliveryPolicyValues, type CompletionSource,
 } from "./model";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const version = z.number().int().positive().nullable();
 interface CareRpc {
   rpc(name: string, args: Record<string, unknown>): PromiseLike<{ data: unknown; error: unknown }>;

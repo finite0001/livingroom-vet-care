@@ -2,7 +2,7 @@
 
 ## November 6, 2026 audit update
 
-The September zero-vulnerability result below is historical. Fresh `npm audit --json` reports **18 vulnerable package entries: 6 high and 12 moderate**; `--omit=dev` reports **8: 4 high and 4 moderate**. See [the dependency triage](beta-readiness-dependencies-2026-11-06.md) and [machine evidence](evidence/beta-dependency-audit-2026-11-06.json). These counts are not confirmed exploit counts. No lockfile was changed in this audit; updates must include the affected clinical/renderer regression checks and new source-bound proof, rather than silently replacing frozen package hashes.
+The initial audit found 18 vulnerable npm package entries (6 high, 12 moderate). The authorized repair upgraded Zod to 4.6.7, Vite to 7.3.7 and affected transitive packages; current full and production-filtered npm audits report **zero advisories**. The standalone renderer also reports zero. See [the dependency remediation](beta-readiness-dependencies-2026-11-06.md), [new machine evidence](evidence/beta-dependency-remediation-2026-11-06.json), and the preserved [initial audit](evidence/beta-dependency-audit-2026-11-06.json). Historical source-bound proof does not automatically carry over to this new package lock.
 
 ## Historical September baseline
 

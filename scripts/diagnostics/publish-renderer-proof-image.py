@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Publish one bounded synthetic renderer image, preserving global Docker credentials."""
 
-import argparse, hashlib, json, os, subprocess, tempfile
+import argparse, hashlib, json, os, re, subprocess, tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument("--run-synthetic-runtime-proof", action="store_true")
+p.add_argument("--tag-prefix", default="proof-20261011")
+p.add_argument("--output-directory", type=Path, default=ROOT / "tmp/renderer-proof")
 args = p.parse_args()
+assert re.fullmatch(r"[a-z0-9][a-z0-9-]{1,60}", args.tag_prefix)
 assert args.run_synthetic_runtime_proof
 context = ROOT / "services/diagnostic-renderer"
 names = [
@@ -18,9 +21,10 @@ names = [
     "package-lock.json",
 ]
 sha = hashlib.sha256(b"".join((context / n).read_bytes() for n in names)).hexdigest()
-tag = "proof-20261011-" + sha[:12]
-out = ROOT / "tmp/renderer-proof"
+tag = args.tag_prefix + "-" + sha[:12]
+out = args.output_directory.resolve()
 out.mkdir(parents=True, exist_ok=True)
+out.chmod(0o700)
 global_config = Path("/Users/davidedler/.docker/config.json")
 before = hashlib.sha256(global_config.read_bytes()).hexdigest()
 with tempfile.TemporaryDirectory(prefix="lrv-vcr-auth-") as temporary:
@@ -47,6 +51,9 @@ with tempfile.TemporaryDirectory(prefix="lrv-vcr-auth-") as temporary:
         "--scope",
         "team_BDI4hvAq1AWGIREoc8sRwNLH",
         "--push",
+        "--",
+        "--progress",
+        "plain",
     ]
     with (out / "vcr-build.log").open("w") as log:
         os.chmod(log.name, 0o600)
@@ -75,6 +82,10 @@ with tempfile.TemporaryDirectory(prefix="lrv-vcr-auth-") as temporary:
         raise RuntimeError(
             "Scoped image publication failed; protected build log retained; temporary authentication removed"
         )
+    assert hashlib.sha256(b"".join((context / n).read_bytes() for n in names)).hexdigest() == sha, "Renderer source changed during build"
+    manifests = set(re.findall(r"exporting manifest (sha256:[a-f0-9]{64})", (out / "vcr-build.log").read_text()))
+    assert len(manifests) == 1, "Expected one exact platform image manifest from the bounded build"
+    image = "lrv-diagnostic-pdf@" + manifests.pop()
     (out / "published-image-inputs.json").write_text(
         json.dumps(
             {
@@ -82,6 +93,7 @@ with tempfile.TemporaryDirectory(prefix="lrv-vcr-auth-") as temporary:
                 "team": "team_BDI4hvAq1AWGIREoc8sRwNLH",
                 "repository": "lrv-diagnostic-pdf",
                 "tag": tag,
+                "image": image,
                 "source_sha256": sha,
                 "file_hashes": {
                     n: hashlib.sha256((context / n).read_bytes()).hexdigest()

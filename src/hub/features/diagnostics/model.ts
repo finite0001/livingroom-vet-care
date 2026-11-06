@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { calendarDateSchema } from "../care-plans/calendar.ts";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const version = z.number().int().min(1).max(999999999);
 const exactLabel = z
   .string()

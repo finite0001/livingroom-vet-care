@@ -1,5 +1,5 @@
 import { z } from "zod";
-const id = z.string().uuid(),
+const id = z.string().guid(),
   hash = z.string().regex(/^[a-f0-9]{64}$/),
   date = z.string().datetime({ offset: true }),
   count = z.number().int().nonnegative();

@@ -6,16 +6,22 @@ import { readFileSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildFrozenCallBundle } from "./evaluation-offline.ts";
-import { CALL_PROVIDER_BUNDLE_SHA256, TRANSPORT_FILES, planCallProviderBundle } from "./synthetic-provider-plan.ts";
+import { CALL_PROVIDER_BUNDLE_SHA256, TRANSPORT_FILES, planCallProviderBundle, planOfflineCallProviderBundle } from "./synthetic-provider-plan.ts";
 
 const bundle = await buildFrozenCallBundle();
 const bytes = Buffer.from(JSON.stringify(bundle));
-test("transport plan admits only exact frozen ten requests with separate code fingerprints and zero network", async () => {
+test("current offline plan preserves ten exact requests and cannot inherit historic hosted admission", async () => {
   const original = globalThis.fetch;
   globalThis.fetch = async () => { throw Error("Network forbidden."); };
   try {
-    const plan = await planCallProviderBundle(bytes);
-    assert.equal(plan.bundle_sha256, CALL_PROVIDER_BUNDLE_SHA256);
+    const plan = await planOfflineCallProviderBundle(bytes);
+    const binding = JSON.parse(readFileSync(new URL("./beta-uuid-candidate.json", import.meta.url), "utf8"));
+    assert.equal(plan.bundle_sha256, binding.bundle_sha256);
+    assert.equal(plan.provider_admission, false);
+    assert.equal(plan.contract, "lrv-call-provider-offline-input-v1");
+    assert.deepEqual(plan.source_sha256, binding.source_sha256);
+    assert.notEqual(plan.bundle_sha256, CALL_PROVIDER_BUNDLE_SHA256);
+    await assert.rejects(planCallProviderBundle(bytes), /only the reviewed ten-case/);
     assert.equal(plan.cases.length, 10);
     assert.deepEqual(Object.keys(plan.transport_source_sha256).sort(), [...TRANSPORT_FILES].sort());
     for (const [n, item] of plan.cases.entries()) {
@@ -24,7 +30,7 @@ test("transport plan admits only exact frozen ten requests with separate code fi
       assert.equal(item.maximum_output_tokens, 8000);
     }
     const bad = structuredClone(bundle); Object.assign(bad.cases[0].context, { model: "other-model" });
-    await assert.rejects(planCallProviderBundle(Buffer.from(JSON.stringify(bad))));
+    await assert.rejects(planOfflineCallProviderBundle(Buffer.from(JSON.stringify(bad))));
     await assert.rejects(planCallProviderBundle(Buffer.from([0xff])));
   } finally { globalThis.fetch = original; }
 });

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { recordSchema } from "./attachment-review-history.ts";
 import type { OriginalCapture } from "./attachment-capture-state.ts";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const decisionSchema = z
   .object({
@@ -52,7 +52,7 @@ function canonical(value: unknown): string {
   return JSON.stringify(value);
 }
 const approved = recordSchema
-  .extend({ source_context: z.record(z.unknown()) })
+  .extend({ source_context: z.record(z.string(), z.unknown()) })
   .strict();
 const cancellation = z
   .object({

@@ -6,7 +6,7 @@ import {
   notePolicySchema,
 } from "../../../../../supabase/functions/_shared/clinical-note-model.ts";
 export * from "../../../../../supabase/functions/_shared/clinical-note-model.ts";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 export const templateRootSchema = z
   .object({
     id: uuid,

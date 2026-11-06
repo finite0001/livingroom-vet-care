@@ -1,8 +1,30 @@
-# Beta dependency triage — November 6, 2026
+# Beta dependency remediation — November 6, 2026
+
+## Current repaired candidate
+
+The browser sweep exposed an additional Zod 4 compatibility change: `uuid()` now rejects some canonical PostgreSQL UUID bit patterns that Zod 3 accepted. The successor preserves the established domain with `guid()` across 97 frontend files, 18 shared Edge modules and three renderer modules, retaining every existing case/zero-value refinement. No fixture IDs or historical golden proofs were changed. Five focused boundary tests and all 12 affected count-policy/correction browser scenarios passed. [The successor Edge manifest](evidence/beta-edge-uuid-candidate-2026-11-06.json) records repeated frozen checks for all 56 entrypoints plus four shared modules and all eight isolated release consumers. [The separately preserved successor renderer proof](evidence/beta-renderer-uuid-proof-2026-11-06.json) includes an actual native render/recovery using a formerly rejected PostgreSQL job UUID. The earlier dependency/image evidence below remains evidence for its earlier candidate; final full-suite results belong to the main beta report.
+
+The owner authorized dependency remediation after the initial audit. The npm lock now reports **zero advisories** for both the full and production-filtered tree; the standalone diagnostic renderer also reports zero. [New remediation evidence](evidence/beta-dependency-remediation-2026-11-06.json) is separate from the original audit below. No audit exclusions or severity suppression were used.
+
+- Upgraded Zod to 4.6.7 in the application, renderer and all 23 affected Edge Function import maps, regenerating their Deno locks. React 18, Router 7.18.3 and npm remain unchanged.
+- Updated Vite to 7.3.7 and compatible transitive fixes: Undici 7.30.2, follow-redirects 1.16.2, qs 6.17.1, brace-expansion 1.1.21/5.0.12 and source-map-js 1.2.2. Patched sucrase no longer needs its vulnerable glob chain.
+- Added two narrowly scoped overrides: `@typescript-eslint/typescript-estree` → minimatch 11.0.5 and `@tailwindcss/typography` → postcss-selector-parser 6.1.5. This avoids the audit tool's suggested parent downgrades. Lint and CSS build exercise these consumers.
+- Updated the retained hook-form resolver to the Zod-4-compatible 5.x line. The app currently has no resolver imports, but the declared integration must not retain a v3-only adapter.
+- Migrated one-argument dictionaries to explicit string keys. Derived schemas now access refined object shapes directly; rebuilt changed shapes retain their strict object contract and existing dedicated refinements. The native controlled receipt adapter uses Zod 4 schema types and accepts only nonnegative bounded integer fields before running the original complete schema. New tests reject unbounded, fractional and oversized inputs and prove refinements still run.
+
+The security regression tests verify that oversized arrays, maps and sets fail before any element validation, including the actual estimate-publication line ceiling. This directly tests the corrected behavior described by [Zod's maintainer](https://github.com/colinhacks/zod/pull/6652), with compatibility decisions informed by the [Zod 4 migration guide](https://zod.dev/v4/changelog).
+
+The renderer image was also rebuilt and published under a new immutable digest, then admitted only after [native Vercel proof](evidence/beta-renderer-dependency-proof-2026-11-06.json). The proof verified actual Linux x64 execution with Zod 4.6.7, exact installed source/package/font hashes, 20 malformed-PDF counterexamples, a 22-page synthetic report, independent validation and native recovery of identical bytes, network denial, restricted worker identity, Chromium sandboxing and whole-VM cleanup. Existing historical image receipts remain intact. Backend policy alignment is separate from this source/image repair and must preserve commissioning flags and existing job provenance.
+
+Historical controlled proof pins and the October clinical provider-test admission remain untouched. `tests/clinical-calls/beta-dependency-candidate.json` preserves the initial repaired offline candidate; `beta-uuid-candidate.json` binds its UUID-compatible successor, and its positive regression checks all ten exact provider request bodies and source/transport fingerprints. The current offline planner has a distinct contract that cannot authorize hosted transport. The historical hosted probe correctly refuses changed source; this does not disable or change the production clinical-generation handlers or their existing commissioning gates. A future hosted evaluation must explicitly review the new candidate.
+
+Local Node regressions passed 2,791/2,791 with no failures or skips, including the new security regressions and positive current-source clinical planner. All 56 Edge entrypoints and the four additional CI shared entrypoints passed the frozen root Deno check. All eight isolated diagnostic-release consumers passed functions-only frozen checks and bundles. The 52-test renderer/diagnostic subset passed. All 23 corresponding lock audits and the root Deno audit reported no known vulnerabilities. Full compiler/lint/build checks were paused to give the independent database proof a serial compute window; final results belong to the parent beta audit. Additional validation status is recorded in the remediation evidence. Root npm and Deno audit results describe local installed/locked packages, not deployed bundle identity. HTTP CDN modules are outside npm advisory coverage. The legacy Bun locks remain unselected historical inputs; use `npm ci` as required by AGENTS.md. Hosted function rollout and new controlled proof are separate workstreams.
+
+## Initial read-only audit (superseded by repair above)
 
 Read-only audit against source baseline `b8767ff2e560f23d884194b5e9f875c0c647532a`. [Full and production-filtered npm reports](evidence/beta-dependency-audit-2026-11-06.json) preserve exact dependency nodes, advisories and suggested fix metadata. No package, lockfile, proof pin or hosted state changed.
 
-`npm audit --json` reports **18 vulnerable package entries: 6 high, 12 moderate, 0 critical**. `npm audit --omit=dev --json` reports **8 entries: 4 high, 4 moderate**. These are affected package counts, not distinct advisory counts or proven exploit paths. The September zero-result in [dependency-baseline.md](dependency-baseline.md) is superseded.
+`npm audit --json` reports **18 vulnerable package entries: 6 high, 12 moderate, 0 critical**. `npm audit --omit=dev --json` reports **8 entries: 4 high, 4 moderate**. These are affected package counts, not distinct advisory counts or proven exploit paths. This initial result superseded the September snapshot and is itself superseded by the current repaired candidate above.
 
 ## Prioritized findings
 
@@ -18,13 +40,13 @@ Read-only audit against source baseline `b8767ff2e560f23d884194b5e9f875c0c647532
 
 The upstream Zod correction checks collection size before parsing elements; see [maintainer PR 6652](https://github.com/colinhacks/zod/pull/6652). The [Vite maintainer advisory](https://github.com/vitejs/vite/security/advisories/GHSA-rq7h-c2jc-7f22) describes dev-server exposure and specific path conditions, so it does not establish a vulnerability in the deployed static site. The [Undici maintainer advisory](https://github.com/nodejs/undici/security/advisories/GHSA-4w7w-5xrc-9h26) requires a particular redirect/shared-cache composition; no such configuration was established in this audit. The [follow-redirects maintainer advisory](https://github.com/follow-redirects/follow-redirects/security/advisories/GHSA-mrwp-f3q8-3g9p) documents cross-realm sensitive-header behavior and its patched version. These sources were checked November 6; later release candidates need a fresh audit.
 
-## Why the lock was not silently refreshed
+## Historical proof boundary retained during repair
 
 Current narcotics proof machinery binds package/source bytes: `tests/controlled-drugs/narcotics-finalize-browser-bindings.json` records `package-lock.json` and `package.json` hashes; `scripts/narcotics-log/operational_browser.py` includes the lockfile in its source set. A dependency update is valid work, but previous proof does not automatically carry over. Keep archived evidence intact, generate new exact-candidate evidence, and inspect current proof admission rather than rewriting historical hashes merely to make a check pass.
 
 The root npm lock and `deno.lock` describe different resolution contexts. Hosted Edge source/bundles and the separate diagnostic-renderer deployment must be verified after upgrades. Passing a root-only audit cannot establish that a deployed service uses the patched dependency.
 
-## Acceptance for the dependency repair
+## Release verification requirements
 
 1. Select compatible patched versions and review any Zod migration behavior, especially error shapes, strict objects, refinements and collection parsing.
 2. Run the current lint/typechecks/unit/build/browser checks, Edge `deno check --frozen` and isolated handler/renderer tests.

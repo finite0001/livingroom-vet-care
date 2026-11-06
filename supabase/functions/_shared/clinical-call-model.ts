@@ -7,7 +7,7 @@ export const CALL_LIMITS = {
   characters: 60000, bytes: 240000, response_bytes: 512000,
   page_ms: 10000, capture_ms: 120000,
 } as const;
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const timestamp = z.string().datetime({ offset: true });
 const text = (max: number) => z.string().max(max).refine((s) => !s.includes("\0"));
 const nonblank = (max: number) => text(max).refine((s) => !!s.trim());

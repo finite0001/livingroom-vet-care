@@ -1,5 +1,5 @@
 import { z } from "zod";
-export const historyId = z.string().uuid();
+export const historyId = z.string().guid();
 export const historyHash = z.string().regex(/^[a-f0-9]{64}$/);
 export const historyTimestamp = z
   .string()
@@ -226,7 +226,7 @@ export const requestSchema = z.object({
   kind: historyKind,
   status: z.enum(["prepared", "approved", "abandoned"]),
   request_hash: historyHash.nullable(),
-  payload: z.record(z.unknown()).nullable(),
+  payload: z.record(z.string(), z.unknown()).nullable(),
   created_at: historyTimestamp,
   resolved_at: historyTimestamp.nullable(),
   review_context: reviewContext.nullable(),
@@ -246,7 +246,7 @@ export function parseHistoryRequest(
   const e = z
       .object({
         request: requestSchema,
-        receipt: z.record(z.unknown()).nullable(),
+        receipt: z.record(z.string(), z.unknown()).nullable(),
       })
       .parse(value),
     r = e.request;

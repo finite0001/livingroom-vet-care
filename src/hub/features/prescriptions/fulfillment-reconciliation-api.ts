@@ -35,7 +35,7 @@ import {
 } from "../../../../supabase/functions/_shared/native-return-reconciliation.ts";
 const uuid = z
     .string()
-    .uuid()
+    .guid()
     .refine((v) => v === v.toLowerCase()),
   hash = z.string().regex(/^[a-f0-9]{64}$/),
   integer = z.number().int().min(0).max(2147483647),
