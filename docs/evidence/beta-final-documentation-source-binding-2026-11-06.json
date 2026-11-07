@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "kind": "final-documentation-only-product-source-binding-v1",
+  "capturedAt": "2026-11-07T02:20:52.812609+00:00",
+  "validatedProductCommit": "7feb6890387742416d811ae744bd7632fb56b6b5",
+  "validatedNativeRun": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42327532678",
+  "validatedNormalProfiles": 15,
+  "productSourceManifestSha256": "8146e9752b4472d5ee8333893ba2d8a1fefcaa9ee60c932921a37bd3c778c9d7",
+  "pinnedFilesVerified": 1385,
+  "pinnedFileInventorySha256": "8ccf1260e63d78cb6e571a08375a8d6b09750bf613f61d30ee3a63571d58e053",
+  "allPinnedFilesMatchValidatedManifest": true,
+  "allCommittedPinnedFilesMatchValidatedCommit": true,
+  "derivedUntrackedException": [
+    "scripts/narcotics-log/cli-framing.json"
+  ],
+  "manifestItselfMatchesValidatedCommit": true,
+  "changedTrackedFiles": [
+    "docs/beta-remediation-2026-11-06.md",
+    "docs/evidence/beta-controlled-candidate-2026-11-06.md"
+  ],
+  "documentationOnlyFiles": [
+    "docs/beta-remediation-2026-11-06.md",
+    "docs/evidence/beta-controlled-candidate-2026-11-06.md",
+    "docs/evidence/beta-current211-family-writer-diagnostics-2026-11-06.json",
+    "docs/evidence/beta-current211-sixth-ci-2026-11-06.json",
+    "docs/evidence/beta-final-documentation-source-binding-2026-11-06.json"
+  ],
+  "noProductFilesChanged": true,
+  "noTrackedModeChanges": true,
+  "bindingMethod": "Compare every pinned source byte count and SHA256 to the exact committed manifest, then each committed pinned file and manifest to validated product commit 7feb. The sole generated cli-framing.json exception is byte/hash checked against that same committed manifest; it is deterministically derived in CI before source admission. Verify all tracked changes and nonignored additions are documentation-only. This receipt intentionally does not embed its own hash or the future documentation commit hash.",
+  "scope": "The completed 15-profile native run remains valid for unchanged product bytes. A later docs-only commit may trigger new CI; this receipt does not claim those pending reruns have passed. Hosted deployment/provider behavior and 33 human decisions are not admitted.",
+  "nativeReceipt": "docs/evidence/beta-current211-sixth-ci-2026-11-06.json",
+  "diagnosticReceipt": "docs/evidence/beta-current211-family-writer-diagnostics-2026-11-06.json"
+}
