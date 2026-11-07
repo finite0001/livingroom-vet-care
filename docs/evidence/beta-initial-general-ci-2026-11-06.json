@@ -1,0 +1,1471 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-11-06T23:54:58.978909+00:00",
+  "kind": "initial-general-ci-outcome",
+  "readinessAdmission": false,
+  "run": {
+    "conclusion": "cancelled",
+    "createdAt": "2026-11-06T23:33:03Z",
+    "headSha": "e709160ecf706bedc08e10e525c1a1f2fd542da2",
+    "status": "completed",
+    "updatedAt": "2026-11-06T23:54:18Z",
+    "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312651903"
+  },
+  "jobs": [
+    {
+      "name": "Historical 206 renderer and scheduling regressions",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128217605533,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312651903/job/128217605533",
+      "startedAt": "2026-11-06T23:33:06Z",
+      "completedAt": "2026-11-06T23:41:34Z",
+      "sourceScope": "retained historical206 regression, not current211 acceptance",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:07Z",
+          "completedAt": "2026-11-06T23:33:08Z"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:08Z",
+          "completedAt": "2026-11-06T23:33:17Z"
+        },
+        {
+          "number": 3,
+          "name": "Admit unchanged historical 206 regression source",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:17Z",
+          "completedAt": "2026-11-06T23:33:19Z"
+        },
+        {
+          "number": 4,
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:19Z",
+          "completedAt": "2026-11-06T23:33:20Z"
+        },
+        {
+          "number": 5,
+          "name": "Run npm ci --ignore-scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:20Z",
+          "completedAt": "2026-11-06T23:34:07Z"
+        },
+        {
+          "number": 6,
+          "name": "Install Chromium with bounded APT retries",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:34:07Z",
+          "completedAt": "2026-11-06T23:34:26Z"
+        },
+        {
+          "number": 7,
+          "name": "Run node --experimental-strip-types scripts/diagnostics/generate-synthetic-input.ts",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:34:26Z",
+          "completedAt": "2026-11-06T23:34:26Z"
+        },
+        {
+          "number": 8,
+          "name": "Build pinned native amd64 renderer",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:34:26Z",
+          "completedAt": "2026-11-06T23:35:03Z"
+        },
+        {
+          "number": 9,
+          "name": "Prove restricted Chromium, actual PDF admission and whole-container cleanup",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:35:03Z",
+          "completedAt": "2026-11-06T23:35:06Z"
+        },
+        {
+          "number": 10,
+          "name": "Run malformed-PDF counterexamples inside credential-free image",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:35:06Z",
+          "completedAt": "2026-11-06T23:35:07Z"
+        },
+        {
+          "number": 11,
+          "name": "Run supabase/setup-cli@v1",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:35:07Z",
+          "completedAt": "2026-11-06T23:35:09Z"
+        },
+        {
+          "number": 12,
+          "name": "Cache the approved immutable PostgreSQL image",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:35:09Z",
+          "completedAt": "2026-11-06T23:35:26Z"
+        },
+        {
+          "number": 13,
+          "name": "Verify PDF registration, staff browser download, observed locks and populated restore",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:35:26Z",
+          "completedAt": "2026-11-06T23:37:59Z"
+        },
+        {
+          "number": 14,
+          "name": "Run denoland/setup-deno@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:37:59Z",
+          "completedAt": "2026-11-06T23:38:03Z"
+        },
+        {
+          "number": 15,
+          "name": "Verify reviewed bookings, observed schedule locks, real browser recovery and populated catalog restore",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:38:03Z",
+          "completedAt": "2026-11-06T23:41:30Z"
+        },
+        {
+          "number": 16,
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:41:30Z",
+          "completedAt": "2026-11-06T23:41:30Z"
+        },
+        {
+          "number": 30,
+          "name": "Post Run denoland/setup-deno@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:41:30Z",
+          "completedAt": "2026-11-06T23:41:31Z"
+        },
+        {
+          "number": 31,
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:41:31Z",
+          "completedAt": "2026-11-06T23:41:32Z"
+        },
+        {
+          "number": 32,
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:41:32Z",
+          "completedAt": "2026-11-06T23:41:32Z"
+        },
+        {
+          "number": 33,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:41:32Z",
+          "completedAt": "2026-11-06T23:41:32Z"
+        }
+      ]
+    },
+    {
+      "name": "Historical 206 controlled-stock proofs",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "databaseId": 128217605873,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312651903/job/128217605873",
+      "startedAt": "2026-11-06T23:33:08Z",
+      "completedAt": "2026-11-06T23:54:15Z",
+      "sourceScope": "retained historical206 regression, not current211 acceptance",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:09Z",
+          "completedAt": "2026-11-06T23:33:09Z"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:09Z",
+          "completedAt": "2026-11-06T23:33:18Z"
+        },
+        {
+          "number": 3,
+          "name": "Admit unchanged historical 206 regression source",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:18Z",
+          "completedAt": "2026-11-06T23:33:19Z"
+        },
+        {
+          "number": 4,
+          "name": "Run supabase/setup-cli@v1",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:19Z",
+          "completedAt": "2026-11-06T23:33:21Z"
+        },
+        {
+          "number": 5,
+          "name": "Cache the approved immutable PostgreSQL image",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:21Z",
+          "completedAt": "2026-11-06T23:33:42Z"
+        },
+        {
+          "number": 6,
+          "name": "Verify frozen private controlled-stock installation artifact",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:42Z",
+          "completedAt": "2026-11-06T23:33:43Z"
+        },
+        {
+          "number": 7,
+          "name": "Verify CLI-owned controlled-stock migration body",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:43Z",
+          "completedAt": "2026-11-06T23:33:43Z"
+        },
+        {
+          "number": 8,
+          "name": "Verify independently sealed private secondary-review installation artifacts",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:43Z",
+          "completedAt": "2026-11-06T23:33:44Z"
+        },
+        {
+          "number": 9,
+          "name": "Verify canonical 206 reference, CLI atomicity and private attachment restores",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:44Z",
+          "completedAt": "2026-11-06T23:41:45Z"
+        },
+        {
+          "number": 10,
+          "name": "Verify isolated controlled-stock candidate, ordinary compatibility, real Auth waits and managed restore",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "startedAt": "2026-11-06T23:41:45Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 11,
+          "name": "Verify genuine 187/188 history, available-only openings and populated opening restore",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 12,
+          "name": "Verify actual CLI ledger failure rollback and transaction barrier",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 13,
+          "name": "Verify separately sealed secondary-review admission and transaction feasibility",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 14,
+          "name": "Verify private secondary review through real Auth, natural expiry and populated restore",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 28,
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 29,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        }
+      ]
+    },
+    {
+      "name": "frontend",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128217605888,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312651903/job/128217605888",
+      "startedAt": "2026-11-06T23:33:06Z",
+      "completedAt": "2026-11-06T23:33:33Z",
+      "sourceScope": "initial current frontend/Edge candidate",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:07Z",
+          "completedAt": "2026-11-06T23:33:08Z"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:08Z",
+          "completedAt": "2026-11-06T23:33:18Z"
+        },
+        {
+          "number": 3,
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:18Z",
+          "completedAt": "2026-11-06T23:33:20Z"
+        },
+        {
+          "number": 4,
+          "name": "Run npm ci",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:20Z",
+          "completedAt": "2026-11-06T23:33:27Z"
+        },
+        {
+          "number": 5,
+          "name": "Check read-only schema comparison safeguards",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:27Z",
+          "completedAt": "2026-11-06T23:33:28Z"
+        },
+        {
+          "number": 6,
+          "name": "Verify restore privilege diagnostics and original Storage metadata",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:28Z",
+          "completedAt": "2026-11-06T23:33:29Z"
+        },
+        {
+          "number": 7,
+          "name": "Verify offline synthetic recap evaluation safeguards",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:29Z",
+          "completedAt": "2026-11-06T23:33:29Z"
+        },
+        {
+          "number": 8,
+          "name": "Verify offline synthetic call transport safeguards",
+          "status": "completed",
+          "conclusion": "failure",
+          "startedAt": "2026-11-06T23:33:29Z",
+          "completedAt": "2026-11-06T23:33:30Z"
+        },
+        {
+          "number": 9,
+          "name": "Verify retained backend proof bytes without executing archived code",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:33:30Z",
+          "completedAt": "2026-11-06T23:33:30Z"
+        },
+        {
+          "number": 10,
+          "name": "Run npm run check",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:33:30Z",
+          "completedAt": "2026-11-06T23:33:30Z"
+        },
+        {
+          "number": 11,
+          "name": "Run npx playwright install --with-deps chromium",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:33:30Z",
+          "completedAt": "2026-11-06T23:33:30Z"
+        },
+        {
+          "number": 12,
+          "name": "Verify built local barcode worker and simulated camera cleanup",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:33:30Z",
+          "completedAt": "2026-11-06T23:33:30Z"
+        },
+        {
+          "number": 13,
+          "name": "Run npm run test:e2e",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:33:30Z",
+          "completedAt": "2026-11-06T23:33:30Z"
+        },
+        {
+          "number": 25,
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:33:30Z",
+          "completedAt": "2026-11-06T23:33:30Z"
+        },
+        {
+          "number": 26,
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:30Z",
+          "completedAt": "2026-11-06T23:33:30Z"
+        },
+        {
+          "number": 27,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:30Z",
+          "completedAt": "2026-11-06T23:33:31Z"
+        }
+      ]
+    },
+    {
+      "name": "Historical 206 database regressions",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "databaseId": 128217605937,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312651903/job/128217605937",
+      "startedAt": "2026-11-06T23:33:06Z",
+      "completedAt": "2026-11-06T23:54:17Z",
+      "sourceScope": "retained historical206 regression, not current211 acceptance",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:08Z",
+          "completedAt": "2026-11-06T23:33:09Z"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:09Z",
+          "completedAt": "2026-11-06T23:33:19Z"
+        },
+        {
+          "number": 3,
+          "name": "Admit unchanged historical 206 regression source",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:19Z",
+          "completedAt": "2026-11-06T23:33:21Z"
+        },
+        {
+          "number": 4,
+          "name": "Select the owned historical runtime for HTTP checks",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:21Z",
+          "completedAt": "2026-11-06T23:33:21Z"
+        },
+        {
+          "number": 5,
+          "name": "Verify local concurrency harness regressions",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:21Z",
+          "completedAt": "2026-11-06T23:35:11Z"
+        },
+        {
+          "number": 6,
+          "name": "Run supabase/setup-cli@v1",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:35:11Z",
+          "completedAt": "2026-11-06T23:35:13Z"
+        },
+        {
+          "number": 7,
+          "name": "Cache the approved immutable PostgreSQL image",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:35:13Z",
+          "completedAt": "2026-11-06T23:35:26Z"
+        },
+        {
+          "number": 8,
+          "name": "Verify scheduler interference refusal and paused canonical installation",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:35:26Z",
+          "completedAt": "2026-11-06T23:37:30Z"
+        },
+        {
+          "number": 9,
+          "name": "Retain encrypted scheduler proof diagnostics",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:37:30Z",
+          "completedAt": "2026-11-06T23:37:33Z"
+        },
+        {
+          "number": 10,
+          "name": "Start owned canonical database with scheduler paused before migrations",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:37:33Z",
+          "completedAt": "2026-11-06T23:38:19Z"
+        },
+        {
+          "number": 11,
+          "name": "Retain encrypted central database diagnostics",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:38:19Z",
+          "completedAt": "2026-11-06T23:38:21Z"
+        },
+        {
+          "number": 12,
+          "name": "Run supabase test db",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:38:21Z",
+          "completedAt": "2026-11-06T23:39:27Z"
+        },
+        {
+          "number": 13,
+          "name": "Verify diagnostic PDF job contention and captured-byte restore",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:39:27Z",
+          "completedAt": "2026-11-06T23:39:47Z"
+        },
+        {
+          "number": 14,
+          "name": "Verify diagnostic review and correction contention",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:39:47Z",
+          "completedAt": "2026-11-06T23:39:55Z"
+        },
+        {
+          "number": 15,
+          "name": "Verify recurring care review, completion and final delivery eligibility races",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:39:55Z",
+          "completedAt": "2026-11-06T23:40:04Z"
+        },
+        {
+          "number": 16,
+          "name": "Verify concurrent service completion, correction and patient archival",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:40:04Z",
+          "completedAt": "2026-11-06T23:40:06Z"
+        },
+        {
+          "number": 17,
+          "name": "Verify photo choice, replay and verified-byte deletion concurrency",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:40:06Z",
+          "completedAt": "2026-11-06T23:40:07Z"
+        },
+        {
+          "number": 18,
+          "name": "Verify unknown inbound retry after concurrent complete-household creation",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:40:07Z",
+          "completedAt": "2026-11-06T23:40:11Z"
+        },
+        {
+          "number": 19,
+          "name": "Verify native prescription cancellation and replacement concurrency",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:40:11Z",
+          "completedAt": "2026-11-06T23:40:20Z"
+        },
+        {
+          "number": 20,
+          "name": "Verify native refill operational transitions and linked-order concurrency",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:40:20Z",
+          "completedAt": "2026-11-06T23:40:29Z"
+        },
+        {
+          "number": 21,
+          "name": "Verify product and lot ordering with queued catalog updates",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:40:29Z",
+          "completedAt": "2026-11-06T23:40:38Z"
+        },
+        {
+          "number": 22,
+          "name": "Verify native dispensing allowance, stock and invoice concurrency",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:40:38Z",
+          "completedAt": "2026-11-06T23:40:58Z"
+        },
+        {
+          "number": 23,
+          "name": "Verify native record-release source concurrency",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:40:58Z",
+          "completedAt": "2026-11-06T23:41:16Z"
+        },
+        {
+          "number": 24,
+          "name": "Verify native dispense correction and release concurrency",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:41:16Z",
+          "completedAt": "2026-11-06T23:41:37Z"
+        },
+        {
+          "number": 25,
+          "name": "Verify native physical return custody and inventory concurrency",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:41:37Z",
+          "completedAt": "2026-11-06T23:42:00Z"
+        },
+        {
+          "number": 26,
+          "name": "Verify native return compensation and discrepancy hold concurrency",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:42:00Z",
+          "completedAt": "2026-11-06T23:42:25Z"
+        },
+        {
+          "number": 27,
+          "name": "Verify native dispense credits and refund reservation concurrency",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:42:25Z",
+          "completedAt": "2026-11-06T23:43:02Z"
+        },
+        {
+          "number": 28,
+          "name": "Verify native estimate drafts, catalog review and uncertain-save resolution",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:43:02Z",
+          "completedAt": "2026-11-06T23:43:14Z"
+        },
+        {
+          "number": 29,
+          "name": "Verify abandoned attachment cleanup claims, replacement and receipt races",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:43:14Z",
+          "completedAt": "2026-11-06T23:43:17Z"
+        },
+        {
+          "number": 30,
+          "name": "Verify incoming attachment claim, finalization and revocation races",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:43:17Z",
+          "completedAt": "2026-11-06T23:43:22Z"
+        },
+        {
+          "number": 31,
+          "name": "Verify conversation attachment capture and queue races",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:43:22Z",
+          "completedAt": "2026-11-06T23:43:26Z"
+        },
+        {
+          "number": 32,
+          "name": "Verify native estimate publication capture, lifecycle and uncertain-save resolution",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:43:26Z",
+          "completedAt": "2026-11-06T23:43:46Z"
+        },
+        {
+          "number": 33,
+          "name": "Verify concurrent treatment alert snapshot locks",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:43:46Z",
+          "completedAt": "2026-11-06T23:43:57Z"
+        },
+        {
+          "number": 34,
+          "name": "Verify concurrent payment collection and invoice locks",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:43:57Z",
+          "completedAt": "2026-11-06T23:44:06Z"
+        },
+        {
+          "number": 35,
+          "name": "Verify concurrent reconciliation and financial evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:44:06Z",
+          "completedAt": "2026-11-06T23:44:19Z"
+        },
+        {
+          "number": 36,
+          "name": "Verify concurrent reviewed payment delivery guards",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:44:19Z",
+          "completedAt": "2026-11-06T23:44:29Z"
+        },
+        {
+          "number": 37,
+          "name": "Verify audited payment event retry concurrency",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:44:29Z",
+          "completedAt": "2026-11-06T23:44:41Z"
+        },
+        {
+          "number": 38,
+          "name": "Verify concurrent lab report promotion and document guards",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:44:41Z",
+          "completedAt": "2026-11-06T23:44:49Z"
+        },
+        {
+          "number": 39,
+          "name": "Verify concurrent external record approval and correction guards",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:44:49Z",
+          "completedAt": "2026-11-06T23:45:02Z"
+        },
+        {
+          "number": 40,
+          "name": "Verify concurrent inbound processing retry and lease guards",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:45:02Z",
+          "completedAt": "2026-11-06T23:45:10Z"
+        },
+        {
+          "number": 41,
+          "name": "Verify operational discovery and scheduler run concurrency",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:45:10Z",
+          "completedAt": "2026-11-06T23:45:18Z"
+        },
+        {
+          "number": 42,
+          "name": "Verify records request capture and cancellation concurrency",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:45:18Z",
+          "completedAt": "2026-11-06T23:45:28Z"
+        },
+        {
+          "number": 43,
+          "name": "Verify reviewed outgoing retry receipt and stale-work concurrency",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:45:28Z",
+          "completedAt": "2026-11-06T23:45:41Z"
+        },
+        {
+          "number": 44,
+          "name": "Reproduce and correct explicit RPC grant drift",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:45:41Z",
+          "completedAt": "2026-11-06T23:45:42Z"
+        },
+        {
+          "number": 45,
+          "name": "Verify selected-source release locking and invalidation",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:45:42Z",
+          "completedAt": "2026-11-06T23:46:00Z"
+        },
+        {
+          "number": 46,
+          "name": "Verify patient-scoped clinical import leases and observation versions",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:46:00Z",
+          "completedAt": "2026-11-06T23:46:26Z"
+        },
+        {
+          "number": 47,
+          "name": "Verify consult-scoped vaccination import races",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:46:26Z",
+          "completedAt": "2026-11-06T23:46:58Z"
+        },
+        {
+          "number": 48,
+          "name": "Verify prescription parent and item import races",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:46:58Z",
+          "completedAt": "2026-11-06T23:47:30Z"
+        },
+        {
+          "number": 49,
+          "name": "Verify reviewed vaccination approval and correction races",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:47:30Z",
+          "completedAt": "2026-11-06T23:47:44Z"
+        },
+        {
+          "number": 50,
+          "name": "Verify reviewed prescription approval and correction races",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:47:44Z",
+          "completedAt": "2026-11-06T23:48:30Z"
+        },
+        {
+          "number": 51,
+          "name": "Verify attachment metadata leases, parent locks and replay races",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:48:30Z",
+          "completedAt": "2026-11-06T23:49:15Z"
+        },
+        {
+          "number": 52,
+          "name": "Verify original capture, source leases and fenced Storage races",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:49:15Z",
+          "completedAt": "2026-11-06T23:51:45Z"
+        },
+        {
+          "number": 53,
+          "name": "Verify populated additive prescription reference upgrade",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:51:45Z",
+          "completedAt": "2026-11-06T23:51:54Z"
+        },
+        {
+          "number": 54,
+          "name": "Verify reviewed history, local problem and release concurrency",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:51:54Z",
+          "completedAt": "2026-11-06T23:52:37Z"
+        },
+        {
+          "number": 55,
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:52:37Z",
+          "completedAt": "2026-11-06T23:52:40Z"
+        },
+        {
+          "number": 56,
+          "name": "Run npm ci --ignore-scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:52:40Z",
+          "completedAt": "2026-11-06T23:53:24Z"
+        },
+        {
+          "number": 57,
+          "name": "Install browser for native full-stack acceptance",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:53:24Z",
+          "completedAt": "2026-11-06T23:53:42Z"
+        },
+        {
+          "number": 58,
+          "name": "Verify native prescribing, real browser dispensing and populated restore",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "startedAt": "2026-11-06T23:53:42Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 59,
+          "name": "Project safe historical RPC failure codes without exposing private logs",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 60,
+          "name": "Run denoland/setup-deno@v2",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 61,
+          "name": "Check and cache payment HTTP roundtrip dependencies",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 62,
+          "name": "Verify actual payment capability HTTP and ledger roundtrip",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 63,
+          "name": "Check and cache reconciliation HTTP roundtrip dependencies",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 64,
+          "name": "Verify actual administrator reconciliation HTTP and proof capture",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 65,
+          "name": "Check and cache payment delivery HTTP dependencies",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 66,
+          "name": "Verify actual payment delivery HTTP, queue and worker roundtrip",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 67,
+          "name": "Verify actual clinical booking, treatment, billing and release workflow",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 68,
+          "name": "Compare PostgreSQL and TypeScript return quantity replay",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 69,
+          "name": "Verify actual scheduler run receipts and operational discovery",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 70,
+          "name": "Verify actual reviewed outbox retry receipts and original delivery guards",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 71,
+          "name": "Verify actual private Storage round-trip",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 72,
+          "name": "Check and cache private lab report HTTP dependencies",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 73,
+          "name": "Verify actual lab report HTTP and private Storage byte capture",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 74,
+          "name": "Verify signed inbound receipt and actual staff inbox workflow",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 75,
+          "name": "Verify signed SMS consent ordering and inbox persistence",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 76,
+          "name": "Check and cache external record HTTP dependencies",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 77,
+          "name": "Verify actual external record HTTP and private file capture",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 78,
+          "name": "Verify patient-scoped clinical imports through actual HTTP and Auth",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 79,
+          "name": "Verify consult-scoped vaccination imports through actual HTTP and Auth",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 80,
+          "name": "Verify prescription intake and clinical review through actual HTTP and Auth",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 81,
+          "name": "Verify unpaid invoice reminders through local Auth, browser, contention and populated restore",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 82,
+          "name": "Verify source-bound dictation review through real Auth, browser, competing edits and populated restore",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 83,
+          "name": "Verify audio capture, one-shot provider dispatch, recovery and reviewed SOAP in an owned runtime",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 84,
+          "name": "Verify template note generation, source recovery, revoked-session locks and populated restore",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 85,
+          "name": "Verify source-cited recap, source-write races and immutable review in an owned runtime",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 86,
+          "name": "Verify private call-source capture through Auth, HTTP and populated restore",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 87,
+          "name": "Verify private call-note access, legacy frontend compatibility and populated restore",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 88,
+          "name": "Verify guarded call drafts, private review, Auth races and populated restore",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 89,
+          "name": "Verify source-bound release artifacts in disposable Auth and Storage",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 90,
+          "name": "Verify reviewed imported history and release artifacts in disposable Auth and Storage",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 91,
+          "name": "Verify attachment metadata and original capture through disposable Auth and Storage",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 92,
+          "name": "Verify conversation upload ownership and actual private bytes",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 93,
+          "name": "Verify incoming attachment HTTP capture and reads through actual Auth and private Storage",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 94,
+          "name": "Verify patient photo ownership and actual private image bytes",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 95,
+          "name": "Verify Whogot and performed services through actual local Auth and PostgREST",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 96,
+          "name": "Verify daily communications through actual local Auth and PostgREST",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 97,
+          "name": "Verify recurring care through actual local Auth and PostgREST",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 98,
+          "name": "Verify records requests through actual Auth, Storage and reviewed email queue",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 99,
+          "name": "Verify diagnostic Auth, private originals and real Patient 360 in an owned runtime",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 100,
+          "name": "Verify diagnostic PDF jobs, exact-byte recovery and Patient360 in an owned runtime",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 199,
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 200,
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        },
+        {
+          "number": 201,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:54:14Z",
+          "completedAt": "2026-11-06T23:54:14Z"
+        }
+      ]
+    },
+    {
+      "name": "edge",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128217605967,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312651903/job/128217605967",
+      "startedAt": "2026-11-06T23:33:06Z",
+      "completedAt": "2026-11-06T23:33:53Z",
+      "sourceScope": "initial current frontend/Edge candidate",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:06Z",
+          "completedAt": "2026-11-06T23:33:07Z"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:07Z",
+          "completedAt": "2026-11-06T23:33:16Z"
+        },
+        {
+          "number": 3,
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:16Z",
+          "completedAt": "2026-11-06T23:33:20Z"
+        },
+        {
+          "number": 4,
+          "name": "Run npm ci --ignore-scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:20Z",
+          "completedAt": "2026-11-06T23:33:25Z"
+        },
+        {
+          "number": 5,
+          "name": "Run denoland/setup-deno@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:25Z",
+          "completedAt": "2026-11-06T23:33:29Z"
+        },
+        {
+          "number": 6,
+          "name": "Check all Edge Function entry points with the committed dependency lock",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:29Z",
+          "completedAt": "2026-11-06T23:33:31Z"
+        },
+        {
+          "number": 7,
+          "name": "Verify invoice handler without root Node dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:31Z",
+          "completedAt": "2026-11-06T23:33:32Z"
+        },
+        {
+          "number": 8,
+          "name": "Verify every diagnostic-record consumer without root Node dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:32Z",
+          "completedAt": "2026-11-06T23:33:41Z"
+        },
+        {
+          "number": 9,
+          "name": "Verify patient photo handler without root Node dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:41Z",
+          "completedAt": "2026-11-06T23:33:42Z"
+        },
+        {
+          "number": 10,
+          "name": "Verify diagnostic PDF handler without root Node dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:42Z",
+          "completedAt": "2026-11-06T23:33:42Z"
+        },
+        {
+          "number": 11,
+          "name": "Verify reconciliation worker without root Node dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:42Z",
+          "completedAt": "2026-11-06T23:33:43Z"
+        },
+        {
+          "number": 12,
+          "name": "Verify unpaid invoice reminder worker without root Node dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:43Z",
+          "completedAt": "2026-11-06T23:33:44Z"
+        },
+        {
+          "number": 13,
+          "name": "Verify clinical audio handler without root Node dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:44Z",
+          "completedAt": "2026-11-06T23:33:48Z"
+        },
+        {
+          "number": 24,
+          "name": "Post Run denoland/setup-deno@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:48Z",
+          "completedAt": "2026-11-06T23:33:49Z"
+        },
+        {
+          "number": 25,
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:49Z",
+          "completedAt": "2026-11-06T23:33:51Z"
+        },
+        {
+          "number": 26,
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:51Z",
+          "completedAt": "2026-11-06T23:33:51Z"
+        },
+        {
+          "number": 27,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-06T23:33:51Z",
+          "completedAt": "2026-11-06T23:33:51Z"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "passedJobs": [
+      "Historical 206 renderer and scheduling regressions",
+      "edge"
+    ],
+    "failedJobs": [
+      "frontend"
+    ],
+    "cancelledJobs": [
+      "Historical 206 controlled-stock proofs",
+      "Historical 206 database regressions"
+    ]
+  },
+  "supersededBy": {
+    "headSha": "4a77ef1c173f6f174781285e27356bb1345538a0",
+    "runUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856897"
+  },
+  "frontendFailureAndLocalRepair": "docs/evidence/beta-ci-frontend-followup-2026-11-06.json",
+  "interpretation": "The initial run was cancelled by the superseding push after frontend fixture failure. Completed Edge and retained historical renderer/scheduling success remains narrowly scoped; cancelled historical profiles are not passes. The successor run needs independent completed results."
+}

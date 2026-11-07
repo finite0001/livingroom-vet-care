@@ -1,0 +1,117 @@
+{
+  "kind": "finite-successor-full-size-overhead-benchmark",
+  "descriptor_json_bytes": 9136568,
+  "engineering_only": true,
+  "full_runtime_acceptance": false,
+  "measurements": [
+    {
+      "variant": "before",
+      "sample": 0,
+      "elapsed_ms": 442.432
+    },
+    {
+      "variant": "before",
+      "sample": 1,
+      "elapsed_ms": 494.433
+    },
+    {
+      "variant": "before",
+      "sample": 2,
+      "elapsed_ms": 383.574
+    },
+    {
+      "variant": "before",
+      "sample": 3,
+      "elapsed_ms": 321.829
+    },
+    {
+      "variant": "before",
+      "sample": 4,
+      "elapsed_ms": 418.176
+    },
+    {
+      "variant": "before",
+      "sample": 5,
+      "elapsed_ms": 772.165
+    },
+    {
+      "variant": "optimized",
+      "sample": 0,
+      "elapsed_ms": 388.14
+    },
+    {
+      "variant": "optimized",
+      "sample": 1,
+      "elapsed_ms": 297.191
+    },
+    {
+      "variant": "optimized",
+      "sample": 2,
+      "elapsed_ms": 269.586
+    },
+    {
+      "variant": "optimized",
+      "sample": 3,
+      "elapsed_ms": 261.984
+    },
+    {
+      "variant": "optimized",
+      "sample": 4,
+      "elapsed_ms": 252.06
+    },
+    {
+      "variant": "optimized",
+      "sample": 5,
+      "elapsed_ms": 342.943
+    }
+  ],
+  "owned_cleanup": true,
+  "captured_at": "2026-11-07T00:07:31.530494+00:00",
+  "baseline_git_revision": "4a77ef1c173f6f174781285e27356bb1345538a0",
+  "baseline_source_sha256": "157e6b7a4a2bd551e5f4f1412ead38fd009a0ffa6a7020bf087b4072aeaeb99f",
+  "optimized_source_sha256": "5c18971ab3b0c4c06b0f61aa6b603db52b10c78e7e34a8331918dedc5a18ec40",
+  "optimized_migration_sha256": "bb9d9ceb3892d0d172a34906e60c263c5dcbfaf74f084d1b4cb577de23524141",
+  "fixture_source": "scripts/narcotics-log/module-expected.json",
+  "fixture_source_sha256": "009b7745613a282e7bf3415e42b507609c93c7b0e757fbacdde61aee4e3aa836",
+  "host": "Shared macOS Docker host, postgres:17-alpine, isolated owned network-none container",
+  "scope": "Exact generated inline successor comparison with full original source descriptor plus a minimal time_entries fixture. Excludes original actual-catalog construction and full RPC execution. Each check compared the complete canonical text to independently Python-projected source expectations.",
+  "statement_timeout_seconds": 8,
+  "limitations": [
+    "Local component timing, not native CI business acceptance.",
+    "Shared host load affects samples; no claimed end-to-end RPC latency."
+  ],
+  "median_ms": {
+    "before": 430.304,
+    "optimized": 283.3885
+  },
+  "median_reduction_percent": 34.1422575667435,
+  "metadata_negative_controls": {
+    "kind": "finite-beta-metadata-postgres-component-v1",
+    "passed": true,
+    "checks": [
+      "exact current delta accepted from immutable original descriptor",
+      "restored direct write ACL refused",
+      "changed comparison function source refused",
+      "admission schema exposure refused",
+      "admission table exposure refused",
+      "disabled admission RLS refused",
+      "disabled immutable trigger refused",
+      "replaced immutable function refused",
+      "admission data mutation refused",
+      "admission data mutation refused",
+      "admission data mutation refused",
+      "self-consistent unrelated expectation tamper refused",
+      "unchanged root numeric encoding drift refused",
+      "unchanged function numeric encoding drift refused",
+      "unchanged relation numeric encoding drift refused",
+      "self-consistent numeric encoding expectation tamper refused",
+      "all application roles denied private admission access"
+    ],
+    "migration_sha256": "bb9d9ceb3892d0d172a34906e60c263c5dcbfaf74f084d1b4cb577de23524141",
+    "hosted_writes": 0,
+    "application_Auth_verified": false,
+    "full_controlled_business_verified": false,
+    "owned_cleanup": true
+  },
+  "metadata_runner_sha256": "81ed2b78f4a987d9c80cc097c76a62f00eb355e8fad40ad2356a4add295dccbf"
+}

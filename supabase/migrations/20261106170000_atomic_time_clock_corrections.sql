@@ -574,7 +574,7 @@ revoke all on function public.read_on_duty_staff() from public, anon;
 grant execute on function public.read_on_duty_staff() to authenticated;
 
 CREATE OR REPLACE FUNCTION controlled_count_entry_v1.require_bound_module() RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path TO 'pg_catalog' SET quote_all_identifiers TO 'false' SET TIME ZONE 'UTC' SET datestyle TO 'ISO,YMD' SET intervalstyle TO 'postgres' SET extra_float_digits TO 3 AS $$
-declare d controlled_count_v1.descriptor;actual jsonb;beta_saved beta_time_clock_v1.admission;beta_expected jsonb;beta_original jsonb;begin
+declare d controlled_count_v1.descriptor;actual jsonb;beta_saved beta_time_clock_v1.admission;beta_expected jsonb;beta_original jsonb;beta_saved_text text;beta_expected_text text;begin
  if current_user<>'postgres'or current_setting('quote_all_identifiers')<>'off'
  or current_setting('TimeZone')<>'UTC'or current_setting('DateStyle')<>'ISO, YMD'
  or current_setting('IntervalStyle')<>'postgres'or current_setting('extra_float_digits')<>'3'then
@@ -649,9 +649,10 @@ declare d controlled_count_v1.descriptor;actual jsonb;beta_saved beta_time_clock
  AND NOT has_function_privilege('service_role',p.oid,'EXECUTE'))THEN
  RAISE EXCEPTION 'beta_clock_admission_immutability_invalid' USING ERRCODE='23514';END IF;
  SELECT * INTO STRICT beta_saved FROM beta_time_clock_v1.admission WHERE revision=1;
+ beta_saved_text := beta_saved.expected_properties::text;
  IF(SELECT count(*)FROM beta_time_clock_v1.admission)<>1
  OR beta_saved.original_descriptor_hash IS DISTINCT FROM d.definition_hash
- OR beta_saved.expected_properties_hash IS DISTINCT FROM encode(sha256(convert_to(beta_saved.expected_properties::text,'UTF8')),'hex')THEN
+ OR beta_saved.expected_properties_hash IS DISTINCT FROM encode(sha256(convert_to(beta_saved_text,'UTF8')),'hex')THEN
  RAISE EXCEPTION 'beta_clock_admission_source_invalid' USING ERRCODE='23514';END IF;
  beta_original := d.definition;
 
@@ -660,20 +661,25 @@ declare d controlled_count_v1.descriptor;actual jsonb;beta_saved beta_time_clock
  OR (SELECT count(*) FROM jsonb_array_elements(beta_expected#>'{ordinary_relations,time_entries,policies}')p
      WHERE p->>'name'IN('Admins update time entries','Admins delete time entries'))<>2 THEN
   RAISE EXCEPTION 'beta_clock_original_source_invalid' USING ERRCODE='23514';END IF;
- beta_expected := jsonb_set(beta_expected,'{ordinary_relations,time_entries,acl}',
-  (SELECT coalesce(jsonb_agg(a ORDER BY n),'[]'::jsonb)
-   FROM jsonb_array_elements(beta_expected#>'{ordinary_relations,time_entries,acl}')WITH ORDINALITY t(a,n)
-   WHERE NOT(a->>'grantee'IN('PUBLIC','anon','authenticated')AND a->>'privilege'IN('INSERT','UPDATE','DELETE'))));
- beta_expected := jsonb_set(beta_expected,'{ordinary_relations,time_entries,policies}',
-  (SELECT coalesce(jsonb_agg(p ORDER BY n),'[]'::jsonb)
-   FROM jsonb_array_elements(beta_expected#>'{ordinary_relations,time_entries,policies}')WITH ORDINALITY t(p,n)
-   WHERE p->>'name'NOT IN('Admins update time entries','Admins delete time entries')));
- beta_expected := jsonb_set(beta_expected,'{functions,controlled_count_entry_v1.require_bound_module(),body_sha256}',
-  to_jsonb(beta_saved.require_bound_body_hash));
+ -- Rebuild only the two changed small branches, then the complete root once.
+ -- The untouched root members are copied directly from the immutable source.
+ beta_expected := beta_expected || jsonb_build_object(
+ 'ordinary_relations',jsonb_set(beta_expected->'ordinary_relations','{time_entries}',
+  jsonb_set(jsonb_set(beta_expected#>'{ordinary_relations,time_entries}','{acl}',
+   (SELECT coalesce(jsonb_agg(a ORDER BY n),'[]'::jsonb)
+    FROM jsonb_array_elements(beta_expected#>'{ordinary_relations,time_entries,acl}')WITH ORDINALITY t(a,n)
+    WHERE NOT(a->>'grantee'IN('PUBLIC','anon','authenticated')AND a->>'privilege'IN('INSERT','UPDATE','DELETE')))),
+   '{policies}',(SELECT coalesce(jsonb_agg(p ORDER BY n),'[]'::jsonb)
+    FROM jsonb_array_elements(beta_expected#>'{ordinary_relations,time_entries,policies}')WITH ORDINALITY t(p,n)
+    WHERE p->>'name'NOT IN('Admins update time entries','Admins delete time entries')))),
+ 'functions',jsonb_set(beta_expected->'functions','{controlled_count_entry_v1.require_bound_module(),body_sha256}',
+  to_jsonb(beta_saved.require_bound_body_hash)));
 
- IF beta_saved.expected_properties::text IS DISTINCT FROM beta_expected::text THEN
+
+ beta_expected_text := beta_expected::text;
+ IF beta_saved_text IS DISTINCT FROM beta_expected_text THEN
  RAISE EXCEPTION 'beta_clock_admission_delta_invalid' USING ERRCODE='23514';END IF;
- if actual::text is distinct from beta_expected::text then
+ if actual::text is distinct from beta_expected_text then
   raise exception 'count_module_invalid'using errcode='P0001',detail='',hint='';end if;
 end
 $$;
@@ -686,19 +692,23 @@ DO $beta_clock_source_admission$ DECLARE p_original jsonb;p_original_hash text;e
  OR (SELECT count(*) FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')p
      WHERE p->>'name'IN('Admins update time entries','Admins delete time entries'))<>2 THEN
   RAISE EXCEPTION 'beta_clock_original_source_invalid' USING ERRCODE='23514';END IF;
- expected := jsonb_set(expected,'{ordinary_relations,time_entries,acl}',
-  (SELECT coalesce(jsonb_agg(a ORDER BY n),'[]'::jsonb)
-   FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,acl}')WITH ORDINALITY t(a,n)
-   WHERE NOT(a->>'grantee'IN('PUBLIC','anon','authenticated')AND a->>'privilege'IN('INSERT','UPDATE','DELETE'))));
- expected := jsonb_set(expected,'{ordinary_relations,time_entries,policies}',
-  (SELECT coalesce(jsonb_agg(p ORDER BY n),'[]'::jsonb)
-   FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')WITH ORDINALITY t(p,n)
-   WHERE p->>'name'NOT IN('Admins update time entries','Admins delete time entries')));
- expected := jsonb_set(expected,'{functions,controlled_count_entry_v1.require_bound_module(),body_sha256}',
-  to_jsonb('f3f995edde47fea226f32b3c1f30db2e40fed72c5a6b7ae235c66f881fd34de9'::text));
+ -- Rebuild only the two changed small branches, then the complete root once.
+ -- The untouched root members are copied directly from the immutable source.
+ expected := expected || jsonb_build_object(
+ 'ordinary_relations',jsonb_set(expected->'ordinary_relations','{time_entries}',
+  jsonb_set(jsonb_set(expected#>'{ordinary_relations,time_entries}','{acl}',
+   (SELECT coalesce(jsonb_agg(a ORDER BY n),'[]'::jsonb)
+    FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,acl}')WITH ORDINALITY t(a,n)
+    WHERE NOT(a->>'grantee'IN('PUBLIC','anon','authenticated')AND a->>'privilege'IN('INSERT','UPDATE','DELETE')))),
+   '{policies}',(SELECT coalesce(jsonb_agg(p ORDER BY n),'[]'::jsonb)
+    FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')WITH ORDINALITY t(p,n)
+    WHERE p->>'name'NOT IN('Admins update time entries','Admins delete time entries')))),
+ 'functions',jsonb_set(expected->'functions','{controlled_count_entry_v1.require_bound_module(),body_sha256}',
+  to_jsonb('11fbab362f74e22cea1128f19d0457e5f3c39cd4ce73fe996e27dcbad5462a02'::text)));
+
 
  INSERT INTO beta_time_clock_v1.admission VALUES(1,p_original_hash,expected,
- encode(sha256(convert_to(expected::text,'UTF8')),'hex'),'f3f995edde47fea226f32b3c1f30db2e40fed72c5a6b7ae235c66f881fd34de9');
+ encode(sha256(convert_to(expected::text,'UTF8')),'hex'),'11fbab362f74e22cea1128f19d0457e5f3c39cd4ce73fe996e27dcbad5462a02');
 END $beta_clock_source_admission$;
 CREATE TRIGGER immutable_admission BEFORE INSERT OR UPDATE OR DELETE OR TRUNCATE
 ON beta_time_clock_v1.admission FOR EACH STATEMENT EXECUTE FUNCTION beta_time_clock_v1.immutable_admission();

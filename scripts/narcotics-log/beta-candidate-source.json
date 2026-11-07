@@ -2,8 +2,8 @@
   "database_operations": 0,
   "files": {
     ".github/workflows/beta-candidate.yml": {
-      "bytes": 6649,
-      "sha256": "098bc4202320bb803ea52ea3dc801ba2c5effed54653de94d14fa01147f83511"
+      "bytes": 6888,
+      "sha256": "52cffa402bacffa16910bc08146c3d1339ddb7c9a5d3acf22ba7f985c5b3448c"
     },
     "index.html": {
       "bytes": 1771,
@@ -31,7 +31,7 @@
     },
     "scripts/narcotics-log/beta-migration210.json": {
       "bytes": 2869,
-      "sha256": "9a8d0da7ef2747445548ef86d973a85534ccf38d343fbeb69e1b2770a28aefa7"
+      "sha256": "ef99f51591cba9e2b5fa3dc2366e0eefa561475fb67d9dccdfeb316a241e4633"
     },
     "scripts/narcotics-log/beta-migration211.json": {
       "bytes": 722,
@@ -39,7 +39,7 @@
     },
     "scripts/narcotics-log/beta-time-clock-source-proof.json": {
       "bytes": 1071,
-      "sha256": "c7cbd4d95c0a4d53771345bf916607f2f2caa43975bcc6362fad92a0c4cabb81"
+      "sha256": "f318422a6ab1fd88b22d6bb6bad95a5e07d274ff705f19902edd9cbeeb24d6a9"
     },
     "scripts/narcotics-log/beta_browser_runner.py": {
       "bytes": 15983,
@@ -66,8 +66,8 @@
       "sha256": "b894a552d7ef9b724e68d35e2f8b302d6ca9803ceba9b7e5e1e8031669e0a894"
     },
     "scripts/narcotics-log/beta_time_clock_source.py": {
-      "bytes": 15373,
-      "sha256": "157e6b7a4a2bd551e5f4f1412ead38fd009a0ffa6a7020bf087b4072aeaeb99f"
+      "bytes": 15745,
+      "sha256": "5c18971ab3b0c4c06b0f61aa6b603db52b10c78e7e34a8331918dedc5a18ec40"
     },
     "scripts/narcotics-log/boundary-reuse-controls.sql": {
       "bytes": 5342,
@@ -498,8 +498,8 @@
       "sha256": "7568a71548d5461ddedaa3baca0030e9705330fdc98e12874759f7a24a01c289"
     },
     "scripts/narcotics-log/verify_beta_metadata.py": {
-      "bytes": 8638,
-      "sha256": "9415b0edfd40c5a36ec610f9e469ad9d22e37c7389363ba18717078869088570"
+      "bytes": 10035,
+      "sha256": "81ed2b78f4a987d9c80cc097c76a62f00eb355e8fad40ad2356a4add295dccbf"
     },
     "scripts/narcotics-log/workflows/auth_effects.py": {
       "bytes": 11844,
@@ -4418,8 +4418,8 @@
       "sha256": "68ea722271b2c7ddee528f7a8ec66fed7a57e3aa6f349a0d8eb8eeee5fbb813f"
     },
     "supabase/migrations/20261106170000_atomic_time_clock_corrections.sql": {
-      "bytes": 176972,
-      "sha256": "1e92fcc69ec4de1f410c7fff3c0f25825151c0bddfa231abf9fbeccad62b5e02"
+      "bytes": 177536,
+      "sha256": "bb9d9ceb3892d0d172a34906e60c263c5dcbfaf74f084d1b4cb577de23524141"
     },
     "supabase/migrations/20261106173000_terminal_appointment_clinician.sql": {
       "bytes": 4558,

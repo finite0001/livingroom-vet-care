@@ -19,13 +19,13 @@ def main():
     parser.add_argument("--run-synthetic-local", action="store_true", required=True)
     parser.parse_args()
     sql, proof = source.build()
-    original = {"properties": {"functions": {source.SIGNATURE: {"body_sha256": source.OLD_BODY_SHA}},
-        "other": {"retained": True}, "ordinary_relations": {"time_entries": {
+    original = {"properties": {"functions": {source.SIGNATURE: {"body_sha256": source.OLD_BODY_SHA, "retained_number": 1}},
+        "other": {"retained": True, "retained_number": 1}, "ordinary_relations": {"time_entries": {
             "acl": [{"grantee": role, "privilege": privilege}
                     for role in ("postgres", "authenticated", "service_role")
                     for privilege in ("SELECT", "INSERT", "UPDATE", "DELETE")],
             "policies": [{"name": name} for name in ("Admins update time entries", "Admins delete time entries", "Read own")],
-            "columns": [{"name": "unchanged"}]}}}}
+            "columns": [{"name": "unchanged", "position": 1}]}}}}
     expected = source.expected_properties(original["properties"], proof["successor_require_bound_body_sha256"])
     text = sql.decode()
     core = (source.ROOT / "scripts/time-clock/atomic-time-clock.sql").read_text()
@@ -43,7 +43,7 @@ def main():
         "INSERT INTO controlled_count_v1.descriptor VALUES(1," + source.literal(json.dumps(original)) + "::jsonb,'" + "a" * 64 + "');\n"
         + private_ddl + populate + "\n"
         + "CREATE FUNCTION public.beta_metadata_control(actual jsonb)RETURNS void LANGUAGE plpgsql SET search_path=pg_catalog AS $$"
-        "DECLARE d controlled_count_v1.descriptor;beta_saved beta_time_clock_v1.admission;beta_expected jsonb;beta_original jsonb;"
+        "DECLARE d controlled_count_v1.descriptor;beta_saved beta_time_clock_v1.admission;beta_expected jsonb;beta_original jsonb;beta_saved_text text;beta_expected_text text;"
         "BEGIN SELECT * INTO STRICT d FROM controlled_count_v1.descriptor WHERE revision=1;\n" + inline + "$$;\n")
     name = "lrv-beta-metadata-" + uuid.uuid4().hex[:12]
     container = None
@@ -107,6 +107,23 @@ def main():
             refused("admission data mutation refused", statement, "beta_clock_admission_immutable")
         refused("self-consistent unrelated expectation tamper refused", "ALTER TABLE beta_time_clock_v1.admission DISABLE TRIGGER immutable_admission;"
             "UPDATE beta_time_clock_v1.admission SET expected_properties=jsonb_set(expected_properties,'{other,retained}','false');"
+            "UPDATE beta_time_clock_v1.admission SET expected_properties_hash=encode(sha256(convert_to(expected_properties::text,'UTF8')),'hex');"
+            "ALTER TABLE beta_time_clock_v1.admission ENABLE TRIGGER immutable_admission;", "beta_clock_admission_delta_invalid")
+        # jsonb equality equates 1 and 1.0; the authored canonical text must not.
+        for label, path in (
+            ("unchanged root numeric encoding drift refused", ("other", "retained_number")),
+            ("unchanged function numeric encoding drift refused", ("functions", source.SIGNATURE, "retained_number")),
+            ("unchanged relation numeric encoding drift refused", ("ordinary_relations", "time_entries", "columns", 0, "position")),
+        ):
+            changed = deepcopy(expected)
+            branch = changed
+            for key in path[:-1]:
+                branch = branch[key]
+            branch[path[-1]] = 1.0
+            refused(label, "", "count_module_invalid", changed)
+        refused("self-consistent numeric encoding expectation tamper refused",
+            "ALTER TABLE beta_time_clock_v1.admission DISABLE TRIGGER immutable_admission;"
+            "UPDATE beta_time_clock_v1.admission SET expected_properties=jsonb_set(expected_properties,'{other,retained_number}','1.0');"
             "UPDATE beta_time_clock_v1.admission SET expected_properties_hash=encode(sha256(convert_to(expected_properties::text,'UTF8')),'hex');"
             "ALTER TABLE beta_time_clock_v1.admission ENABLE TRIGGER immutable_admission;", "beta_clock_admission_delta_invalid")
         for role in ("anon", "authenticated", "service_role"):

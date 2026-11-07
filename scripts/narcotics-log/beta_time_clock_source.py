@@ -58,16 +58,20 @@ def projection_sql(new_hash, expression=False):
  OR (SELECT count(*) FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')p
      WHERE p->>'name'IN('Admins update time entries','Admins delete time entries'))<>2 THEN
   RAISE EXCEPTION 'beta_clock_original_source_invalid' USING ERRCODE='23514';END IF;
- expected := jsonb_set(expected,'{ordinary_relations,time_entries,acl}',
-  (SELECT coalesce(jsonb_agg(a ORDER BY n),'[]'::jsonb)
-   FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,acl}')WITH ORDINALITY t(a,n)
-   WHERE NOT(a->>'grantee'IN('PUBLIC','anon','authenticated')AND a->>'privilege'IN('INSERT','UPDATE','DELETE'))));
- expected := jsonb_set(expected,'{ordinary_relations,time_entries,policies}',
-  (SELECT coalesce(jsonb_agg(p ORDER BY n),'[]'::jsonb)
-   FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')WITH ORDINALITY t(p,n)
-   WHERE p->>'name'NOT IN('Admins update time entries','Admins delete time entries')));
- expected := jsonb_set(expected,'{functions,controlled_count_entry_v1.require_bound_module(),body_sha256}',
-  to_jsonb(""" + (new_hash if expression else literal(new_hash) + "::text") + """));
+ -- Rebuild only the two changed small branches, then the complete root once.
+ -- The untouched root members are copied directly from the immutable source.
+ expected := expected || jsonb_build_object(
+ 'ordinary_relations',jsonb_set(expected->'ordinary_relations','{time_entries}',
+  jsonb_set(jsonb_set(expected#>'{ordinary_relations,time_entries}','{acl}',
+   (SELECT coalesce(jsonb_agg(a ORDER BY n),'[]'::jsonb)
+    FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,acl}')WITH ORDINALITY t(a,n)
+    WHERE NOT(a->>'grantee'IN('PUBLIC','anon','authenticated')AND a->>'privilege'IN('INSERT','UPDATE','DELETE')))),
+   '{policies}',(SELECT coalesce(jsonb_agg(p ORDER BY n),'[]'::jsonb)
+    FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')WITH ORDINALITY t(p,n)
+    WHERE p->>'name'NOT IN('Admins update time entries','Admins delete time entries')))),
+ 'functions',jsonb_set(expected->'functions','{controlled_count_entry_v1.require_bound_module(),body_sha256}',
+  to_jsonb(""" + (new_hash if expression else literal(new_hash) + "::text") + """)));
+
 """
 
 
@@ -151,15 +155,17 @@ def build():
  AND NOT has_function_privilege('service_role',p.oid,'EXECUTE'))THEN
  RAISE EXCEPTION 'beta_clock_admission_immutability_invalid' USING ERRCODE='23514';END IF;
  SELECT * INTO STRICT saved FROM beta_time_clock_v1.admission WHERE revision=1;
+ beta_saved_text := saved.expected_properties::text;
  IF(SELECT count(*)FROM beta_time_clock_v1.admission)<>1
  OR saved.original_descriptor_hash IS DISTINCT FROM d.definition_hash
- OR saved.expected_properties_hash IS DISTINCT FROM encode(sha256(convert_to(saved.expected_properties::text,'UTF8')),'hex')THEN
+ OR saved.expected_properties_hash IS DISTINCT FROM encode(sha256(convert_to(beta_saved_text,'UTF8')),'hex')THEN
  RAISE EXCEPTION 'beta_clock_admission_source_invalid' USING ERRCODE='23514';END IF;
  p_original := d.definition;
 """ + projection_sql("saved.require_bound_body_hash", expression=True) + """
- IF saved.expected_properties::text IS DISTINCT FROM expected::text THEN
+ beta_expected_text := expected::text;
+ IF beta_saved_text IS DISTINCT FROM beta_expected_text THEN
  RAISE EXCEPTION 'beta_clock_admission_delta_invalid' USING ERRCODE='23514';END IF;
- if actual::text is distinct from expected::text then"""
+ if actual::text is distinct from beta_expected_text then"""
     # The projection is inside the already source-bound comparison function.
     # There is no separately callable accessor whose replacement could bypass
     # its own integrity checks, and no mutually embedded digest cycle.
@@ -168,7 +174,8 @@ def build():
     admission = re.sub(r"\bp_original\b", "beta_original", admission)
     old_declaration = "declare d controlled_count_v1.descriptor;actual jsonb;begin"
     new_declaration = ("declare d controlled_count_v1.descriptor;actual jsonb;"
-                       "beta_saved beta_time_clock_v1.admission;beta_expected jsonb;beta_original jsonb;begin")
+                       "beta_saved beta_time_clock_v1.admission;beta_expected jsonb;beta_original jsonb;"
+                       "beta_saved_text text;beta_expected_text text;begin")
     if definition.count(old_declaration) != 1:
         raise ValueError("Exact original comparison declaration required")
     successor = definition.replace(old_declaration, new_declaration, 1).replace(OLD_COMPARE, admission, 1)
