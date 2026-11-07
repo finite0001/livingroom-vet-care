@@ -1,4 +1,4 @@
-name: Exact beta candidate acceptance
+name: Engineering writer diagnosis (never candidate acceptance)
 
 on:
   pull_request:
@@ -69,6 +69,7 @@ jobs:
           path: /tmp/beta-metadata-component.json
 
   current-runtime:
+    if: ${{ false }} # Isolated diagnostic branch; cannot produce candidate acceptance.
     needs: source
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
@@ -132,8 +133,12 @@ jobs:
             scripts/narcotics-log/beta-candidate-source.json
 
   recovery-diagnostic:
+    strategy:
+      fail-fast: false
+      matrix:
+        writer_profile: [clinical, native_return_v1]
     if: github.event_name == 'workflow_dispatch' && inputs.recovery_diagnostic
-    name: Engineering recovery error trace (never acceptance)
+    name: Engineering writer trace (${{ matrix.writer_profile }}, never acceptance)
     needs: source
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
@@ -153,13 +158,13 @@ jobs:
         run: |
           node scripts/narcotics-log/frame-cli.mjs --write-candidate
           node scripts/narcotics-log/frame-hosted-history.mjs --write-candidate
-      - name: Capture the native current211 recovery exception without admitting acceptance
-        run: python3 -I -B scripts/narcotics-log/beta_rehearsal.py --run-synthetic-local --profile recovery-diagnostic
+      - name: Capture the native current211 writer exception without admitting acceptance
+        run: python3 -I -B scripts/narcotics-log/beta_writer_diagnostic.py --run-synthetic-local --profile ${{ matrix.writer_profile }}
       - name: Retain bounded synthetic native error and non-admitting result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: beta-recovery-engineering-trace
+          name: beta-writer-engineering-trace-${{ matrix.writer_profile }}
           retention-days: 14
           if-no-files-found: ignore
           path: |
@@ -170,3 +175,5 @@ jobs:
             /tmp/lrv-narcotics-install-*/rpc-failure.json
             /tmp/lrv-narcotics-install-*/beta-recovery-native-trace.json
             /tmp/lrv-narcotics-install-*/beta-recovery-diagnostic-source.json
+            /tmp/lrv-narcotics-install-*/beta-writer-native-trace.json
+            /tmp/lrv-narcotics-install-*/beta-writer-call-timing-*.json

@@ -2,8 +2,8 @@
   "database_operations": 0,
   "files": {
     ".github/workflows/beta-candidate.yml": {
-      "bytes": 6888,
-      "sha256": "52cffa402bacffa16910bc08146c3d1339ddb7c9a5d3acf22ba7f985c5b3448c"
+      "bytes": 7313,
+      "sha256": "54e5143dc1a7279233d3a2b2991dd86ea7e17a83204adaa3f5f9c6091f3f6f2c"
     },
     "index.html": {
       "bytes": 1771,
@@ -68,6 +68,10 @@
     "scripts/narcotics-log/beta_time_clock_source.py": {
       "bytes": 15745,
       "sha256": "5c18971ab3b0c4c06b0f61aa6b603db52b10c78e7e34a8331918dedc5a18ec40"
+    },
+    "scripts/narcotics-log/beta_writer_diagnostic.py": {
+      "bytes": 4473,
+      "sha256": "f7767aafd1baa42d75911b0dbde26bf04d4c8d4f0211315f341f42a312b0ea22"
     },
     "scripts/narcotics-log/boundary-reuse-controls.sql": {
       "bytes": 5342,
@@ -376,6 +380,10 @@
     "scripts/narcotics-log/test_beta_time_clock_source.py": {
       "bytes": 2518,
       "sha256": "5fdb9691c4300161397089b0870260fd1828eb0b065cfb822291aeaee6c5c59c"
+    },
+    "scripts/narcotics-log/test_beta_writer_diagnostic.py": {
+      "bytes": 5036,
+      "sha256": "1675d7accfc145da5ea94317e44ee7e13e4276959004b6d2f4e6a537b2e39897"
     },
     "scripts/narcotics-log/test_boundary_projection.py": {
       "bytes": 1504,
