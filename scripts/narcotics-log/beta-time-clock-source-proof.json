@@ -1,9 +1,15 @@
 {
+  "admission_changed_leaf_paths": [
+    "functions.controlled_count_entry_v1.require_bound_module().body_sha256",
+    "ordinary_relations.time_entries.acl",
+    "ordinary_relations.time_entries.policies"
+  ],
   "admission_root_branches": [
     "functions",
     "ordinary_relations"
   ],
   "ambient_catalog_used_as_expected": false,
+  "catalog_snapshot_calls_unchanged": true,
   "changed_properties": [
     "ordinary_relations.time_entries.acl",
     "ordinary_relations.time_entries.policies",
@@ -12,16 +18,19 @@
   "complete_canonical_object_equality": true,
   "core_sha256": "0cbb8076575dbeb36d1d0dee010ee3b643b083cadb7a0df7e674546df96dfcca",
   "database_operations": 0,
+  "descriptor_hash_canonical_bytes_preserved": true,
+  "descriptor_hash_wrapper_rebuild_removed": true,
+  "descriptor_same_value_materialized_once": true,
   "expected_projection_inline": true,
   "external_expected_accessor": false,
   "historical_descriptors_rewritten": false,
   "historical_receipts_rewritten": false,
   "immutable_admission_body_sha256": "e5a5b32210d1660ba58c46854b92189f5d998ad47e449b8c8c0d055644f3952f",
   "kind": "finite-beta-time-clock-metadata-successor-source-v1",
-  "migration_bytes": 177603,
-  "migration_sha256": "7234e91e772f4055b66baa0fa7a07868134e84458dd23aa4b01847eb1c553ad1",
+  "migration_bytes": 177853,
+  "migration_sha256": "bf3cb81794a6577611d2df9419743082de3af34729d1a6028ef3d09dfdc3406f",
   "original_require_bound_body_sha256": "f6feeae8a261d68cbd2c674d0c8d6dafcb2de7dfd1b628b39dd62d1c99376380",
   "per_member_comparison": false,
-  "successor_require_bound_body_sha256": "493c86052c67b0f819dba73fe95f59b17a32ef031e889f458c4e7c86765082b4",
+  "successor_require_bound_body_sha256": "54d536314d04ecc556c11572160abf887123e0a4e6ddf982bb666446c1771beb",
   "whole_comparison_body_inverse": true
 }

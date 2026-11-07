@@ -36,7 +36,12 @@ class FiniteSuccessorTests(unittest.TestCase):
         retained = deepcopy(original)
         compact = source.admission_properties(original, "a" * 64)
         self.assertEqual(set(compact), {"functions", "ordinary_relations"})
-        self.assertEqual({**original, **compact}, source.expected_properties(original, "a" * 64))
+        rebuilt=deepcopy(original)
+        rebuilt["functions"][source.SIGNATURE]["body_sha256"]=compact["functions"][source.SIGNATURE]["body_sha256"]
+        rebuilt["ordinary_relations"]["time_entries"].update(compact["ordinary_relations"]["time_entries"])
+        self.assertEqual(set(compact["functions"][source.SIGNATURE]),{"body_sha256"})
+        self.assertEqual(set(compact["ordinary_relations"]["time_entries"]),{"acl","policies"})
+        self.assertEqual(rebuilt, source.expected_properties(original, "a" * 64))
         self.assertEqual(original, retained)
 
     def test_other_original_function_or_policy_inventory_is_rejected(self):

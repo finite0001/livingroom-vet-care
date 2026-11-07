@@ -1,0 +1,354 @@
+{
+  "kind": "finite-beta-leaf-hash-materialization-component-v1",
+  "observedAt": "2026-11-07T01:22:28.803059+00:00",
+  "engineeringOnly": true,
+  "nativeAcceptance": false,
+  "previousCandidate": "aca45386f05d718f62bfa50cef476bed78c4f0e3",
+  "applicationDeadlineSeconds": 8,
+  "catalogSnapshotCountAndOrderChanged": false,
+  "crossInvocationCaching": false,
+  "wholeCanonicalTextComparisonRetained": true,
+  "oldDescriptorAndHistoricalSourcesRewritten": false,
+  "sourceProof": {
+    "admission_changed_leaf_paths": [
+      "functions.controlled_count_entry_v1.require_bound_module().body_sha256",
+      "ordinary_relations.time_entries.acl",
+      "ordinary_relations.time_entries.policies"
+    ],
+    "admission_root_branches": [
+      "functions",
+      "ordinary_relations"
+    ],
+    "ambient_catalog_used_as_expected": false,
+    "catalog_snapshot_calls_unchanged": true,
+    "changed_properties": [
+      "ordinary_relations.time_entries.acl",
+      "ordinary_relations.time_entries.policies",
+      "functions.controlled_count_entry_v1.require_bound_module().body_sha256"
+    ],
+    "complete_canonical_object_equality": true,
+    "core_sha256": "0cbb8076575dbeb36d1d0dee010ee3b643b083cadb7a0df7e674546df96dfcca",
+    "database_operations": 0,
+    "descriptor_hash_canonical_bytes_preserved": true,
+    "descriptor_hash_wrapper_rebuild_removed": true,
+    "descriptor_same_value_materialized_once": true,
+    "expected_projection_inline": true,
+    "external_expected_accessor": false,
+    "historical_descriptors_rewritten": false,
+    "historical_receipts_rewritten": false,
+    "immutable_admission_body_sha256": "e5a5b32210d1660ba58c46854b92189f5d998ad47e449b8c8c0d055644f3952f",
+    "kind": "finite-beta-time-clock-metadata-successor-source-v1",
+    "migration_bytes": 177853,
+    "migration_sha256": "bf3cb81794a6577611d2df9419743082de3af34729d1a6028ef3d09dfdc3406f",
+    "original_require_bound_body_sha256": "f6feeae8a261d68cbd2c674d0c8d6dafcb2de7dfd1b628b39dd62d1c99376380",
+    "per_member_comparison": false,
+    "successor_require_bound_body_sha256": "54d536314d04ecc556c11572160abf887123e0a4e6ddf982bb666446c1771beb",
+    "whole_comparison_body_inverse": true
+  },
+  "components": {
+    "leafProjection": {
+      "kind": "finite-successor-full-size-overhead-benchmark",
+      "descriptor_json_bytes": 9136568,
+      "engineering_only": true,
+      "full_runtime_acceptance": false,
+      "measurements": [
+        {
+          "variant": "before",
+          "sample": 0,
+          "elapsed_ms": 156.914
+        },
+        {
+          "variant": "before",
+          "sample": 1,
+          "elapsed_ms": 145.037
+        },
+        {
+          "variant": "optimized",
+          "sample": 0,
+          "elapsed_ms": 129.485
+        },
+        {
+          "variant": "optimized",
+          "sample": 1,
+          "elapsed_ms": 115.624
+        },
+        {
+          "variant": "optimized",
+          "sample": 2,
+          "elapsed_ms": 128.924
+        },
+        {
+          "variant": "optimized",
+          "sample": 3,
+          "elapsed_ms": 115.526
+        },
+        {
+          "variant": "before",
+          "sample": 2,
+          "elapsed_ms": 130.456
+        },
+        {
+          "variant": "before",
+          "sample": 3,
+          "elapsed_ms": 124.99
+        },
+        {
+          "variant": "before",
+          "sample": 4,
+          "elapsed_ms": 137.865
+        },
+        {
+          "variant": "before",
+          "sample": 5,
+          "elapsed_ms": 144.201
+        },
+        {
+          "variant": "optimized",
+          "sample": 4,
+          "elapsed_ms": 126.046
+        },
+        {
+          "variant": "optimized",
+          "sample": 5,
+          "elapsed_ms": 113.789
+        }
+      ],
+      "owned_cleanup": true
+    },
+    "descriptorHash": {
+      "kind": "descriptor-hash-canonical-byte-component",
+      "observedAt": "2026-11-07T01:13:17.347636+00:00",
+      "engineeringOnly": true,
+      "hostedWrites": 0,
+      "readOnlyTransactions": true,
+      "source": "module-expected.json plus minimal ordinary_relations fixture",
+      "construction": "'{\"domain\": \"lrv.count.local_fixture.module.v1\", \"definition\": ' || coalesce(definition::text,'null') || '}'",
+      "baseline": "jsonb_build_object('domain','lrv.count.local_fixture.module.v1','definition',definition)::text",
+      "nativeAcceptance": false,
+      "cases": [
+        {
+          "case": "SQL NULL",
+          "hashEqual": true,
+          "bytesEqual": true
+        },
+        {
+          "case": "JSON null",
+          "hashEqual": true,
+          "bytesEqual": true
+        },
+        {
+          "case": "true",
+          "hashEqual": true,
+          "bytesEqual": true
+        },
+        {
+          "case": "false",
+          "hashEqual": true,
+          "bytesEqual": true
+        },
+        {
+          "case": "integer",
+          "hashEqual": true,
+          "bytesEqual": true
+        },
+        {
+          "case": "numeric scale",
+          "hashEqual": true,
+          "bytesEqual": true
+        },
+        {
+          "case": "exponent",
+          "hashEqual": true,
+          "bytesEqual": true
+        },
+        {
+          "case": "negative zero",
+          "hashEqual": true,
+          "bytesEqual": true
+        },
+        {
+          "case": "nested lexical numbers",
+          "hashEqual": true,
+          "bytesEqual": true
+        },
+        {
+          "case": "empty object",
+          "hashEqual": true,
+          "bytesEqual": true
+        },
+        {
+          "case": "empty array",
+          "hashEqual": true,
+          "bytesEqual": true
+        },
+        {
+          "case": "ordered array",
+          "hashEqual": true,
+          "bytesEqual": true
+        },
+        {
+          "case": "Unicode and escaping",
+          "hashEqual": true,
+          "bytesEqual": true
+        },
+        {
+          "case": "scalar string",
+          "hashEqual": true,
+          "bytesEqual": true
+        }
+      ],
+      "fullDescriptor": {
+        "sha256": "d25230c85a8dfed67f37b8112085122bca57ccf30ebd1015012cb1267befe6dc",
+        "hashEqual": true,
+        "bytesEqual": true,
+        "wrapperBytes": 9136631,
+        "definitionBytes": 9136568
+      },
+      "executionMs": {
+        "wrapped": [
+          62.126,
+          56.795,
+          64.781,
+          50.439,
+          57.759,
+          56.148,
+          53.928,
+          52.134
+        ],
+        "constructed": [
+          46.595,
+          56.303,
+          43.854,
+          42.769,
+          38.658,
+          38.761,
+          42.203,
+          52.26
+        ]
+      },
+      "medianExecutionMs": {
+        "wrapped": 56.148,
+        "constructed": 42.769
+      },
+      "benchmarkNote": "Alternating order; discard first sample per variant. EXPLAIN execution only, includes same materialized descriptor and SHA256. SQL parse/plan and actual catalog construction excluded.",
+      "passed": true,
+      "ownedCleanup": true
+    },
+    "selectedValueMaterialization": {
+      "engineeringOnly": true,
+      "hostedWrites": 0,
+      "ownedDisposableSetupWrites": true,
+      "snapshotCallsChanged": false,
+      "source": "module-expected.json plus minimal ordinary_relations",
+      "observedAt": "2026-11-07T01:21:17.739283+00:00",
+      "lexical_identity": {
+        "cases": 11,
+        "equal": true
+      },
+      "storage": {
+        "columnSize": 2101348,
+        "toastBytes": 2162688,
+        "jsonTextBytes": 9135822
+      },
+      "values": {
+        "direct": {
+          "hash": "d446dc7441b73adc8ae477a32b2a35d126d990afc139f108a32ea95866b778ec",
+          "after_size": 2101348,
+          "before_size": 2101348,
+          "properties_hash": "40117dd333c351548b630936e410a66561ef87bc710eb066d5902cfb98d25da0"
+        },
+        "lax": {
+          "hash": "d446dc7441b73adc8ae477a32b2a35d126d990afc139f108a32ea95866b778ec",
+          "after_size": 9160077,
+          "before_size": 2101348,
+          "properties_hash": "40117dd333c351548b630936e410a66561ef87bc710eb066d5902cfb98d25da0"
+        }
+      },
+      "executionMs": {
+        "direct": [
+          97.928,
+          93.767,
+          95.81,
+          92.135,
+          93.779,
+          93.327,
+          95.076,
+          93.339
+        ],
+        "lax": [
+          90.126,
+          90.258,
+          96.782,
+          89.239,
+          91.019,
+          84.831,
+          86.523,
+          88.113
+        ]
+      },
+      "medianMs": {
+        "direct": 93.767,
+        "lax": 89.239
+      },
+      "note": "Actual TOASTed table and PLpgSQL composite; same two observed definition uses (hash and properties extraction), properties serialization/hash forces result. Includes owned function/table access; excludes all catalog snapshots. First sample per variant discarded.",
+      "passed": true,
+      "ownedCleanup": true
+    },
+    "metadataControls": {
+      "kind": "finite-beta-metadata-postgres-component-v1",
+      "passed": true,
+      "checks": [
+        "exact descriptor wrapper bytes and SHA256 preserved",
+        "same selected descriptor materialized without changing any JSON or SQL NULL value",
+        "exact current delta accepted from immutable original descriptor",
+        "restored direct write ACL refused",
+        "changed comparison function source refused",
+        "admission schema exposure refused",
+        "admission table exposure refused",
+        "disabled admission RLS refused",
+        "disabled immutable trigger refused",
+        "replaced immutable function refused",
+        "admission data mutation refused",
+        "admission data mutation refused",
+        "admission data mutation refused",
+        "self-consistent unrelated expectation tamper refused",
+        "unknown null root member refused",
+        "missing null root member refused",
+        "Unicode-normalized distinct root key refused",
+        "unchanged nested array order drift refused",
+        "scalar actual root refused",
+        "unchanged root numeric encoding drift refused",
+        "unchanged function numeric encoding drift refused",
+        "unchanged relation numeric encoding drift refused",
+        "self-consistent numeric encoding expectation tamper refused",
+        "all application roles denied private admission access"
+      ],
+      "migration_sha256": "bf3cb81794a6577611d2df9419743082de3af34729d1a6028ef3d09dfdc3406f",
+      "hosted_writes": 0,
+      "application_Auth_verified": false,
+      "full_controlled_business_verified": false,
+      "owned_cleanup": true,
+      "descriptor_hash_equivalence": {
+        "cases": 13,
+        "bytes_equal": true,
+        "hashes_equal": true
+      },
+      "descriptor_materialization_equivalence": {
+        "cases": 13,
+        "bytes_equal": true
+      }
+    }
+  },
+  "limitations": [
+    "Component medians are from a shared local macOS Docker host; not a full Supabase RPC, not cumulative latency guarantees.",
+    "Leaf benchmark executes actual source-derived admission/comparison with full9MB descriptor and minimal ordinary-relations fixture; catalog snapshots excluded.",
+    "Hash and materialization benchmarks isolate their respective work; gains may overlap and must not be blindly summed.",
+    "All15 normal Linux acceptance profiles and actual clinical/native-return writer timings remain required."
+  ],
+  "equivalence": [
+    "Admission contains only exact source-derived function body hash and filtered time_entries ACL/policies; complete original function/table/root metadata is reconstructed for the original canonical-text comparison.",
+    "Fixed wrapper prefix and suffix surround the identical canonical definition text; SQL NULL becomes JSON null exactly as in jsonb_build_object, so descriptor SHA256 input is byte-identical.",
+    "jsonb_set_lax with SQL NULL newvalue and return_target returns the same already-selected value for every JSON kind and SQL NULL, materialized only within this guard invocation.",
+    "The exact original body is restored by inverses of the declaration, final admission block, descriptor hash expression and same-value materialization statement. Original catalog helpers are neither removed nor reordered."
+  ]
+}

@@ -1,0 +1,351 @@
+{
+  "schemaVersion": 1,
+  "kind": "compact-writer-timing-engineering-evidence-v1",
+  "capturedAt": "2026-11-07T01:17:43.670189+00:00",
+  "runtimeAcceptance": false,
+  "readinessAdmission": false,
+  "run": {
+    "conclusion": "failure",
+    "createdAt": "2026-11-07T00:44:33Z",
+    "headSha": "eabf1f984e58af2c5604c2dd19e9768ef4c859cb",
+    "status": "completed",
+    "updatedAt": "2026-11-07T00:52:19Z",
+    "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320057010"
+  },
+  "jobs": [
+    {
+      "name": "source",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242163205,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320057010/job/128242163205",
+      "startedAt": "2026-11-07T00:44:38Z",
+      "completedAt": "2026-11-07T00:46:24Z",
+      "failedSteps": []
+    },
+    {
+      "name": "Engineering writer trace (clinical, never acceptance)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128242798811,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320057010/job/128242798811",
+      "startedAt": "2026-11-07T00:46:29Z",
+      "completedAt": "2026-11-07T00:52:10Z",
+      "failedSteps": [
+        "Capture the native current211 writer exception without admitting acceptance"
+      ]
+    },
+    {
+      "name": "Engineering writer trace (native_return_v1, never acceptance)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128242798814,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320057010/job/128242798814",
+      "startedAt": "2026-11-07T00:46:28Z",
+      "completedAt": "2026-11-07T00:52:18Z",
+      "failedSteps": [
+        "Capture the native current211 writer exception without admitting acceptance"
+      ]
+    },
+    {
+      "name": "current-runtime",
+      "status": "completed",
+      "conclusion": "skipped",
+      "databaseId": 128242800333,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320057010/job/128242800333",
+      "startedAt": "2026-11-07T00:46:25Z",
+      "completedAt": "2026-11-07T00:46:24Z",
+      "failedSteps": []
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13552713232,
+      "name": "beta-writer-engineering-trace-clinical",
+      "size_in_bytes": 6907,
+      "digest": "sha256:85631171338b7b7ea00c1cfed1e7b88171bf3bbf66fd434e11f2886d41b39b7e",
+      "created_at": "2026-11-07T00:52:08Z",
+      "expired": false
+    },
+    {
+      "id": 13552577494,
+      "name": "beta-metadata-component",
+      "size_in_bytes": 703,
+      "digest": "sha256:b6894f3f3de8d4a3c46398b34a3ad80248978fdb6732668ca16416faae9716d4",
+      "created_at": "2026-11-07T00:46:22Z",
+      "expired": false
+    },
+    {
+      "id": 13552194838,
+      "name": "beta-writer-engineering-trace-native_return_v1",
+      "size_in_bytes": 2853,
+      "digest": "sha256:68f8ee2dd87422433e06b800c92c76144596d02815ad71630519dc547085dbe2",
+      "created_at": "2026-11-07T00:52:16Z",
+      "expired": false
+    }
+  ],
+  "engineeringOnly": true,
+  "productHeadSha": "aca45386f05d718f62bfa50cef476bed78c4f0e3",
+  "exactProductSourceEquivalence": {
+    "supabase/migrations/20261106170000_atomic_time_clock_corrections.sql": {
+      "sha256": "7234e91e772f4055b66baa0fa7a07868134e84458dd23aa4b01847eb1c553ad1",
+      "diagnosticMatchesProduct": true
+    },
+    "scripts/narcotics-log/beta_time_clock_source.py": {
+      "sha256": "2eba1e47f36a4b0b92fcf664759c38d108efa0d66d1a336e4823deb0c7794c9e",
+      "diagnosticMatchesProduct": true
+    },
+    "scripts/narcotics-log/beta-migration210.json": {
+      "sha256": "f8dda9ebebcad09712f48a48044af43eeda122028157058b929325252cac2afc",
+      "diagnosticMatchesProduct": true
+    },
+    "scripts/narcotics-log/beta-time-clock-source-proof.json": {
+      "sha256": "6580e674be7116a794ce7b3afc71bd6455e19a346cdd470d783f8ca10a1f6fed",
+      "diagnosticMatchesProduct": true
+    }
+  },
+  "allDiffPathsFromProduct": [
+    ".github/workflows/beta-candidate.yml",
+    "docs/beta-remediation-2026-11-06.md",
+    "docs/evidence/beta-controlled-candidate-2026-11-06.md",
+    "docs/evidence/beta-controlled-metadata-compact-2026-11-06.json",
+    "docs/evidence/beta-current211-third-ci-2026-11-06.json",
+    "docs/evidence/beta-current211-writer-diagnostics-2026-11-06.json",
+    "docs/evidence/beta-frontend-ci-fd5f-2026-11-06.json",
+    "docs/evidence/beta-frontend-compact-source-comparison-2026-11-06.json",
+    "docs/evidence/beta-retained209-ci-fd5f-2026-11-06.json",
+    "scripts/narcotics-log/beta-candidate-source.json",
+    "scripts/narcotics-log/beta_writer_diagnostic.py",
+    "scripts/narcotics-log/test_beta_writer_diagnostic.py"
+  ],
+  "profiles": {
+    "clinical": {
+      "result": {
+        "all_ten_writers_verified": false,
+        "application_Auth_verified": false,
+        "authenticated_browser_verified": false,
+        "beta210_only_three_reviewed_controlled_property_changes": true,
+        "beta210_original_controlled_descriptor_unchanged": true,
+        "beta210_original_rows_and_sequences_preserved": true,
+        "beta211_controlled_properties_rows_and_sequences_preserved": true,
+        "beta_candidate_profile": "engineering-writer-clinical",
+        "beta_candidate_source_sha256": "8d822465d630ac8a68e120e95eae5afd7f0f6ecd5a82f4b9dacfc3c4077b3353",
+        "business_profile_verified": false,
+        "cold209_empty_count_preflight_verified": true,
+        "common269_source_properties": true,
+        "complete_independent_source_reference_properties": true,
+        "complete_source_derived208_ledger": true,
+        "complete_source_derived209_ledger": true,
+        "complete_source_derived210_ledger": true,
+        "complete_source_derived211_ledger": true,
+        "copied_migrations_rechecked": true,
+        "count_business_verified": false,
+        "current211_normal_acceptance": false,
+        "diagnostic_function": "public.execute_managed_stock_intent_v1(jsonb)",
+        "diagnostic_function_body_sha256": "01e54c986a52afb0bf39a1f7d528f8bc6cdf4887dc2059dea6ef08e7be676666",
+        "elapsed_seconds": 294.04155305100005,
+        "engineering_only": true,
+        "failure_types": [
+          "ValueError"
+        ],
+        "full121_source_module_properties": true,
+        "historical_ledger_rows_rewritten": false,
+        "hosted_client_contact_check_validated_before_installation": true,
+        "hosted_writes": 0,
+        "kind": "engineering-current211-writer-diagnostic-v1",
+        "new_count_tables_empty_except_source_descriptor": true,
+        "normal_owned_cleanup": true,
+        "old_rows_preserved_exact_declared_additions_only": true,
+        "original204_rows_preserved_with_source_declared_appends": true,
+        "passed": false,
+        "populated_receiver_verified": false,
+        "prefix_sources_rechecked": true,
+        "production_deployed": false,
+        "profile": "clinical",
+        "provider_requests": 0,
+        "scheduler_paused_before_first_project_SQL": true,
+        "source_only_audit_column_controls": {
+          "Auth_acceptance": false,
+          "cases": 7,
+          "domain_writes": 0
+        },
+        "source_rechecked": true,
+        "validated_client_constraint_controls": {
+          "cases": 7,
+          "raw_client_check_still_validated": true,
+          "same_original_metadata": true
+        }
+      },
+      "filesSha256": {
+        "beta-recovery-diagnostic-source.json": "9daa385cd9fdcd586c080b686273663aedda1fee4e4b211034579d12ec5730ea",
+        "beta-recovery-native-trace.json": "fdac8f67eff403a4c4f780a694fc38473ec6d5ae643fe273927d0768f5b42e03",
+        "beta-writer-call-timing-001.json": "cf6617f01ee3a7243cfda67f104f73f0247d520e8e009aa637429540f649d5ab",
+        "beta-writer-call-timing-002.json": "9d844947cca4a6a9b2e2074471eda76d93ebc92ab5b6a28a98dea13ba1afd28a",
+        "beta-writer-native-trace.json": "251680a4b87033b6709f8a7b0cf36367541fc4515886b68a0cf58a660edadce9",
+        "primary-failure.txt": "f1cf368daa7eccc5fe56c5e90085df5b239e0702411baf5112d27289a31e4988",
+        "result.json": "363d710c1d3fe5636dc2d9a536dc2fcc0506feb51d1e84b335c865beaad2404a",
+        "rpc-failure.json": "528fb025ae47032bc6fff7b58f097be88a9650c4dedb64648dadb170769e0f9d"
+      },
+      "primaryFailureLastLine": "ValueError: Unexpected fixed RPC status: execute_managed_stock_intent_v1 500",
+      "rpcFailure": {
+        "error": {
+          "code": "57014",
+          "details": "SQL statement \"WITH held AS MATERIALIZED (\n  select l.* from pg_catalog.pg_locks l\n  where l.pid=pg_catalog.pg_backend_pid()and l.database=(select oid from pg_catalog.pg_database where datname=pg_catalog.current_database())and l.granted\n ),held_relations AS MATERIALIZED (\n  select distinct l.relation,l.mode from held l where l.locktype='relation'\n ),resolved AS MATERIALIZED (\n  select p.*,c.oid as relation_oid,c.relkind,c.relispartition\n  from controlled_count_entry_v1.shared_product_relation_plan_values()p\n  left join pg_catalog.pg_namespace n on n.nspname=p.schema_name\n  left join pg_catalog.pg_class c on c.relnamespace=n.oid and c.relname=p.relation_name\n )\n select count(*),count(distinct r.relation_oid),\n coalesce(bool_and(r.relation_oid is not null and r.relkind='r'and not r.relispartition\n  and l.relation is not null),false),\n exists(select 1 from held l where l.locktype='advisory'and l.classid=90271040::oid and l.objid=0::oid and l.objsubid=2 and l.mode='ShareLock')\n                                            from resolved r left join held_relations l on l.relation=r.relation_oid and l.mode=r.held_mode\"\nPL/pgSQL function assert_shared_product_relation_frontier() line 7 at SQL statement\nSQL statement \"SELECT controlled_count_entry_v1.assert_shared_product_relation_frontier()\"\nPL/pgSQL function assert_complete_product_kernel() line 6 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.assert_complete_product_kernel()\"\nPL/pgSQL function assert_read_frontier() line 2 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.assert_read_frontier()\"\nPL/pgSQL function narcotics_recovery_v1.require_head() line 6 at PERFORM\nPL/pgSQL function controlled_count_entry_v1.recovery_post_frontier_required() line 31 at assignment\nSQL statement \"SELECT controlled_count_entry_v1.recovery_post_frontier_required()\"\nPL/pgSQL function acquire_shared_product_relation_frontier() line 40 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.acquire_shared_product_relation_frontier()\"\nPL/pgSQL function acquire_ordinary_relation_frontier() line 2 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.acquire_ordinary_relation_frontier()\"\nPL/pgSQL function before_parent_gate(uuid,uuid) line 5 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.before_parent_gate(p_actor,p_id)\"\nPL/pgSQL function controlled_stock_gate(uuid,uuid) line 4 at PERFORM\nPL/pgSQL function read_controlled_stock_action(uuid,uuid) line 2 during statement block local variable initialization\nPL/pgSQL function managed_saved_preparation_required(jsonb) line 5 at assignment\nSQL statement \"SELECT controlled_stock_workflow_v1.managed_saved_preparation_required(q)\"\nPL/pgSQL function managed_reply(jsonb) line 43 at PERFORM\nPL/pgSQL function managed_execute(jsonb,jsonb) line 12 at assignment\nPL/pgSQL function execute_managed_stock_intent_v1(jsonb) line 6 at assignment",
+          "hint": "",
+          "message": "canceling statement due to statement timeout"
+        },
+        "rpc": "execute_managed_stock_intent_v1",
+        "status": 500
+      },
+      "sourceBinding": {
+        "diagnostic_body_sha256": "01e54c986a52afb0bf39a1f7d528f8bc6cdf4887dc2059dea6ef08e7be676666",
+        "engineering_only": true,
+        "normal_acceptance": false,
+        "original_body_sha256": "b437e0c3fcce34dcb83778f6e0eefbf60ccb3b7089724dc8d21125216e763caf",
+        "production_SQL_changed": false,
+        "signature": "public.execute_managed_stock_intent_v1(jsonb)",
+        "source_derived_descriptor_and_finite_admission": true,
+        "whole_wrapper_source_inverse": true
+      },
+      "nativeTrace": {
+        "elapsed_seconds": 8.019396260999997,
+        "engineering_only": true,
+        "error": {
+          "code": "57014",
+          "details": "SQL statement \"WITH held AS MATERIALIZED (\n  select l.* from pg_catalog.pg_locks l\n  where l.pid=pg_catalog.pg_backend_pid()and l.database=(select oid from pg_catalog.pg_database where datname=pg_catalog.current_database())and l.granted\n ),held_relations AS MATERIALIZED (\n  select distinct l.relation,l.mode from held l where l.locktype='relation'\n ),resolved AS MATERIALIZED (\n  select p.*,c.oid as relation_oid,c.relkind,c.relispartition\n  from controlled_count_entry_v1.shared_product_relation_plan_values()p\n  left join pg_catalog.pg_namespace n on n.nspname=p.schema_name\n  left join pg_catalog.pg_class c on c.relnamespace=n.oid and c.relname=p.relation_name\n )\n select count(*),count(distinct r.relation_oid),\n coalesce(bool_and(r.relation_oid is not null and r.relkind='r'and not r.relispartition\n  and l.relation is not null),false),\n exists(select 1 from held l where l.locktype='advisory'and l.classid=90271040::oid and l.objid=0::oid and l.objsubid=2 and l.mode='ShareLock')\n                                            from resolved r left join held_relations l on l.relation=r.relation_oid and l.mode=r.held_mode\"\nPL/pgSQL function assert_shared_product_relation_frontier() line 7 at SQL statement\nSQL statement \"SELECT controlled_count_entry_v1.assert_shared_product_relation_frontier()\"\nPL/pgSQL function assert_complete_product_kernel() line 6 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.assert_complete_product_kernel()\"\nPL/pgSQL function assert_read_frontier() line 2 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.assert_read_frontier()\"\nPL/pgSQL function narcotics_recovery_v1.require_head() line 6 at PERFORM\nPL/pgSQL function controlled_count_entry_v1.recovery_post_frontier_required() line 31 at assignment\nSQL statement \"SELECT controlled_count_entry_v1.recovery_post_frontier_required()\"\nPL/pgSQL function acquire_shared_product_relation_frontier() line 40 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.acquire_shared_product_relation_frontier()\"\nPL/pgSQL function acquire_ordinary_relation_frontier() line 2 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.acquire_ordinary_relation_frontier()\"\nPL/pgSQL function before_parent_gate(uuid,uuid) line 5 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.before_parent_gate(p_actor,p_id)\"\nPL/pgSQL function controlled_stock_gate(uuid,uuid) line 4 at PERFORM\nPL/pgSQL function read_controlled_stock_action(uuid,uuid) line 2 during statement block local variable initialization\nPL/pgSQL function managed_saved_preparation_required(jsonb) line 5 at assignment\nSQL statement \"SELECT controlled_stock_workflow_v1.managed_saved_preparation_required(q)\"\nPL/pgSQL function managed_reply(jsonb) line 43 at PERFORM\nPL/pgSQL function managed_execute(jsonb,jsonb) line 12 at assignment\nPL/pgSQL function execute_managed_stock_intent_v1(jsonb) line 6 at assignment",
+          "hint": "",
+          "message": "canceling statement due to statement timeout"
+        },
+        "execute_index": 2,
+        "expected_status_received": false,
+        "normal_acceptance": false,
+        "rpc": "execute_managed_stock_intent_v1",
+        "status": 500,
+        "writer": "record_anesthesia_drug_administration"
+      },
+      "callTimings": [
+        {
+          "elapsed_seconds": 6.974247605000016,
+          "engineering_only": true,
+          "execute_index": 1,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "writer": "record_patient_treatment"
+        },
+        {
+          "elapsed_seconds": 8.019396260999997,
+          "engineering_only": true,
+          "execute_index": 2,
+          "expected_status_received": false,
+          "normal_acceptance": false,
+          "writer": "record_anesthesia_drug_administration"
+        }
+      ]
+    },
+    "native_return_v1": {
+      "result": {
+        "all_ten_writers_verified": false,
+        "application_Auth_verified": false,
+        "authenticated_browser_verified": false,
+        "beta210_only_three_reviewed_controlled_property_changes": true,
+        "beta210_original_controlled_descriptor_unchanged": true,
+        "beta210_original_rows_and_sequences_preserved": true,
+        "beta211_controlled_properties_rows_and_sequences_preserved": true,
+        "beta_candidate_profile": "engineering-writer-native_return_v1",
+        "beta_candidate_source_sha256": "8d822465d630ac8a68e120e95eae5afd7f0f6ecd5a82f4b9dacfc3c4077b3353",
+        "business_profile_verified": false,
+        "cold209_empty_count_preflight_verified": true,
+        "common269_source_properties": true,
+        "complete_independent_source_reference_properties": true,
+        "complete_source_derived208_ledger": true,
+        "complete_source_derived209_ledger": true,
+        "complete_source_derived210_ledger": true,
+        "complete_source_derived211_ledger": true,
+        "copied_migrations_rechecked": true,
+        "count_business_verified": false,
+        "current211_normal_acceptance": false,
+        "diagnostic_function": "public.execute_managed_stock_intent_v1(jsonb)",
+        "diagnostic_function_body_sha256": "01e54c986a52afb0bf39a1f7d528f8bc6cdf4887dc2059dea6ef08e7be676666",
+        "elapsed_seconds": 301.537649584,
+        "engineering_only": true,
+        "failure_types": [
+          "RuntimeError"
+        ],
+        "full121_source_module_properties": true,
+        "genuine_policy_grammar_controls": 0,
+        "historical_ledger_rows_rewritten": false,
+        "hosted_client_contact_check_validated_before_installation": true,
+        "hosted_writes": 0,
+        "independent_record_review_signing_verified": false,
+        "kind": "engineering-current211-writer-diagnostic-v1",
+        "new_count_tables_empty_except_source_descriptor": true,
+        "normal_owned_cleanup": true,
+        "old_rows_preserved_exact_declared_additions_only": true,
+        "original204_rows_preserved_with_source_declared_appends": true,
+        "original_parent_rows_verified": true,
+        "passed": false,
+        "populated_receiver_verified": false,
+        "prefix_sources_rechecked": true,
+        "production_deployed": false,
+        "profile": "native_return_v1",
+        "provider_requests": 0,
+        "representative_writers_verified": [
+          "record_native_dispense",
+          "record_native_dispense_return"
+        ],
+        "scheduler_paused_before_first_project_SQL": true,
+        "source_only_audit_column_controls": {
+          "Auth_acceptance": false,
+          "cases": 7,
+          "domain_writes": 0
+        },
+        "source_rechecked": true,
+        "source_sequences_verified": true,
+        "validated_client_constraint_controls": {
+          "cases": 7,
+          "raw_client_check_still_validated": true,
+          "same_original_metadata": true
+        }
+      },
+      "filesSha256": {
+        "beta-recovery-diagnostic-source.json": "9daa385cd9fdcd586c080b686273663aedda1fee4e4b211034579d12ec5730ea",
+        "beta-writer-call-timing-001.json": "71fe31ae828365d6a2f1c101c73c6407927a55e1e454589eb330a5fd7a1cf042",
+        "beta-writer-call-timing-002.json": "48485921fcc6aa7ce8e495e371e0901a7ff33d0bb35fd4b7f686bcb6cfd3c792",
+        "primary-failure.txt": "8de54b2375877840e4a13ed82788ceddc2c824d427307e77500fa2cb68d6d354",
+        "result.json": "09422410dcac9845bc5a5007f9dc9b72b2691fb61363f1216d2e32c6d239c04b"
+      },
+      "primaryFailureLastLine": "RuntimeError: Engineering writer tracing cannot grant normal current211 acceptance",
+      "sourceBinding": {
+        "diagnostic_body_sha256": "01e54c986a52afb0bf39a1f7d528f8bc6cdf4887dc2059dea6ef08e7be676666",
+        "engineering_only": true,
+        "normal_acceptance": false,
+        "original_body_sha256": "b437e0c3fcce34dcb83778f6e0eefbf60ccb3b7089724dc8d21125216e763caf",
+        "production_SQL_changed": false,
+        "signature": "public.execute_managed_stock_intent_v1(jsonb)",
+        "source_derived_descriptor_and_finite_admission": true,
+        "whole_wrapper_source_inverse": true
+      },
+      "callTimings": [
+        {
+          "elapsed_seconds": 7.102196563999996,
+          "engineering_only": true,
+          "execute_index": 1,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "writer": "record_native_dispense"
+        },
+        {
+          "elapsed_seconds": 7.1137975940000615,
+          "engineering_only": true,
+          "execute_index": 2,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "writer": "record_native_dispense_return"
+        }
+      ]
+    }
+  },
+  "scope": "Manual engineering-only branch. Product migration210/source/proof/framing bytes match aca45386; diagnostic manifest/workflow and wrapper instrumentation are separate. Wrapper source inverse and cleanup evidence are retained. No hosted writes or production SQL change; original 8-second statement deadline retained.",
+  "normalRunReceipt": "docs/evidence/beta-current211-fourth-ci-2026-11-06.json",
+  "interpretation": "Clinical treatment completed in 6.974 seconds, anesthesia timed out after 8.019 seconds with native SQLSTATE 57014. Dispense/return completed in 7.102/7.114 seconds and then the harness intentionally refused acceptance. Both GitHub diagnostic jobs report failure for different reasons; neither grants release admission."
+}

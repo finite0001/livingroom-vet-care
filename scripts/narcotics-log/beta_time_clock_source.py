@@ -22,6 +22,11 @@ SIGNATURE = "controlled_count_entry_v1.require_bound_module()"
 OLD_BODY_SHA = "f6feeae8a261d68cbd2c674d0c8d6dafcb2de7dfd1b628b39dd62d1c99376380"
 HEADER = "CREATE OR REPLACE FUNCTION " + SIGNATURE
 OLD_COMPARE = " if actual::text is distinct from(d.definition->'properties')::text then"
+DESCRIPTOR_HASH_ORIGINAL = "jsonb_build_object('domain','lrv.count.local_fixture.module.v1','definition',d.definition)::text"
+DESCRIPTOR_HASH_CANONICAL = """('{"domain": "lrv.count.local_fixture.module.v1", "definition": '||coalesce(d.definition::text,'null')||'}')"""
+DESCRIPTOR_SELECT = " select * into strict d from controlled_count_v1.descriptor where revision=1;"
+DESCRIPTOR_MATERIALIZE = "pg_catalog.jsonb_set_lax(d.definition,'{}'::text[],NULL::jsonb,false,'return_target')"
+DESCRIPTOR_FLAT_SELECT = DESCRIPTOR_SELECT + "\n d.definition := " + DESCRIPTOR_MATERIALIZE + ";"
 POLICIES = {"Admins update time entries", "Admins delete time entries"}
 WRITE_PRIVILEGES = {"INSERT", "UPDATE", "DELETE"}
 DIRECT_ROLES = {"PUBLIC", "anon", "authenticated"}
@@ -51,9 +56,11 @@ def expected_properties(original, new_body_sha):
 
 
 def admission_properties(original, new_body_sha):
-    """The finite admission stores only the two changed root branches."""
+    """The finite admission stores only the three changed metadata leaves."""
     projected = expected_properties(original, new_body_sha)
-    return {name: projected[name] for name in ("functions", "ordinary_relations")}
+    return {"functions": {SIGNATURE: {"body_sha256": projected["functions"][SIGNATURE]["body_sha256"]}},
+            "ordinary_relations": {"time_entries": {name: projected["ordinary_relations"]["time_entries"][name]
+                for name in ("acl", "policies")}}}
 
 
 def projection_sql(new_hash, expression=False, properties_expression="p_original->'properties'"):
@@ -64,19 +71,17 @@ def projection_sql(new_hash, expression=False, properties_expression="p_original
  OR (SELECT count(*) FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')p
      WHERE p->>'name'IN('Admins update time entries','Admins delete time entries'))<>2 THEN
   RAISE EXCEPTION 'beta_clock_original_source_invalid' USING ERRCODE='23514';END IF;
- -- Store only the two fully source-projected branches in the admission.
- -- Every other root member is retained from the immutable original.
+ -- Store only the three changed leaves; all other metadata stays source-owned.
  expected := jsonb_build_object(
- 'ordinary_relations',jsonb_set(expected->'ordinary_relations','{time_entries}',
-  jsonb_set(jsonb_set(expected#>'{ordinary_relations,time_entries}','{acl}',
-   (SELECT coalesce(jsonb_agg(a ORDER BY n),'[]'::jsonb)
+ 'ordinary_relations',jsonb_build_object('time_entries',jsonb_build_object(
+   'acl',(SELECT coalesce(jsonb_agg(a ORDER BY n),'[]'::jsonb)
     FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,acl}')WITH ORDINALITY t(a,n)
-    WHERE NOT(a->>'grantee'IN('PUBLIC','anon','authenticated')AND a->>'privilege'IN('INSERT','UPDATE','DELETE')))),
-   '{policies}',(SELECT coalesce(jsonb_agg(p ORDER BY n),'[]'::jsonb)
+    WHERE NOT(a->>'grantee'IN('PUBLIC','anon','authenticated')AND a->>'privilege'IN('INSERT','UPDATE','DELETE'))),
+   'policies',(SELECT coalesce(jsonb_agg(p ORDER BY n),'[]'::jsonb)
     FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')WITH ORDINALITY t(p,n)
     WHERE p->>'name'NOT IN('Admins update time entries','Admins delete time entries')))),
- 'functions',jsonb_set(expected->'functions','{controlled_count_entry_v1.require_bound_module(),body_sha256}',
-  to_jsonb(""" + (new_hash if expression else literal(new_hash) + "::text") + """)));
+ 'functions',jsonb_build_object('controlled_count_entry_v1.require_bound_module()',jsonb_build_object(
+  'body_sha256',to_jsonb(""" + (new_hash if expression else literal(new_hash) + "::text") + """))));
 
 """
 
@@ -172,7 +177,11 @@ def build():
  IF beta_saved_text IS DISTINCT FROM beta_expected_text THEN
  RAISE EXCEPTION 'beta_clock_admission_delta_invalid' USING ERRCODE='23514';END IF;
  -- One complete canonical object comparison covers every key and value.
- expected := p_original || expected;
+ expected := p_original || jsonb_build_object(
+  'functions',jsonb_set(p_original->'functions','{controlled_count_entry_v1.require_bound_module(),body_sha256}',
+   expected#>'{functions,controlled_count_entry_v1.require_bound_module(),body_sha256}'),
+  'ordinary_relations',jsonb_set(p_original->'ordinary_relations','{time_entries}',
+   (p_original#>'{ordinary_relations,time_entries}')||(expected#>'{ordinary_relations,time_entries}')));
  if actual::text is distinct from expected::text then"""
     # The projection is inside the already source-bound comparison function.
     # There is no separately callable accessor whose replacement could bypass
@@ -186,8 +195,16 @@ def build():
                        "beta_saved_text text;beta_expected_text text;begin")
     if definition.count(old_declaration) != 1:
         raise ValueError("Exact original comparison declaration required")
-    successor = definition.replace(old_declaration, new_declaration, 1).replace(OLD_COMPARE, admission, 1)
-    if successor.replace(admission, OLD_COMPARE, 1).replace(new_declaration, old_declaration, 1) != definition:
+    if definition.count(DESCRIPTOR_SELECT) != 1:
+        raise ValueError("Exact original source-descriptor read required")
+    if definition.count(DESCRIPTOR_HASH_ORIGINAL) != 1:
+        raise ValueError("Exact original source-descriptor hash expression required")
+    successor = (definition.replace(old_declaration, new_declaration, 1).replace(OLD_COMPARE, admission, 1)
+                 .replace(DESCRIPTOR_HASH_ORIGINAL, DESCRIPTOR_HASH_CANONICAL, 1)
+                 .replace(DESCRIPTOR_SELECT, DESCRIPTOR_FLAT_SELECT, 1))
+    if (successor.replace(admission, OLD_COMPARE, 1).replace(new_declaration, old_declaration, 1)
+            .replace(DESCRIPTOR_HASH_CANONICAL, DESCRIPTOR_HASH_ORIGINAL, 1)
+            .replace(DESCRIPTOR_FLAT_SELECT, DESCRIPTOR_SELECT, 1)) != definition:
         raise ValueError("Whole comparison source inverse required")
     new_hash = sha(successor.split(" AS $$", 1)[1][:-3].encode())
     projection = projection_sql(new_hash)
@@ -241,7 +258,11 @@ SELECT pg_notify('pgrst','reload schema');
         original_require_bound_body_sha256=OLD_BODY_SHA, successor_require_bound_body_sha256=new_hash,
         expected_projection_inline=True, external_expected_accessor=False,
         admission_root_branches=["functions", "ordinary_relations"],
+        admission_changed_leaf_paths=["functions."+SIGNATURE+".body_sha256",
+            "ordinary_relations.time_entries.acl", "ordinary_relations.time_entries.policies"],
         complete_canonical_object_equality=True, per_member_comparison=False,
+        descriptor_same_value_materialized_once=True, catalog_snapshot_calls_unchanged=True,
+        descriptor_hash_canonical_bytes_preserved=True, descriptor_hash_wrapper_rebuild_removed=True,
         immutable_admission_body_sha256=immutable_hash,
         core_sha256=sha(core), migration_sha256=sha(sql), migration_bytes=len(sql),
         historical_descriptors_rewritten=False, historical_receipts_rewritten=False,

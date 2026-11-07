@@ -1,0 +1,633 @@
+{
+  "schemaVersion": 1,
+  "kind": "compact-writer-profiling-engineering-evidence-v1",
+  "capturedAt": "2026-11-07T01:17:43.768242+00:00",
+  "runtimeAcceptance": false,
+  "readinessAdmission": false,
+  "run": {
+    "conclusion": "failure",
+    "createdAt": "2026-11-07T01:01:06Z",
+    "headSha": "0daa9a747aa103ee27e9c511a10c8160fa2886e5",
+    "status": "completed",
+    "updatedAt": "2026-11-07T01:09:00Z",
+    "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42321670464"
+  },
+  "jobs": [
+    {
+      "name": "source",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128247428359,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42321670464/job/128247428359",
+      "startedAt": "2026-11-07T01:01:12Z",
+      "completedAt": "2026-11-07T01:02:57Z",
+      "failedSteps": []
+    },
+    {
+      "name": "Engineering writer profile (native_return_v1, never acceptance)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128248000736,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42321670464/job/128248000736",
+      "startedAt": "2026-11-07T01:03:01Z",
+      "completedAt": "2026-11-07T01:08:59Z",
+      "failedSteps": [
+        "Capture the native current211 writer exception without admitting acceptance"
+      ]
+    },
+    {
+      "name": "Engineering writer profile (clinical, never acceptance)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128248000763,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42321670464/job/128248000763",
+      "startedAt": "2026-11-07T01:03:02Z",
+      "completedAt": "2026-11-07T01:08:48Z",
+      "failedSteps": [
+        "Capture the native current211 writer exception without admitting acceptance"
+      ]
+    },
+    {
+      "name": "current-runtime",
+      "status": "completed",
+      "conclusion": "skipped",
+      "databaseId": 128248002062,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42321670464/job/128248002062",
+      "startedAt": "2026-11-07T01:02:57Z",
+      "completedAt": "2026-11-07T01:02:57Z",
+      "failedSteps": []
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13553855398,
+      "name": "beta-metadata-component",
+      "size_in_bytes": 703,
+      "digest": "sha256:21e9f9129736619ce06efb92226e493c5d8223b65cc4bcbb832faa0758f8404d",
+      "created_at": "2026-11-07T01:02:54Z",
+      "expired": false
+    },
+    {
+      "id": 13552709784,
+      "name": "beta-writer-engineering-trace-native_return_v1",
+      "size_in_bytes": 19929,
+      "digest": "sha256:ce0347e6424846773bc1896fc69c8ef6d6f651bd55c911080bb45f895a448688",
+      "created_at": "2026-11-07T01:08:57Z",
+      "expired": false
+    },
+    {
+      "id": 13552574694,
+      "name": "beta-writer-engineering-trace-clinical",
+      "size_in_bytes": 21326,
+      "digest": "sha256:860247290c84759c9b8dc4ea096492db89647afd97a5a4b434ba344f18c1f0a8",
+      "created_at": "2026-11-07T01:08:45Z",
+      "expired": false
+    }
+  ],
+  "engineeringOnly": true,
+  "productHeadSha": "aca45386f05d718f62bfa50cef476bed78c4f0e3",
+  "exactProductSourceEquivalence": {
+    "supabase/migrations/20261106170000_atomic_time_clock_corrections.sql": {
+      "sha256": "7234e91e772f4055b66baa0fa7a07868134e84458dd23aa4b01847eb1c553ad1",
+      "diagnosticMatchesProduct": true
+    },
+    "scripts/narcotics-log/beta_time_clock_source.py": {
+      "sha256": "2eba1e47f36a4b0b92fcf664759c38d108efa0d66d1a336e4823deb0c7794c9e",
+      "diagnosticMatchesProduct": true
+    },
+    "scripts/narcotics-log/beta-migration210.json": {
+      "sha256": "f8dda9ebebcad09712f48a48044af43eeda122028157058b929325252cac2afc",
+      "diagnosticMatchesProduct": true
+    },
+    "scripts/narcotics-log/beta-time-clock-source-proof.json": {
+      "sha256": "6580e674be7116a794ce7b3afc71bd6455e19a346cdd470d783f8ca10a1f6fed",
+      "diagnosticMatchesProduct": true
+    }
+  },
+  "allDiffPathsFromProduct": [
+    ".github/workflows/beta-candidate.yml",
+    "docs/beta-remediation-2026-11-06.md",
+    "docs/evidence/beta-controlled-candidate-2026-11-06.md",
+    "docs/evidence/beta-controlled-metadata-compact-2026-11-06.json",
+    "docs/evidence/beta-current211-third-ci-2026-11-06.json",
+    "docs/evidence/beta-current211-writer-diagnostics-2026-11-06.json",
+    "docs/evidence/beta-frontend-ci-fd5f-2026-11-06.json",
+    "docs/evidence/beta-frontend-compact-source-comparison-2026-11-06.json",
+    "docs/evidence/beta-retained209-ci-fd5f-2026-11-06.json",
+    "scripts/narcotics-log/beta-candidate-source.json",
+    "scripts/narcotics-log/beta_recovery_diagnostic.py",
+    "scripts/narcotics-log/beta_writer_diagnostic.py",
+    "scripts/narcotics-log/test_beta_recovery_diagnostic.py",
+    "scripts/narcotics-log/test_beta_writer_diagnostic.py"
+  ],
+  "profiles": {
+    "clinical": {
+      "result": {
+        "all_ten_writers_verified": false,
+        "application_Auth_verified": false,
+        "authenticated_browser_verified": false,
+        "beta210_only_three_reviewed_controlled_property_changes": true,
+        "beta210_original_controlled_descriptor_unchanged": true,
+        "beta210_original_rows_and_sequences_preserved": true,
+        "beta211_controlled_properties_rows_and_sequences_preserved": true,
+        "beta_candidate_profile": "engineering-writer-clinical",
+        "beta_candidate_source_sha256": "c10f65467dedb4e4365a5a6d91593a860975112d13967edce337151b88c9cbd1",
+        "business_profile_verified": false,
+        "cold209_empty_count_preflight_verified": true,
+        "common269_source_properties": true,
+        "complete_independent_source_reference_properties": true,
+        "complete_source_derived208_ledger": true,
+        "complete_source_derived209_ledger": true,
+        "complete_source_derived210_ledger": true,
+        "complete_source_derived211_ledger": true,
+        "copied_migrations_rechecked": true,
+        "count_business_verified": false,
+        "current211_normal_acceptance": false,
+        "diagnostic_function": "public.execute_managed_stock_intent_v1(jsonb)",
+        "diagnostic_function_body_sha256": "797e82c740d462714e04a7930c593d0b4dbd5ae763196afc68c9c44651fc643b",
+        "elapsed_seconds": 298.786694026,
+        "engineering_only": true,
+        "failure_types": [
+          "ValueError"
+        ],
+        "full121_source_module_properties": true,
+        "historical_ledger_rows_rewritten": false,
+        "hosted_client_contact_check_validated_before_installation": true,
+        "hosted_writes": 0,
+        "kind": "engineering-current211-writer-diagnostic-v1",
+        "new_count_tables_empty_except_source_descriptor": true,
+        "normal_owned_cleanup": true,
+        "old_rows_preserved_exact_declared_additions_only": true,
+        "original204_rows_preserved_with_source_declared_appends": true,
+        "passed": false,
+        "populated_receiver_verified": false,
+        "prefix_sources_rechecked": true,
+        "production_deployed": false,
+        "profile": "clinical",
+        "provider_requests": 0,
+        "scheduler_paused_before_first_project_SQL": true,
+        "source_only_audit_column_controls": {
+          "Auth_acceptance": false,
+          "cases": 7,
+          "domain_writes": 0
+        },
+        "source_rechecked": true,
+        "validated_client_constraint_controls": {
+          "cases": 7,
+          "raw_client_check_still_validated": true,
+          "same_original_metadata": true
+        }
+      },
+      "filesSha256": {
+        "beta-recovery-diagnostic-source.json": "ebed76eb713be185dcfa368bb941647d78f13f5c0e61c106e3d521532095d33f",
+        "beta-recovery-native-trace.json": "18439d5a90f52cbfbd73e6d08365a2933f786f3255674218e70bc018b21a5ae8",
+        "beta-writer-call-timing-001.json": "68e72c82a866e7f396c6682a22422ca661954820d6570d6e857c2d6f7f35cc89",
+        "beta-writer-call-timing-002.json": "6fa21fe29adf0c168aa4559a513f33eebcbeeb2b9997f6968769d794fdb85ae2",
+        "beta-writer-function-costs-001.json": "31290dbab6f1acd4ef3457a8ede39a27f75616897cdcb71b17f4d2be0aec23e5",
+        "beta-writer-function-costs-002.json": "e8b3341d98a567f8a639b8ecc815340f58948a1495f471a6a820cd97c92250c9",
+        "beta-writer-native-trace.json": "34888ef2270bcf20b76d501cf3fa1596f1860e030a967bc493e28e7f0344ef84",
+        "primary-failure.txt": "8d13ddf5e15ac48eb761e707bf159b0da6cddf49682cab2151659a443e6b53a2",
+        "result.json": "cf34efdc4679212fd76051534f2b96de897c9a316d40acd1033986208cb38918",
+        "rpc-failure.json": "1ae043e9c689b42eef04964e80d70c1ef99d86f3bb6887cb18c1397ba38e5507"
+      },
+      "primaryFailureLastLine": "ValueError: Unexpected fixed RPC status: execute_managed_stock_intent_v1 500",
+      "rpcFailure": {
+        "error": {
+          "code": "57014",
+          "details": "SQL function \"snapshot\" statement 1\nPL/pgSQL assignment \"actual:=jsonb_build_object('workflow_tables',(select coalesce(jsonb_object_agg(c.relname,jsonb_build_object('kind',c.relkind,'persistence',c.relpersistence,\n 'owner',pg_get_userbyid(c.relowner),'rls',c.relrowsecurity,'force_rls',c.relforcerowsecurity,'options',to_jsonb(c.reloptions),'dropped_columns',(select count(*)from pg_attribute z where z.attrelid=c.oid and z.attnum>0 and z.attisdropped),\n 'columns',(select jsonb_agg(jsonb_build_object('name',a.attname,'number',a.attnum,'type',replace(replace(replace(replace(format_type(a.atttypid,a.atttypmod),'controlled_count_fixture_reference_v1.controlled_stock_execution_contexts','public.controlled_stock_execution_contexts'),'controlled_count_fixture_reference_v1.journal','controlled_stock_workflow_v1.journal'),'controlled_count_fixture_reference_v1.witness_operations','controlled_stock_workflow_v1.witness_operations'),'controlled_count_fixture_reference_v1.','controlled_count_v1.'),'not_null',a.attnotnull,'identity',a.attidentity,'generated',a.attgenerated,'collation',case when a.attcollation=0 then null else (select n.nspname||'.'||co.collname from pg_collation co join pg_namespace n on n.oid=co.collnamespace where co.oid=a.attcollation)end,'default',replace(replace(replace(replace(pg_get_expr(fixture_attrdef.adbin,fixture_attrdef.adrelid),'controlled_count_fixture_reference_v1.controlled_stock_execution_contexts','public.controlled_stock_execution_contexts'),'controlled_count_fixture_reference_v1.journal','controlled_stock_workflow_v1.journal'),'controlled_count_fixture_reference_v1.witness_operations','controlled_stock_workflow_v1.witness_operations'),'controlled_count_fixture_reference_v1.','controlled_count_v1.'),'acl',to_jsonb(a.attacl))order by a.attnum)from pg_attribute a left join pg_attrdef fixture_attrdef on fixture_attrdef.adrelid=a.attrelid and fixture_attrdef.adnum=a.attnum where a.attrelid=c.oid and a.attnum>0 and not a.attisdropped),\n 'constraints',(select coalesce(jsonb_agg(jsonb_build_object('name',q.conname,'kind',q.contype,'deferrable',q.condeferrable,'deferred',q.condeferred,'validated',q.convalidated,'definition',replace(replace(replace(replace(pg_get_constraintdef(q.oid,false),'controlled_count_fixture_reference_v1.controlled_stock_execution_contexts','public.controlled_stock_execution_contexts'),'controlled_count_fixture_reference_v1.journal','controlled_stock_workflow_v1.journal'),'controlled_count_fixture_reference_v1.witness_operations','controlled_stock_workflow_v1.witness_operations'),'controlled_count_fixture_reference_v1.','controlled_count_v1.'))order by q.conname),'[]'::jsonb)from pg_constraint q where q.conrelid=c.oid),\n 'indexes',(select coalesce(jsonb_agg(jsonb_build_object('name',ci.relname,'definition',replace(replace(replace(replace(pg_get_indexdef(i.indexrelid,0,false),'controlled_count_fixture_reference_v1.controlled_stock_execution_contexts','public.controlled_stock_execution_contexts'),'controlled_count_fixture_reference_v1.journal','controlled_stock_workflow_v1.journal'),'controlled_count_fixture_reference_v1.witness_operations','controlled_stock_workflow_v1.witness_operations'),'controlled_count_fixture_reference_v1.','controlled_count_v1.'),'valid',i.indisvalid,'ready',i.indisready,'live',i.indislive)order by ci.relname),'[]'::jsonb)from pg_index i join pg_class ci on ci.oid=i.indexrelid where i.indrelid=c.oid),\n 'acl',(select coalesce(jsonb_agg(jsonb_build_object('grantor',pg_get_userbyid(x.grantor),'grantee',case when x.grantee=0 then 'PUBLIC'else pg_get_userbyid(x.grantee)end,'privilege',x.privilege_type,'grantable',x.is_grantable)order by x.grantee,x.privilege_type),'[]'::jsonb)from aclexplode(coalesce(c.relacl,acldefault('r',c.relowner)))x)\n )order by c.relname),'{}'::jsonb)from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='controlled_stock_workflow_v1' and c.relname=any(ARRAY['journal','witness_operations']::text[])),'app_cut',(select jsonb_object_agg(r.role,jsonb_build_object('private_schema_access',exists(select 1 from pg_namespace n where n.",
+          "hint": "",
+          "message": "canceling statement due to statement timeout"
+        },
+        "rpc": "execute_managed_stock_intent_v1",
+        "status": 500
+      },
+      "sourceBinding": {
+        "diagnostic_body_sha256": "797e82c740d462714e04a7930c593d0b4dbd5ae763196afc68c9c44651fc643b",
+        "engineering_only": true,
+        "function_profiling_enabled": true,
+        "normal_acceptance": false,
+        "original_body_sha256": "b437e0c3fcce34dcb83778f6e0eefbf60ccb3b7089724dc8d21125216e763caf",
+        "production_SQL_changed": false,
+        "signature": "public.execute_managed_stock_intent_v1(jsonb)",
+        "source_derived_descriptor_and_finite_admission": true,
+        "tracking_scope": "transaction-local inside fixed RPC backend",
+        "whole_wrapper_source_inverse": true
+      },
+      "nativeTrace": {
+        "elapsed_seconds": 8.028153514999985,
+        "engineering_only": true,
+        "error": {
+          "code": "57014",
+          "details": "SQL function \"snapshot\" statement 1\nPL/pgSQL assignment \"actual:=jsonb_build_object('workflow_tables',(select coalesce(jsonb_object_agg(c.relname,jsonb_build_object('kind',c.relkind,'persistence',c.relpersistence,\n 'owner',pg_get_userbyid(c.relowner),'rls',c.relrowsecurity,'force_rls',c.relforcerowsecurity,'options',to_jsonb(c.reloptions),'dropped_columns',(select count(*)from pg_attribute z where z.attrelid=c.oid and z.attnum>0 and z.attisdropped),\n 'columns',(select jsonb_agg(jsonb_build_object('name',a.attname,'number',a.attnum,'type',replace(replace(replace(replace(format_type(a.atttypid,a.atttypmod),'controlled_count_fixture_reference_v1.controlled_stock_execution_contexts','public.controlled_stock_execution_contexts'),'controlled_count_fixture_reference_v1.journal','controlled_stock_workflow_v1.journal'),'controlled_count_fixture_reference_v1.witness_operations','controlled_stock_workflow_v1.witness_operations'),'controlled_count_fixture_reference_v1.','controlled_count_v1.'),'not_null',a.attnotnull,'identity',a.attidentity,'generated',a.attgenerated,'collation',case when a.attcollation=0 then null else (select n.nspname||'.'||co.collname from pg_collation co join pg_namespace n on n.oid=co.collnamespace where co.oid=a.attcollation)end,'default',replace(replace(replace(replace(pg_get_expr(fixture_attrdef.adbin,fixture_attrdef.adrelid),'controlled_count_fixture_reference_v1.controlled_stock_execution_contexts','public.controlled_stock_execution_contexts'),'controlled_count_fixture_reference_v1.journal','controlled_stock_workflow_v1.journal'),'controlled_count_fixture_reference_v1.witness_operations','controlled_stock_workflow_v1.witness_operations'),'controlled_count_fixture_reference_v1.','controlled_count_v1.'),'acl',to_jsonb(a.attacl))order by a.attnum)from pg_attribute a left join pg_attrdef fixture_attrdef on fixture_attrdef.adrelid=a.attrelid and fixture_attrdef.adnum=a.attnum where a.attrelid=c.oid and a.attnum>0 and not a.attisdropped),\n 'constraints',(select coalesce(jsonb_agg(jsonb_build_object('name',q.conname,'kind',q.contype,'deferrable',q.condeferrable,'deferred',q.condeferred,'validated',q.convalidated,'definition',replace(replace(replace(replace(pg_get_constraintdef(q.oid,false),'controlled_count_fixture_reference_v1.controlled_stock_execution_contexts','public.controlled_stock_execution_contexts'),'controlled_count_fixture_reference_v1.journal','controlled_stock_workflow_v1.journal'),'controlled_count_fixture_reference_v1.witness_operations','controlled_stock_workflow_v1.witness_operations'),'controlled_count_fixture_reference_v1.','controlled_count_v1.'))order by q.conname),'[]'::jsonb)from pg_constraint q where q.conrelid=c.oid),\n 'indexes',(select coalesce(jsonb_agg(jsonb_build_object('name',ci.relname,'definition',replace(replace(replace(replace(pg_get_indexdef(i.indexrelid,0,false),'controlled_count_fixture_reference_v1.controlled_stock_execution_contexts','public.controlled_stock_execution_contexts'),'controlled_count_fixture_reference_v1.journal','controlled_stock_workflow_v1.journal'),'controlled_count_fixture_reference_v1.witness_operations','controlled_stock_workflow_v1.witness_operations'),'controlled_count_fixture_reference_v1.','controlled_count_v1.'),'valid',i.indisvalid,'ready',i.indisready,'live',i.indislive)order by ci.relname),'[]'::jsonb)from pg_index i join pg_class ci on ci.oid=i.indexrelid where i.indrelid=c.oid),\n 'acl',(select coalesce(jsonb_agg(jsonb_build_object('grantor',pg_get_userbyid(x.grantor),'grantee',case when x.grantee=0 then 'PUBLIC'else pg_get_userbyid(x.grantee)end,'privilege',x.privilege_type,'grantable',x.is_grantable)order by x.grantee,x.privilege_type),'[]'::jsonb)from aclexplode(coalesce(c.relacl,acldefault('r',c.relowner)))x)\n )order by c.relname),'{}'::jsonb)from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='controlled_stock_workflow_v1' and c.relname=any(ARRAY['journal','witness_operations']::text[])),'app_cut',(select jsonb_object_agg(r.role,jsonb_build_object('private_schema_access',exists(select 1 from pg_namespace n where n.",
+          "hint": "",
+          "message": "canceling statement due to statement timeout"
+        },
+        "execute_index": 2,
+        "expected_status_received": false,
+        "normal_acceptance": false,
+        "rpc": "execute_managed_stock_intent_v1",
+        "status": 500,
+        "writer": "record_anesthesia_drug_administration"
+      },
+      "callTimings": [
+        {
+          "elapsed_seconds": 6.980805249000014,
+          "engineering_only": true,
+          "execute_index": 1,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "writer": "record_patient_treatment"
+        },
+        {
+          "elapsed_seconds": 8.028153514999985,
+          "engineering_only": true,
+          "execute_index": 2,
+          "expected_status_received": false,
+          "normal_acceptance": false,
+          "writer": "record_anesthesia_drug_administration"
+        }
+      ],
+      "functionCostSummaries": [
+        {
+          "aborted_call_statistics_may_be_incomplete": false,
+          "engineering_only": true,
+          "execute_index": 1,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "self_time_is_exclusive": true,
+          "total_time_is_inclusive_and_not_summed": true,
+          "writer": "record_patient_treatment",
+          "guardDelta": {
+            "calls": 11,
+            "self_ms": 3457.773,
+            "signature": "controlled_count_entry_v1.require_bound_module()",
+            "total_ms": 5921.204
+          },
+          "highestExclusiveCosts": [
+            {
+              "calls": 11,
+              "self_ms": 3457.773,
+              "signature": "controlled_count_entry_v1.require_bound_module()",
+              "total_ms": 5921.204
+            },
+            {
+              "calls": 44,
+              "self_ms": 1086.735,
+              "signature": "controlled_stock_manifest_snapshot()",
+              "total_ms": 1086.735
+            },
+            {
+              "calls": 11,
+              "self_ms": 968.008,
+              "signature": "controlled_review_v3.snapshot()",
+              "total_ms": 1656.495
+            },
+            {
+              "calls": 22,
+              "self_ms": 264.459,
+              "signature": "controlled_review.snapshot()",
+              "total_ms": 821.193
+            },
+            {
+              "calls": 10,
+              "self_ms": 208.498,
+              "signature": "controlled_count_entry_v1.acquire_shared_product_relation_frontier()",
+              "total_ms": 5939.706
+            },
+            {
+              "calls": 121,
+              "self_ms": 181.855,
+              "signature": "controlled_count_entry_v1.assert_shared_product_relation_frontier()",
+              "total_ms": 277.971
+            },
+            {
+              "calls": 10,
+              "self_ms": 163.994,
+              "signature": "narcotics_register_v1.module_properties(text,text,text,text)",
+              "total_ms": 163.994
+            },
+            {
+              "calls": 11,
+              "self_ms": 128.302,
+              "signature": "controlled_count_entry_v1.module_ordinary_relations()",
+              "total_ms": 128.302
+            }
+          ],
+          "fullArtifactSha256": "31290dbab6f1acd4ef3457a8ede39a27f75616897cdcb71b17f4d2be0aec23e5"
+        },
+        {
+          "aborted_call_statistics_may_be_incomplete": true,
+          "engineering_only": true,
+          "execute_index": 2,
+          "expected_status_received": false,
+          "normal_acceptance": false,
+          "self_time_is_exclusive": true,
+          "total_time_is_inclusive_and_not_summed": true,
+          "writer": "record_anesthesia_drug_administration",
+          "guardDelta": {
+            "calls": 12,
+            "self_ms": 3920.884,
+            "signature": "controlled_count_entry_v1.require_bound_module()",
+            "total_ms": 6609.591
+          },
+          "highestExclusiveCosts": [
+            {
+              "calls": 12,
+              "self_ms": 3920.884,
+              "signature": "controlled_count_entry_v1.require_bound_module()",
+              "total_ms": 6609.591
+            },
+            {
+              "calls": 52,
+              "self_ms": 1286.037,
+              "signature": "controlled_stock_manifest_snapshot()",
+              "total_ms": 1286.037
+            },
+            {
+              "calls": 12,
+              "self_ms": 1057.218,
+              "signature": "controlled_review_v3.snapshot()",
+              "total_ms": 1811.788
+            },
+            {
+              "calls": 26,
+              "self_ms": 310.401,
+              "signature": "controlled_review.snapshot()",
+              "total_ms": 969.075
+            },
+            {
+              "calls": 11,
+              "self_ms": 226.714,
+              "signature": "controlled_count_entry_v1.acquire_shared_product_relation_frontier()",
+              "total_ms": 6671.262999999999
+            },
+            {
+              "calls": 11,
+              "self_ms": 181.165,
+              "signature": "narcotics_register_v1.module_properties(text,text,text,text)",
+              "total_ms": 181.165
+            },
+            {
+              "calls": 115,
+              "self_ms": 170.30800000000002,
+              "signature": "controlled_count_entry_v1.assert_shared_product_relation_frontier()",
+              "total_ms": 262.78499999999997
+            },
+            {
+              "calls": 12,
+              "self_ms": 140.86800000000002,
+              "signature": "controlled_count_entry_v1.module_ordinary_relations()",
+              "total_ms": 140.86800000000002
+            }
+          ],
+          "fullArtifactSha256": "e8b3341d98a567f8a639b8ecc815340f58948a1495f471a6a820cd97c92250c9"
+        }
+      ]
+    },
+    "native_return_v1": {
+      "result": {
+        "all_ten_writers_verified": false,
+        "application_Auth_verified": false,
+        "authenticated_browser_verified": false,
+        "beta210_only_three_reviewed_controlled_property_changes": true,
+        "beta210_original_controlled_descriptor_unchanged": true,
+        "beta210_original_rows_and_sequences_preserved": true,
+        "beta211_controlled_properties_rows_and_sequences_preserved": true,
+        "beta_candidate_profile": "engineering-writer-native_return_v1",
+        "beta_candidate_source_sha256": "c10f65467dedb4e4365a5a6d91593a860975112d13967edce337151b88c9cbd1",
+        "business_profile_verified": false,
+        "cold209_empty_count_preflight_verified": true,
+        "common269_source_properties": true,
+        "complete_independent_source_reference_properties": true,
+        "complete_source_derived208_ledger": true,
+        "complete_source_derived209_ledger": true,
+        "complete_source_derived210_ledger": true,
+        "complete_source_derived211_ledger": true,
+        "copied_migrations_rechecked": true,
+        "count_business_verified": false,
+        "current211_normal_acceptance": false,
+        "diagnostic_function": "public.execute_managed_stock_intent_v1(jsonb)",
+        "diagnostic_function_body_sha256": "797e82c740d462714e04a7930c593d0b4dbd5ae763196afc68c9c44651fc643b",
+        "elapsed_seconds": 308.67480665999994,
+        "engineering_only": true,
+        "failure_types": [
+          "RuntimeError"
+        ],
+        "full121_source_module_properties": true,
+        "genuine_policy_grammar_controls": 0,
+        "historical_ledger_rows_rewritten": false,
+        "hosted_client_contact_check_validated_before_installation": true,
+        "hosted_writes": 0,
+        "independent_record_review_signing_verified": false,
+        "kind": "engineering-current211-writer-diagnostic-v1",
+        "new_count_tables_empty_except_source_descriptor": true,
+        "normal_owned_cleanup": true,
+        "old_rows_preserved_exact_declared_additions_only": true,
+        "original204_rows_preserved_with_source_declared_appends": true,
+        "original_parent_rows_verified": true,
+        "passed": false,
+        "populated_receiver_verified": false,
+        "prefix_sources_rechecked": true,
+        "production_deployed": false,
+        "profile": "native_return_v1",
+        "provider_requests": 0,
+        "representative_writers_verified": [
+          "record_native_dispense",
+          "record_native_dispense_return"
+        ],
+        "scheduler_paused_before_first_project_SQL": true,
+        "source_only_audit_column_controls": {
+          "Auth_acceptance": false,
+          "cases": 7,
+          "domain_writes": 0
+        },
+        "source_rechecked": true,
+        "source_sequences_verified": true,
+        "validated_client_constraint_controls": {
+          "cases": 7,
+          "raw_client_check_still_validated": true,
+          "same_original_metadata": true
+        }
+      },
+      "filesSha256": {
+        "beta-recovery-diagnostic-source.json": "ebed76eb713be185dcfa368bb941647d78f13f5c0e61c106e3d521532095d33f",
+        "beta-writer-call-timing-001.json": "8d1bd3073611f1b87aaab3669ac14473622067c81d627b1c2ff182d1f52c3071",
+        "beta-writer-call-timing-002.json": "f2afeaea6072b499ae39af9bf2af72cf1d00354139790c9b4014fd7a763f5ae8",
+        "beta-writer-function-costs-001.json": "c046a6141525577400d40b4b45cf110872f718da3505e4c03d4e79bd4ad4a5c6",
+        "beta-writer-function-costs-002.json": "dd45babbc0e363cbc893b8feeb22f66d68147ba262770e27e12eaa0a811fff14",
+        "primary-failure.txt": "b176531dcf0e4a8650525bf4f6801f50b29a89730529582bc5183a333f1dfda6",
+        "result.json": "02024b6cabf8d98d560cfbbd26ddf25357a2c4faf63781c74f9eff7ad9737965"
+      },
+      "primaryFailureLastLine": "RuntimeError: Engineering writer tracing cannot grant normal current211 acceptance",
+      "sourceBinding": {
+        "diagnostic_body_sha256": "797e82c740d462714e04a7930c593d0b4dbd5ae763196afc68c9c44651fc643b",
+        "engineering_only": true,
+        "function_profiling_enabled": true,
+        "normal_acceptance": false,
+        "original_body_sha256": "b437e0c3fcce34dcb83778f6e0eefbf60ccb3b7089724dc8d21125216e763caf",
+        "production_SQL_changed": false,
+        "signature": "public.execute_managed_stock_intent_v1(jsonb)",
+        "source_derived_descriptor_and_finite_admission": true,
+        "tracking_scope": "transaction-local inside fixed RPC backend",
+        "whole_wrapper_source_inverse": true
+      },
+      "callTimings": [
+        {
+          "elapsed_seconds": 7.428099618000033,
+          "engineering_only": true,
+          "execute_index": 1,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "writer": "record_native_dispense"
+        },
+        {
+          "elapsed_seconds": 7.370435331999943,
+          "engineering_only": true,
+          "execute_index": 2,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "writer": "record_native_dispense_return"
+        }
+      ],
+      "functionCostSummaries": [
+        {
+          "aborted_call_statistics_may_be_incomplete": false,
+          "engineering_only": true,
+          "execute_index": 1,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "self_time_is_exclusive": true,
+          "total_time_is_inclusive_and_not_summed": true,
+          "writer": "record_native_dispense",
+          "guardDelta": {
+            "calls": 11,
+            "self_ms": 3606.384,
+            "signature": "controlled_count_entry_v1.require_bound_module()",
+            "total_ms": 6121.776
+          },
+          "highestExclusiveCosts": [
+            {
+              "calls": 11,
+              "self_ms": 3606.384,
+              "signature": "controlled_count_entry_v1.require_bound_module()",
+              "total_ms": 6121.776
+            },
+            {
+              "calls": 44,
+              "self_ms": 1110.507,
+              "signature": "controlled_stock_manifest_snapshot()",
+              "total_ms": 1110.507
+            },
+            {
+              "calls": 11,
+              "self_ms": 979.413,
+              "signature": "controlled_review_v3.snapshot()",
+              "total_ms": 1690.602
+            },
+            {
+              "calls": 22,
+              "self_ms": 280.036,
+              "signature": "controlled_review.snapshot()",
+              "total_ms": 847.798
+            },
+            {
+              "calls": 10,
+              "self_ms": 223.579,
+              "signature": "controlled_count_entry_v1.acquire_shared_product_relation_frontier()",
+              "total_ms": 6141.562
+            },
+            {
+              "calls": 124,
+              "self_ms": 193.322,
+              "signature": "controlled_count_entry_v1.assert_shared_product_relation_frontier()",
+              "total_ms": 298.102
+            },
+            {
+              "calls": 10,
+              "self_ms": 164.52,
+              "signature": "narcotics_register_v1.module_properties(text,text,text,text)",
+              "total_ms": 164.52
+            },
+            {
+              "calls": 11,
+              "self_ms": 128.76,
+              "signature": "controlled_count_entry_v1.module_ordinary_relations()",
+              "total_ms": 128.76
+            }
+          ],
+          "fullArtifactSha256": "c046a6141525577400d40b4b45cf110872f718da3505e4c03d4e79bd4ad4a5c6"
+        },
+        {
+          "aborted_call_statistics_may_be_incomplete": false,
+          "engineering_only": true,
+          "execute_index": 2,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "self_time_is_exclusive": true,
+          "total_time_is_inclusive_and_not_summed": true,
+          "writer": "record_native_dispense_return",
+          "guardDelta": {
+            "calls": 11,
+            "self_ms": 3604.1530000000002,
+            "signature": "controlled_count_entry_v1.require_bound_module()",
+            "total_ms": 6102.1849999999995
+          },
+          "highestExclusiveCosts": [
+            {
+              "calls": 11,
+              "self_ms": 3604.1530000000002,
+              "signature": "controlled_count_entry_v1.require_bound_module()",
+              "total_ms": 6102.1849999999995
+            },
+            {
+              "calls": 44,
+              "self_ms": 1103.1100000000001,
+              "signature": "controlled_stock_manifest_snapshot()",
+              "total_ms": 1103.1100000000001
+            },
+            {
+              "calls": 11,
+              "self_ms": 976.3609999999999,
+              "signature": "controlled_review_v3.snapshot()",
+              "total_ms": 1685.0799999999997
+            },
+            {
+              "calls": 22,
+              "self_ms": 273.38500000000005,
+              "signature": "controlled_review.snapshot()",
+              "total_ms": 839.806
+            },
+            {
+              "calls": 10,
+              "self_ms": 217.348,
+              "signature": "controlled_count_entry_v1.acquire_shared_product_relation_frontier()",
+              "total_ms": 6116.02
+            },
+            {
+              "calls": 122,
+              "self_ms": 185.485,
+              "signature": "controlled_count_entry_v1.assert_shared_product_relation_frontier()",
+              "total_ms": 284.93000000000006
+            },
+            {
+              "calls": 10,
+              "self_ms": 164.85099999999997,
+              "signature": "narcotics_register_v1.module_properties(text,text,text,text)",
+              "total_ms": 164.85099999999997
+            },
+            {
+              "calls": 11,
+              "self_ms": 128.92400000000004,
+              "signature": "controlled_count_entry_v1.module_ordinary_relations()",
+              "total_ms": 128.92400000000004
+            }
+          ],
+          "fullArtifactSha256": "dd45babbc0e363cbc893b8feeb22f66d68147ba262770e27e12eaa0a811fff14"
+        }
+      ]
+    }
+  },
+  "scope": "Manual engineering-only branch. Product migration210/source/proof/framing bytes match aca45386; diagnostic manifest/workflow and wrapper instrumentation are separate. Wrapper source inverse and cleanup evidence are retained. No hosted writes or production SQL change; original 8-second statement deadline retained.",
+  "normalRunReceipt": "docs/evidence/beta-current211-fourth-ci-2026-11-06.json",
+  "interpretation": "Transaction-local pg_stat_user_functions profiling reports exclusive self_time separately from inclusive total_time; inclusive costs are never summed. require_bound_module consumed 3,457.773 ms across 11 calls for treatment, 3,920.884 ms across 12 observed calls for the aborted anesthesia request, and 3,606.384/3,604.153 ms across 11 calls each for dispense/return. Aborted-call statistics may be incomplete. Clinical timed out at 8.028 seconds; return protocol completed then intentionally refused acceptance. This identifies guard overhead but does not certify a proposed successor."
+}
