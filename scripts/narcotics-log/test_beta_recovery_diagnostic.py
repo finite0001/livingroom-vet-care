@@ -1,6 +1,7 @@
 """Engineering traces remain source-derived and cannot grant acceptance."""
 from copy import deepcopy
 import json
+import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
@@ -18,10 +19,26 @@ class RecoveryDiagnosticTests(unittest.TestCase):
         # the installer's independent source-reference observation.
         original['properties']['ordinary_relations']={'time_entries':{'acl':[],
             'policies':[{'name':name}for name in sorted(beta.clock_source.POLICIES)]}}
+        original['properties']['lexical_number']=1.0
+        raw=json.dumps(original).replace('"lexical_number": 1.0','"lexical_number": 1.00')
+        original_family={**beta.clock_source.render_family('{"original": 1.00}'),
+                         'original_descriptor_hash':'a'*64}
+        changed_family={**beta.clock_source.render_family('{"changed": 1.00}'),
+                        'original_descriptor_hash':'b'*64}
         target=SimpleNamespace(expected_module=deepcopy(original),operational_ledger=[{}]*211,
+            expected_module_canonical_text=raw,
             result={'complete_source_derived211_ledger':True},evidence=Path('/unused'))
-        runtime=SimpleNamespace(install=target,raw_query=Mock(),verify_module=Mock())
-        with patch.object(beta.business,'save') as save:
+        def source_delta(label,sql):
+            self.assertEqual(label,'engineering-source-wrapper-expectation')
+            self.assertTrue(sql.startswith("SELECT jsonb_build_object('canonical_text',jsonb_set("+beta.clock_source.literal(raw)))
+            matches=re.findall(r"to_jsonb\('([a-f0-9]{64})'::text\),false\)::text\);$",sql)
+            self.assertEqual(len(matches),1)
+            value=deepcopy(original)
+            value['properties']['functions'][diagnostic.SIGNATURE]['body_sha256']=matches[0]
+            return {'canonical_text':json.dumps(value).replace('"lexical_number": 1.0','"lexical_number": 1.00')}
+        runtime=SimpleNamespace(install=target,raw_query=Mock(),verify_module=Mock(),selected_query=Mock(side_effect=source_delta))
+        with patch.object(beta.business,'save') as save,patch.object(beta,'source_family',return_value=original_family),\
+                patch.object(beta,'derive_source_family',return_value=changed_family) as derive:
             diagnostic.bind(runtime)
         wanted=deepcopy(original)
         wanted['properties']['functions'][diagnostic.SIGNATURE]['body_sha256']=target.expected_module['properties']['functions'][diagnostic.SIGNATURE]['body_sha256']
@@ -34,11 +51,18 @@ class RecoveryDiagnosticTests(unittest.TestCase):
         self.assertIn('GET STACKED DIAGNOSTICS',program)
         self.assertIn("SET LOCAL statement_timeout='8s'",program)
         self.assertIn('engineering_admission_binding_refused',program)
-        require_hash=beta.installation.decode(beta.installation.prefix.regular(beta.HERE/'beta-time-clock-source-proof.json'))['successor_require_bound_body_sha256']
-        compact={'functions':{beta.clock_source.SIGNATURE:{'body_sha256':require_hash}},
-            'ordinary_relations':{'time_entries':{'acl':[],'policies':[]}}}
-        expected_sql=beta.clock_source.literal(beta.installation.canonical(compact))+'::jsonb'
-        self.assertTrue('expected_properties='+expected_sql in program, 'Diagnostic admission must bind exactly the compact projected branches')
+        self.assertIn(changed_family['definition'],program)
+        self.assertIn('beta_new_expectation text:='+beta.clock_source.literal(changed_family['canonical_text']),program)
+        self.assertIn('beta_template text:='+beta.clock_source.literal(changed_family['template_body']),program)
+        self.assertIn('AND canonical_expectation=expected::text',program)
+        self.assertIn('engineering_original_family_source_invalid',program)
+        self.assertEqual(program.count(beta.clock_source.literal(raw)),1)
+        self.assertEqual(program.count(beta.clock_source.literal(target.expected_module_canonical_text)),1)
+        self.assertIn('require_bound_body_hash='+beta.clock_source.literal(changed_family['body_sha256']),program)
+        self.assertNotIn('expected_properties_hash=',program)
+        self.assertIn('"lexical_number": 1.00',target.expected_module_canonical_text)
+        self.assertEqual(derive.call_args.args[2],target.expected_module_canonical_text)
+        self.assertEqual(target.beta_source_family,(target.expected_module_canonical_text,changed_family))
         runtime.verify_module.assert_called_once()
 
     def test_no_trace_or_generic_error_cannot_complete_diagnosis(self):

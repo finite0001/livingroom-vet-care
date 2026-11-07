@@ -30,16 +30,16 @@
       "sha256": "05e2515399d74d9e1546474ae0f24ace9bbb143217e7248af86ca1e71c90f754"
     },
     "scripts/narcotics-log/beta-migration210.json": {
-      "bytes": 2869,
-      "sha256": "965ff12470fd753e8c8fa49f774946b24c203e33affba2057d7830f7a69624bf"
+      "bytes": 2795,
+      "sha256": "068307f0364301599ac612bd2b1a1d0b3947f4c0acc46032b4d9d8c742f2d6eb"
     },
     "scripts/narcotics-log/beta-migration211.json": {
       "bytes": 722,
       "sha256": "4674914ab8ae4823fa9af942454015039b507620878404402a54ddcf65ac8d19"
     },
     "scripts/narcotics-log/beta-time-clock-source-proof.json": {
-      "bytes": 1637,
-      "sha256": "f4a598c8b6eaf07f6d2dd786da795ec05fc2b003f05caff7ab8235e042cecb8c"
+      "bytes": 1634,
+      "sha256": "7c9545478c7dbd27cf32b5c21131bfe00ac8b1a58e76473c6f389cec03f84cd1"
     },
     "scripts/narcotics-log/beta_browser_runner.py": {
       "bytes": 15983,
@@ -54,20 +54,20 @@
       "sha256": "70f6486f61aeb46aacf8dc4e0bb642a9b97dbe7ec3c4d4c1fc264ed0615246b5"
     },
     "scripts/narcotics-log/beta_recovery_diagnostic.py": {
-      "bytes": 6620,
-      "sha256": "86caa672694cbf77d31f3ff7a8aa2dfa2ea407e33f3e5b6d752e5760e78ff1b3"
+      "bytes": 8534,
+      "sha256": "6f11ec908c679654c6eeab5dbde0ad492a3f9354ce395693b98d625786ca2ad0"
     },
     "scripts/narcotics-log/beta_rehearsal.py": {
-      "bytes": 23767,
-      "sha256": "e5bbc3610b23837dded3002ec9473fc021886e10fd056416fcc6dd885f34258b"
+      "bytes": 28524,
+      "sha256": "04c1beb55e15987565bba83bcca36920bb4ea60192a23a329191b59bb5922902"
     },
     "scripts/narcotics-log/beta_release_source.py": {
       "bytes": 3520,
       "sha256": "b894a552d7ef9b724e68d35e2f8b302d6ca9803ceba9b7e5e1e8031669e0a894"
     },
     "scripts/narcotics-log/beta_time_clock_source.py": {
-      "bytes": 18324,
-      "sha256": "5abb8dc6df2543b33d4d57e10b7a6a561f7a48b7ce35601b58f92750d458dd89"
+      "bytes": 20940,
+      "sha256": "3f11d21889459571245958b2f7acb5c634cf8b6e404faad22aa8b8223181f37c"
     },
     "scripts/narcotics-log/boundary-reuse-controls.sql": {
       "bytes": 5342,
@@ -357,9 +357,13 @@
       "bytes": 6339,
       "sha256": "dce9bc4df128cde16770c78025d373dc64de62ce9c6520a3aeed978fb99b680d"
     },
+    "scripts/narcotics-log/test_beta_family_runtime.py": {
+      "bytes": 7075,
+      "sha256": "c4a8c7f0ce0b3a8a0adfee4fe2b6d1498e67eae258d263735f4f0b7c459918a0"
+    },
     "scripts/narcotics-log/test_beta_recovery_diagnostic.py": {
-      "bytes": 4106,
-      "sha256": "f0bba8cdc2160cf85bf93ef47ae72b87da33cb1ccc8662b90d1f20ce93bb5315"
+      "bytes": 5938,
+      "sha256": "d0d6866f098235bc982eea3f3805a19c87fbb5839cf9489e6444104e59cd4645"
     },
     "scripts/narcotics-log/test_beta_rehearsal.py": {
       "bytes": 3745,
@@ -374,8 +378,8 @@
       "sha256": "327ec4f2603fca95bfa5bbf36dd87632adbb3da7522c9627d6f2ee57913182ad"
     },
     "scripts/narcotics-log/test_beta_time_clock_source.py": {
-      "bytes": 3473,
-      "sha256": "5ec96b564e2adc6601eb96ff6e370caac26cad7671a814374df7d82d3fbd1380"
+      "bytes": 4130,
+      "sha256": "9cdc414e537d3f3755f9019c07532bdeb4abe36ff8d8091902546544630b2b99"
     },
     "scripts/narcotics-log/test_boundary_projection.py": {
       "bytes": 1504,
@@ -498,8 +502,8 @@
       "sha256": "7568a71548d5461ddedaa3baca0030e9705330fdc98e12874759f7a24a01c289"
     },
     "scripts/narcotics-log/verify_beta_metadata.py": {
-      "bytes": 12824,
-      "sha256": "1f60f68e6d06fc5cabe4ab4cec56dfed2fb3741abccf604b7fa6951cbe45070e"
+      "bytes": 21880,
+      "sha256": "7750010b83b9fa5cb3838434fc19c835c16cbe0dc609b9f8491bb297c85195cf"
     },
     "scripts/narcotics-log/workflows/auth_effects.py": {
       "bytes": 11844,
@@ -4418,8 +4422,8 @@
       "sha256": "68ea722271b2c7ddee528f7a8ec66fed7a57e3aa6f349a0d8eb8eeee5fbb813f"
     },
     "supabase/migrations/20261106170000_atomic_time_clock_corrections.sql": {
-      "bytes": 177853,
-      "sha256": "bf3cb81794a6577611d2df9419743082de3af34729d1a6028ef3d09dfdc3406f"
+      "bytes": 181665,
+      "sha256": "66908ec41dfadb7d363043d30a1f69fb7804ea9e5bee5a57ad17fd9087847823"
     },
     "supabase/migrations/20261106173000_terminal_appointment_clinician.sql": {
       "bytes": 4558,

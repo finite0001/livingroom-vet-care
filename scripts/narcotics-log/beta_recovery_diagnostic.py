@@ -24,6 +24,8 @@ def bind(runtime):
     target=runtime.install
     if len(target.operational_ledger)!=211 or not target.result.get('complete_source_derived211_ledger'):
         raise ValueError('Trace requires the fully verified current211 source installation')
+    original_family=beta.source_family(runtime,'engineering-original-family')
+    original_canonical=target.expected_module_canonical_text
     raw=beta.installation.prefix.regular(beta.ROOT/'supabase/migrations'/beta.installation.prefix.FORWARD[1]).decode()
     changed=deepcopy(target.expected_module)
     original_hash=changed['properties']['functions'][SIGNATURE]['body_sha256']
@@ -34,24 +36,48 @@ def bind(runtime):
     if hashlib.sha256(original_body.encode()).hexdigest()!=original_hash:
         raise ValueError('Whole original execute wrapper source inverse required')
     changed['properties']['functions'][SIGNATURE]['body_sha256']=digest
-    require_hash=beta.installation.decode(beta.installation.prefix.regular(beta.HERE/'beta-time-clock-source-proof.json'))['successor_require_bound_body_sha256']
-    projected=clock_source.admission_properties(changed['properties'],require_hash)
-    old=clock_source.literal(beta.installation.canonical(target.expected_module))+'::jsonb'
-    new=clock_source.literal(beta.installation.canonical(changed))+'::jsonb'
-    expected=clock_source.literal(beta.installation.canonical(projected))+'::jsonb'
+    # Transform the independently source-created raw reference, not the
+    # installed descriptor. JSONB stays in PostgreSQL so 1.00 never becomes 1.0.
+    canonical_delta=runtime.selected_query('engineering-source-wrapper-expectation',
+        "SELECT jsonb_build_object('canonical_text',jsonb_set("+clock_source.literal(original_canonical)+"::jsonb,"
+        "ARRAY['properties','functions',"+clock_source.literal(SIGNATURE)+",'body_sha256'],"
+        "to_jsonb("+clock_source.literal(digest)+"::text),false)::text);")
+    if (set(canonical_delta)!={'canonical_text'} or not isinstance(canonical_delta['canonical_text'],str)
+            or beta.installation.decode(canonical_delta['canonical_text'])!=changed):
+        raise ValueError('Exact source-owned diagnostic wrapper delta required')
+    changed_canonical=canonical_delta['canonical_text']
+    family=beta.derive_source_family(runtime,'engineering-wrapper-family',changed_canonical)
+    if family['template_body']!=original_family['template_body']:
+        raise ValueError('One unchanged source-owned diagnostic guard template required')
     sql="""BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='5s';
-"""+program+"""
+"""+program+'\n'+family['definition']+"""
 ALTER TABLE controlled_count_v1.descriptor DISABLE TRIGGER count_history_immutable;
 ALTER TABLE beta_time_clock_v1.admission DISABLE TRIGGER immutable_admission;
-DO $engineering_binding$DECLARE old_hash text;changed_rows integer;BEGIN
- SELECT definition_hash INTO STRICT old_hash FROM controlled_count_v1.descriptor WHERE revision=1 AND definition="""+old+""";
- UPDATE controlled_count_v1.descriptor SET definition="""+new+""",definition_hash=encode(sha256(convert_to(jsonb_build_object(
- 'domain','lrv.count.local_fixture.module.v1','definition',"""+new+""")::text,'UTF8')),'hex') WHERE revision=1 AND definition="""+old+""";
+DO $engineering_binding$DECLARE old_hash text;changed_rows integer;expected jsonb;
+ beta_old_canonical text:="""+clock_source.literal(original_canonical)+""";
+ beta_new_definition jsonb:="""+clock_source.literal(changed_canonical)+"""::jsonb;
+ beta_new_expectation text:="""+clock_source.literal(family['canonical_text'])+""";
+ beta_template text:="""+clock_source.literal(family['template_body'])+""";
+BEGIN
+"""+clock_source.normalization_sql("beta_old_canonical::jsonb->'properties'")+"""
+ IF encode(sha256(convert_to(expected::text,'UTF8')),'hex') IS DISTINCT FROM """+clock_source.literal(original_family['expected_hash'])+""" THEN
+ RAISE EXCEPTION 'engineering_original_family_source_invalid';END IF;
+ SELECT definition_hash INTO STRICT old_hash FROM controlled_count_v1.descriptor WHERE revision=1
+ AND definition::text=beta_old_canonical
+ AND definition_hash="""+clock_source.literal(original_family['original_descriptor_hash'])+""";
+ UPDATE controlled_count_v1.descriptor SET definition=beta_new_definition,definition_hash=encode(sha256(convert_to(jsonb_build_object(
+ 'domain','lrv.count.local_fixture.module.v1','definition',beta_new_definition)::text,'UTF8')),'hex') WHERE revision=1
+ AND definition::text=beta_old_canonical AND definition_hash=old_hash;
  GET DIAGNOSTICS changed_rows=ROW_COUNT;
  IF changed_rows<>1 THEN RAISE EXCEPTION 'engineering_descriptor_binding_refused';END IF;
  UPDATE beta_time_clock_v1.admission SET original_descriptor_hash=(SELECT definition_hash FROM controlled_count_v1.descriptor WHERE revision=1),
- expected_properties="""+expected+""",expected_properties_hash=encode(sha256(convert_to(("""+expected+""")::text,'UTF8')),'hex')
- WHERE revision=1 AND original_descriptor_hash=old_hash AND require_bound_body_hash="""+clock_source.literal(require_hash)+""";
+ canonical_expectation=beta_new_expectation,
+ guard_template=beta_template,
+ require_bound_body_hash="""+clock_source.literal(family['body_sha256'])+"""
+ WHERE revision=1 AND original_descriptor_hash=old_hash
+ AND canonical_expectation=expected::text
+ AND guard_template=beta_template
+ AND require_bound_body_hash="""+clock_source.literal(original_family['body_sha256'])+""";
  GET DIAGNOSTICS changed_rows=ROW_COUNT;
  IF changed_rows<>1 THEN RAISE EXCEPTION 'engineering_admission_binding_refused';END IF;
 END $engineering_binding$;
@@ -61,6 +87,8 @@ COMMIT;
 """
     runtime.raw_query('engineering-only-current211-execute-trace',sql)
     target.expected_module=changed
+    target.expected_module_canonical_text=changed_canonical
+    target.beta_source_family=(changed_canonical,family)
     runtime.verify_module('engineering-current211-source-derived-trace-binding')
     target.result.update(engineering_only=True,current211_normal_acceptance=False,
         diagnostic_function=SIGNATURE,diagnostic_function_body_sha256=digest)
@@ -68,6 +96,8 @@ COMMIT;
         engineering_only=True,normal_acceptance=False,signature=SIGNATURE,
         original_body_sha256=original_hash,whole_wrapper_source_inverse=True,
         diagnostic_body_sha256=digest,source_derived_descriptor_and_finite_admission=True,
+        guard_family_body_sha256=family['body_sha256'],
+        source_expected_canonical_text_preserved=True,
         production_SQL_changed=False))
 
 

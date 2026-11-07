@@ -98,12 +98,77 @@ class BetaRuntime(business.Runtime):
             return super().verify_module(label)
         captured = self.install.query(label, (HERE / "module-capture.sql").read_text())
         original = self.install.expected_module
-        proof = installation.decode(installation.prefix.regular(HERE / "beta-time-clock-source-proof.json"))
-        expected = clock_source.expected_properties(original["properties"], proof["successor_require_bound_body_sha256"])
+        family = source_family(self, label)
+        expected = clock_source.expected_properties(original["properties"], family["body_sha256"])
+        # Retain the historical decoded comparison as a supplemental check.
+        # Lexical numeric equality comes from module-capture's initial exact G
+        # invocation (full canonical comparison), bound below to independent
+        # raw-source N/G and the unchanged canonical descriptor, not Python JSON.
         if (captured["reference_absent"] is not True
                 or installation.canonical(captured["properties"]) != installation.canonical(expected)
                 or installation.canonical(captured["descriptor"]["definition"]) != installation.canonical(original)):
             raise ValueError("Finite current successor differs or historical descriptor changed: " + label)
+        # This observer never chooses an expectation. Exact body/cache text and
+        # the historical descriptor must match the independent source reference.
+        observed = self.selected_query(label + "-source-family", """
+SELECT jsonb_build_object(
+ 'body',(SELECT prosrc FROM pg_proc WHERE oid='controlled_count_entry_v1.require_bound_module()'::regprocedure),
+ 'admission_count',(SELECT count(*) FROM beta_time_clock_v1.admission),
+ 'admission',(SELECT to_jsonb(a) FROM beta_time_clock_v1.admission a WHERE revision=1),
+ 'original_canonical_text',(SELECT definition::text FROM controlled_count_v1.descriptor WHERE revision=1));
+""")
+        wanted = dict(body=family["body"], admission_count=1,
+            admission=dict(revision=1, original_descriptor_hash=family["original_descriptor_hash"],
+                canonical_expectation=family["canonical_text"], guard_template=family["template_body"],
+                require_bound_body_hash=family["body_sha256"]),
+            original_canonical_text=self.install.expected_module_canonical_text)
+        if observed != wanted:
+            raise ValueError("Exact independently source-derived guard family required: " + label)
+
+
+def source_expectation_envelope(sql):
+    """Preserve original PostgreSQL numeric spelling across the JSON transport."""
+    raw = installation.prefix.regular(HERE / "module-source-expected.sql")
+    pins = installation.decode(installation.prefix.regular(HERE / "proof-data-pins.json"))
+    pin = pins["files"]["module-source-expected.sql"]
+    if len(raw) != pin["bytes"] or installation.sha(raw) != pin["sha256"] or sql != raw.decode():
+        raise ValueError("Exact original source-reference program required")
+    original = "SELECT pg_catalog.current_setting('lrv_narcotics_source.expected');"
+    replacement = ("SELECT jsonb_build_object('canonical_text',"
+                   "pg_catalog.current_setting('lrv_narcotics_source.expected'));")
+    if sql.count(original) != 1 or replacement in sql:
+        raise ValueError("One exact original canonical-reference result required")
+    wrapped = sql.replace(original, replacement, 1)
+    if wrapped.replace(replacement, original, 1) != sql:
+        raise ValueError("Whole canonical-reference source inverse required")
+    return wrapped
+
+
+def derive_source_family(runtime, label, original_canonical_text):
+    if not isinstance(original_canonical_text, str) or not original_canonical_text:
+        raise ValueError("Lossless independently source-created canonical expectation required")
+    projected = runtime.selected_query(label + "-source-expectation",
+        clock_source.canonical_expectation_query(original_canonical_text))
+    if (set(projected) != {"canonical_text", "sha256", "original_descriptor_hash"}
+            or not isinstance(projected["canonical_text"], str)
+            or not isinstance(projected["original_descriptor_hash"], str)):
+        raise ValueError("Complete canonical source expectation required")
+    family = clock_source.render_family(projected["canonical_text"])
+    if (family["expected_hash"] != projected["sha256"]
+            or len(projected["original_descriptor_hash"]) != 64
+            or any(c not in "0123456789abcdef" for c in projected["original_descriptor_hash"])):
+        raise ValueError("Independent source expectation digest differs")
+    return {**family, "canonical_text": projected["canonical_text"],
+            "original_descriptor_hash": projected["original_descriptor_hash"]}
+
+
+def source_family(runtime, label):
+    target = runtime.install
+    original = getattr(target, "expected_module_canonical_text", None)
+    retained = getattr(target, "beta_source_family", None)
+    if retained is None or retained[0] != original:
+        target.beta_source_family = (original, derive_source_family(runtime, label, original))
+    return target.beta_source_family[1]
 
 
 def current_modules():
@@ -177,6 +242,17 @@ def with_factories(function, factories):
 
 class CurrentBusiness(business.BusinessInstallation):
     execute = with_factories(business.BusinessInstallation.execute, {"Runtime": BetaRuntime, "modules": current_modules})
+
+    def query(self, label, sql):
+        if label != "complete-source-expected-properties":
+            return super().query(label, sql)
+        envelope = super().query(label + "-canonical", source_expectation_envelope(sql))
+        if set(envelope) != {"canonical_text"} or not isinstance(envelope["canonical_text"], str):
+            raise ValueError("One lossless canonical source-reference result required")
+        self.expected_module_canonical_text = envelope["canonical_text"]
+        value = installation.decode(self.expected_module_canonical_text)
+        self.save(label, value)
+        return value
 
 
 def install210(runtime):
@@ -293,8 +369,8 @@ def current_tamper_controls(runtime):
         ("admission-delete", "DELETE FROM beta_time_clock_v1.admission;", "beta_clock_admission_immutable"),
         ("admission-truncate", "TRUNCATE beta_time_clock_v1.admission;", "beta_clock_admission_immutable"),
         ("rehashed-admission", "ALTER TABLE beta_time_clock_v1.admission DISABLE TRIGGER immutable_admission;"
-            "UPDATE beta_time_clock_v1.admission SET expected_properties=jsonb_set(expected_properties,'{unreviewed_delta}','true');"
-            "UPDATE beta_time_clock_v1.admission SET expected_properties_hash=encode(sha256(convert_to(expected_properties::text,'UTF8')),'hex');"
+            "UPDATE beta_time_clock_v1.admission SET canonical_expectation="
+            "(canonical_expectation::jsonb||jsonb_build_object('unreviewed_delta',true))::text;"
             "ALTER TABLE beta_time_clock_v1.admission ENABLE TRIGGER immutable_admission;", "beta_clock_admission_delta_invalid"),
     )
     for label, mutation, message in controls:
@@ -337,6 +413,8 @@ class BetaReceiver(receiver_rehearsal.Receiver):
     def __init__(self, source, evidence):
         super().__init__(source, evidence)
         self.beta_clock_installed = source.beta_clock_installed
+        self.expected_module_canonical_text = source.expected_module_canonical_text
+        self.beta_source_family = getattr(source, "beta_source_family", None)
 
 
 class BetaOperationalBrowser(operational_browser.OperationalBrowser, CurrentBusiness, hosted.HostedHistoryInstallation):
