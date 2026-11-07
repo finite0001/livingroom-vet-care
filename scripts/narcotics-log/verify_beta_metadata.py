@@ -24,7 +24,7 @@ def main():
             "acl": [{"grantee": role, "privilege": privilege}
                     for role in ("postgres", "authenticated", "service_role")
                     for privilege in ("SELECT", "INSERT", "UPDATE", "DELETE")],
-            "policies": [{"name": name} for name in ("Admins update time entries", "Admins delete time entries", "Read own")],
+            "policies": [{"name": name, "retained_number": 1} for name in ("Admins update time entries", "Admins delete time entries", "Read own")],
             "columns": [{"name": "unchanged", "position": 1}]}}}}
     expected = source.expected_properties(original["properties"], proof["successor_require_bound_body_sha256"])
     text = sql.decode()
@@ -90,6 +90,27 @@ def main():
                 raise TimeoutError("Owned component PostgreSQL did not become ready")
             time.sleep(0.1)
         command(fixture)
+        # Exercise the exact authored replacement, including SQL NULL versus
+        # JSON null and lexical details that must produce identical hash input.
+        lexical=[None,True,False,0,1,1.0,-0.0,[],{},[1,1.0,None],
+            {"é":"e\u0301", "quoted":"\"\\\n\t", "ordered":[2,1]}, original]
+        values=["(NULL::jsonb)"]+["("+source.literal(json.dumps(value,ensure_ascii=False))+"::jsonb)" for value in lexical]
+        old_bytes="convert_to("+source.DESCRIPTOR_HASH_ORIGINAL+",'UTF8')"
+        new_bytes="convert_to("+source.DESCRIPTOR_HASH_CANONICAL+",'UTF8')"
+        wrapper=command("WITH d(definition)AS(VALUES"+','.join(values)+")SELECT jsonb_build_object("
+            "'cases',count(*),'bytes_equal',bool_and("+old_bytes+" IS NOT DISTINCT FROM "+new_bytes+"),"
+            "'hashes_equal',bool_and(sha256("+old_bytes+") IS NOT DISTINCT FROM sha256("+new_bytes+")))FROM d;")
+        if json.loads(wrapper)!={'cases':len(values),'bytes_equal':True,'hashes_equal':True}:
+            raise AssertionError("Descriptor wrapper canonical bytes changed")
+        receipt['descriptor_hash_equivalence']=json.loads(wrapper)
+        receipt['checks'].append('exact descriptor wrapper bytes and SHA256 preserved')
+        identity=command("WITH d(definition)AS(VALUES"+','.join(values)+")SELECT jsonb_build_object("
+            "'cases',count(*),'bytes_equal',bool_and(convert_to(d.definition::text,'UTF8')IS NOT DISTINCT FROM "
+            "convert_to("+source.DESCRIPTOR_MATERIALIZE+"::text,'UTF8')))FROM d;")
+        if json.loads(identity)!={'cases':len(values),'bytes_equal':True}:
+            raise AssertionError("Descriptor materialization changed the selected value")
+        receipt['descriptor_materialization_equivalence']=json.loads(identity)
+        receipt['checks'].append('same selected descriptor materialized without changing any JSON or SQL NULL value')
         command(check())
         receipt["checks"].append("exact current delta accepted from immutable original descriptor")
         refused("restored direct write ACL refused", "", "count_module_invalid",
@@ -136,7 +157,7 @@ def main():
             refused(label, "", "count_module_invalid", changed)
         refused("self-consistent numeric encoding expectation tamper refused",
             "ALTER TABLE beta_time_clock_v1.admission DISABLE TRIGGER immutable_admission;"
-            "UPDATE beta_time_clock_v1.admission SET expected_properties=jsonb_set(expected_properties,'{functions,controlled_count_entry_v1.require_bound_module(),retained_number}','1.0');"
+            "UPDATE beta_time_clock_v1.admission SET expected_properties=jsonb_set(expected_properties,'{ordinary_relations,time_entries,policies,0,retained_number}','1.0');"
             "UPDATE beta_time_clock_v1.admission SET expected_properties_hash=encode(sha256(convert_to(expected_properties::text,'UTF8')),'hex');"
             "ALTER TABLE beta_time_clock_v1.admission ENABLE TRIGGER immutable_admission;", "beta_clock_admission_delta_invalid")
         for role in ("anon", "authenticated", "service_role"):
