@@ -1,7 +1,8 @@
 """Disposable current211 native-error trace; never business/recovery acceptance.
 
-Only the fixed execute wrapper's error fence changes. Its authored body and the
-finite diagnostic descriptor/admission expectations are independently derived;
+Only the fixed execute wrapper's error fence and optional transaction-local
+function profiling change. Its authored body and finite diagnostic
+descriptor/admission expectations are independently derived;
 original production SQL and historical evidence are never modified.
 """
 from copy import deepcopy
@@ -19,7 +20,7 @@ class DiagnosticComplete(Exception):
     """A captured native failure, followed by normal unchanged owned cleanup."""
 
 
-def bind(runtime):
+def bind(runtime, *, profile_functions=False):
     import beta_rehearsal as beta
     target=runtime.install
     if len(target.operational_ledger)!=211 or not target.result.get('complete_source_derived211_ledger'):
@@ -33,6 +34,28 @@ def bind(runtime):
     original_body=program.split(' AS $$',1)[1][:-3].replace('declare diagnostic_native_context text;q jsonb;','declare q jsonb;',1).replace(new_fence,old_fence,1)
     if hashlib.sha256(original_body.encode()).hexdigest()!=original_hash:
         raise ValueError('Whole original execute wrapper source inverse required')
+    if profile_functions:
+        original_program=program
+        begin_anchor="begin\n perform controlled_stock_workflow_v1.managed_entry_frontier();"
+        begin_profile="begin\n perform pg_catalog.set_config('track_functions','all',true);\n perform controlled_stock_workflow_v1.managed_entry_frontier();"
+        finish_anchor="return controlled_stock_workflow_v1.finish_managed_entry((q->>'actor_id')::uuid,a,r);"
+        finish_profile="r:=controlled_stock_workflow_v1.finish_managed_entry((q->>'actor_id')::uuid,a,r);perform pg_catalog.pg_stat_force_next_flush();return r;"
+        failure_profile=new_fence.replace("RAISE EXCEPTION USING", "PERFORM pg_catalog.pg_stat_force_next_flush();RAISE EXCEPTION USING",1)
+        pairs=((begin_anchor,begin_profile),(finish_anchor,finish_profile),(new_fence,failure_profile))
+        for old,new in pairs:
+            if program.count(old)!=1:raise ValueError('Exact fixed profiling source anchor required')
+            program=program.replace(old,new,1)
+        inverse=program
+        for old,new in reversed(pairs):inverse=inverse.replace(new,old,1)
+        if inverse!=original_program:raise ValueError('Whole profiling wrapper source inverse required')
+        digest=hashlib.sha256(program.split(' AS $$',1)[1][:-3].encode()).hexdigest()
+        target.boot.sql("GRANT SET ON PARAMETER track_functions TO postgres;"
+            "GRANT EXECUTE ON FUNCTION pg_catalog.pg_stat_force_next_flush() TO postgres;",admin=True)
+        permissions=runtime.selected_query('engineering-only-function-profiling-permission',
+            "SELECT jsonb_build_object('track_functions',has_parameter_privilege('postgres','track_functions','SET'),"
+            "'flush',has_function_privilege('postgres','pg_catalog.pg_stat_force_next_flush()','EXECUTE'));")
+        if permissions!={'track_functions':True,'flush':True}:
+            raise ValueError('Owned engineering profiling permission not established')
     changed['properties']['functions'][SIGNATURE]['body_sha256']=digest
     require_hash=beta.installation.decode(beta.installation.prefix.regular(beta.HERE/'beta-time-clock-source-proof.json'))['successor_require_bound_body_sha256']
     projected=clock_source.admission_properties(changed['properties'],require_hash)
@@ -68,7 +91,8 @@ COMMIT;
         engineering_only=True,normal_acceptance=False,signature=SIGNATURE,
         original_body_sha256=original_hash,whole_wrapper_source_inverse=True,
         diagnostic_body_sha256=digest,source_derived_descriptor_and_finite_admission=True,
-        production_SQL_changed=False))
+        production_SQL_changed=False,function_profiling_enabled=profile_functions,
+        tracking_scope='transaction-local inside fixed RPC backend' if profile_functions else None))
 
 
 class TimedHttp:

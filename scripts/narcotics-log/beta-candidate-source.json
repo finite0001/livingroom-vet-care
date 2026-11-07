@@ -2,8 +2,8 @@
   "database_operations": 0,
   "files": {
     ".github/workflows/beta-candidate.yml": {
-      "bytes": 7313,
-      "sha256": "54e5143dc1a7279233d3a2b2991dd86ea7e17a83204adaa3f5f9c6091f3f6f2c"
+      "bytes": 7390,
+      "sha256": "3fea7899eacad7df987ab9bc3b7a9eda6c42d3cde409b5b90800707f0af0f1fb"
     },
     "index.html": {
       "bytes": 1771,
@@ -54,8 +54,8 @@
       "sha256": "70f6486f61aeb46aacf8dc4e0bb642a9b97dbe7ec3c4d4c1fc264ed0615246b5"
     },
     "scripts/narcotics-log/beta_recovery_diagnostic.py": {
-      "bytes": 6620,
-      "sha256": "86caa672694cbf77d31f3ff7a8aa2dfa2ea407e33f3e5b6d752e5760e78ff1b3"
+      "bytes": 8786,
+      "sha256": "01cbf26f67eea239537c2a2bfc9c7047b917bcd2253a1382be7779081828cda0"
     },
     "scripts/narcotics-log/beta_rehearsal.py": {
       "bytes": 23767,
@@ -70,8 +70,8 @@
       "sha256": "2eba1e47f36a4b0b92fcf664759c38d108efa0d66d1a336e4823deb0c7794c9e"
     },
     "scripts/narcotics-log/beta_writer_diagnostic.py": {
-      "bytes": 4473,
-      "sha256": "f7767aafd1baa42d75911b0dbde26bf04d4c8d4f0211315f341f42a312b0ea22"
+      "bytes": 7304,
+      "sha256": "13e405913dd0a72bdc405bf1496ac6f3f4829bedc18b6f548a4f4aaf61d98be1"
     },
     "scripts/narcotics-log/boundary-reuse-controls.sql": {
       "bytes": 5342,
@@ -362,8 +362,8 @@
       "sha256": "dce9bc4df128cde16770c78025d373dc64de62ce9c6520a3aeed978fb99b680d"
     },
     "scripts/narcotics-log/test_beta_recovery_diagnostic.py": {
-      "bytes": 4200,
-      "sha256": "dfadddc112e256d8b55b7fb01b81e3620987fbcb353f43626e99411f61bce435"
+      "bytes": 5665,
+      "sha256": "07af651ddc1263504e47e1f1818edc21ebd63717339c2d5edb3ef243bd67a75c"
     },
     "scripts/narcotics-log/test_beta_rehearsal.py": {
       "bytes": 3745,
@@ -382,8 +382,8 @@
       "sha256": "ae7d73e88bee816177af131ecb7f5a7b442d90719f75d8cf90a34ebdcc504f4a"
     },
     "scripts/narcotics-log/test_beta_writer_diagnostic.py": {
-      "bytes": 5036,
-      "sha256": "1675d7accfc145da5ea94317e44ee7e13e4276959004b6d2f4e6a537b2e39897"
+      "bytes": 5688,
+      "sha256": "5bb667db8965abf09834fdc5fe86b4e58959bc32390f006ce0a85aa655e16cdb"
     },
     "scripts/narcotics-log/test_boundary_projection.py": {
       "bytes": 1504,

@@ -42,6 +42,27 @@ class RecoveryDiagnosticTests(unittest.TestCase):
         self.assertTrue('expected_properties='+expected_sql in program, 'Diagnostic admission must bind exactly the compact projected branches')
         runtime.verify_module.assert_called_once()
 
+    def test_optional_profiling_is_transaction_local_and_keeps_source_inverse(self):
+        original=json.loads((beta.HERE/'module-expected.json').read_text())
+        original['properties']['ordinary_relations']={'time_entries':{'acl':[],
+            'policies':[{'name':name}for name in sorted(beta.clock_source.POLICIES)]}}
+        target=SimpleNamespace(expected_module=deepcopy(original),operational_ledger=[{}]*211,
+            result={'complete_source_derived211_ledger':True},evidence=Path('/unused'),boot=SimpleNamespace(sql=Mock()))
+        runtime=SimpleNamespace(install=target,raw_query=Mock(),verify_module=Mock(),
+            selected_query=Mock(return_value={'track_functions':True,'flush':True}))
+        with patch.object(beta.business,'save') as save:
+            diagnostic.bind(runtime,profile_functions=True)
+        program=runtime.raw_query.call_args.args[1]
+        self.assertEqual(program.count("set_config('track_functions','all',true)"),1)
+        self.assertEqual(program.count('pg_stat_force_next_flush()'),2)
+        grants=target.boot.sql.call_args
+        self.assertTrue(grants.kwargs['admin'])
+        self.assertNotIn('authenticated',grants.args[0])
+        self.assertNotIn('anon',grants.args[0])
+        self.assertTrue(save.call_args.args[2]['whole_wrapper_source_inverse'])
+        self.assertTrue(save.call_args.args[2]['function_profiling_enabled'])
+        self.assertFalse(save.call_args.args[2]['normal_acceptance'])
+
     def test_no_trace_or_generic_error_cannot_complete_diagnosis(self):
         with TemporaryDirectory() as folder:
             directory=Path(folder).resolve()

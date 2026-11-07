@@ -27,7 +27,7 @@ class WriterDiagnosticTests(unittest.TestCase):
                         error=dict(code='57014',message='statement timeout',details='fixed synthetic context',hint=''))))
                     raise ValueError('fixed failed status')
                 return {'unchanged': True}
-            runtime = SimpleNamespace(folder=folder)
+            runtime = SimpleNamespace(folder=folder,selected_query=lambda *args:{})
             http = writer.WriterHttp(SimpleNamespace(rpc=rpc), runtime)
             probe = {'p_request': {'writer':'record_anesthesia_drug_administration', 'secret':'must-not-copy'}}
             user = {'access_token':'must-not-copy'}
@@ -60,7 +60,7 @@ class WriterDiagnosticTests(unittest.TestCase):
                 (folder/'rpc-failure.json').write_text(json.dumps(dict(rpc=name,status=500,
                     error=dict(code='57014',message='statement timeout',details='second native context',hint=''))))
                 raise ValueError('second fixed failed status')
-            http = writer.WriterHttp(SimpleNamespace(rpc=rpc), SimpleNamespace(folder=folder))
+            http = writer.WriterHttp(SimpleNamespace(rpc=rpc), SimpleNamespace(folder=folder,selected_query=lambda *args:{}))
             http.rpc('probe_controlled_stock_intent_v1',{'p_request':{'writer':'record_patient_treatment'}},{})
             self.assertEqual(http.rpc(writer.diagnostic.API,{},{}),{'saved':True})
             http.rpc('probe_controlled_stock_intent_v1',{'p_request':{'writer':'record_anesthesia_drug_administration'}},{})
@@ -74,6 +74,16 @@ class WriterDiagnosticTests(unittest.TestCase):
             self.assertEqual(native['execute_index'],2)
             self.assertEqual(native['writer'],'record_anesthesia_drug_administration')
             self.assertEqual(native['error']['details'],'second native context')
+
+    def test_function_deltas_are_exclusive_and_never_sum_nested_total_time(self):
+        before={'parent()':dict(calls=2,self_ms=3,total_ms=10)}
+        after={'parent()':dict(calls=3,self_ms=5,total_ms=18),
+               'child()':dict(calls=2,self_ms=6,total_ms=6)}
+        self.assertEqual(writer.function_deltas(before,after),[
+            dict(signature='child()',calls=2,self_ms=6,total_ms=6),
+            dict(signature='parent()',calls=1,self_ms=2,total_ms=8)])
+        with self.assertRaisesRegex(ValueError,'statistics reset'):
+            writer.function_deltas(after,before)
 
     def test_successful_protocol_still_refuses_normal_acceptance(self):
         target = object.__new__(writer.WriterDiagnosis)

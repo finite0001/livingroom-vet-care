@@ -1,4 +1,4 @@
-name: Engineering writer diagnosis (never candidate acceptance)
+name: Engineering writer profiling (never candidate acceptance)
 
 on:
   pull_request:
@@ -138,7 +138,7 @@ jobs:
       matrix:
         writer_profile: [clinical, native_return_v1]
     if: github.event_name == 'workflow_dispatch' && inputs.recovery_diagnostic
-    name: Engineering writer trace (${{ matrix.writer_profile }}, never acceptance)
+    name: Engineering writer profile (${{ matrix.writer_profile }}, never acceptance)
     needs: source
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
@@ -177,3 +177,4 @@ jobs:
             /tmp/lrv-narcotics-install-*/beta-recovery-diagnostic-source.json
             /tmp/lrv-narcotics-install-*/beta-writer-native-trace.json
             /tmp/lrv-narcotics-install-*/beta-writer-call-timing-*.json
+            /tmp/lrv-narcotics-install-*/beta-writer-function-costs-*.json
