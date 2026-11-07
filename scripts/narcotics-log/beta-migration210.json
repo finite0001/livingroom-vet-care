@@ -5,12 +5,12 @@
   "migration_count": 210,
   "migration": "20261106170000_atomic_time_clock_corrections.sql",
   "framing": {
-    "bytes": 177536,
-    "sha256": "bb9d9ceb3892d0d172a34906e60c263c5dcbfaf74f084d1b4cb577de23524141",
+    "bytes": 177603,
+    "sha256": "7234e91e772f4055b66baa0fa7a07868134e84458dd23aa4b01847eb1c553ad1",
     "statement_count": 30,
-    "compact_array_sha256": "64489f0d19a5bf254c40852f389a4cec0da68bb1bde3ac59b5c8073ca713ed84",
-    "postgres_array_sha256": "ee4d01ecbe790040ffd8c725340b80dd26655a32d3aeabbaf9f85ee0ee504888",
-    "postgres_array_bytes": 178276,
+    "compact_array_sha256": "63ffa9b917ccef87d0d1c21be4777a49b3ee13d25c856acd1509b6c0b381bf62",
+    "postgres_array_sha256": "6f0ad97969722bf485f609b85c1bae7dba466eed30165c05c29f58d10a91513c",
+    "postgres_array_bytes": 178345,
     "statement_sha256s": [
       "92e575ba4db4a98894c4267969d39de63ab3769e347564721edf8a79f4a6dca6",
       "7596f02d47ffbe91c986fc1c3b0e2032254efa50443bebcf654842bc902a1957",
@@ -37,8 +37,8 @@
       "d45e5722d18f4c2cf37a96bf10e3bb2d3cc188a26a8644da2d12a78ad27f455d",
       "4778a11a5af8660f5648aec99b47b4afb7b501fcde0713611c60bd476990f4e7",
       "926e84e495266d36ec631362b30e1592ee09558f2810ea33073b8cd0ab15be71",
-      "5d983c725d40b19d28fc485dd2252f95a987a8b8e77cc2741a313f2c41241235",
-      "5c7efaac25ca67c1860efc475d0da58eb4fda6f25863503c1c60b26d4fbaef67",
+      "1401916a9e49b6ade427ab5fb46daf3dda3cd306ff1515c2a2ea37423cb46984",
+      "e10fe759419e468fc632f0c8d2ba98dbd4f8adc22ae8b6928285a34b0d69b813",
       "21e6400c8579ec1c336f0041032e61b4a11b0cdf56e7cccbf95bbfe07753404e",
       "e465bb93289f1ec4653d4703f716314c4101157d6103cb79e47f37d743a966cb",
       "8d9e9e9dfafb91696821005eb8c89b3af5bba17edeb513d813f8f0adf70a151d"

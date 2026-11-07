@@ -34,6 +34,12 @@ class RecoveryDiagnosticTests(unittest.TestCase):
         self.assertIn('GET STACKED DIAGNOSTICS',program)
         self.assertIn("SET LOCAL statement_timeout='8s'",program)
         self.assertIn('engineering_admission_binding_refused',program)
+        require_hash=beta.installation.decode(beta.installation.prefix.regular(beta.HERE/'beta-time-clock-source-proof.json'))['successor_require_bound_body_sha256']
+        compact={key:deepcopy(wanted['properties'][key]) for key in ('functions','ordinary_relations')}
+        compact['functions'][beta.clock_source.SIGNATURE]['body_sha256']=require_hash
+        compact['ordinary_relations']['time_entries']['policies']=[]
+        expected_sql=beta.clock_source.literal(beta.installation.canonical(compact))+'::jsonb'
+        self.assertTrue('expected_properties='+expected_sql in program, 'Diagnostic admission must bind exactly the compact projected branches')
         runtime.verify_module.assert_called_once()
 
     def test_no_trace_or_generic_error_cannot_complete_diagnosis(self):

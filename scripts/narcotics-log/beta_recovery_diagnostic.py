@@ -35,7 +35,7 @@ def bind(runtime):
         raise ValueError('Whole original execute wrapper source inverse required')
     changed['properties']['functions'][SIGNATURE]['body_sha256']=digest
     require_hash=beta.installation.decode(beta.installation.prefix.regular(beta.HERE/'beta-time-clock-source-proof.json'))['successor_require_bound_body_sha256']
-    projected=clock_source.expected_properties(changed['properties'],require_hash)
+    projected=clock_source.admission_properties(changed['properties'],require_hash)
     old=clock_source.literal(beta.installation.canonical(target.expected_module))+'::jsonb'
     new=clock_source.literal(beta.installation.canonical(changed))+'::jsonb'
     expected=clock_source.literal(beta.installation.canonical(projected))+'::jsonb'
