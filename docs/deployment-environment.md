@@ -13,7 +13,7 @@ Set these in the intended Vercel environment, not just in a repository `.env` fi
 | `VITE_SUPABASE_URL` | `https://mgadheotkdnrsatfivjy.supabase.co` | Exact `https://<staging-reference>.supabase.co` origin |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Matching browser publishable key | Matching staging browser publishable key |
 
-The dedicated project is reserved for eventual production even while its current provider settings say staging. Preview builds cannot use it or the original Lovable project. A separate hosted staging backend has not been provisioned or approved by this change; until one is available, use the isolated local validation environment. Production configuration passing is not permission to launch or proof that the dedicated database is commissioned.
+The production project is `mgadheotkdnrsatfivjy`; the separate staging project is `kothoqicubowyhwfsrte`, as recorded in the [environment manifest](environment-manifest.md). Preview builds cannot use production or the retained Lovable project. Recheck the staging schema and enabled gates for the candidate before using it. Production configuration passing does not establish backend, provider or clinical acceptance.
 
 Modern `sb_publishable_` keys are accepted. Legacy JWT keys must declare `role=anon` and the selected project reference. JWT payload inspection is a configuration sanity check, **not signature verification**; modern opaque keys cannot be bound to a project offline. Hosted authentication and backend commissioning must verify actual validity, ownership and privileges. Secret keys and service-role JWTs are rejected without printing their values. Follow [Supabase's key guidance](https://supabase.com/docs/guides/getting-started/api-keys).
 

@@ -4,7 +4,7 @@ import { precedes } from "./attachment-review-history.ts";
 import type { MigrationCursor, MigrationManifest, MigrationRpc } from "./migration-run-api.ts";
 import type { MigrationResolutionRequest } from "./migration-resolution-state.ts";
 
-const uuid = z.string().uuid(), hash = z.string().regex(/^[a-f0-9]{64}$/);
+const uuid = z.string().guid(), hash = z.string().regex(/^[a-f0-9]{64}$/);
 const date = z.string().datetime({ offset: true }).refine(v => Number.isFinite(Date.parse(v)) && !/\.\d{7}/.test(v));
 const version = z.number().int().positive().safe(), count = z.number().int().nonnegative().safe();
 const resource = z.enum(["contact", "animal", "healthstatus", "consult", "history", "vaccination", "prescription", "prescriptionitem", "attachment"]);

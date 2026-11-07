@@ -1,4 +1,5 @@
 import { ProblemImportEvidence } from "../imports/ProblemImportEvidence";
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { useProblemImportEvidence } from "../imports/useProblemImportEvidence";
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -51,6 +52,7 @@ export function PatientProblems({ petId, disabled, onDirtyChange }: PatientProbl
       if (!data) throw new Error('No saved problem was returned. Reload before retrying.');
       const next = toDraft(data); setRecord(data); setDraft(next); setBaseline(JSON.stringify(next)); setMessage('Problem saved.');
       void cache.invalidateQueries({ queryKey: patientProblemsKey(petId) });
+      void refreshPatientReleases(cache, petId);
     } catch (error) { setError(errorText(error)); }
     finally { busyRef.current = false; setBusy(false); }
   };

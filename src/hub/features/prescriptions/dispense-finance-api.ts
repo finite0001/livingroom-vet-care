@@ -162,7 +162,7 @@ export interface FinanceClosedResolution {
 export type FinanceCloseResult = FinanceRecordedResolution | FinanceClosedResolution;
 const uuid = z
     .string()
-    .uuid()
+    .guid()
     .refine((v) => v === v.toLowerCase()),
   hash = z.string().regex(/^[a-f0-9]{64}$/),
   version = z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);

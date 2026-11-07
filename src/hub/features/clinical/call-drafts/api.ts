@@ -8,7 +8,7 @@ import {
 interface CallRpc {
   rpc(name: string, args: Record<string, unknown>): PromiseLike<{ data: unknown; error: unknown }>;
 }
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 async function rpc(name: string, args: Record<string, unknown>) {
   const { data, error } = await (supabase as unknown as CallRpc).rpc(name, args);
   if (error) throw error;

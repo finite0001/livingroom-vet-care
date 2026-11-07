@@ -3,7 +3,7 @@ import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
 import type { PrescriptionOperation } from "../prescriptions/prescription-state.ts";
 import { prescriptionUsageSchema } from "../prescriptions/prescription-api.ts";
 import type { PrescriptionRpc } from "../prescriptions/prescription-api.ts";
-const uuid = z.string().uuid(), hash = z.string().regex(/^[a-f0-9]{64}$/), revision = z.number().int().min(1).max(2147483647);
+const uuid = z.string().guid(), hash = z.string().regex(/^[a-f0-9]{64}$/), revision = z.number().int().min(1).max(2147483647);
 const instant = z.string().datetime({ offset: true }).refine(v => Number.isFinite(Date.parse(v)) && !/\.\d{7}/.test(v));
 const text = (max: number) => z.string().min(1).refine(v => Array.from(v).length <= max && v === v.trim() && ![...v].some(c => { const n = c.charCodeAt(0); return (n < 32 && n !== 9 && n !== 10) || n === 127; }));
 const channel = z.enum(["phone", "email", "text", "in_person", "other"]);

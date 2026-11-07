@@ -11,7 +11,7 @@ import {
 export * from "../../../../../supabase/functions/_shared/clinical-recap-model.ts";
 const uuid = z
     .string()
-    .uuid()
+    .guid()
     .refine((value) => value === value.toLowerCase()),
   hash = z.string().regex(/^[a-f0-9]{64}$/);
 const identity = { actor_id: uuid, pet_id: uuid, job_id: uuid };

@@ -1,5 +1,5 @@
 import { z } from "zod";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const positive = z.number().int().positive();
 const timestamp = z.string().refine((v) => Number.isFinite(Date.parse(v)));
@@ -90,7 +90,7 @@ export const importedVaccinationSchema = z.object({
   snapshot_id: uuid,
   payload_hash: hash,
   observed_head_version: positive,
-  original: z.record(z.unknown()),
+  original: z.record(z.string(), z.unknown()),
   consult: z.object({
     snapshot_id: uuid,
     payload_hash: hash,

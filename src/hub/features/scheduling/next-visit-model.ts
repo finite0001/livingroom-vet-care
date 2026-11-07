@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { bindingSchema, bookingValuesSchema } from "./catalog-model.ts";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const instant = z.string().datetime({ offset: true });
 const day = z
   .string()

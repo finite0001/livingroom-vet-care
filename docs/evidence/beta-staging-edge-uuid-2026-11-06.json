@@ -1,0 +1,638 @@
+{
+  "projectRef": "kothoqicubowyhwfsrte",
+  "observedAt": "2026-11-06T22:47:47.402568+00:00",
+  "candidateManifest": "docs/evidence/beta-edge-uuid-candidate-2026-11-06.json",
+  "deploy": {
+    "projectRef": "kothoqicubowyhwfsrte",
+    "observedAt": "2026-11-06T22:45:41.333204+00:00",
+    "candidateManifestSha256": "b7106ae2a430c3097d64179dffa838d256a938e7d859cf8e2d20b4a3671ea27a",
+    "sourceFilesVerified": 141,
+    "exitCode": 0,
+    "stdout": "{\"project_ref\":\"kothoqicubowyhwfsrte\",\"functions\":[\"capture-conversation-email\",\"clinical-audio-process\",\"clinical-call-capture\",\"clinical-call-note-process\",\"clinical-note-process\",\"clinical-recap-process\",\"dispatch-outbox\",\"download-diagnostic-pdf\",\"estimate-decision\",\"prepare-document-link\",\"prepare-estimate-decision-grant\",\"prepare-estimate-publication\",\"prepare-invoice-email\",\"prepare-payment-delivery\",\"prepare-release-email\",\"queue-invoice-reminders\",\"read-estimate-publication-artifact\",\"reconcile-operational-tasks\",\"recover-document-link\",\"recover-estimate-decision-grant\",\"recover-estimate-publication-preparation\",\"retrieve-document-link\",\"verify-patient-photo\"],\"dashboard_url\":\"https://supabase.com/dashboard/project/kothoqicubowyhwfsrte/functions\",\"message\":\"Deployed Functions.\"}\n",
+    "stderr": "Deploying Function: capture-conversation-email\nDeploying Function: clinical-audio-process\nUploading asset (clinical-audio-process): supabase/functions/clinical-audio-process/deno.json\nUploading asset (capture-conversation-email): supabase/functions/capture-conversation-email/deno.json\nUploading asset (clinical-audio-process): supabase/functions/clinical-audio-process/index.ts\nUploading asset (capture-conversation-email): supabase/functions/capture-conversation-email/index.ts\nUploading asset (clinical-audio-process): supabase/functions/_shared/clinical-audio-handler.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/delivery-policy.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/capture-conversation-email.ts\nUploading asset (clinical-audio-process): supabase/functions/_shared/clinical-veterinary-context.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/conversation-email-payload.ts\nUploading asset (clinical-audio-process): supabase/functions/_shared/clinical-audio-model.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/verify-conversation-attachment.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/inbound/verification.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/release-email-payload.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/record-release-renderer.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/vaccine-certificate-renderer.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/record-release-charts.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/record-release-history.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/record-release-source-provenance.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/record-release-api-attachments.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/record-release-imported-history.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/record-release-imported-vaccinations.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/record-release-imported-prescriptions.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/prescription-reconciliation.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/record-release-native-prescriptions.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/native-prescription-renderer.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/native-dispense-corrections.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/native-dispense-returns.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/native-return-quantity-replay.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/native-return-reconciliation-contract.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/native-return-reconciliation.ts\nUploading asset (capture-conversation-email): supabase/functions/_shared/record-release-diagnostics.ts\nDeploying Function: clinical-call-capture\nUploading asset (clinical-call-capture): supabase/functions/clinical-call-capture/deno.json\nUploading asset (clinical-call-capture): supabase/functions/clinical-call-capture/index.ts\nUploading asset (clinical-call-capture): supabase/functions/_shared/clinical-call-handler.ts\nUploading asset (clinical-call-capture): supabase/functions/_shared/clinical-call-model.ts\nDeploying Function: clinical-call-note-process\nUploading asset (clinical-call-note-process): supabase/functions/clinical-call-note-process/deno.json\nUploading asset (clinical-call-note-process): supabase/functions/clinical-call-note-process/index.ts\nUploading asset (clinical-call-note-process): supabase/functions/_shared/clinical-call-note-handler.ts\nUploading asset (clinical-call-note-process): supabase/functions/_shared/clinical-call-note-processing-model.ts\nUploading asset (clinical-call-note-process): supabase/functions/_shared/clinical-note-model.ts\nUploading asset (clinical-call-note-process): supabase/functions/_shared/clinical-audio-model.ts\nUploading asset (clinical-call-note-process): supabase/functions/_shared/clinical-call-note-provider.ts\nUploading asset (clinical-call-note-process): supabase/functions/_shared/clinical-veterinary-context.ts\nUploading asset (clinical-call-note-process): supabase/functions/_shared/clinical-call-note-model.ts\nUploading asset (clinical-call-note-process): supabase/functions/_shared/clinical-call-model.ts\nDeploying Function: clinical-note-process\nUploading asset (clinical-note-process): supabase/functions/clinical-note-process/deno.json\nUploading asset (clinical-note-process): supabase/functions/clinical-note-process/index.ts\nUploading asset (clinical-note-process): supabase/functions/_shared/clinical-note-handler.ts\nUploading asset (clinical-note-process): supabase/functions/_shared/clinical-veterinary-context.ts\nUploading asset (clinical-note-process): supabase/functions/_shared/clinical-audio-model.ts\nUploading asset (clinical-note-process): supabase/functions/_shared/clinical-note-model.ts\nDeploying Function: clinical-recap-process\nUploading asset (clinical-recap-process): supabase/functions/clinical-recap-process/deno.json\nUploading asset (clinical-recap-process): supabase/functions/clinical-recap-process/index.ts\nUploading asset (clinical-recap-process): supabase/functions/_shared/clinical-recap-handler.ts\nDeploying Function: dispatch-outbox\nUploading asset (clinical-recap-process): supabase/functions/_shared/clinical-veterinary-context.ts\nUploading asset (clinical-recap-process): supabase/functions/_shared/clinical-audio-model.ts\nUploading asset (dispatch-outbox): supabase/functions/dispatch-outbox/deno.json\nUploading asset (clinical-recap-process): supabase/functions/_shared/clinical-recap-model.ts\nUploading asset (dispatch-outbox): supabase/functions/dispatch-outbox/index.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/cloudtalk-sms.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/delivery-policy.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/outbox-dispatch.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/worker-batch.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/release-email-payload.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/record-release-renderer.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/vaccine-certificate-renderer.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/record-release-charts.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/record-release-history.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/record-release-source-provenance.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/record-release-api-attachments.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/record-release-imported-history.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/record-release-imported-vaccinations.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/record-release-imported-prescriptions.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/prescription-reconciliation.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/record-release-native-prescriptions.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/native-prescription-renderer.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/native-dispense-corrections.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/native-dispense-returns.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/native-return-quantity-replay.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/native-return-reconciliation-contract.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/native-return-reconciliation.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/record-release-diagnostics.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/document-link-capability.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/payment-delivery-payload.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/payment-access-capability.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/stripe-provider.ts\nUploading asset (dispatch-outbox): supabase/functions/_shared/worker-auth.ts\nDeploying Function: download-diagnostic-pdf\nUploading asset (download-diagnostic-pdf): supabase/functions/download-diagnostic-pdf/deno.json\nUploading asset (download-diagnostic-pdf): supabase/functions/download-diagnostic-pdf/index.ts\nUploading asset (download-diagnostic-pdf): supabase/functions/_shared/diagnostic-pdf-download.ts\nUploading asset (download-diagnostic-pdf): supabase/functions/_shared/inbound/verification.ts\nUploading asset (download-diagnostic-pdf): supabase/functions/_shared/diagnostic-pdf-bytes.ts\nDeploying Function: estimate-decision\nUploading asset (estimate-decision): supabase/functions/estimate-decision/deno.json\nUploading asset (estimate-decision): supabase/functions/estimate-decision/index.ts\nDeploying Function: prepare-document-link\nUploading asset (estimate-decision): supabase/functions/_shared/estimate-decision-runtime.ts\nUploading asset (estimate-decision): supabase/functions/_shared/estimate-decision-limiter.ts\nUploading asset (prepare-document-link): supabase/functions/prepare-document-link/deno.json\nUploading asset (estimate-decision): supabase/functions/_shared/estimate-decision-http.ts\nUploading asset (prepare-document-link): supabase/functions/prepare-document-link/index.ts\nUploading asset (estimate-decision): supabase/functions/_shared/estimate-publication-document.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/document-link-runtime.ts\nUploading asset (estimate-decision): supabase/functions/_shared/estimate-decision-contract.ts\nUploading asset (estimate-decision): supabase/functions/_shared/estimate-decision-capability.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/document-link-http.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/invoice-document.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/release-email-payload.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/delivery-policy.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/record-release-renderer.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/vaccine-certificate-renderer.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/record-release-charts.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/record-release-history.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/record-release-source-provenance.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/record-release-api-attachments.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/record-release-imported-history.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/record-release-imported-vaccinations.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/record-release-imported-prescriptions.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/prescription-reconciliation.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/record-release-native-prescriptions.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/native-prescription-renderer.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/native-dispense-corrections.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/native-dispense-returns.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/native-return-quantity-replay.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/native-return-reconciliation-contract.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/native-return-reconciliation.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/record-release-diagnostics.ts\nDeploying Function: prepare-estimate-decision-grant\nUploading asset (prepare-document-link): supabase/functions/_shared/document-link-artifacts.ts\nUploading asset (prepare-document-link): supabase/functions/_shared/document-link-capability.ts\nUploading asset (prepare-estimate-decision-grant): supabase/functions/prepare-estimate-decision-grant/deno.json\nUploading asset (prepare-estimate-decision-grant): supabase/functions/prepare-estimate-decision-grant/index.ts\nUploading asset (prepare-estimate-decision-grant): supabase/functions/_shared/estimate-decision-grant-runtime.ts\nUploading asset (prepare-estimate-decision-grant): supabase/functions/_shared/estimate-publication-runtime.ts\nUploading asset (prepare-estimate-decision-grant): supabase/functions/_shared/estimate-publication-http.ts\nUploading asset (prepare-estimate-decision-grant): supabase/functions/_shared/estimate-publication-document.ts\nUploading asset (prepare-estimate-decision-grant): supabase/functions/_shared/estimate-decision-grant-http.ts\nUploading asset (prepare-estimate-decision-grant): supabase/functions/_shared/estimate-decision-http.ts\nUploading asset (prepare-estimate-decision-grant): supabase/functions/_shared/estimate-decision-contract.ts\nUploading asset (prepare-estimate-decision-grant): supabase/functions/_shared/estimate-decision-capability.ts\nDeploying Function: prepare-estimate-publication\nDeploying Function: prepare-invoice-email\nUploading asset (prepare-estimate-publication): supabase/functions/prepare-estimate-publication/deno.json\nUploading asset (prepare-estimate-publication): supabase/functions/prepare-estimate-publication/index.ts\nUploading asset (prepare-invoice-email): supabase/functions/prepare-invoice-email/deno.json\nUploading asset (prepare-estimate-publication): supabase/functions/_shared/estimate-publication-runtime.ts\nUploading asset (prepare-invoice-email): supabase/functions/prepare-invoice-email/index.ts\nUploading asset (prepare-estimate-publication): supabase/functions/_shared/estimate-publication-http.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/delivery-policy.ts\nUploading asset (prepare-estimate-publication): supabase/functions/_shared/estimate-publication-document.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/prepare-invoice-email.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/invoice-document.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/invoice-email-payload.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/release-email-payload.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/record-release-renderer.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/vaccine-certificate-renderer.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/record-release-charts.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/record-release-history.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/record-release-source-provenance.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/record-release-api-attachments.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/record-release-imported-history.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/record-release-imported-vaccinations.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/record-release-imported-prescriptions.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/prescription-reconciliation.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/record-release-native-prescriptions.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/native-prescription-renderer.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/native-dispense-corrections.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/native-dispense-returns.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/native-return-quantity-replay.ts\nDeploying Function: prepare-payment-delivery\nUploading asset (prepare-invoice-email): supabase/functions/_shared/native-return-reconciliation-contract.ts\nUploading asset (prepare-payment-delivery): supabase/functions/prepare-payment-delivery/deno.json\nUploading asset (prepare-invoice-email): supabase/functions/_shared/native-return-reconciliation.ts\nUploading asset (prepare-payment-delivery): supabase/functions/prepare-payment-delivery/index.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/payment-delivery-staff-runtime.ts\nUploading asset (prepare-invoice-email): supabase/functions/_shared/record-release-diagnostics.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/delivery-policy.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/cloudtalk-sms.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/payment-delivery-staff.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/payment-access-staff.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/payment-access-capability.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/stripe-provider.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/payment-delivery-payload.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/release-email-payload.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/record-release-renderer.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/vaccine-certificate-renderer.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/record-release-charts.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/record-release-history.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/record-release-source-provenance.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/record-release-api-attachments.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/record-release-imported-history.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/record-release-imported-vaccinations.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/record-release-imported-prescriptions.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/prescription-reconciliation.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/record-release-native-prescriptions.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/native-prescription-renderer.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/native-dispense-corrections.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/native-dispense-returns.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/native-return-quantity-replay.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/native-return-reconciliation-contract.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/native-return-reconciliation.ts\nUploading asset (prepare-payment-delivery): supabase/functions/_shared/record-release-diagnostics.ts\nDeploying Function: prepare-release-email\nUploading asset (prepare-release-email): supabase/functions/prepare-release-email/deno.json\nUploading asset (prepare-release-email): supabase/functions/prepare-release-email/index.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/delivery-policy.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/prepare-release-email.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/record-release-renderer.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/vaccine-certificate-renderer.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/record-release-charts.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/record-release-history.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/record-release-source-provenance.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/record-release-api-attachments.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/record-release-imported-history.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/record-release-imported-vaccinations.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/record-release-imported-prescriptions.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/prescription-reconciliation.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/record-release-native-prescriptions.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/native-prescription-renderer.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/native-dispense-corrections.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/native-dispense-returns.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/native-return-quantity-replay.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/native-return-reconciliation-contract.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/native-return-reconciliation.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/record-release-diagnostics.ts\nUploading asset (prepare-release-email): supabase/functions/_shared/release-email-payload.ts\nDeploying Function: queue-invoice-reminders\nUploading asset (queue-invoice-reminders): supabase/functions/queue-invoice-reminders/deno.json\nUploading asset (queue-invoice-reminders): supabase/functions/queue-invoice-reminders/index.ts\nUploading asset (queue-invoice-reminders): supabase/functions/_shared/invoice-reminder-handler.ts\nUploading asset (queue-invoice-reminders): supabase/functions/_shared/worker-auth.ts\nDeploying Function: read-estimate-publication-artifact\nUploading asset (read-estimate-publication-artifact): supabase/functions/read-estimate-publication-artifact/deno.json\nUploading asset (read-estimate-publication-artifact): supabase/functions/read-estimate-publication-artifact/index.ts\nUploading asset (read-estimate-publication-artifact): supabase/functions/_shared/estimate-publication-runtime.ts\nUploading asset (read-estimate-publication-artifact): supabase/functions/_shared/estimate-publication-http.ts\nUploading asset (read-estimate-publication-artifact): supabase/functions/_shared/estimate-publication-document.ts\nDeploying Function: reconcile-operational-tasks\nUploading asset (reconcile-operational-tasks): supabase/functions/reconcile-operational-tasks/deno.json\nUploading asset (reconcile-operational-tasks): supabase/functions/reconcile-operational-tasks/index.ts\nUploading asset (reconcile-operational-tasks): supabase/functions/_shared/operational-reconciliation-handler.ts\nUploading asset (reconcile-operational-tasks): supabase/functions/_shared/operational-reconciliation-contract.ts\nUploading asset (reconcile-operational-tasks): supabase/functions/_shared/worker-auth.ts\nDeploying Function: recover-document-link\nUploading asset (recover-document-link): supabase/functions/recover-document-link/deno.json\nUploading asset (recover-document-link): supabase/functions/recover-document-link/index.ts\nUploading asset (recover-document-link): supabase/functions/_shared/document-link-runtime.ts\nUploading asset (recover-document-link): supabase/functions/_shared/document-link-http.ts\nUploading asset (recover-document-link): supabase/functions/_shared/invoice-document.ts\nUploading asset (recover-document-link): supabase/functions/_shared/release-email-payload.ts\nUploading asset (recover-document-link): supabase/functions/_shared/delivery-policy.ts\nUploading asset (recover-document-link): supabase/functions/_shared/record-release-renderer.ts\nUploading asset (recover-document-link): supabase/functions/_shared/vaccine-certificate-renderer.ts\nUploading asset (recover-document-link): supabase/functions/_shared/record-release-charts.ts\nUploading asset (recover-document-link): supabase/functions/_shared/record-release-history.ts\nUploading asset (recover-document-link): supabase/functions/_shared/record-release-source-provenance.ts\nUploading asset (recover-document-link): supabase/functions/_shared/record-release-api-attachments.ts\nUploading asset (recover-document-link): supabase/functions/_shared/record-release-imported-history.ts\nUploading asset (recover-document-link): supabase/functions/_shared/record-release-imported-vaccinations.ts\nUploading asset (recover-document-link): supabase/functions/_shared/record-release-imported-prescriptions.ts\nUploading asset (recover-document-link): supabase/functions/_shared/prescription-reconciliation.ts\nUploading asset (recover-document-link): supabase/functions/_shared/record-release-native-prescriptions.ts\nUploading asset (recover-document-link): supabase/functions/_shared/native-prescription-renderer.ts\nUploading asset (recover-document-link): supabase/functions/_shared/native-dispense-corrections.ts\nUploading asset (recover-document-link): supabase/functions/_shared/native-dispense-returns.ts\nUploading asset (recover-document-link): supabase/functions/_shared/native-return-quantity-replay.ts\nUploading asset (recover-document-link): supabase/functions/_shared/native-return-reconciliation-contract.ts\nDeploying Function: recover-estimate-decision-grant\nUploading asset (recover-document-link): supabase/functions/_shared/native-return-reconciliation.ts\nUploading asset (recover-estimate-decision-grant): supabase/functions/recover-estimate-decision-grant/deno.json\nUploading asset (recover-estimate-decision-grant): supabase/functions/recover-estimate-decision-grant/index.ts\nUploading asset (recover-document-link): supabase/functions/_shared/record-release-diagnostics.ts\nUploading asset (recover-estimate-decision-grant): supabase/functions/_shared/estimate-decision-grant-runtime.ts\nUploading asset (recover-document-link): supabase/functions/_shared/document-link-artifacts.ts\nUploading asset (recover-estimate-decision-grant): supabase/functions/_shared/estimate-publication-runtime.ts\nUploading asset (recover-document-link): supabase/functions/_shared/document-link-capability.ts\nUploading asset (recover-estimate-decision-grant): supabase/functions/_shared/estimate-publication-http.ts\nUploading asset (recover-estimate-decision-grant): supabase/functions/_shared/estimate-publication-document.ts\nUploading asset (recover-estimate-decision-grant): supabase/functions/_shared/estimate-decision-grant-http.ts\nUploading asset (recover-estimate-decision-grant): supabase/functions/_shared/estimate-decision-http.ts\nUploading asset (recover-estimate-decision-grant): supabase/functions/_shared/estimate-decision-contract.ts\nUploading asset (recover-estimate-decision-grant): supabase/functions/_shared/estimate-decision-capability.ts\nDeploying Function: recover-estimate-publication-preparation\nUploading asset (recover-estimate-publication-preparation): supabase/functions/recover-estimate-publication-preparation/deno.json\nUploading asset (recover-estimate-publication-preparation): supabase/functions/recover-estimate-publication-preparation/index.ts\nUploading asset (recover-estimate-publication-preparation): supabase/functions/_shared/estimate-publication-runtime.ts\nUploading asset (recover-estimate-publication-preparation): supabase/functions/_shared/estimate-publication-http.ts\nUploading asset (recover-estimate-publication-preparation): supabase/functions/_shared/estimate-publication-document.ts\nDeploying Function: retrieve-document-link\nUploading asset (retrieve-document-link): supabase/functions/retrieve-document-link/deno.json\nUploading asset (retrieve-document-link): supabase/functions/retrieve-document-link/index.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/document-link-runtime.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/document-link-http.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/invoice-document.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/release-email-payload.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/delivery-policy.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/record-release-renderer.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/vaccine-certificate-renderer.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/record-release-charts.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/record-release-history.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/record-release-source-provenance.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/record-release-api-attachments.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/record-release-imported-history.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/record-release-imported-vaccinations.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/record-release-imported-prescriptions.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/prescription-reconciliation.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/record-release-native-prescriptions.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/native-prescription-renderer.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/native-dispense-corrections.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/native-dispense-returns.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/native-return-quantity-replay.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/native-return-reconciliation-contract.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/native-return-reconciliation.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/record-release-diagnostics.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/document-link-artifacts.ts\nUploading asset (retrieve-document-link): supabase/functions/_shared/document-link-capability.ts\nDeploying Function: verify-patient-photo\nUploading asset (verify-patient-photo): supabase/functions/verify-patient-photo/deno.json\nUploading asset (verify-patient-photo): supabase/functions/verify-patient-photo/index.ts\nUploading asset (verify-patient-photo): supabase/functions/_shared/patient-photo-verification.ts\nUploading asset (verify-patient-photo): supabase/functions/_shared/patient-photo-image.ts\nUploading asset (verify-patient-photo): supabase/functions/_shared/inbound/verification.ts\nA new version of Supabase CLI is available: v3.0.0 (currently installed v2.118.0)\nWe recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli\n"
+  },
+  "remoteDownloadedSource": [
+    {
+      "slug": "capture-conversation-email",
+      "downloadedMatchingFiles": 25,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/capture-conversation-email/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "114899f72ffdf0b7013c068c623eb65a7cb9466b58c79a072200631d149448fc",
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "clinical-audio-process",
+      "downloadedMatchingFiles": 5,
+      "missingFromDownload": [
+        "supabase/functions/clinical-audio-process/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "3d60ca9b45a431f40f82073ba1b0cc9e7ebefc6945caec4f65205b8f935213d6",
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "clinical-call-capture",
+      "downloadedMatchingFiles": 4,
+      "missingFromDownload": [
+        "supabase/functions/clinical-call-capture/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "989f70c4bbc0988b63a84ec4bea875baaa7e3a52c0bfef3d02800957bdfba015",
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "clinical-call-note-process",
+      "downloadedMatchingFiles": 10,
+      "missingFromDownload": [
+        "supabase/functions/clinical-call-note-process/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "2ca0c0a9726afed34cad9ee87054b3b96b3d97c08088d2c2177a1d6ed9837bc7",
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "clinical-note-process",
+      "downloadedMatchingFiles": 6,
+      "missingFromDownload": [
+        "supabase/functions/clinical-note-process/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "63a6cc57d4f38a9be0688e5308143975f7e8832b133f32edd89b9395c22afda9",
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "clinical-recap-process",
+      "downloadedMatchingFiles": 6,
+      "missingFromDownload": [
+        "supabase/functions/clinical-recap-process/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "996ef6b2c3a5db1063aa08c490c70c5054f17c79eba52e21d8a5b3588a1fb570",
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "dispatch-outbox",
+      "downloadedMatchingFiles": 28,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/_shared/stripe-provider.ts",
+        "supabase/functions/dispatch-outbox/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "b445dc869e79cacd2b08cb7293875d509079b451ffeddabc0a96819d5d61b0c8",
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/_shared/stripe-provider.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "download-diagnostic-pdf",
+      "downloadedMatchingFiles": 5,
+      "missingFromDownload": [
+        "supabase/functions/download-diagnostic-pdf/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "73a1403bb08c4eb2f4092759b0a8ab1dcae66ff439e1139e3b21373e03131a29",
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "estimate-decision",
+      "downloadedMatchingFiles": 8,
+      "missingFromDownload": [
+        "supabase/functions/estimate-decision/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "a52f4c6fb49d02affe7822c2e88636b6b0b2e2d474802f15ba98874f0981f6b8",
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "prepare-document-link",
+      "downloadedMatchingFiles": 26,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/prepare-document-link/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "593a49ab5cb5ff52c9a69db770f5b05a1255c6ca7b9931bdf9d779b296cad4b5",
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "prepare-estimate-decision-grant",
+      "downloadedMatchingFiles": 9,
+      "missingFromDownload": [
+        "supabase/functions/_shared/estimate-publication-http.ts",
+        "supabase/functions/prepare-estimate-decision-grant/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "d4c1098e55d450c9b8c14c1a4df76478088a4e7fda02e90ed8f485261e6e4277",
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/estimate-publication-http.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "prepare-estimate-publication",
+      "downloadedMatchingFiles": 5,
+      "missingFromDownload": [
+        "supabase/functions/prepare-estimate-publication/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "68e2c066a9b0cd4c546fdd1d7cd0aff3d3bb16c927c6f13d9db02819390f4e75",
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "prepare-invoice-email",
+      "downloadedMatchingFiles": 24,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/prepare-invoice-email/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "4b4540b83e97ad0865fef7ce1e4ff4bd02d5dc3594335a332f090e9ed8acfc19",
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "prepare-payment-delivery",
+      "downloadedMatchingFiles": 26,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/_shared/payment-access-staff.ts",
+        "supabase/functions/_shared/stripe-provider.ts",
+        "supabase/functions/prepare-payment-delivery/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "ab9beab9c8b0ca4ef66e46a8b1a02f550fc48492b66b49605f3593513c1f0e85",
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/_shared/payment-access-staff.ts",
+        "supabase/functions/_shared/stripe-provider.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "prepare-release-email",
+      "downloadedMatchingFiles": 22,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/prepare-release-email/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "dae048655dbb3b2709e3d7ec1a5e4588d1013239bbb4a95c66f4e16d5fa2b726",
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "queue-invoice-reminders",
+      "downloadedMatchingFiles": 4,
+      "missingFromDownload": [
+        "supabase/functions/queue-invoice-reminders/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "16c96bbbbd2eb34691bcda2da888c047d055e0a852e9af6da7e1a05dcf6681b5",
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "read-estimate-publication-artifact",
+      "downloadedMatchingFiles": 5,
+      "missingFromDownload": [
+        "supabase/functions/read-estimate-publication-artifact/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "fbacf492dacd0633efa582992982ca2d1493ee79b5c5387db67914bd3dcce3ae",
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "reconcile-operational-tasks",
+      "downloadedMatchingFiles": 5,
+      "missingFromDownload": [
+        "supabase/functions/reconcile-operational-tasks/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "550bfa99d138e1a7845b2ae6e80acbf6839aaa832d418b29a5414940e422a749",
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "recover-document-link",
+      "downloadedMatchingFiles": 26,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/recover-document-link/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "c28fe90bb959dff80d42aed74c55fa6806b85209f3a8e49d525b26c25c1473f9",
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "recover-estimate-decision-grant",
+      "downloadedMatchingFiles": 9,
+      "missingFromDownload": [
+        "supabase/functions/_shared/estimate-publication-http.ts",
+        "supabase/functions/recover-estimate-decision-grant/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "971eef830fdbb91d5be7983eea6c8f85c13f2622e07c09094773a33b7934be51",
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/estimate-publication-http.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "recover-estimate-publication-preparation",
+      "downloadedMatchingFiles": 5,
+      "missingFromDownload": [
+        "supabase/functions/recover-estimate-publication-preparation/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "e9e6be297a3721b2777fc7e4882f04a77ec57f2a13c8e6fbeb9e09637fe2e168",
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "retrieve-document-link",
+      "downloadedMatchingFiles": 26,
+      "missingFromDownload": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts",
+        "supabase/functions/retrieve-document-link/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "6f70dbf0e9b8629c5989e94dfc8b40bcca2bbbce27c13ebf88c24e004d85c072",
+      "omittedTypeOnlySources": [
+        "supabase/functions/_shared/native-return-reconciliation-contract.ts"
+      ],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    },
+    {
+      "slug": "verify-patient-photo",
+      "downloadedMatchingFiles": 5,
+      "missingFromDownload": [
+        "supabase/functions/verify-patient-photo/deno.lock"
+      ],
+      "differentFiles": [],
+      "sourceClosureSha256": "e15ca3266404aa4b7bc66faf2f8ad46af41289ddbcdb47d64ea65a4f36c20257",
+      "omittedTypeOnlySources": [],
+      "unexplainedMissingSources": [],
+      "exactRuntimeSourceAndConfig": true
+    }
+  ],
+  "sourceParityPass": true,
+  "runtimeDependencyAnalysis": "TypeScript AST traversed value imports, value re-exports, and literal dynamic imports. Erased type-only dependencies excluded from runtime parity.",
+  "remoteLockfilesVerified": false,
+  "limitation": "Server downloads omit local Deno lockfiles and erased type-only dependencies. All downloaded source files and deno.json maps match candidate hashes; omitted locks are not remotely verified.",
+  "httpAcceptance": {
+    "projectRef": "kothoqicubowyhwfsrte",
+    "observedAt": "2026-11-06T22:48:06.715371+00:00",
+    "unauthenticated": [
+      {
+        "slug": "capture-conversation-email",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "clinical-audio-process",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "clinical-call-capture",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "clinical-call-note-process",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "clinical-note-process",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "clinical-recap-process",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "dispatch-outbox",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "download-diagnostic-pdf",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "estimate-decision",
+        "status": 404,
+        "rejected": true
+      },
+      {
+        "slug": "prepare-document-link",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "prepare-estimate-decision-grant",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "prepare-estimate-publication",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "prepare-invoice-email",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "prepare-payment-delivery",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "prepare-release-email",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "queue-invoice-reminders",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "read-estimate-publication-artifact",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "reconcile-operational-tasks",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "recover-document-link",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "recover-estimate-decision-grant",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "recover-estimate-publication-preparation",
+        "status": 401,
+        "rejected": true
+      },
+      {
+        "slug": "retrieve-document-link",
+        "status": 404,
+        "rejected": true
+      },
+      {
+        "slug": "verify-patient-photo",
+        "status": 401,
+        "rejected": true
+      }
+    ],
+    "authenticated": [
+      {
+        "slug": "dispatch-outbox",
+        "status": 200,
+        "receipt": {
+          "processed": false,
+          "disabled": true
+        }
+      },
+      {
+        "slug": "queue-invoice-reminders",
+        "status": 200,
+        "receipt": {
+          "run_id": "235d37d8-4130-44e6-9cb3-c35485634222",
+          "requested_limit": 5,
+          "queued": 0,
+          "dispatched": false
+        },
+        "sameIdentityReplay": true
+      },
+      {
+        "slug": "reconcile-operational-tasks",
+        "status": 200,
+        "receipt": {
+          "run_id": "20e6faca-b858-4cc9-aed8-028feed7a173",
+          "requested_limit": 5,
+          "outcome": "completed",
+          "counts": {
+            "examined": 1,
+            "generated": 0,
+            "revised": 0,
+            "unresolved": 0
+          },
+          "sweep_complete": true,
+          "reconciled": true
+        },
+        "sameIdentityReplay": true
+      }
+    ],
+    "providerWrites": false,
+    "passed": true
+  },
+  "hostedFunctionMetadata": [
+    {
+      "slug": "capture-conversation-email",
+      "status": "ACTIVE",
+      "version": 25,
+      "verifyJwt": true
+    },
+    {
+      "slug": "clinical-audio-process",
+      "status": "ACTIVE",
+      "version": 8,
+      "verifyJwt": true
+    },
+    {
+      "slug": "clinical-call-capture",
+      "status": "ACTIVE",
+      "version": 7,
+      "verifyJwt": true
+    },
+    {
+      "slug": "clinical-call-note-process",
+      "status": "ACTIVE",
+      "version": 8,
+      "verifyJwt": true
+    },
+    {
+      "slug": "clinical-note-process",
+      "status": "ACTIVE",
+      "version": 7,
+      "verifyJwt": true
+    },
+    {
+      "slug": "clinical-recap-process",
+      "status": "ACTIVE",
+      "version": 8,
+      "verifyJwt": true
+    },
+    {
+      "slug": "dispatch-outbox",
+      "status": "ACTIVE",
+      "version": 39,
+      "verifyJwt": false
+    },
+    {
+      "slug": "download-diagnostic-pdf",
+      "status": "ACTIVE",
+      "version": 13,
+      "verifyJwt": true
+    },
+    {
+      "slug": "estimate-decision",
+      "status": "ACTIVE",
+      "version": 22,
+      "verifyJwt": false
+    },
+    {
+      "slug": "prepare-document-link",
+      "status": "ACTIVE",
+      "version": 37,
+      "verifyJwt": true
+    },
+    {
+      "slug": "prepare-estimate-decision-grant",
+      "status": "ACTIVE",
+      "version": 22,
+      "verifyJwt": true
+    },
+    {
+      "slug": "prepare-estimate-publication",
+      "status": "ACTIVE",
+      "version": 22,
+      "verifyJwt": true
+    },
+    {
+      "slug": "prepare-invoice-email",
+      "status": "ACTIVE",
+      "version": 36,
+      "verifyJwt": true
+    },
+    {
+      "slug": "prepare-payment-delivery",
+      "status": "ACTIVE",
+      "version": 36,
+      "verifyJwt": true
+    },
+    {
+      "slug": "prepare-release-email",
+      "status": "ACTIVE",
+      "version": 36,
+      "verifyJwt": true
+    },
+    {
+      "slug": "queue-invoice-reminders",
+      "status": "ACTIVE",
+      "version": 8,
+      "verifyJwt": false
+    },
+    {
+      "slug": "read-estimate-publication-artifact",
+      "status": "ACTIVE",
+      "version": 22,
+      "verifyJwt": true
+    },
+    {
+      "slug": "reconcile-operational-tasks",
+      "status": "ACTIVE",
+      "version": 8,
+      "verifyJwt": false
+    },
+    {
+      "slug": "recover-document-link",
+      "status": "ACTIVE",
+      "version": 37,
+      "verifyJwt": true
+    },
+    {
+      "slug": "recover-estimate-decision-grant",
+      "status": "ACTIVE",
+      "version": 22,
+      "verifyJwt": true
+    },
+    {
+      "slug": "recover-estimate-publication-preparation",
+      "status": "ACTIVE",
+      "version": 22,
+      "verifyJwt": true
+    },
+    {
+      "slug": "retrieve-document-link",
+      "status": "ACTIVE",
+      "version": 37,
+      "verifyJwt": false
+    },
+    {
+      "slug": "verify-patient-photo",
+      "status": "ACTIVE",
+      "version": 13,
+      "verifyJwt": true
+    }
+  ],
+  "JWTConfigurationPreserved": true,
+  "all56Active": true,
+  "previousDeploymentReceipt": "docs/evidence/beta-staging-edge-dependencies-2026-11-06.json",
+  "passed": true
+}

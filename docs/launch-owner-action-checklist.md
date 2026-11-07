@@ -1,104 +1,37 @@
-# Owner action checklist for public launch
+# Owner action checklist for beta and public launch
 
-**September 25 correction:** The [independent commercial audit](launch-evidence/2026-09-25-independent-commercial-audit.md) supersedes the September 24 gate counts below. Software, database, Edge, scheduler, CI, provider, and recovery blockers remain. The [repair progress](launch-evidence/2026-09-25-repair-progress.md) tracks local fixes and the staging-first release order; no clinical or staff decisions have been inferred.
-
-Last updated: 2026-10-27 for the Antech closeout checkpoint only; dated readiness snapshots below retain their original scope.
+Reconciled November 6, 2026 against the repository. This checklist records decisions and evidence still needed; it does not declare live services unavailable solely because an older document said so. Engineering results belong in the [beta audit](beta-readiness-documentation-2026-11-06.md), and release steps in the [deployment runbook](deployment-runbook.md).
 
 ## Before project closeout: Antech follow-up
 
-- [ ] Check whether Jennifer Woodmansee at Antech has supplied the integration documentation, NDA/onboarding information and authorized test access requested through Susan's October 26 introduction. If these have not arrived, Dave should follow up before Living Room Vet project closeout and record the response or next action. Owner confirmed October 27 that access is not yet available.
+- [ ] Check whether Jennifer Woodmansee at Antech has supplied integration documentation, NDA/onboarding information and authorized test access requested through Susan's October 26 introduction. If not, Dave should follow up and record the response or next action. Owner confirmation on October 27 was that access was not available; current vendor status needs verification.
 
-The request covers reference-lab ordering/results and imaging, with possible EKG submissions for radiology/cardiology review. Keep it in the Living Room Vet workstream; it does not hold open GreenTree's completed communications release. See [Antech commissioning](antech-commissioning.md). This is a follow-up checkpoint, not a claim that the vendor integration is implemented or enabled.
+The request covers reference-lab ordering/results and imaging, with possible EKG submissions for radiology/cardiology review. See [Antech commissioning](antech-commissioning.md). Native manual diagnostic workflows can be tested independently; vendor selection and a prepared plan do not establish an automatic connection.
 
-This checklist records the remaining actions that require owner, registrar, or practice-policy authority. Hub workflow readiness, Vercel Production deployment, custom-domain HTTPS, and release-control evidence are otherwise prepared for final verification. Current aggregate readiness is 3/6 gates passing. The generated blocker groups are the two local-only readiness migrations, `20260924120000` and `20260924130000`, clinical/staff acceptance decisions and run metadata, and owner public-contact content. The Stage 2 pre-apply refresh is recorded in [2026-09-24 Stage 2 readiness refresh before hosted Phase 2 apply](launch-evidence/2026-09-24-stage-2-readiness-refresh-pre-apply.md), local disabled/test-mode delivery coverage is recorded in [2026-09-24 no-live-send local workflow drill](launch-evidence/2026-09-24-no-live-send-local-drill.md), the local integrated preventive/inventory/billing/payment/certificate workflow proof is recorded in [2026-09-24 integrated synthetic local workflow proof](launch-evidence/2026-09-24-integrated-synthetic-local-workflow.md), and the reviewer package readiness receipt is recorded in [2026-09-24 clinical and staff acceptance package readiness](launch-evidence/2026-09-24-clinical-staff-acceptance-package.md).
+## Practice decisions
 
-## 1. DNS and HTTPS at GoDaddy/Vercel — completed 2026-09-24
+- [ ] Confirm the beta scope and whether it uses synthetic staging records or approved real practice workflows.
+- [x] Owner confirmed housecalls target **Late 2027** on November 6; implemented in source. Both stages remain planned. Publish with the reviewed candidate; do not infer opening from the date.
+- [x] Owner approved: “If you can’t reach us, contact your nearest local 24-hour emergency veterinary service.” Implemented as shared `emergencyInstructions`; a named hospital phone is not required for this approved guidance. Publish with the reviewed candidate.
+- [ ] Record David Edler’s clinical and staff beta review decisions and rehearsal results in [the acceptance register](clinical-staff-acceptance-register.json). The expanded current register contains 18 clinical and 15 staff rows, all Pending. Use the [current walkthrough](beta-acceptance-walkthrough-2026-11-06.md); reviewer assignment is not sign-off.
+- [ ] Approve any selected clinical note/audio/call processing policies, templates, recording/retention terms and actual device workflows before enabling processing. Captured audio or a generated draft does not constitute clinical sign-off.
+- [ ] For narcotics operation, supply approved staff assignments, drug classifications, independent physical opening counts and clinic procedures. Do not use synthetic acceptance quantities as opening stock.
 
-Current DNS now points at Vercel:
+## Release evidence
 
-| Host/name | Type | Current value |
-| --- | --- | --- |
-| `@` | `A` | `216.150.1.1` |
-| `@` | `A` | `216.150.16.1` |
-| `www` | `CNAME` | `1115926f442091d7.vercel-dns-016.com.` |
+- [ ] Recheck staging/production ledgers, deployed Edge source, frontend SHA/backend, scheduler receipts and configuration presence against the exact candidate. The [November 6 hosted metadata](evidence/beta-hosted-metadata-2026-11-06.json) shows production at 209 versions but staging at 204 and without `invite-staff`. Metadata is not deployed-source or functional proof. Use the [specialized release sequence](controlled-drugs/narcotics-release-sequence-20261028.md) from the actual prefix, not the September generic push instructions.
+- [ ] Resolve or explicitly exclude the [November 6 runtime metadata](evidence/beta-backend-runtime-metadata-2026-11-06.json) findings: staging scheduler configuration is missing, production attachment cleanup returned 503 with “Attachment cleanup is disabled”, and task-reconciliation/invoice-reminder jobs are inactive on both targets. Verify new outcomes after repair; HTTP 200 alone is insufficient.
+- [ ] Review complete exact-candidate test results, including current narcotics workflows. The CI historical-206 database job does not prove the newer 207–209 workflows.
+- [ ] Confirm restore access, a tested recovery path, alert recipients and the PITR decision. Check actual hosted settings before changing them.
+- [ ] Confirm authentication settings and a real staff invite/recovery/deactivation rehearsal on the intended target.
+- [ ] Approve the specific PR merge and release once its evidence is ready. Agents never infer permission to merge.
 
-Do not add browser secrets or service-role/provider credentials to DNS or Vercel public environment variables.
+## Provider acceptance
 
-Verification completed:
+- [ ] Verify the selected CloudTalk number, outbound allowlists/mode, inbound threading, STOP/resubscribe behavior and delivery-state wording with approved test recipients. Twilio is retained code and is not the selected provider.
+- [ ] Verify Resend outbound, AgentMail reply/attachment handling, signed delivery callbacks and failure recovery. Preserve Fastmail root MX/staff mail.
+- [ ] Complete sandbox payment/refund/reconciliation and Affirm acceptance before any live-payment activation; verify live-account, return-origin and capability settings separately. Never install a sandbox payment profile in production.
+- [ ] Verify reminder policies and per-record eligibility with disabled/test delivery before enabling real sends.
+- [ ] Record vendor-specific acceptance for any automatic lab, imaging or device integration included in the beta. Keep excluded providers clearly unavailable.
 
-- `dig +short A thelivingroom.vet` returned `216.150.1.1` and `216.150.16.1`.
-- `dig +short CNAME www.thelivingroom.vet` returned `1115926f442091d7.vercel-dns-016.com.`.
-- Vercel domain verification returned `configured_correctly` for both `thelivingroom.vet` and `www.thelivingroom.vet`.
-- HTTPS smoke checks now return HTTP/2 200 from Vercel for `https://thelivingroom.vet`, `https://www.thelivingroom.vet`, and `https://thelivingroom.vet/hub`. See [2026-09-24 public domain HTTPS smoke](launch-evidence/2026-09-24-public-domain-https-smoke.md).
-
-## 2. Hosted application/backend readiness — local Phase 2 proof complete, hosted apply pending
-
-Current generated evidence records:
-
-- Supabase migration parity: 148 matching hosted versions, 0 remote-only, 2 local-only (`20260924120000`, `20260924130000`).
-- Supabase/database operating-loop gate: blocked until both local readiness migrations are applied to hosted and readiness is refreshed.
-- Hub workflow readiness gate: pass.
-- Clinical and staff acceptance readiness gate: blocked until the 8 clinical review decisions, staff acceptance run metadata, and 8 staff workflow decisions are recorded.
-- External services/deployment readiness gate: pass.
-- Verification/release-control gate: pass.
-- Public website gate: blocked only by owner public-contact values.
-
-Local database proof exists for the pending Phase 2 migration: [2026-09-24 current-stack DB replay and pgTAP](launch-evidence/2026-09-24-current-stack-db-replay-pgtap.md).
-
-Local integrated workflow proof exists for the pre-phone/CloudTalk synthetic clinical, inventory, billing, payment, delivery, and reconciliation loop: [2026-09-24 integrated synthetic local workflow proof](launch-evidence/2026-09-24-integrated-synthetic-local-workflow.md). This is not hosted staff acceptance or clinical approval.
-
-Clinical/staff acceptance package readiness is documented in [2026-09-24 clinical and staff acceptance package readiness](launch-evidence/2026-09-24-clinical-staff-acceptance-package.md). Reviewer decisions are still pending.
-
-The latest local release-control check passed at the current readiness package checkpoint: [2026-09-24 local release-control check](launch-evidence/2026-09-24-local-release-control-check.md).
-
-Hosted dry-run proof exists for the pending apply set: `npx supabase db push --linked --dry-run --skip-vault` would apply exactly `20260924120000_canonical_housecall_appointment_contract.sql` and `20260924130000_inbound_sms_service_rpc_security.sql`, with no seeds or roles. After explicit owner approval, the exact hosted apply command is:
-
-```bash
-npx supabase db push --linked --skip-vault
-```
-
-Then regenerate evidence with:
-
-```bash
-npm run readiness:refresh --silent
-npm run readiness:summary -- --fail-on-blockers
-```
-
-Scheduler jobs exist after the hosted migration rollout, but database Vault values `project_url` and `scheduler_worker_key` are intentionally absent. That means database-initiated scheduler calls remain contained until explicit scheduler/provider commissioning. The owner-run procedure, a dry-run-capable idempotent SQL script and a read-only per-job status check are in [scheduler commissioning](scheduler.md).
-
-## 3. Confirm public contact content
-
-Do not publish guessed phone, email, or emergency instructions. The public site intentionally blocks launch while these values are `null` in `src/config/practice.ts`.
-
-Owner-approved values needed:
-
-| Field | Required decision |
-| --- | --- |
-| Practice phone | Public phone number to display and link with `tel:`. |
-| Practice email | Public monitored mailbox to display and link with `mailto:`. |
-| Emergency instructions | Public urgent/emergency phone/contact wording. Avoid implying this practice monitors emergencies unless that is operationally true. |
-
-Already configured:
-
-- Opening hours: `Monday–Saturday, 9 am–5 pm Mountain Time`.
-
-After owner approval, update `src/config/practice.ts`, then run:
-
-```bash
-npm run public:readiness
-npm run readiness:refresh
-```
-
-Expected result: public website gate has zero blockers.
-
-## 4. Provider/dashboard follow-up before live messaging
-
-The launch-critical Supabase functions are deployed. Before live provider use, configure dashboards only to the current launch slugs:
-
-- Resend delivery webhook: `https://mgadheotkdnrsatfivjy.supabase.co/functions/v1/resend-delivery-webhook`.
-- Twilio status callback: `https://mgadheotkdnrsatfivjy.supabase.co/functions/v1/twilio-message-status-callback`.
-- Twilio inbound SMS webhook: `https://mgadheotkdnrsatfivjy.supabase.co/functions/v1/twilio-inbound-sms`.
-- Legacy callback endpoints `enqueue-message`, `public-contact`, `resend-webhook`, and `twilio-webhook` should not be configured in provider dashboards for the launch path.
-- Scheduler-capable worker slugs such as `dispatch-outbox`, `process-inbound`, and `queue-reminders` must remain unable to run from database cron until scheduler Vault values and provider gates are intentionally commissioned.
-
-Keep `OUTBOUND_DELIVERY_MODE=disabled` until explicit provider round-trip tests are approved.
+Run `npm run public:readiness` after approved public-copy changes. Regenerate aggregate readiness only from evidence for the exact release/environment; its green checks do not replace the decisions above. Historical 3/6 scores, old DNS values and old secret-presence observations are retained in dated receipts, not treated as current launch status.

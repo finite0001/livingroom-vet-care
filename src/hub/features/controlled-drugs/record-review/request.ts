@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { validUnicode } from "./exact-json.ts";
 
-export const reviewUuidSchema = z.string().uuid().refine(value => value === value.toLowerCase() && value !== "00000000-0000-0000-0000-000000000000");
+// The retained PostgreSQL protocol admits every canonical UUID bit pattern.
+// Zod 4 uuid() adds RFC version/variant restrictions; guid() preserves this domain.
+export const reviewUuidSchema = z.string().guid().refine(value => value === value.toLowerCase() && value !== "00000000-0000-0000-0000-000000000000");
 export const reviewDigestSchema = z.string().regex(/^[a-f0-9]{64}$/);
 export const recordReviewRequestSchema = z.object({
   actor_id: reviewUuidSchema, operation_id: reviewUuidSchema, event_id: reviewUuidSchema,

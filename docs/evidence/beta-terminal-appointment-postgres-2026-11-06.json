@@ -1,0 +1,22 @@
+{
+  "kind": "terminal-appointment-trigger-postgres-v1",
+  "passed": true,
+  "checks": [
+    "unchanged hosted baseline reproduces inactive-assignee cancellation failure",
+    "function ACL and trigger registration unchanged",
+    "normal cancellation preserves historical clinician, version increment and audit assignment",
+    "stale cancellation remains conflict",
+    "COMPLETED preserves historical clinician and cannot reopen",
+    "NO_SHOW preserves historical clinician and cannot reopen",
+    "inactive open reschedule, confirmation and closed reassignment denied",
+    "inactive clinician rejected on every new insert including terminal status",
+    "actor, expected version, identity, sequential version and no-delete guards preserved",
+    "valid active reassignment and reschedule remains available",
+    "catalog delegate still called after successful writes"
+  ],
+  "syntheticAuth": true,
+  "fullCatalogIntegration": false,
+  "hostedWrites": 0,
+  "ownedCleanup": true,
+  "sourceSha256": "d61fea9edd24f4c9598307c3320b3c1a6da70dcc1a81d1d11668b66898c8ed6f"
+}

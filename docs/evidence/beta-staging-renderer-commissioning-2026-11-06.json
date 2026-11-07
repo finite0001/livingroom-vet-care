@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-11-06T23:16:03.957988+00:00",
+  "projectRef": "kothoqicubowyhwfsrte",
+  "commissioned": true,
+  "mode": "operator-invoked-one-job",
+  "authorizingScope": "Owner explicitly delegated beta technical remediation; root reviewed exact existing staging operator path and current-image configuration.",
+  "attribution": "Codex performed engineering verification and technical staging configuration under owner instruction. Existing active staging administrator profile is configuration attribution; no impersonated login or claim of personal clinical review.",
+  "acceptedByProfileSha256": "7aba422af64c7a30d334e16ec99df7efa6e073bb868b5c0ee1965790d25636ca",
+  "configurationSqlSha256": "9112fdbc7f6a8f2c1054f1a0966774fc426d016a984f93653b4def3cc5783917",
+  "runtimeVerification": {
+    "sourceAndRuntimeProvenanceMatch": true,
+    "operatorCli": {
+      "state": "missing",
+      "postgresWireUuidAccepted": true,
+      "knownAbsentJob": true,
+      "noJobWrites": true
+    },
+    "runtime": {
+      "image": "lrv-diagnostic-pdf@sha256:a8ce75e5241a44d1f566eafde611c77414e2f9106e6ee58f3fad34ce319bf22b",
+      "provenance": {
+        "font_sha": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+        "settings": {
+          "displayHeaderFooter": true,
+          "footerTemplate": "<div style=\"font-size:8px;width:100%;text-align:center\">Page <span class=\"pageNumber\"></span> of <span class=\"totalPages\"></span></div>",
+          "format": "Letter",
+          "headerTemplate": "<div></div>",
+          "margin": {
+            "bottom": "14mm",
+            "left": "12mm",
+            "right": "12mm",
+            "top": "14mm"
+          },
+          "outline": false,
+          "preferCSSPageSize": false,
+          "printBackground": true,
+          "tagged": false
+        },
+        "template_sha": "683ae492a698f06eabcdca24d7023c96c60ae5d8bb311fa9783b41b2a1f9b5d4",
+        "validator_sha": "ac1f2695539b0fc2d0ab72d423c21091f5c97071693f94738d239846a635bdc2",
+        "worker_sha": "0ceed44d2e9941f23e6eeb066fa07531cb52b661d6abab1afd195e39a29186ce"
+      },
+      "renderer_sha": "a8ce75e5241a44d1f566eafde611c77414e2f9106e6ee58f3fad34ce319bf22b",
+      "settings_sha": "4b83514099038b7f14ae77a2b2fbf036f376a8d50f9ea166d183afd6e2417eae"
+    }
+  },
+  "state": {
+    "disclosure": 0,
+    "outbox": 1,
+    "outbox_hash": "0519320abf6db5521557a91e83485dd96ed9f54c7e84462ad4f6e7e9580529fd",
+    "owned_unrevoked_grants": 0,
+    "release": 0,
+    "runtime": 1,
+    "staff_disclosure": 1,
+    "worker": 1
+  },
+  "workflowEvidence": "docs/evidence/beta-staging-renderer-workflow-2026-11-06.json",
+  "limits": {
+    "vcpus": 1,
+    "memoryMiB": 2048,
+    "sessionTimeoutMs": 60000,
+    "renderCommandTimeoutMs": 45000,
+    "pdfByteLimit": 3145728,
+    "pageLimit": 40,
+    "networkPolicy": "deny-all",
+    "persistent": false,
+    "ports": []
+  },
+  "preserved": {
+    "releaseRecipientPolicyRows": true,
+    "outboxExactSnapshot": true,
+    "historicalJobsCapturesAndManifests": true,
+    "noSchedulerOrRecurringService": true,
+    "noDeliveryProviderActivation": true
+  },
+  "operatorEntrypoint": "node --experimental-strip-types scripts/diagnostics/process-private-pdf.ts JOB_UUID",
+  "operatorCliProofScope": "Actual entrypoint read admitted runtime and accepted a canonical non-RFC PostgreSQL wire UUID for a verified absent job; missing is expected. Positive generation and recovery are separately proven in the201-check hosted workflow."
+}

@@ -1,0 +1,33 @@
+{
+  "additional_admission_read_bound_to_later_read": true,
+  "ambient_catalog_used_as_expected": false,
+  "canonical_expectation_hash_embedded": true,
+  "catalog_snapshot_calls_unchanged": true,
+  "catalog_snapshot_order_unchanged": true,
+  "changed_properties": [
+    "ordinary_relations.time_entries.acl",
+    "ordinary_relations.time_entries.policies",
+    "functions.controlled_count_entry_v1.require_bound_module().body_sha256"
+  ],
+  "core_sha256": "0cbb8076575dbeb36d1d0dee010ee3b643b083cadb7a0df7e674546df96dfcca",
+  "database_operations": 0,
+  "descriptor_hash_canonical_bytes_preserved": true,
+  "descriptor_same_value_materialized_once": true,
+  "expected_projection_inline": false,
+  "external_expected_accessor": false,
+  "full_canonical_text_comparison": true,
+  "historical_descriptors_rewritten": false,
+  "historical_receipts_rewritten": false,
+  "immutable_admission_body_sha256": "e5a5b32210d1660ba58c46854b92189f5d998ad47e449b8c8c0d055644f3952f",
+  "kind": "finite-beta-time-clock-metadata-successor-source-v2",
+  "migration_bytes": 181665,
+  "migration_sha256": "66908ec41dfadb7d363043d30a1f69fb7804ea9e5bee5a57ad17fd9087847823",
+  "observed_self_hash_authenticated_before_normalization": true,
+  "original_require_bound_body_sha256": "f6feeae8a261d68cbd2c674d0c8d6dafcb2de7dfd1b628b39dd62d1c99376380",
+  "source_projection_installation_only": true,
+  "successor_kind": "source-derived-finite-body-family-v1",
+  "template_body_bytes": 113958,
+  "template_body_sha256": "690f7d90798e0018f2f662823dadebb69b0e960328c01339b52e1787174a1498",
+  "template_hash_embedded": true,
+  "whole_comparison_body_inverse": true
+}

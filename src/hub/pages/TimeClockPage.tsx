@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hub/contexts/auth-context";
 import { LoadErrorState } from "@/hub/components/shared/LoadErrorState";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { timeClockTotals } from "@/hub/features/time-clock/time-totals";
 import {
   useCurrentShift, useClockIn, useClockOut, useMyShifts, useOnDutyStaff,
   durationSeconds, type TimeEntry,
@@ -38,24 +39,16 @@ export default function TimeClockPage() {
   const clockIn = useClockIn();
   const clockOut = useClockOut();
 
-  // Live tick while clocked in so the timer and today's total update each second.
+  // Keep elapsed totals current, including the Denver day changing while off duty.
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
-    if (!current) return;
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
-  }, [current]);
+  }, []);
 
   const elapsed = current ? durationSeconds(current, now) : 0;
   const isOpen = (s: TimeEntry) => !s.clock_out_at;
-  const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
-  const weekAgo = Date.now() - 7 * 86_400_000;
-  const todaySeconds = shifts
-    .filter((s) => new Date(s.clock_in_at) >= startOfToday)
-    .reduce((sum, s) => sum + durationSeconds(s, now), 0);
-  const weekSeconds = shifts
-    .filter((s) => new Date(s.clock_in_at).getTime() >= weekAgo)
-    .reduce((sum, s) => sum + durationSeconds(s, now), 0);
+  const { today: todaySeconds, week: weekSeconds } = timeClockTotals(shifts, now);
 
   const errMsg = (e: unknown, fallback: string) => (e as { message?: string })?.message || fallback;
   const handleClockIn = () => clockIn.mutate(undefined, {
@@ -118,7 +111,7 @@ export default function TimeClockPage() {
         {/* Totals. A dash, not 0m, when the shifts could not be read — a false
             zero would say "you have worked nothing today". */}
         <div className="grid grid-cols-2 gap-3">
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Today</p><p className="mt-1 text-2xl font-bold tabular-nums">{shiftsFailed ? "—" : fmtHm(todaySeconds)}</p></CardContent></Card>
+          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Today (Denver)</p><p className="mt-1 text-2xl font-bold tabular-nums">{shiftsFailed ? "—" : fmtHm(todaySeconds)}</p></CardContent></Card>
           <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Past 7 days</p><p className="mt-1 text-2xl font-bold tabular-nums">{shiftsFailed ? "—" : fmtHm(weekSeconds)}</p></CardContent></Card>
         </div>
 

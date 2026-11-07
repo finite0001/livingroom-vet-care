@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-11-06T22:59:03.624045+00:00",
+  "projectRef": "kothoqicubowyhwfsrte",
+  "acceptedImage": "lrv-diagnostic-pdf@sha256:a8ce75e5241a44d1f566eafde611c77414e2f9106e6ee58f3fad34ce319bf22b",
+  "fullWorkflowAccepted": false,
+  "passedBeforeFailure": [
+    "Current image generated and privately registered synthetic diagnostic PDF",
+    "Exact HTTP Storage readback hash, length and object generation matched",
+    "Direct staff Storage download denied",
+    "Stored job replay did not regenerate",
+    "Configured prepare-release-email HTTP endpoint captured exact original PDF attachment"
+  ],
+  "failedStep": {
+    "rpc": "prepare_document_link",
+    "code": "PGRST202",
+    "cause": "Prior proof runner omitted required p_key_version when its optional synthetic signing environment was unset; not a product RPC signature change"
+  },
+  "cleanup": {
+    "finallyCompletedWithoutCleanupError": true,
+    "originalPolicyAndOutboxSnapshotAssertionPassed": true,
+    "runtimePolicyRows": 0,
+    "workerPolicyRows": 0,
+    "staffDisclosurePolicyRows": 0,
+    "recordReleasePolicyRows": 0,
+    "requestDisclosurePolicyRows": 0,
+    "priorOutboxRows": 1
+  },
+  "followup": "Separate beta runner now obtains a transient capability from actual prepare-document-link Edge boundary without loading signing keys, and retains a separate pre-capture tampered-byte refusal. Await exclusive staging migration completion before retry.",
+  "sourceSha256": {
+    "scripts/rollout/pdf-packages-beta-staging-auth.ts": "cba39d52de8ad5edf7fdb1988c17c20f768ccab37ace41cf8aea0454c08bfa0d",
+    "scripts/rollout/pdf-packages-beta-staging-browser.ts": "394a109d0d2522b78cc0a1f99400da1267dae59ab8df8b61784e1db500731619",
+    "scripts/rollout/pdf-packages-beta-capture-proof.ts": "22b704009e7267a90f6fb0ac8a5417e28bb6ccbd08b0a53394e2febd96e155bd",
+    "services/diagnostic-renderer/trusted.ts": "9cad173543bf60b89f4f9dd6f40c9cf152c440fee46dbc849d27d579b59b54b3"
+  },
+  "overlap": "Controlled migration catch-up began during this attempt; complete workflow acceptance is false."
+}

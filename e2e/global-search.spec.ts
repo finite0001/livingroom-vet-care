@@ -10,7 +10,7 @@ async function mockBackend(page: Page) {
   const payload = Buffer.from(JSON.stringify({ sub: user.id, exp: expires, role: "authenticated", aud: "authenticated" })).toString("base64url");
   const session = { access_token: `eyJhbGciOiJIUzI1NiJ9.${payload}.synthetic-signature`, refresh_token: "synthetic-refresh", token_type: "bearer", expires_in: 3600, expires_at: expires, user };
   await page.addInitScript(value => localStorage.setItem("sb-127-auth-token", JSON.stringify(value)), session);
-  await page.route("**/*", route => new URL(route.request().url()).origin === "http://127.0.0.1:8080" ? route.continue() : route.abort());
+  await page.route("**/*", route => new URL(route.request().url()).origin === test.info().project.use.baseURL! ? route.continue() : route.abort());
   await page.route(`${backend}/**`, async route => {
     const url = new URL(route.request().url());
     if (url.pathname === "/auth/v1/token") return route.fulfill({ json: session });

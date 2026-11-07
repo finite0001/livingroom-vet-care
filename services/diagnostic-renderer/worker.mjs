@@ -13,7 +13,7 @@ const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const inputSchema = z
   .object({
     version: z.literal(1),
-    job_id: z.string().uuid(),
+    job_id: z.string().guid(),
     source_hash: hash,
     snapshot_hash: hash,
     html_sha256: hash,

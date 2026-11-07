@@ -121,7 +121,6 @@ export async function listPrescriptionReviewRequests(
 }
 
 const sourceContextSchema = importedPrescriptionSchema
-  .innerType()
   .shape.context.omit({
     patient_version: true,
     reviewed: true,
@@ -132,16 +131,16 @@ const sourceContextSchema = importedPrescriptionSchema
     consult: z.object({
       status: z.enum(["resolved", "not_supplied", "unresolved", "not_checked"]),
       reference: z.unknown().optional(),
-      snapshot_id: z.string().uuid().optional(),
+      snapshot_id: z.string().guid().optional(),
       payload_hash: z.string().optional(),
       observed_head_version: z.number().int().positive().optional(),
     }),
   });
 const previewSchema = z.object({
   run: z.object({
-    id: z.string().uuid(),
-    pet_id: z.string().uuid(),
-    animal_link_id: z.string().uuid(),
+    id: z.string().guid(),
+    pet_id: z.string().guid(),
+    animal_link_id: z.string().guid(),
     prescription_external_id: z.string(),
     source_origin: z.string().url(),
     source_site_uid: z.string(),
@@ -193,10 +192,10 @@ export async function listPrescriptionReviewCandidates(
       candidates: z
         .array(
           z.object({
-            id: z.string().uuid(),
+            id: z.string().guid(),
             created_at: z.string(),
             status: z.string(),
-            animal_link_id: z.string().uuid(),
+            animal_link_id: z.string().guid(),
             prescription_external_id: z.string(),
             source: z.object({
               origin: z.string().url(),
@@ -237,7 +236,7 @@ export async function listReviewMedicationProducts(search: string) {
   return z
     .array(
       z.object({
-        id: z.string().uuid(),
+        id: z.string().guid(),
         name: z.string(),
         version: z.number().int().positive(),
         kind: z.literal("medication"),

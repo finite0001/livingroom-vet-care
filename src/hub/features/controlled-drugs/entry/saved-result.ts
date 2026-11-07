@@ -11,7 +11,7 @@ import type { EntryReply } from "./schema.ts";
 // These are pure original observers. Any future accidental transport call from
 // an observer fails closed; this dependency can never make an RPC or write.
 const noTransport:PrescriptionRpc={rpc(){throw new Error("Saved-result admission cannot invoke a native RPC.");}};
-const uuid=z.string().uuid();
+const uuid=z.string().guid();
 /** Called only for an independently verified owned saved C0 reply. The loader
  * must be the source-contracted owned-pointer authorization read, under the SAME
  * captured identity, signal and original deadline as that C0 read. */

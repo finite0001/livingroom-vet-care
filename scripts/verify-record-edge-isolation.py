@@ -31,7 +31,7 @@ consumers = sorted(
 assert len(consumers) >= 8, "Diagnostic-release consumers unexpectedly disappeared"
 for slug in consumers:
     config = functions / slug / "deno.json"
-    assert json.loads(config.read_text())["imports"]["zod"] == "npm:zod@3.25.76", slug
+    assert json.loads(config.read_text())["imports"]["zod"] == "npm:zod@4.6.7", slug
     assert (functions / slug / "deno.lock").is_file(), slug
     with tempfile.TemporaryDirectory(prefix="lrv-record-edge-") as temporary:
         isolated = Path(temporary)

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { MigrationBinding, MigrationManifest } from "./migration-run-api.ts";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const revision = z.number().int().positive();
 export const migrationItemCursorSchema = z.object({ page: z.number().int().min(1).max(1000), ordinal: z.number().int().min(0).max(10), snapshot_id: uuid }).strict();

@@ -12,6 +12,7 @@ export interface PracticeSettings {
   phone: string | null;
   email: string | null;
   emergencyPhone: string | null;
+  emergencyInstructions: string;
   domain: string | null;
   hours: string | null;
   contactPath: string;
@@ -27,11 +28,12 @@ export const practice: PracticeSettings = {
   phone: "(720) 764-6677",
   email: "admin@thelivingroom.vet",
   emergencyPhone: null,
+  emergencyInstructions: "If you can’t reach us, contact your nearest local 24-hour emergency veterinary service.",
   domain: "thelivingroom.vet",
   hours: "Monday–Saturday, 9 am–5 pm Mountain Time",
   contactPath: "/contact#contact-form",
   launchStages: [
-    { serviceMode: "housecall", label: "Housecalls", status: "planned", targetWindow: "Late October 2026" },
+    { serviceMode: "housecall", label: "Housecalls", status: "planned", targetWindow: "Late 2027" },
     { serviceMode: "clinic", label: "Clinic", status: "planned", targetWindow: "Early 2027" },
   ],
 };

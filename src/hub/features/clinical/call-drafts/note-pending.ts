@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { callNoteIntentSchema, callNoteReserveSchema } from "../../../../../supabase/functions/_shared/clinical-call-note-processing-model.ts";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const scope = { actor: uuid, pet: uuid, encounter: uuid, source: uuid };
 export const pendingCallNoteSchema = z.discriminatedUnion("kind", [
   z.object({ ...scope, kind: z.literal("reserve"), id: uuid, request: callNoteReserveSchema }).strict(),

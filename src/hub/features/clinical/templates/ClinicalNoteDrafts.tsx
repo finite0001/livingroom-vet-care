@@ -43,7 +43,7 @@ const pendingIntentSchema = noteIntentSchema.extend({
   reason: z.union([z.literal(""), retryReasonSchema]),
 });
 const pendingSchema = z
-  .object({ job_id: z.string().uuid(), intent: pendingIntentSchema.nullable() })
+  .object({ job_id: z.string().guid(), intent: pendingIntentSchema.nullable() })
   .strict();
 type Pending = z.infer<typeof pendingSchema>;
 type JobRead = z.infer<typeof noteJobReadSchema>;

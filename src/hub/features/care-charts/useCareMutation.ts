@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hub/contexts/auth-context";
 import { care, type CareArgs, type CareMutation } from "./api";
@@ -45,6 +46,7 @@ export function useCareMutation(scope: string) {
       setUncertain(false);
       setSuccess("Saved.");
       void cache.invalidateQueries({ queryKey: ["care-charts"] });
+      void refreshPatientReleases(cache);
       return true;
     } catch (failure) {
       const definite = isDefinitiveRejection(failure);

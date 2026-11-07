@@ -15,6 +15,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/hub/components/shared/EmptyState";
+import { LoadErrorState } from "@/hub/components/shared/LoadErrorState";
 import { AllStaffTimesheet } from "@/hub/components/timesheet/AllStaffTimesheet";
 import { useAuth } from "@/hub/contexts/auth-context";
 import { useMyShiftsRange } from "@/hub/hooks/use-time-clock";
@@ -61,7 +62,7 @@ export default function MyTimePage() {
   const fromIso = fromDate ? startOfDay(fromDate).toISOString() : null;
   const toIso = toDate ? endOfDay(toDate).toISOString() : null;
 
-  const { data, isLoading } = useMyShiftsRange(fromIso, toIso);
+  const { data, isLoading, isError, refetch } = useMyShiftsRange(fromIso, toIso);
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -147,7 +148,7 @@ export default function MyTimePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{isLoading ? "—" : totals.label}</div>
+              <div className="text-3xl font-bold">{isLoading || isError ? "—" : totals.label}</div>
             </CardContent>
           </Card>
           <Card>
@@ -155,7 +156,7 @@ export default function MyTimePage() {
               <CardTitle className="text-sm text-muted-foreground font-medium">Shifts shown</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{isLoading ? "—" : totals.count}</div>
+              <div className="text-3xl font-bold">{isLoading || isError ? "—" : totals.count}</div>
             </CardContent>
           </Card>
         </div>
@@ -174,7 +175,7 @@ export default function MyTimePage() {
                   variant="outline"
                   size="sm"
                   onClick={exportCsv}
-                  disabled={isLoading || filtered.length === 0}
+                  disabled={isLoading || isError || filtered.length === 0}
                   className="h-8"
                 >
                   <Download className="h-3.5 w-3.5" /> Export CSV
@@ -242,6 +243,8 @@ export default function MyTimePage() {
               <div className="space-y-2">
                 {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
               </div>
+            ) : isError ? (
+              <LoadErrorState label="Timesheet" detail="Time entries could not be verified. Refresh before reviewing or exporting hours." onRetry={() => void refetch()} />
             ) : filtered.length === 0 ? (
               <EmptyState
                 icon={Clock}

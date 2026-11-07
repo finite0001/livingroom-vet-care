@@ -78,7 +78,7 @@ async function fixture(page: Page, role = "ADMIN") {
     session,
   );
   await page.route("**/*", (r) =>
-    new URL(r.request().url()).origin === "http://127.0.0.1:8080"
+    new URL(r.request().url()).origin === test.info().project.use.baseURL!
       ? r.continue()
       : r.abort(),
   );

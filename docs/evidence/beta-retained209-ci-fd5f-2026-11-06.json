@@ -1,0 +1,2713 @@
+{
+  "schemaVersion": 1,
+  "kind": "beta-retained209-baseline-ci-success-v1",
+  "capturedAt": "2026-11-07T00:42:27.005468+00:00",
+  "readinessAdmission": false,
+  "current211RuntimeAcceptance": false,
+  "run": {
+    "conclusion": "success",
+    "createdAt": "2026-11-07T00:08:54Z",
+    "headSha": "fd5f673110aedc21f7a13413ee24d82c833c52f4",
+    "status": "completed",
+    "updatedAt": "2026-11-07T00:36:15Z",
+    "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133"
+  },
+  "workflowSha256": "699a553692fafc7963dd1556e9f43b189edc92de50cc2acd41c0de4eb51bd3fb",
+  "immutableRuntimeSourceCommit": "0da567533c8877b21cf4fbe141b6c1bf3f20492c",
+  "immutableRuntimeSourceGitTree": "04e2605d5b019ceadcf4d8ba988ff3d5eb4e1e94",
+  "jobsPassed": 19,
+  "jobsFailed": 0,
+  "jobs": [
+    {
+      "name": "Retained 209 / historical-source-boundary",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128230105849,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128230105849",
+      "startedAt": "2026-11-07T00:09:14Z",
+      "completedAt": "2026-11-07T00:09:35Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:09:15Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:09:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:09:24Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:09:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:09:32Z",
+          "conclusion": "success",
+          "name": "Materialize and admit the unchanged historical release",
+          "number": 3,
+          "startedAt": "2026-11-07T00:09:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:09:33Z",
+          "conclusion": "success",
+          "name": "Verify retained installation artifacts in that historical view",
+          "number": 4,
+          "startedAt": "2026-11-07T00:09:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:09:33Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 8,
+          "startedAt": "2026-11-07T00:09:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:09:33Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 9,
+          "startedAt": "2026-11-07T00:09:33Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / forward-installation",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128230106175,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128230106175",
+      "startedAt": "2026-11-07T00:09:16Z",
+      "completedAt": "2026-11-07T00:12:55Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:09:18Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:09:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:09:22Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:09:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:09:24Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:09:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:09:26Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:09:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:09:43Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:09:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:09:54Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:09:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:10:51Z",
+          "conclusion": "success",
+          "name": "Verify process containment and framing controls",
+          "number": 7,
+          "startedAt": "2026-11-07T00:09:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:10:55Z",
+          "conclusion": "success",
+          "name": "Derive forward ledger hashes from the pinned official CLI parser",
+          "number": 8,
+          "startedAt": "2026-11-07T00:10:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:11:00Z",
+          "conclusion": "success",
+          "name": "Check complete source admission",
+          "number": 9,
+          "startedAt": "2026-11-07T00:10:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:12:51Z",
+          "conclusion": "success",
+          "name": "Rehearse actual owned CLI installation and complete source properties",
+          "number": 10,
+          "startedAt": "2026-11-07T00:11:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:12:53Z",
+          "conclusion": "success",
+          "name": "Retain scoped installation diagnostics",
+          "number": 11,
+          "startedAt": "2026-11-07T00:12:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:12:53Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 21,
+          "startedAt": "2026-11-07T00:12:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:12:53Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 22,
+          "startedAt": "2026-11-07T00:12:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:12:53Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 23,
+          "startedAt": "2026-11-07T00:12:53Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / authored-history-installation",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128230106180,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128230106180",
+      "startedAt": "2026-11-07T00:09:16Z",
+      "completedAt": "2026-11-07T00:12:30Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:09:18Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:09:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:09:26Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:09:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:09:28Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:09:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:09:30Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:09:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:09:54Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:09:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:10:05Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:09:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:10:24Z",
+          "conclusion": "success",
+          "name": "Verify exact source receipt variants",
+          "number": 7,
+          "startedAt": "2026-11-07T00:10:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:12:27Z",
+          "conclusion": "success",
+          "name": "Rehearse authored history and complete CLI installation",
+          "number": 8,
+          "startedAt": "2026-11-07T00:10:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:12:29Z",
+          "conclusion": "success",
+          "name": "Retain scoped installation diagnostics",
+          "number": 9,
+          "startedAt": "2026-11-07T00:12:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:12:29Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 17,
+          "startedAt": "2026-11-07T00:12:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:12:29Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 18,
+          "startedAt": "2026-11-07T00:12:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:12:29Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "startedAt": "2026-11-07T00:12:29Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / operational-staff-browser",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420144,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420144",
+      "startedAt": "2026-11-07T00:12:59Z",
+      "completedAt": "2026-11-07T00:19:08Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:13:01Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:12:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:05Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:13:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:09Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:13:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:11Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:13:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:31Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:13:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:43Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:13:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:14:11Z",
+          "conclusion": "success",
+          "name": "Run npx playwright install --with-deps chromium",
+          "number": 7,
+          "startedAt": "2026-11-07T00:13:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:14:16Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 8,
+          "startedAt": "2026-11-07T00:14:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:14:21Z",
+          "conclusion": "success",
+          "name": "Admit original operational frontend and backend sources",
+          "number": 9,
+          "startedAt": "2026-11-07T00:14:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:04Z",
+          "conclusion": "success",
+          "name": "Verify real staff login and interrupted operational saves",
+          "number": 10,
+          "startedAt": "2026-11-07T00:14:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:06Z",
+          "conclusion": "success",
+          "name": "Retain bounded results without credentials or session tokens",
+          "number": 11,
+          "startedAt": "2026-11-07T00:19:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:06Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 21,
+          "startedAt": "2026-11-07T00:19:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:06Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 22,
+          "startedAt": "2026-11-07T00:19:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:06Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 23,
+          "startedAt": "2026-11-07T00:19:06Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / populated-recovery",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420237,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420237",
+      "startedAt": "2026-11-07T00:12:59Z",
+      "completedAt": "2026-11-07T00:22:15Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:13:01Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:12:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:04Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:13:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:09Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:13:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:11Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:13:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:32Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:13:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:44Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:13:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:48Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 7,
+          "startedAt": "2026-11-07T00:13:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:11Z",
+          "conclusion": "success",
+          "name": "Verify complete populated recovery using original Auth principals",
+          "number": 8,
+          "startedAt": "2026-11-07T00:13:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:13Z",
+          "conclusion": "success",
+          "name": "Retain bounded synthetic result diagnostics only",
+          "number": 9,
+          "startedAt": "2026-11-07T00:22:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:14Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 17,
+          "startedAt": "2026-11-07T00:22:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:14Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 18,
+          "startedAt": "2026-11-07T00:22:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:14Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "startedAt": "2026-11-07T00:22:14Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / pending-validation-rollback",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420248,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420248",
+      "startedAt": "2026-11-07T00:13:00Z",
+      "completedAt": "2026-11-07T00:17:36Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:13:03Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:13:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:14Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:13:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:20Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:13:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:22Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:13:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:43Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:13:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:54Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:13:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:59Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 7,
+          "startedAt": "2026-11-07T00:13:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:32Z",
+          "conclusion": "success",
+          "name": "Prove genuine count failure rolls back all records",
+          "number": 8,
+          "startedAt": "2026-11-07T00:13:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:33Z",
+          "conclusion": "success",
+          "name": "Retain engineering negative proof separately from acceptance",
+          "number": 9,
+          "startedAt": "2026-11-07T00:17:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:33Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 17,
+          "startedAt": "2026-11-07T00:17:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:33Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 18,
+          "startedAt": "2026-11-07T00:17:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:33Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "startedAt": "2026-11-07T00:17:33Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / register-engineering",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420294,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420294",
+      "startedAt": "2026-11-07T00:12:59Z",
+      "completedAt": "2026-11-07T00:19:25Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:13:01Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:13:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:05Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:13:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:09Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:13:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:11Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:13:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:32Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:13:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:44Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:13:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:48Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 7,
+          "startedAt": "2026-11-07T00:13:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:22Z",
+          "conclusion": "success",
+          "name": "Exercise reports and preserved forms in an owned engineering database",
+          "number": 8,
+          "startedAt": "2026-11-07T00:13:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:23Z",
+          "conclusion": "success",
+          "name": "Retain bounded source and API diagnostics, never release acceptance",
+          "number": 9,
+          "startedAt": "2026-11-07T00:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:23Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 17,
+          "startedAt": "2026-11-07T00:19:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:23Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 18,
+          "startedAt": "2026-11-07T00:19:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:24Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "startedAt": "2026-11-07T00:19:23Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / genuine-business (ordinary_none)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420414,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420414",
+      "startedAt": "2026-11-07T00:17:17Z",
+      "completedAt": "2026-11-07T00:21:38Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:17:19Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:17:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:30Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:17:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:34Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:17:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:36Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:17:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:56Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:17:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:08Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:17:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:08Z",
+          "conclusion": "skipped",
+          "name": "Run npx playwright install --with-deps chromium",
+          "number": 7,
+          "startedAt": "2026-11-07T00:18:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:13Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 8,
+          "startedAt": "2026-11-07T00:18:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:13Z",
+          "conclusion": "skipped",
+          "name": "Trace clinical execution failure in a disposable instrumented database",
+          "number": 9,
+          "startedAt": "2026-11-07T00:18:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:13Z",
+          "conclusion": "skipped",
+          "name": "Trace count finalization failure in a disposable instrumented database",
+          "number": 10,
+          "startedAt": "2026-11-07T00:18:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:13Z",
+          "conclusion": "skipped",
+          "name": "Retain only the synthetic native error before normal acceptance",
+          "number": 11,
+          "startedAt": "2026-11-07T00:18:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:13Z",
+          "conclusion": "skipped",
+          "name": "Trace discrepancy execution in a separate owned engineering database",
+          "number": 12,
+          "startedAt": "2026-11-07T00:18:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:13Z",
+          "conclusion": "skipped",
+          "name": "Retain bounded variance native error and timing",
+          "number": 13,
+          "startedAt": "2026-11-07T00:18:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:17Z",
+          "conclusion": "success",
+          "name": "Admit fixed genuine business sources",
+          "number": 14,
+          "startedAt": "2026-11-07T00:18:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:35Z",
+          "conclusion": "success",
+          "name": "Verify real staff accounts, business effects and normal cleanup",
+          "number": 15,
+          "startedAt": "2026-11-07T00:18:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:36Z",
+          "conclusion": "success",
+          "name": "Retain scoped diagnostics without local passwords or session tokens",
+          "number": 16,
+          "startedAt": "2026-11-07T00:21:35Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:36Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 31,
+          "startedAt": "2026-11-07T00:21:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:36Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 32,
+          "startedAt": "2026-11-07T00:21:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:37Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 33,
+          "startedAt": "2026-11-07T00:21:36Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / genuine-business (clinical)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420416,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420416",
+      "startedAt": "2026-11-07T00:24:29Z",
+      "completedAt": "2026-11-07T00:31:55Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:24:32Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:24:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:24:41Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:24:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:24:44Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:24:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:24:46Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:24:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:25:08Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:24:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:25:21Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:25:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:25:21Z",
+          "conclusion": "skipped",
+          "name": "Run npx playwright install --with-deps chromium",
+          "number": 7,
+          "startedAt": "2026-11-07T00:25:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:25:25Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 8,
+          "startedAt": "2026-11-07T00:25:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:28:55Z",
+          "conclusion": "success",
+          "name": "Trace clinical execution failure in a disposable instrumented database",
+          "number": 9,
+          "startedAt": "2026-11-07T00:25:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:28:55Z",
+          "conclusion": "skipped",
+          "name": "Trace count finalization failure in a disposable instrumented database",
+          "number": 10,
+          "startedAt": "2026-11-07T00:28:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:28:55Z",
+          "conclusion": "success",
+          "name": "Retain only the synthetic native error before normal acceptance",
+          "number": 11,
+          "startedAt": "2026-11-07T00:28:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:28:55Z",
+          "conclusion": "skipped",
+          "name": "Trace discrepancy execution in a separate owned engineering database",
+          "number": 12,
+          "startedAt": "2026-11-07T00:28:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:28:55Z",
+          "conclusion": "skipped",
+          "name": "Retain bounded variance native error and timing",
+          "number": 13,
+          "startedAt": "2026-11-07T00:28:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:29:00Z",
+          "conclusion": "success",
+          "name": "Admit fixed genuine business sources",
+          "number": 14,
+          "startedAt": "2026-11-07T00:28:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:51Z",
+          "conclusion": "success",
+          "name": "Verify real staff accounts, business effects and normal cleanup",
+          "number": 15,
+          "startedAt": "2026-11-07T00:29:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:53Z",
+          "conclusion": "success",
+          "name": "Retain scoped diagnostics without local passwords or session tokens",
+          "number": 16,
+          "startedAt": "2026-11-07T00:31:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:53Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 31,
+          "startedAt": "2026-11-07T00:31:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:53Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 32,
+          "startedAt": "2026-11-07T00:31:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:53Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 33,
+          "startedAt": "2026-11-07T00:31:53Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / genuine-business (browser_lost_finalize)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420417,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420417",
+      "startedAt": "2026-11-07T00:12:59Z",
+      "completedAt": "2026-11-07T00:18:06Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:13:01Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:13:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:09Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:13:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:11Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:13:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:13Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:13:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:35Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:13:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:45Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:13:35Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:14:06Z",
+          "conclusion": "success",
+          "name": "Run npx playwright install --with-deps chromium",
+          "number": 7,
+          "startedAt": "2026-11-07T00:13:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:14:11Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 8,
+          "startedAt": "2026-11-07T00:14:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:14:11Z",
+          "conclusion": "skipped",
+          "name": "Trace clinical execution failure in a disposable instrumented database",
+          "number": 9,
+          "startedAt": "2026-11-07T00:14:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:14:11Z",
+          "conclusion": "skipped",
+          "name": "Trace count finalization failure in a disposable instrumented database",
+          "number": 10,
+          "startedAt": "2026-11-07T00:14:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:14:11Z",
+          "conclusion": "skipped",
+          "name": "Retain only the synthetic native error before normal acceptance",
+          "number": 11,
+          "startedAt": "2026-11-07T00:14:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:14:11Z",
+          "conclusion": "skipped",
+          "name": "Trace discrepancy execution in a separate owned engineering database",
+          "number": 12,
+          "startedAt": "2026-11-07T00:14:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:14:11Z",
+          "conclusion": "skipped",
+          "name": "Retain bounded variance native error and timing",
+          "number": 13,
+          "startedAt": "2026-11-07T00:14:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:14:15Z",
+          "conclusion": "success",
+          "name": "Admit fixed genuine business sources",
+          "number": 14,
+          "startedAt": "2026-11-07T00:14:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:03Z",
+          "conclusion": "success",
+          "name": "Verify real staff accounts, business effects and normal cleanup",
+          "number": 15,
+          "startedAt": "2026-11-07T00:14:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:04Z",
+          "conclusion": "success",
+          "name": "Retain scoped diagnostics without local passwords or session tokens",
+          "number": 16,
+          "startedAt": "2026-11-07T00:18:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:04Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 31,
+          "startedAt": "2026-11-07T00:18:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:04Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 32,
+          "startedAt": "2026-11-07T00:18:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:04Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 33,
+          "startedAt": "2026-11-07T00:18:04Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / genuine-business (scalars)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420425,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420425",
+      "startedAt": "2026-11-07T00:22:40Z",
+      "completedAt": "2026-11-07T00:27:04Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:22:42Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:22:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:51Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:22:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:53Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:22:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:55Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:22:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:23:19Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:22:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:23:27Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:23:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:23:27Z",
+          "conclusion": "skipped",
+          "name": "Run npx playwright install --with-deps chromium",
+          "number": 7,
+          "startedAt": "2026-11-07T00:23:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:23:31Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 8,
+          "startedAt": "2026-11-07T00:23:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:23:31Z",
+          "conclusion": "skipped",
+          "name": "Trace clinical execution failure in a disposable instrumented database",
+          "number": 9,
+          "startedAt": "2026-11-07T00:23:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:23:31Z",
+          "conclusion": "skipped",
+          "name": "Trace count finalization failure in a disposable instrumented database",
+          "number": 10,
+          "startedAt": "2026-11-07T00:23:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:23:31Z",
+          "conclusion": "skipped",
+          "name": "Retain only the synthetic native error before normal acceptance",
+          "number": 11,
+          "startedAt": "2026-11-07T00:23:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:23:31Z",
+          "conclusion": "skipped",
+          "name": "Trace discrepancy execution in a separate owned engineering database",
+          "number": 12,
+          "startedAt": "2026-11-07T00:23:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:23:31Z",
+          "conclusion": "skipped",
+          "name": "Retain bounded variance native error and timing",
+          "number": 13,
+          "startedAt": "2026-11-07T00:23:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:23:36Z",
+          "conclusion": "success",
+          "name": "Admit fixed genuine business sources",
+          "number": 14,
+          "startedAt": "2026-11-07T00:23:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:27:00Z",
+          "conclusion": "success",
+          "name": "Verify real staff accounts, business effects and normal cleanup",
+          "number": 15,
+          "startedAt": "2026-11-07T00:23:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:27:02Z",
+          "conclusion": "success",
+          "name": "Retain scoped diagnostics without local passwords or session tokens",
+          "number": 16,
+          "startedAt": "2026-11-07T00:27:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:27:02Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 31,
+          "startedAt": "2026-11-07T00:27:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:27:02Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 32,
+          "startedAt": "2026-11-07T00:27:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:27:02Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 33,
+          "startedAt": "2026-11-07T00:27:02Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / genuine-business (commission_all)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420430,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420430",
+      "startedAt": "2026-11-07T00:12:59Z",
+      "completedAt": "2026-11-07T00:17:14Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:13:01Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:13:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:11Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:13:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:16Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:13:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:18Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:13:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:39Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:13:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:51Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:13:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:51Z",
+          "conclusion": "skipped",
+          "name": "Run npx playwright install --with-deps chromium",
+          "number": 7,
+          "startedAt": "2026-11-07T00:13:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:55Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 8,
+          "startedAt": "2026-11-07T00:13:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:55Z",
+          "conclusion": "skipped",
+          "name": "Trace clinical execution failure in a disposable instrumented database",
+          "number": 9,
+          "startedAt": "2026-11-07T00:13:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:55Z",
+          "conclusion": "skipped",
+          "name": "Trace count finalization failure in a disposable instrumented database",
+          "number": 10,
+          "startedAt": "2026-11-07T00:13:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:55Z",
+          "conclusion": "skipped",
+          "name": "Retain only the synthetic native error before normal acceptance",
+          "number": 11,
+          "startedAt": "2026-11-07T00:13:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:55Z",
+          "conclusion": "skipped",
+          "name": "Trace discrepancy execution in a separate owned engineering database",
+          "number": 12,
+          "startedAt": "2026-11-07T00:13:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:55Z",
+          "conclusion": "skipped",
+          "name": "Retain bounded variance native error and timing",
+          "number": 13,
+          "startedAt": "2026-11-07T00:13:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:14:00Z",
+          "conclusion": "success",
+          "name": "Admit fixed genuine business sources",
+          "number": 14,
+          "startedAt": "2026-11-07T00:13:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:08Z",
+          "conclusion": "success",
+          "name": "Verify real staff accounts, business effects and normal cleanup",
+          "number": 15,
+          "startedAt": "2026-11-07T00:14:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:11Z",
+          "conclusion": "success",
+          "name": "Retain scoped diagnostics without local passwords or session tokens",
+          "number": 16,
+          "startedAt": "2026-11-07T00:17:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:11Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 31,
+          "startedAt": "2026-11-07T00:17:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:11Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 32,
+          "startedAt": "2026-11-07T00:17:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:11Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 33,
+          "startedAt": "2026-11-07T00:17:11Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / genuine-business (count_agreement)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420448,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420448",
+      "startedAt": "2026-11-07T00:12:59Z",
+      "completedAt": "2026-11-07T00:20:49Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:13:01Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:13:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:09Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:13:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:13Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:13:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:15Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:13:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:34Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:13:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:46Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:13:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:46Z",
+          "conclusion": "skipped",
+          "name": "Run npx playwright install --with-deps chromium",
+          "number": 7,
+          "startedAt": "2026-11-07T00:13:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:50Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 8,
+          "startedAt": "2026-11-07T00:13:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:13:50Z",
+          "conclusion": "skipped",
+          "name": "Trace clinical execution failure in a disposable instrumented database",
+          "number": 9,
+          "startedAt": "2026-11-07T00:13:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:31Z",
+          "conclusion": "success",
+          "name": "Trace count finalization failure in a disposable instrumented database",
+          "number": 10,
+          "startedAt": "2026-11-07T00:13:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:32Z",
+          "conclusion": "success",
+          "name": "Retain only the synthetic native error before normal acceptance",
+          "number": 11,
+          "startedAt": "2026-11-07T00:17:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:32Z",
+          "conclusion": "skipped",
+          "name": "Trace discrepancy execution in a separate owned engineering database",
+          "number": 12,
+          "startedAt": "2026-11-07T00:17:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:32Z",
+          "conclusion": "skipped",
+          "name": "Retain bounded variance native error and timing",
+          "number": 13,
+          "startedAt": "2026-11-07T00:17:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:17:36Z",
+          "conclusion": "success",
+          "name": "Admit fixed genuine business sources",
+          "number": 14,
+          "startedAt": "2026-11-07T00:17:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:20:44Z",
+          "conclusion": "success",
+          "name": "Verify real staff accounts, business effects and normal cleanup",
+          "number": 15,
+          "startedAt": "2026-11-07T00:17:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:20:46Z",
+          "conclusion": "success",
+          "name": "Retain scoped diagnostics without local passwords or session tokens",
+          "number": 16,
+          "startedAt": "2026-11-07T00:20:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:20:46Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 31,
+          "startedAt": "2026-11-07T00:20:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:20:47Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 32,
+          "startedAt": "2026-11-07T00:20:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:20:47Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 33,
+          "startedAt": "2026-11-07T00:20:47Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / genuine-business (record_review_signing)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420463,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420463",
+      "startedAt": "2026-11-07T00:18:10Z",
+      "completedAt": "2026-11-07T00:22:36Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:18:13Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:18:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:22Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:18:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:24Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:18:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:26Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:18:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:18:49Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:18:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:00Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:18:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:00Z",
+          "conclusion": "skipped",
+          "name": "Run npx playwright install --with-deps chromium",
+          "number": 7,
+          "startedAt": "2026-11-07T00:19:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:04Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 8,
+          "startedAt": "2026-11-07T00:19:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:04Z",
+          "conclusion": "skipped",
+          "name": "Trace clinical execution failure in a disposable instrumented database",
+          "number": 9,
+          "startedAt": "2026-11-07T00:19:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:04Z",
+          "conclusion": "skipped",
+          "name": "Trace count finalization failure in a disposable instrumented database",
+          "number": 10,
+          "startedAt": "2026-11-07T00:19:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:04Z",
+          "conclusion": "skipped",
+          "name": "Retain only the synthetic native error before normal acceptance",
+          "number": 11,
+          "startedAt": "2026-11-07T00:19:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:04Z",
+          "conclusion": "skipped",
+          "name": "Trace discrepancy execution in a separate owned engineering database",
+          "number": 12,
+          "startedAt": "2026-11-07T00:19:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:04Z",
+          "conclusion": "skipped",
+          "name": "Retain bounded variance native error and timing",
+          "number": 13,
+          "startedAt": "2026-11-07T00:19:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:19:09Z",
+          "conclusion": "success",
+          "name": "Admit fixed genuine business sources",
+          "number": 14,
+          "startedAt": "2026-11-07T00:19:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:32Z",
+          "conclusion": "success",
+          "name": "Verify real staff accounts, business effects and normal cleanup",
+          "number": 15,
+          "startedAt": "2026-11-07T00:19:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:34Z",
+          "conclusion": "success",
+          "name": "Retain scoped diagnostics without local passwords or session tokens",
+          "number": 16,
+          "startedAt": "2026-11-07T00:22:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:34Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 31,
+          "startedAt": "2026-11-07T00:22:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:34Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 32,
+          "startedAt": "2026-11-07T00:22:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:34Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 33,
+          "startedAt": "2026-11-07T00:22:34Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / genuine-business (native_return_v1)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420464,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420464",
+      "startedAt": "2026-11-07T00:31:22Z",
+      "completedAt": "2026-11-07T00:36:14Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:31:24Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:31:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:33Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:31:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:42Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:31:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:44Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:31:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:07Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:31:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:21Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:32:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:21Z",
+          "conclusion": "skipped",
+          "name": "Run npx playwright install --with-deps chromium",
+          "number": 7,
+          "startedAt": "2026-11-07T00:32:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:26Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 8,
+          "startedAt": "2026-11-07T00:32:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:26Z",
+          "conclusion": "skipped",
+          "name": "Trace clinical execution failure in a disposable instrumented database",
+          "number": 9,
+          "startedAt": "2026-11-07T00:32:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:26Z",
+          "conclusion": "skipped",
+          "name": "Trace count finalization failure in a disposable instrumented database",
+          "number": 10,
+          "startedAt": "2026-11-07T00:32:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:26Z",
+          "conclusion": "skipped",
+          "name": "Retain only the synthetic native error before normal acceptance",
+          "number": 11,
+          "startedAt": "2026-11-07T00:32:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:26Z",
+          "conclusion": "skipped",
+          "name": "Trace discrepancy execution in a separate owned engineering database",
+          "number": 12,
+          "startedAt": "2026-11-07T00:32:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:26Z",
+          "conclusion": "skipped",
+          "name": "Retain bounded variance native error and timing",
+          "number": 13,
+          "startedAt": "2026-11-07T00:32:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:31Z",
+          "conclusion": "success",
+          "name": "Admit fixed genuine business sources",
+          "number": 14,
+          "startedAt": "2026-11-07T00:32:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:36:10Z",
+          "conclusion": "success",
+          "name": "Verify real staff accounts, business effects and normal cleanup",
+          "number": 15,
+          "startedAt": "2026-11-07T00:32:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:36:12Z",
+          "conclusion": "success",
+          "name": "Retain scoped diagnostics without local passwords or session tokens",
+          "number": 16,
+          "startedAt": "2026-11-07T00:36:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:36:12Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 31,
+          "startedAt": "2026-11-07T00:36:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:36:12Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 32,
+          "startedAt": "2026-11-07T00:36:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:36:12Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 33,
+          "startedAt": "2026-11-07T00:36:12Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / genuine-business (variance_reconciliation)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420469,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420469",
+      "startedAt": "2026-11-07T00:21:42Z",
+      "completedAt": "2026-11-07T00:31:18Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:21:44Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:21:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:52Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:21:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:58Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:21:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:00Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:21:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:21Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:22:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:34Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:22:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:34Z",
+          "conclusion": "skipped",
+          "name": "Run npx playwright install --with-deps chromium",
+          "number": 7,
+          "startedAt": "2026-11-07T00:22:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:38Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 8,
+          "startedAt": "2026-11-07T00:22:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:38Z",
+          "conclusion": "skipped",
+          "name": "Trace clinical execution failure in a disposable instrumented database",
+          "number": 9,
+          "startedAt": "2026-11-07T00:22:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:38Z",
+          "conclusion": "skipped",
+          "name": "Trace count finalization failure in a disposable instrumented database",
+          "number": 10,
+          "startedAt": "2026-11-07T00:22:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:22:38Z",
+          "conclusion": "skipped",
+          "name": "Retain only the synthetic native error before normal acceptance",
+          "number": 11,
+          "startedAt": "2026-11-07T00:22:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:27:15Z",
+          "conclusion": "success",
+          "name": "Trace discrepancy execution in a separate owned engineering database",
+          "number": 12,
+          "startedAt": "2026-11-07T00:22:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:27:17Z",
+          "conclusion": "success",
+          "name": "Retain bounded variance native error and timing",
+          "number": 13,
+          "startedAt": "2026-11-07T00:27:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:27:21Z",
+          "conclusion": "success",
+          "name": "Admit fixed genuine business sources",
+          "number": 14,
+          "startedAt": "2026-11-07T00:27:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:14Z",
+          "conclusion": "success",
+          "name": "Verify real staff accounts, business effects and normal cleanup",
+          "number": 15,
+          "startedAt": "2026-11-07T00:27:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:16Z",
+          "conclusion": "success",
+          "name": "Retain scoped diagnostics without local passwords or session tokens",
+          "number": 16,
+          "startedAt": "2026-11-07T00:31:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:16Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 31,
+          "startedAt": "2026-11-07T00:31:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:16Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 32,
+          "startedAt": "2026-11-07T00:31:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:16Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 33,
+          "startedAt": "2026-11-07T00:31:16Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / genuine-business (native_pickup_annotation)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420534,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420534",
+      "startedAt": "2026-11-07T00:27:08Z",
+      "completedAt": "2026-11-07T00:31:42Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:27:10Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:27:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:27:19Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:27:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:27:21Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:27:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:27:23Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:27:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:27:47Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:27:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:28:00Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:27:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:28:00Z",
+          "conclusion": "skipped",
+          "name": "Run npx playwright install --with-deps chromium",
+          "number": 7,
+          "startedAt": "2026-11-07T00:28:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:28:04Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 8,
+          "startedAt": "2026-11-07T00:28:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:28:04Z",
+          "conclusion": "skipped",
+          "name": "Trace clinical execution failure in a disposable instrumented database",
+          "number": 9,
+          "startedAt": "2026-11-07T00:28:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:28:04Z",
+          "conclusion": "skipped",
+          "name": "Trace count finalization failure in a disposable instrumented database",
+          "number": 10,
+          "startedAt": "2026-11-07T00:28:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:28:04Z",
+          "conclusion": "skipped",
+          "name": "Retain only the synthetic native error before normal acceptance",
+          "number": 11,
+          "startedAt": "2026-11-07T00:28:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:28:04Z",
+          "conclusion": "skipped",
+          "name": "Trace discrepancy execution in a separate owned engineering database",
+          "number": 12,
+          "startedAt": "2026-11-07T00:28:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:28:04Z",
+          "conclusion": "skipped",
+          "name": "Retain bounded variance native error and timing",
+          "number": 13,
+          "startedAt": "2026-11-07T00:28:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:28:09Z",
+          "conclusion": "success",
+          "name": "Admit fixed genuine business sources",
+          "number": 14,
+          "startedAt": "2026-11-07T00:28:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:39Z",
+          "conclusion": "success",
+          "name": "Verify real staff accounts, business effects and normal cleanup",
+          "number": 15,
+          "startedAt": "2026-11-07T00:28:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:40Z",
+          "conclusion": "success",
+          "name": "Retain scoped diagnostics without local passwords or session tokens",
+          "number": 16,
+          "startedAt": "2026-11-07T00:31:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:40Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 31,
+          "startedAt": "2026-11-07T00:31:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:41Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 32,
+          "startedAt": "2026-11-07T00:31:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:41Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 33,
+          "startedAt": "2026-11-07T00:31:41Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / genuine-business (independent_witness)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420535,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420535",
+      "startedAt": "2026-11-07T00:20:52Z",
+      "completedAt": "2026-11-07T00:24:25Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:20:54Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:20:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:03Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:20:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:09Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:21:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:10Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:21:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:31Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:21:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:40Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:21:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:40Z",
+          "conclusion": "skipped",
+          "name": "Run npx playwright install --with-deps chromium",
+          "number": 7,
+          "startedAt": "2026-11-07T00:21:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:43Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 8,
+          "startedAt": "2026-11-07T00:21:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:43Z",
+          "conclusion": "skipped",
+          "name": "Trace clinical execution failure in a disposable instrumented database",
+          "number": 9,
+          "startedAt": "2026-11-07T00:21:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:43Z",
+          "conclusion": "skipped",
+          "name": "Trace count finalization failure in a disposable instrumented database",
+          "number": 10,
+          "startedAt": "2026-11-07T00:21:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:43Z",
+          "conclusion": "skipped",
+          "name": "Retain only the synthetic native error before normal acceptance",
+          "number": 11,
+          "startedAt": "2026-11-07T00:21:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:43Z",
+          "conclusion": "skipped",
+          "name": "Trace discrepancy execution in a separate owned engineering database",
+          "number": 12,
+          "startedAt": "2026-11-07T00:21:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:43Z",
+          "conclusion": "skipped",
+          "name": "Retain bounded variance native error and timing",
+          "number": 13,
+          "startedAt": "2026-11-07T00:21:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:21:47Z",
+          "conclusion": "success",
+          "name": "Admit fixed genuine business sources",
+          "number": 14,
+          "startedAt": "2026-11-07T00:21:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:24:22Z",
+          "conclusion": "success",
+          "name": "Verify real staff accounts, business effects and normal cleanup",
+          "number": 15,
+          "startedAt": "2026-11-07T00:21:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:24:23Z",
+          "conclusion": "success",
+          "name": "Retain scoped diagnostics without local passwords or session tokens",
+          "number": 16,
+          "startedAt": "2026-11-07T00:24:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:24:24Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 31,
+          "startedAt": "2026-11-07T00:24:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:24:24Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 32,
+          "startedAt": "2026-11-07T00:24:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:24:24Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 33,
+          "startedAt": "2026-11-07T00:24:24Z",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "name": "Retained 209 / genuine-business (native_return_v2_discrepancy)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128231420634,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421133/job/128231420634",
+      "startedAt": "2026-11-07T00:31:46Z",
+      "completedAt": "2026-11-07T00:36:06Z",
+      "steps": [
+        {
+          "completedAt": "2026-11-07T00:31:48Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-07T00:31:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:57Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-07T00:31:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:31:58Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v4",
+          "number": 3,
+          "startedAt": "2026-11-07T00:31:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:00Z",
+          "conclusion": "success",
+          "name": "Run supabase/setup-cli@v1",
+          "number": 4,
+          "startedAt": "2026-11-07T00:31:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:23Z",
+          "conclusion": "success",
+          "name": "Cache the approved immutable PostgreSQL image",
+          "number": 5,
+          "startedAt": "2026-11-07T00:32:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:30Z",
+          "conclusion": "success",
+          "name": "Run npm ci --ignore-scripts",
+          "number": 6,
+          "startedAt": "2026-11-07T00:32:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:30Z",
+          "conclusion": "skipped",
+          "name": "Run npx playwright install --with-deps chromium",
+          "number": 7,
+          "startedAt": "2026-11-07T00:32:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:34Z",
+          "conclusion": "success",
+          "name": "Run node scripts/narcotics-log/frame-cli.mjs --write-candidate",
+          "number": 8,
+          "startedAt": "2026-11-07T00:32:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:34Z",
+          "conclusion": "skipped",
+          "name": "Trace clinical execution failure in a disposable instrumented database",
+          "number": 9,
+          "startedAt": "2026-11-07T00:32:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:34Z",
+          "conclusion": "skipped",
+          "name": "Trace count finalization failure in a disposable instrumented database",
+          "number": 10,
+          "startedAt": "2026-11-07T00:32:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:34Z",
+          "conclusion": "skipped",
+          "name": "Retain only the synthetic native error before normal acceptance",
+          "number": 11,
+          "startedAt": "2026-11-07T00:32:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:34Z",
+          "conclusion": "skipped",
+          "name": "Trace discrepancy execution in a separate owned engineering database",
+          "number": 12,
+          "startedAt": "2026-11-07T00:32:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:34Z",
+          "conclusion": "skipped",
+          "name": "Retain bounded variance native error and timing",
+          "number": 13,
+          "startedAt": "2026-11-07T00:32:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:32:39Z",
+          "conclusion": "success",
+          "name": "Admit fixed genuine business sources",
+          "number": 14,
+          "startedAt": "2026-11-07T00:32:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:36:03Z",
+          "conclusion": "success",
+          "name": "Verify real staff accounts, business effects and normal cleanup",
+          "number": 15,
+          "startedAt": "2026-11-07T00:32:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:36:05Z",
+          "conclusion": "success",
+          "name": "Retain scoped diagnostics without local passwords or session tokens",
+          "number": 16,
+          "startedAt": "2026-11-07T00:36:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:36:05Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v4",
+          "number": 31,
+          "startedAt": "2026-11-07T00:36:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:36:05Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 32,
+          "startedAt": "2026-11-07T00:36:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-07T00:36:05Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 33,
+          "startedAt": "2026-11-07T00:36:05Z",
+          "status": "completed"
+        }
+      ]
+    }
+  ],
+  "interpretation": "All 19 retained209 baseline jobs succeeded, including both native installation paths, populated recovery, operational browser, rollback, register and every genuine business profile. Jobs intentionally check out immutable source0da5675; these results preserve the historical209 baseline and do not grant current211 acceptance. The source-boundary job separately materializes its explicitly historical206 view.",
+  "priorSourceReceipt": "docs/evidence/beta-retained209-native-ci-2026-11-06.json"
+}

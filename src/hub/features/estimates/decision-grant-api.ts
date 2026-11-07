@@ -24,7 +24,7 @@ import {
  * lost response is recovered from `read_native_estimate_decision_grants`
  * rather than from browser storage.
  */
-const uuid = z.string().uuid().refine((value) => value === value.toLowerCase());
+const uuid = z.string().guid().refine((value) => value === value.toLowerCase());
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 // Browser mirror of the response schemas in
 // supabase/functions/_shared/estimate-decision-grant-http.ts. That module is

@@ -4,7 +4,7 @@ import { migrationItemCursorSchema, parseMigrationItems } from "./migration-item
 import type { MigrationItemCursor } from "./migration-items-api.ts";
 import { precedes } from "./attachment-review-history.ts";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const date = z.string().datetime({ offset: true }).refine(value => Number.isFinite(Date.parse(value)) && !/\.\d{7}/.test(value));
 const origin = z.enum(["https://api.trial.ezyvet.com", "https://api.ezyvet.com"]);
@@ -27,7 +27,7 @@ const manifestSchema = z.object({ run: runSchema, scopes: z.array(scopeSchema).m
 const descriptor = z.object({
   version: z.literal(1), run_id: uuid, owner: uuid, source_origin: origin, source_site_uid: site, resource,
   parent_evidence: z.enum(["selected_identity_filter", "mapping_identity_only", "exact_parent_version"]),
-  context: z.record(z.unknown()),
+  context: z.record(z.string(), z.unknown()),
 }).strict();
 const bindingSchema = z.object({
   id: uuid, scope_id: uuid, child_run_id: uuid, actor_id: uuid, replaces_id: uuid.nullable(),

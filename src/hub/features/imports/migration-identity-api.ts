@@ -2,7 +2,7 @@ import { z } from "zod";
 import { parseMigrationBinding } from "./migration-run-api.ts";
 import type { MigrationBinding, MigrationRpc } from "./migration-run-api.ts";
 import type { MigrationItem } from "./migration-items-api.ts";
-const uuid = z.string().uuid(), hash = z.string().regex(/^[a-f0-9]{64}$/);
+const uuid = z.string().guid(), hash = z.string().regex(/^[a-f0-9]{64}$/);
 const date = z.string().datetime({ offset: true });
 const schema = z.object({
   version: z.literal(1), binding_id: uuid, scope_id: uuid, child_run_id: uuid, actor_id: uuid,

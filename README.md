@@ -1,8 +1,10 @@
 # The Living Room Vet
 
-Boulder veterinary practice website and staff workspace. Home base: 2619 Spruce Street. Housecalls target late October 2026; the clinic targets early 2027. Owned domain: **thelivingroom.vet**.
+**Beta status:** [Current remediation and acceptance work](docs/beta-remediation-2026-11-06.md). [Initial audit and evidence](docs/beta-readiness-2026-11-06.md).
 
-The application uses React 18, TypeScript, Vite, Tailwind, shadcn/ui, React Router 7 and Supabase. Lovable remains connected through GitHub. This is an evolving practice platform; the clinical checklist is not yet fully implemented.
+Boulder veterinary practice website and staff workspace. Home base: 2619 Spruce Street. Owned domain: **thelivingroom.vet**. Launch stages remain planned in `src/config/practice.ts`; the owner confirmed a late-2027 housecall target on November 6. The clinic target remains early 2027. If the practice cannot be reached, contact the nearest local 24-hour emergency veterinary service.
+
+The application uses React 18, TypeScript, Vite, Tailwind, shadcn/ui, React Router 7 and Supabase. Lovable remains connected through GitHub. Start with the [beta documentation and feature map](docs/beta-readiness-documentation-2026-11-06.md) for current implementation boundaries, verification sources and outstanding acceptance work.
 
 ## Development
 
@@ -39,15 +41,18 @@ npx playwright test
 
 Implementation status spans current hosted evidence and historical branch receipts. Reviewed historical ezyVet weight promotion and schema-4 release provenance retain original source values, local reviewed measurements and discrepancy history; no live ezyVet credentials or import activation is implied. See the [readiness evidence tracker](docs/commercial-readiness.md) for current checks and open gates.
 
-The selected dedicated Supabase project is `mgadheotkdnrsatfivjy`. Hosted migrations are at parity, Vercel Production targets that backend, and the original Lovable backend remains retained historical state. Provider credentials, public contact content and live commissioning still require the steps below.
+The selected production Supabase project is `mgadheotkdnrsatfivjy`; staging is `kothoqicubowyhwfsrte`. Legacy Lovable `ugpyjacqganaqtsiekay` is retained historical state. The [November 6 metadata check](docs/evidence/beta-hosted-metadata-2026-11-06.json) found production with all 209 repository migration versions and 56 active function slugs; staging has 204 versions and lacks `invite-staff`. Version/slug presence does not prove deployed source or functioning workflows. The [runtime check](docs/evidence/beta-backend-runtime-metadata-2026-11-06.json) also found missing staging scheduler configuration and production attachment cleanup explicitly disabled. Follow the [current deployment procedure](docs/deployment-runbook.md), including its specialized narcotics release sequence.
 
 ## Clinical workspace and acceptance
+
+David Edler is the assigned beta reviewer. Use the [current acceptance walkthrough](docs/beta-acceptance-walkthrough-2026-11-06.md) and record actual decisions; assignments and automated tests do not constitute sign-off.
 
 The patient workspace includes identity details, weight history, SOAP drafts/signing/addenda, important historical problems, dental and qualitative QOL/body-map charts, native anesthesia records, due plans and certificates. Household contacts and addresses can be edited with server search and duplicate review. These forms await Dr. Susan Edler’s acceptance through the [editable clinical review pack](docs/clinical-review/README.md) and [synthetic offline examples](docs/clinical-review/review-examples.html). Native manual anesthesia records do not imply automatic vendor import, and Antech selection does not imply an active lab connection. See [clinical workflow and deployment gates](docs/clinical-core.md); hosted migration parity does not replace clinical/provider acceptance.
 
 ## Working documents
 
-- [Implementation plan and feature audit](plans/2026-09-12-practice-platform/plan.md)
+- [Current beta documentation and feature map](docs/beta-readiness-documentation-2026-11-06.md)
+- [Original implementation plan (historical)](plans/2026-09-12-practice-platform/plan.md)
 - [Housecall and clinic release schedule](plans/2026-09-12-practice-platform/release-schedule.md)
 - [Deployment runbook](docs/deployment-runbook.md)
 - [Staff access and first-admin bootstrap](docs/staff-access.md)
@@ -62,6 +67,6 @@ The patient workspace includes identity details, weight history, SOAP drafts/sig
 - [Public logo candidate and responsive previews](docs/brand/public-logo-integration.md)
 - [Restore procedure](docs/restore-runbook.md)
 - [Antech commissioning requirements](docs/antech-commissioning.md)
-- [External ezyVet integration plan](plans/2026-09-12-practice-platform/external-pims-integration.md)
+- [Standalone platform direction](docs/standalone-platform-direction-20260916.md); the [earlier ezyVet integration plan](plans/2026-09-12-practice-platform/external-pims-integration.md) is historical and does not authorize renewed synchronization.
 
 Use reviewed branches/PRs and recheck the latest GitHub state before merging because Lovable may push concurrently. Do not change the active backend merely by replacing the project ID without reconciling data, auth, files and integrations.

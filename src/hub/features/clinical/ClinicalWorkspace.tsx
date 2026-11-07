@@ -1,4 +1,5 @@
 import { PerformedServices } from '../whogot/PerformedServices';
+import { refreshPatientReleases } from '../record-releases/refresh';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,10 +79,11 @@ export function ClinicalWorkspace({ petId, appointmentId = null, disabled = fals
     setConfirmedAppointment(null);
     setRecord(row); setDraft(next); setBaseline(JSON.stringify(next)); setAddendum(''); setError(''); setMessage('');
   };
-  const adopt = (row: Tables<'clinical_encounters'>) => {
+  const adopt = (row: Tables<'clinical_encounters'>, sourceChanged = false) => {
     const next = encounterDraft(row);
     setRecord(row); setDraft(next); setBaseline(JSON.stringify(next));
     void cache.invalidateQueries({ queryKey: ['clinical-encounters', petId] });
+    if (sourceChanged) void refreshPatientReleases(cache, petId);
   };
   const run = async (action: () => Promise<void>) => {
     if (appointmentBusy || busyRef.current || assistanceDirty || assistanceBusy) return;
@@ -99,14 +101,14 @@ export function ClinicalWorkspace({ petId, appointmentId = null, disabled = fals
     });
     if (error) throw error;
     if (!data) throw new Error('No saved record was returned. Reload before retrying.');
-    adopt(data); setMessage('Draft saved.');
+    adopt(data, true); setMessage('Draft saved.');
   });
   const sign = () => run(async () => {
     if (!record || dirty) throw new Error('Save and review your draft before signing.');
     const { data, error } = await supabase.rpc('sign_clinical_encounter', { p_id: record.id, p_expected_version: record.version });
     if (error) throw error;
     if (!data) throw new Error('No signed record was returned. Reload before retrying.');
-    adopt(data); setMessage('Encounter signed. Corrections can be added as an addendum.');
+    adopt(data, true); setMessage('Encounter signed. Corrections can be added as an addendum.');
   });
   const append = () => run(async () => {
     if (!record || !addendum.trim()) return;
@@ -114,12 +116,13 @@ export function ClinicalWorkspace({ petId, appointmentId = null, disabled = fals
     if (error) throw error;
     setAddendum(''); setMessage('Addendum saved.');
     void cache.invalidateQueries({ queryKey: ['clinical-addenda', record.id] });
+    void refreshPatientReleases(cache, petId);
   });
   const reload = () => run(async () => {
     if (!record || !window.confirm('Discard your local changes and load the latest saved encounter?')) return;
     const { data, error } = await supabase.from('clinical_encounters').select('*').eq('id', record.id).eq('pet_id', petId).single();
     if (error) throw error;
-    adopt(data); setAddendum(''); setMessage('Latest saved encounter loaded.');
+    adopt(data, data.version !== record.version); setAddendum(''); setMessage('Latest saved encounter loaded.');
   });
   const appointmentReady = !appointmentId || (confirmedAppointment?.appointment_id === appointmentId && confirmedAppointment.encounter_id === record?.id);
   const beforeRecording = appointmentId ? async () => {
@@ -129,7 +132,7 @@ export function ClinicalWorkspace({ petId, appointmentId = null, disabled = fals
   } : undefined;
   return <section className="space-y-6" aria-label="Clinical records">
     {appointmentId && <AppointmentDictation key={appointmentId} petId={petId} appointmentId={appointmentId} encounters={encounters.data ?? []} blocked={disabled || dirty || !!addendum.trim() || problemDirty || serviceDirty || assistanceDirty || assistanceBusy || busy} onBusyChange={setAppointmentBusy} onPrepared={(row, context) => {
-      adopt(row); setAddendum(''); setError(''); setMessage('Appointment encounter opened. Confirm recording permission below.');
+      adopt(row, !encounters.data?.some(saved => saved.id === row.id && saved.version === row.version)); setAddendum(''); setError(''); setMessage('Appointment encounter opened. Confirm recording permission below.');
       setConfirmedAppointment({ ...context, encounter_id: row.id, encounter_status: row.status as 'draft' | 'signed' });
       requestAnimationFrame(() => { recorderSection.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }); recorderSection.current?.focus({ preventScroll: true }); });
     }} />}

@@ -1,0 +1,617 @@
+{
+  "schemaVersion": 1,
+  "kind": "leaf-writer-profiling-engineering-evidence-v1",
+  "capturedAt": "2026-11-07T01:35:03.741976+00:00",
+  "runtimeAcceptance": false,
+  "readinessAdmission": false,
+  "run": {
+    "conclusion": "failure",
+    "createdAt": "2026-11-07T01:24:56Z",
+    "headSha": "b714aef106363b2b5cbb3bdb27db7c86edf49ebd",
+    "status": "completed",
+    "updatedAt": "2026-11-07T01:32:48Z",
+    "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42323942668"
+  },
+  "jobs": [
+    {
+      "name": "source",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128254745685,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42323942668/job/128254745685",
+      "startedAt": "2026-11-07T01:25:01Z",
+      "completedAt": "2026-11-07T01:26:44Z",
+      "failedSteps": []
+    },
+    {
+      "name": "Engineering writer profile (native_return_v1, never acceptance)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128255250768,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42323942668/job/128255250768",
+      "startedAt": "2026-11-07T01:26:48Z",
+      "completedAt": "2026-11-07T01:32:37Z",
+      "failedSteps": [
+        "Capture the native current211 writer exception without admitting acceptance"
+      ]
+    },
+    {
+      "name": "Engineering writer profile (clinical, never acceptance)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128255250817,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42323942668/job/128255250817",
+      "startedAt": "2026-11-07T01:26:48Z",
+      "completedAt": "2026-11-07T01:32:47Z",
+      "failedSteps": [
+        "Capture the native current211 writer exception without admitting acceptance"
+      ]
+    },
+    {
+      "name": "current-runtime",
+      "status": "completed",
+      "conclusion": "skipped",
+      "databaseId": 128255252394,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42323942668/job/128255252394",
+      "startedAt": "2026-11-07T01:26:44Z",
+      "completedAt": "2026-11-07T01:26:44Z",
+      "failedSteps": []
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13555090477,
+      "name": "beta-writer-engineering-trace-native_return_v1",
+      "size_in_bytes": 19886,
+      "digest": "sha256:7b0a644214590ce9f6fd837f27f9e7ba98137b76b95efdfd01b4c1b5d199761b",
+      "created_at": "2026-11-07T01:32:34Z",
+      "expired": false
+    },
+    {
+      "id": 13554950191,
+      "name": "beta-metadata-component",
+      "size_in_bytes": 837,
+      "digest": "sha256:5fb076091d3a5d26b7421dc4a8d32368d1db6163e55d0412f1f44b22665865a8",
+      "created_at": "2026-11-07T01:26:41Z",
+      "expired": false
+    },
+    {
+      "id": 13554322870,
+      "name": "beta-writer-engineering-trace-clinical",
+      "size_in_bytes": 16962,
+      "digest": "sha256:194fc4e1d98c49a9a8758befb848880692933dd2f6664bb5af7b3268858d8b60",
+      "created_at": "2026-11-07T01:32:45Z",
+      "expired": false
+    }
+  ],
+  "engineeringOnly": true,
+  "productHeadSha": "86d9c177533cbd3ddbf245fe28a8ea896ebdc5cd",
+  "exactProductSourceEquivalence": {
+    "supabase/migrations/20261106170000_atomic_time_clock_corrections.sql": {
+      "sha256": "bf3cb81794a6577611d2df9419743082de3af34729d1a6028ef3d09dfdc3406f",
+      "diagnosticMatchesProduct": true
+    },
+    "scripts/narcotics-log/beta_time_clock_source.py": {
+      "sha256": "5abb8dc6df2543b33d4d57e10b7a6a561f7a48b7ce35601b58f92750d458dd89",
+      "diagnosticMatchesProduct": true
+    },
+    "scripts/narcotics-log/beta-migration210.json": {
+      "sha256": "965ff12470fd753e8c8fa49f774946b24c203e33affba2057d7830f7a69624bf",
+      "diagnosticMatchesProduct": true
+    },
+    "scripts/narcotics-log/beta-time-clock-source-proof.json": {
+      "sha256": "f4a598c8b6eaf07f6d2dd786da795ec05fc2b003f05caff7ab8235e042cecb8c",
+      "diagnosticMatchesProduct": true
+    }
+  },
+  "allDiffPathsFromProduct": [
+    ".github/workflows/beta-candidate.yml",
+    "docs/beta-remediation-2026-11-06.md",
+    "docs/evidence/beta-controlled-candidate-2026-11-06.md",
+    "docs/evidence/beta-controlled-metadata-compact-2026-11-06.json",
+    "docs/evidence/beta-controlled-metadata-leaf-2026-11-06.json",
+    "docs/evidence/beta-current211-compact-profiling-2026-11-06.json",
+    "docs/evidence/beta-current211-compact-writer-diagnostics-2026-11-06.json",
+    "docs/evidence/beta-current211-fourth-ci-2026-11-06.json",
+    "docs/evidence/beta-current211-third-ci-2026-11-06.json",
+    "docs/evidence/beta-current211-writer-diagnostics-2026-11-06.json",
+    "docs/evidence/beta-frontend-ci-fd5f-2026-11-06.json",
+    "docs/evidence/beta-frontend-compact-source-comparison-2026-11-06.json",
+    "docs/evidence/beta-frontend-leaf-source-comparison-2026-11-06.json",
+    "docs/evidence/beta-retained209-ci-fd5f-2026-11-06.json",
+    "scripts/narcotics-log/beta-candidate-source.json",
+    "scripts/narcotics-log/beta_recovery_diagnostic.py",
+    "scripts/narcotics-log/beta_writer_diagnostic.py",
+    "scripts/narcotics-log/test_beta_recovery_diagnostic.py",
+    "scripts/narcotics-log/test_beta_writer_diagnostic.py"
+  ],
+  "profiles": {
+    "clinical": {
+      "result": {
+        "all_ten_writers_verified": false,
+        "application_Auth_verified": false,
+        "authenticated_browser_verified": false,
+        "beta210_only_three_reviewed_controlled_property_changes": true,
+        "beta210_original_controlled_descriptor_unchanged": true,
+        "beta210_original_rows_and_sequences_preserved": true,
+        "beta211_controlled_properties_rows_and_sequences_preserved": true,
+        "beta_candidate_profile": "engineering-writer-clinical",
+        "beta_candidate_source_sha256": "301968b78f66f4ba362d2b1dd6011f2c101621233628e45ccb7f94dfa8313d22",
+        "business_profile_verified": false,
+        "cold209_empty_count_preflight_verified": true,
+        "common269_source_properties": true,
+        "complete_independent_source_reference_properties": true,
+        "complete_source_derived208_ledger": true,
+        "complete_source_derived209_ledger": true,
+        "complete_source_derived210_ledger": true,
+        "complete_source_derived211_ledger": true,
+        "copied_migrations_rechecked": true,
+        "count_business_verified": false,
+        "current211_normal_acceptance": false,
+        "diagnostic_function": "public.execute_managed_stock_intent_v1(jsonb)",
+        "diagnostic_function_body_sha256": "797e82c740d462714e04a7930c593d0b4dbd5ae763196afc68c9c44651fc643b",
+        "elapsed_seconds": 308.99214820300006,
+        "engineering_only": true,
+        "failure_types": [
+          "RuntimeError"
+        ],
+        "full121_source_module_properties": true,
+        "genuine_policy_grammar_controls": 0,
+        "historical_ledger_rows_rewritten": false,
+        "hosted_client_contact_check_validated_before_installation": true,
+        "hosted_writes": 0,
+        "independent_record_review_signing_verified": false,
+        "kind": "engineering-current211-writer-diagnostic-v1",
+        "new_count_tables_empty_except_source_descriptor": true,
+        "normal_owned_cleanup": true,
+        "old_rows_preserved_exact_declared_additions_only": true,
+        "original204_rows_preserved_with_source_declared_appends": true,
+        "original_parent_rows_verified": true,
+        "passed": false,
+        "populated_receiver_verified": false,
+        "prefix_sources_rechecked": true,
+        "production_deployed": false,
+        "profile": "clinical",
+        "provider_requests": 0,
+        "representative_writers_verified": [
+          "record_patient_treatment",
+          "record_anesthesia_drug_administration"
+        ],
+        "scheduler_paused_before_first_project_SQL": true,
+        "source_only_audit_column_controls": {
+          "Auth_acceptance": false,
+          "cases": 7,
+          "domain_writes": 0
+        },
+        "source_rechecked": true,
+        "source_sequences_verified": true,
+        "validated_client_constraint_controls": {
+          "cases": 7,
+          "raw_client_check_still_validated": true,
+          "same_original_metadata": true
+        }
+      },
+      "filesSha256": {
+        "beta-recovery-diagnostic-source.json": "ebed76eb713be185dcfa368bb941647d78f13f5c0e61c106e3d521532095d33f",
+        "beta-writer-call-timing-001.json": "b53d1433f47764709954bfa91df710d9d1c9f0fa88beee45ceb980299425a9e8",
+        "beta-writer-call-timing-002.json": "418cb98a3d45318740aa8b1880cbaf3d0a6272c23efaf9337dc77d03e4d49ac7",
+        "beta-writer-function-costs-001.json": "1a395a9b1735782a467e265f7b4f7c6e88e7893af82d9885a373d64c48a24ed8",
+        "beta-writer-function-costs-002.json": "3fa65adc96b23ec40120692cf1b6ba0834a638ff45e621645a4424909c049b1e",
+        "primary-failure.txt": "b176531dcf0e4a8650525bf4f6801f50b29a89730529582bc5183a333f1dfda6",
+        "result.json": "cf14512b4598bdfc5243ab404bcb47161167d1d913dc471bafa8f64df40fc598"
+      },
+      "primaryFailureLastLine": "RuntimeError: Engineering writer tracing cannot grant normal current211 acceptance",
+      "sourceBinding": {
+        "diagnostic_body_sha256": "797e82c740d462714e04a7930c593d0b4dbd5ae763196afc68c9c44651fc643b",
+        "engineering_only": true,
+        "function_profiling_enabled": true,
+        "normal_acceptance": false,
+        "original_body_sha256": "b437e0c3fcce34dcb83778f6e0eefbf60ccb3b7089724dc8d21125216e763caf",
+        "production_SQL_changed": false,
+        "signature": "public.execute_managed_stock_intent_v1(jsonb)",
+        "source_derived_descriptor_and_finite_admission": true,
+        "tracking_scope": "transaction-local inside fixed RPC backend",
+        "whole_wrapper_source_inverse": true
+      },
+      "callTimings": [
+        {
+          "elapsed_seconds": 6.7624768389998735,
+          "engineering_only": true,
+          "execute_index": 1,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "writer": "record_patient_treatment"
+        },
+        {
+          "elapsed_seconds": 7.702120422000007,
+          "engineering_only": true,
+          "execute_index": 2,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "writer": "record_anesthesia_drug_administration"
+        }
+      ],
+      "functionCostSummaries": [
+        {
+          "aborted_call_statistics_may_be_incomplete": false,
+          "engineering_only": true,
+          "execute_index": 1,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "self_time_is_exclusive": true,
+          "total_time_is_inclusive_and_not_summed": true,
+          "writer": "record_patient_treatment",
+          "guardDelta": {
+            "calls": 11,
+            "self_ms": 3190.379,
+            "signature": "controlled_count_entry_v1.require_bound_module()",
+            "total_ms": 5637.629
+          },
+          "highestExclusiveCosts": [
+            {
+              "calls": 11,
+              "self_ms": 3190.379,
+              "signature": "controlled_count_entry_v1.require_bound_module()",
+              "total_ms": 5637.629
+            },
+            {
+              "calls": 44,
+              "self_ms": 1085.442,
+              "signature": "controlled_stock_manifest_snapshot()",
+              "total_ms": 1085.442
+            },
+            {
+              "calls": 11,
+              "self_ms": 953.575,
+              "signature": "controlled_review_v3.snapshot()",
+              "total_ms": 1620.512
+            },
+            {
+              "calls": 22,
+              "self_ms": 261.623,
+              "signature": "controlled_review.snapshot()",
+              "total_ms": 802.526
+            },
+            {
+              "calls": 10,
+              "self_ms": 210.427,
+              "signature": "controlled_count_entry_v1.acquire_shared_product_relation_frontier()",
+              "total_ms": 5689.331
+            },
+            {
+              "calls": 121,
+              "self_ms": 183.978,
+              "signature": "controlled_count_entry_v1.assert_shared_product_relation_frontier()",
+              "total_ms": 283.065
+            },
+            {
+              "calls": 10,
+              "self_ms": 165.402,
+              "signature": "narcotics_register_v1.module_properties(text,text,text,text)",
+              "total_ms": 165.402
+            },
+            {
+              "calls": 11,
+              "self_ms": 130.568,
+              "signature": "controlled_count_entry_v1.module_ordinary_relations()",
+              "total_ms": 130.568
+            }
+          ],
+          "fullArtifactSha256": "1a395a9b1735782a467e265f7b4f7c6e88e7893af82d9885a373d64c48a24ed8"
+        },
+        {
+          "aborted_call_statistics_may_be_incomplete": false,
+          "engineering_only": true,
+          "execute_index": 2,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "self_time_is_exclusive": true,
+          "total_time_is_inclusive_and_not_summed": true,
+          "writer": "record_anesthesia_drug_administration",
+          "guardDelta": {
+            "calls": 13,
+            "self_ms": 3643.2920000000004,
+            "signature": "controlled_count_entry_v1.require_bound_module()",
+            "total_ms": 6487.340999999999
+          },
+          "highestExclusiveCosts": [
+            {
+              "calls": 13,
+              "self_ms": 3643.2920000000004,
+              "signature": "controlled_count_entry_v1.require_bound_module()",
+              "total_ms": 6487.340999999999
+            },
+            {
+              "calls": 52,
+              "self_ms": 1266.7089999999998,
+              "signature": "controlled_stock_manifest_snapshot()",
+              "total_ms": 1266.7089999999998
+            },
+            {
+              "calls": 13,
+              "self_ms": 1103.9219999999998,
+              "signature": "controlled_review_v3.snapshot()",
+              "total_ms": 1882.678
+            },
+            {
+              "calls": 26,
+              "self_ms": 300.32700000000006,
+              "signature": "controlled_review.snapshot()",
+              "total_ms": 931.667
+            },
+            {
+              "calls": 12,
+              "self_ms": 258.10400000000004,
+              "signature": "controlled_count_entry_v1.acquire_shared_product_relation_frontier()",
+              "total_ms": 6664.352999999999
+            },
+            {
+              "calls": 134,
+              "self_ms": 203.993,
+              "signature": "controlled_count_entry_v1.assert_shared_product_relation_frontier()",
+              "total_ms": 313.763
+            },
+            {
+              "calls": 12,
+              "self_ms": 198.96800000000002,
+              "signature": "narcotics_register_v1.module_properties(text,text,text,text)",
+              "total_ms": 198.96800000000002
+            },
+            {
+              "calls": 13,
+              "self_ms": 154.37499999999997,
+              "signature": "controlled_count_entry_v1.module_ordinary_relations()",
+              "total_ms": 154.37499999999997
+            }
+          ],
+          "fullArtifactSha256": "3fa65adc96b23ec40120692cf1b6ba0834a638ff45e621645a4424909c049b1e"
+        }
+      ]
+    },
+    "native_return_v1": {
+      "result": {
+        "all_ten_writers_verified": false,
+        "application_Auth_verified": false,
+        "authenticated_browser_verified": false,
+        "beta210_only_three_reviewed_controlled_property_changes": true,
+        "beta210_original_controlled_descriptor_unchanged": true,
+        "beta210_original_rows_and_sequences_preserved": true,
+        "beta211_controlled_properties_rows_and_sequences_preserved": true,
+        "beta_candidate_profile": "engineering-writer-native_return_v1",
+        "beta_candidate_source_sha256": "301968b78f66f4ba362d2b1dd6011f2c101621233628e45ccb7f94dfa8313d22",
+        "business_profile_verified": false,
+        "cold209_empty_count_preflight_verified": true,
+        "common269_source_properties": true,
+        "complete_independent_source_reference_properties": true,
+        "complete_source_derived208_ledger": true,
+        "complete_source_derived209_ledger": true,
+        "complete_source_derived210_ledger": true,
+        "complete_source_derived211_ledger": true,
+        "copied_migrations_rechecked": true,
+        "count_business_verified": false,
+        "current211_normal_acceptance": false,
+        "diagnostic_function": "public.execute_managed_stock_intent_v1(jsonb)",
+        "diagnostic_function_body_sha256": "797e82c740d462714e04a7930c593d0b4dbd5ae763196afc68c9c44651fc643b",
+        "elapsed_seconds": 297.73279091100005,
+        "engineering_only": true,
+        "failure_types": [
+          "RuntimeError"
+        ],
+        "full121_source_module_properties": true,
+        "genuine_policy_grammar_controls": 0,
+        "historical_ledger_rows_rewritten": false,
+        "hosted_client_contact_check_validated_before_installation": true,
+        "hosted_writes": 0,
+        "independent_record_review_signing_verified": false,
+        "kind": "engineering-current211-writer-diagnostic-v1",
+        "new_count_tables_empty_except_source_descriptor": true,
+        "normal_owned_cleanup": true,
+        "old_rows_preserved_exact_declared_additions_only": true,
+        "original204_rows_preserved_with_source_declared_appends": true,
+        "original_parent_rows_verified": true,
+        "passed": false,
+        "populated_receiver_verified": false,
+        "prefix_sources_rechecked": true,
+        "production_deployed": false,
+        "profile": "native_return_v1",
+        "provider_requests": 0,
+        "representative_writers_verified": [
+          "record_native_dispense",
+          "record_native_dispense_return"
+        ],
+        "scheduler_paused_before_first_project_SQL": true,
+        "source_only_audit_column_controls": {
+          "Auth_acceptance": false,
+          "cases": 7,
+          "domain_writes": 0
+        },
+        "source_rechecked": true,
+        "source_sequences_verified": true,
+        "validated_client_constraint_controls": {
+          "cases": 7,
+          "raw_client_check_still_validated": true,
+          "same_original_metadata": true
+        }
+      },
+      "filesSha256": {
+        "beta-recovery-diagnostic-source.json": "ebed76eb713be185dcfa368bb941647d78f13f5c0e61c106e3d521532095d33f",
+        "beta-writer-call-timing-001.json": "26c5011a5eabf20c67999bf4883e23beab0cf959c285772474671be85eae02dd",
+        "beta-writer-call-timing-002.json": "7ce2ecea4893f4fe10b0b14e2d6db858254035d01646eaab460343c7ab2850da",
+        "beta-writer-function-costs-001.json": "571018d2e5d437c7394765a8660d17a01da59c8ac7d74a980e30791ca7f3b01a",
+        "beta-writer-function-costs-002.json": "cc77d3a43a9b28aab250daba51525897d7c980579377b0eb50e4bf5d2e2e1f25",
+        "primary-failure.txt": "b176531dcf0e4a8650525bf4f6801f50b29a89730529582bc5183a333f1dfda6",
+        "result.json": "ecb483c616ee72060bf98b5c2f3fafde9dd26c0e90f355d4e7489d3b55d2be88"
+      },
+      "primaryFailureLastLine": "RuntimeError: Engineering writer tracing cannot grant normal current211 acceptance",
+      "sourceBinding": {
+        "diagnostic_body_sha256": "797e82c740d462714e04a7930c593d0b4dbd5ae763196afc68c9c44651fc643b",
+        "engineering_only": true,
+        "function_profiling_enabled": true,
+        "normal_acceptance": false,
+        "original_body_sha256": "b437e0c3fcce34dcb83778f6e0eefbf60ccb3b7089724dc8d21125216e763caf",
+        "production_SQL_changed": false,
+        "signature": "public.execute_managed_stock_intent_v1(jsonb)",
+        "source_derived_descriptor_and_finite_admission": true,
+        "tracking_scope": "transaction-local inside fixed RPC backend",
+        "whole_wrapper_source_inverse": true
+      },
+      "callTimings": [
+        {
+          "elapsed_seconds": 6.929097574000025,
+          "engineering_only": true,
+          "execute_index": 1,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "writer": "record_native_dispense"
+        },
+        {
+          "elapsed_seconds": 6.673191594000002,
+          "engineering_only": true,
+          "execute_index": 2,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "writer": "record_native_dispense_return"
+        }
+      ],
+      "functionCostSummaries": [
+        {
+          "aborted_call_statistics_may_be_incomplete": false,
+          "engineering_only": true,
+          "execute_index": 1,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "self_time_is_exclusive": true,
+          "total_time_is_inclusive_and_not_summed": true,
+          "writer": "record_native_dispense",
+          "guardDelta": {
+            "calls": 11,
+            "self_ms": 3174.879,
+            "signature": "controlled_count_entry_v1.require_bound_module()",
+            "total_ms": 5618.443
+          },
+          "highestExclusiveCosts": [
+            {
+              "calls": 11,
+              "self_ms": 3174.879,
+              "signature": "controlled_count_entry_v1.require_bound_module()",
+              "total_ms": 5618.443
+            },
+            {
+              "calls": 44,
+              "self_ms": 1071.045,
+              "signature": "controlled_stock_manifest_snapshot()",
+              "total_ms": 1071.045
+            },
+            {
+              "calls": 11,
+              "self_ms": 967.968,
+              "signature": "controlled_review_v3.snapshot()",
+              "total_ms": 1630.929
+            },
+            {
+              "calls": 22,
+              "self_ms": 257.404,
+              "signature": "controlled_review.snapshot()",
+              "total_ms": 793.132
+            },
+            {
+              "calls": 10,
+              "self_ms": 223.613,
+              "signature": "controlled_count_entry_v1.acquire_shared_product_relation_frontier()",
+              "total_ms": 5687.47
+            },
+            {
+              "calls": 124,
+              "self_ms": 194.905,
+              "signature": "controlled_count_entry_v1.assert_shared_product_relation_frontier()",
+              "total_ms": 296.192
+            },
+            {
+              "calls": 10,
+              "self_ms": 166.106,
+              "signature": "narcotics_register_v1.module_properties(text,text,text,text)",
+              "total_ms": 166.106
+            },
+            {
+              "calls": 11,
+              "self_ms": 131.116,
+              "signature": "controlled_count_entry_v1.module_ordinary_relations()",
+              "total_ms": 131.116
+            }
+          ],
+          "fullArtifactSha256": "571018d2e5d437c7394765a8660d17a01da59c8ac7d74a980e30791ca7f3b01a"
+        },
+        {
+          "aborted_call_statistics_may_be_incomplete": false,
+          "engineering_only": true,
+          "execute_index": 2,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "self_time_is_exclusive": true,
+          "total_time_is_inclusive_and_not_summed": true,
+          "writer": "record_native_dispense_return",
+          "guardDelta": {
+            "calls": 11,
+            "self_ms": 3031.367,
+            "signature": "controlled_count_entry_v1.require_bound_module()",
+            "total_ms": 5370.178999999999
+          },
+          "highestExclusiveCosts": [
+            {
+              "calls": 11,
+              "self_ms": 3031.367,
+              "signature": "controlled_count_entry_v1.require_bound_module()",
+              "total_ms": 5370.178999999999
+            },
+            {
+              "calls": 44,
+              "self_ms": 1032.4209999999998,
+              "signature": "controlled_stock_manifest_snapshot()",
+              "total_ms": 1032.4209999999998
+            },
+            {
+              "calls": 11,
+              "self_ms": 928.7800000000001,
+              "signature": "controlled_review_v3.snapshot()",
+              "total_ms": 1554.4209999999998
+            },
+            {
+              "calls": 22,
+              "self_ms": 236.77300000000002,
+              "signature": "controlled_review.snapshot()",
+              "total_ms": 749.6720000000001
+            },
+            {
+              "calls": 10,
+              "self_ms": 215.54500000000002,
+              "signature": "controlled_count_entry_v1.acquire_shared_product_relation_frontier()",
+              "total_ms": 5450.849999999999
+            },
+            {
+              "calls": 122,
+              "self_ms": 185.23999999999998,
+              "signature": "controlled_count_entry_v1.assert_shared_product_relation_frontier()",
+              "total_ms": 280.981
+            },
+            {
+              "calls": 10,
+              "self_ms": 163.48000000000002,
+              "signature": "narcotics_register_v1.module_properties(text,text,text,text)",
+              "total_ms": 163.48000000000002
+            },
+            {
+              "calls": 11,
+              "self_ms": 125.42799999999997,
+              "signature": "controlled_count_entry_v1.module_ordinary_relations()",
+              "total_ms": 125.42799999999997
+            }
+          ],
+          "fullArtifactSha256": "cc77d3a43a9b28aab250daba51525897d7c980579377b0eb50e4bf5d2e2e1f25"
+        }
+      ]
+    }
+  },
+  "scope": "Manual engineering-only branch with transaction-local profiling and fixed error-wrapper source inverse. Exact product migration, generator, framing and source-proof bytes match 86d9. No hosted writes, changed deadlines, production SQL edits or runtime admission. Inclusive function timings overlap and are not summed; exclusive observations can omit inlined or untracked work.",
+  "interpretation": "All four observed writes completed: treatment 6.762476839 s, anesthesia 7.702120422 s, dispense 6.929097574 s and return 6.673191594 s. Both complete diagnostic protocols then intentionally failed to deny acceptance. Anesthesia had only approximately 0.298 s of headroom under the unchanged 8-second deadline. The normal clinical job still failed generically; this successful diagnostic does not expose or prove the cause of that separate failure and cannot override it.",
+  "normalRunReceipt": "docs/evidence/beta-current211-fifth-ci-2026-11-06.json"
+}

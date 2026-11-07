@@ -1,3 +1,4 @@
+import { practice } from "@/config/practice";
 import ServiceDetailLayout from "@/components/layout/ServiceDetailLayout";
 import { usePublicRouteMetadata } from "@/hooks/use-page-title";
 import { Scissors, Dog, Heart, Zap, Stethoscope } from "lucide-react";
@@ -80,7 +81,7 @@ const Surgery = () => {
         {
           question: "What if there's an emergency after hours?",
           answer:
-            "After-hours and emergency referral instructions will be confirmed before surgical appointments open. For true emergencies, contact an open veterinary emergency hospital directly.",
+            practice.emergencyInstructions,
         },
       ]}
       relatedServices={[

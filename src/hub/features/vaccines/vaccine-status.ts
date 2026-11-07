@@ -35,14 +35,14 @@ export const vaccineStatusGroupSchema = z.object({
   last_given_source: z
     .union([recordSource, z.literal("due_plan_anchor")])
     .nullable(),
-  last_record_id: z.string().uuid().nullable(),
+  last_record_id: z.string().guid().nullable(),
   last_product_name: z.string().nullable(),
   due_on: calendarDate.nullable(),
   due_source: z.union([recordSource, z.literal("reviewed_due_plan")]).nullable(),
   record_count: z.number().int().nonnegative(),
   plan: z
     .object({
-      id: z.string().uuid(),
+      id: z.string().guid(),
       version: z.number().int().positive(),
       status: z.enum(["current", "proposed"]),
       current_due_on: calendarDate,
@@ -54,7 +54,7 @@ export const vaccineStatusGroupSchema = z.object({
   ),
 });
 export const vaccineStatusSummarySchema = z.object({
-  pet_id: z.string().uuid(),
+  pet_id: z.string().guid(),
   as_of: calendarDate,
   groups: z.array(vaccineStatusGroupSchema).max(500),
 });

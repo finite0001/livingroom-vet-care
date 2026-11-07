@@ -1,0 +1,172 @@
+{
+  "kind": "livingroom-beta-verification-v1",
+  "generatedAt": "2026-11-06T21:07:47.391452+00:00",
+  "baselineCommit": "b8767ff2e560f23d884194b5e9f875c0c647532a",
+  "branch": "audit/lrv-beta-readiness-20261106",
+  "scope": "Local audit candidate. Browser HTTP is mocked except separately recorded public read-only smoke. Not hosted workflow, clinical, provider or beta acceptance.",
+  "hostedWrites": 0,
+  "providerSends": 0,
+  "deployments": 0,
+  "fullCheck": {
+    "command": "npm run check",
+    "node": "22",
+    "passed": true,
+    "lintErrors": 0,
+    "existingLintWarnings": 7,
+    "typecheck": true,
+    "unitTests": 2789,
+    "unitPassed": 2789,
+    "unitFailed": 0,
+    "unitSkipped": 0,
+    "build": true,
+    "buildWarnings": [
+      "Chunks larger than 500 kB"
+    ]
+  },
+  "browser": {
+    "currentManifestScenarios": 608,
+    "uniqueScenariosPassedAcrossRuns": 608,
+    "missing": [],
+    "singleCleanFullRun": false,
+    "retries": 0,
+    "timeoutMs": 60000,
+    "expectTimeoutMs": 15000,
+    "fullRunWorkers": 3,
+    "focusedWorkers": 1,
+    "ports": [
+      [
+        18080,
+        18081
+      ],
+      [
+        18180,
+        18181
+      ]
+    ],
+    "fullRun": {
+      "passed": 603,
+      "failed": 1,
+      "skipped": 1,
+      "failure": "Earlier version of newly added clinical regression label assertion; fixed and focused rerun passed.",
+      "skip": "CloudTalk UI flag disabled; enabled separately with mocked requests."
+    },
+    "focusedRuns": [
+      {
+        "area": "Clinical",
+        "passed": 3
+      },
+      {
+        "area": "Time clock",
+        "passed": 3
+      },
+      {
+        "area": "CloudTalk enabled",
+        "passed": 1
+      }
+    ],
+    "developmentFailures": [
+      "Discarded early run used conflicting hardcoded fixture origins and encountered cold compile timing.",
+      "An earlier focused clinical run encountered cold compile heading timing.",
+      "Final type check initially hit TS2589 comparing generated Supabase client with narrow test transport; explicit boundary cast fixed, full check passed.",
+      "CloudTalk enabled test initially rejected a legitimate count-only HEAD request; fixture and precise read-only assertion corrected, rerun passed."
+    ],
+    "limitation": "Deduplicated coverage across full and focused runs, not a single clean 608-test execution. Legacy E2E stock provider configuration is mocked and is not deployed backend proof."
+  },
+  "additionalVerification": {
+    "denoEntrypoints": "All function entrypoints plus four additional CI targets passed with Deno 2.9.7 and committed lock; CI uses 2.9.6.",
+    "edgeIsolationHarnesses": 7,
+    "narcoticsPythonTests": 116,
+    "cliFramingTests": 2,
+    "schemaProjectTests": 3,
+    "scannerBuiltWorkerChecks": 16,
+    "restoreTests": {
+      "node": 17,
+      "python": 3,
+      "metadataNode": 1
+    },
+    "clinicalRecapPythonTests": 16,
+    "offlineSyntheticRecapCalls": 27,
+    "retainedEvidenceVerifierTests": 12,
+    "retainedEvidenceScope": "Historical receipt verification, not fresh hosted execution."
+  },
+  "localInstallation": {
+    "passed": false,
+    "ownedCleanupPassed": true,
+    "evidence": "beta-local-installation-2026-11-06.json",
+    "limitation": "Fixed owner command deadline exceeded; proof bounds were not relaxed."
+  },
+  "sourceSha256": {
+    "e2e/anesthesia.spec.ts": "aec2918ced39e66e4eabce0f49b364d3b263961339d7e0be60bc7fcc9f79aa61",
+    "e2e/billing.spec.ts": "da96415fa1576e28b1fd7229f289e4032ed4f29e509e07bfcec3a7aac895964d",
+    "e2e/care-plans.spec.ts": "71d507742fd66acbd5e32b896120fea0c15473b5d16d9093ee59a0cf98e7638e",
+    "e2e/care-reminders.spec.ts": "f71102e62001b93958e3092fe7d81cfeda1dee1965f96b5bb7ceb0930d293524",
+    "e2e/client-estimate-decision.spec.ts": "964459270b45317dab0c4cbf8e589503920956254cdc6120b3887a6caf84c614",
+    "e2e/client-payment.spec.ts": "47329ff2c114f0179d1c9b5c449a4f048fdcd95163286bfca88cc10c65d54d98",
+    "e2e/clients.spec.ts": "a52a0426fd60e2af86980048264343b355680d73b6953654ce1176661142ba6d",
+    "e2e/clinical-imports.spec.ts": "0f665dcf83e29861be3bda574662ca4f0c9624d85c656f258cfc9ef1a764990d",
+    "e2e/clinical.spec.ts": "348d995ef22f3fb29959b94182e4deb8c28435363a6610aebed048811319e92c",
+    "e2e/commissioned-navigation.spec.ts": "b1fb5a22cf3d36b0d161fa8c03eaa1e93356af010c20462adaa436ed8c35a100",
+    "e2e/dental.spec.ts": "08d386befcd67b115994592e88f1c5e8e9a75fc5245d2cf699e5549766c651e0",
+    "e2e/documents.spec.ts": "6445dd8e57ad8afb502444779f98d73fa8dc27a0249cb3b2ec16926c5d3c7bb5",
+    "e2e/global-search.spec.ts": "e7ec74cc07286fc067acf2b6b576f6110e3405967a28164a2787dd61cd04ccef",
+    "e2e/hub-error-states.spec.ts": "62acf9867ac2d3d653bdef64d47d66018fe0c21122880ec7e39eb8a94e3c16ed",
+    "e2e/inbound-review.spec.ts": "07e300b9b70056c722d1e6b8fa820ce473ff9f73bb833379d831accad8132602",
+    "e2e/lab-results.spec.ts": "c4735966b366114df19a949560f9cbd2aba0e4950a1a987f9e23755bf0ccfc18",
+    "e2e/lab-work.spec.ts": "690d4fd9791df717d5b623777fa118828761540b625f7fbecc30a7f1e3fc7bfe",
+    "e2e/migration-resolutions.spec.ts": "e70523fbd8e33af4f1f37621fce955508e8f1da72d7bc6a6218aa1ddad45fbf0",
+    "e2e/migration-workspace.spec.ts": "f1b07715bd39092b9d6caaa461cdef4a2b2984876d9a0e94ddc5d21bba65f314",
+    "e2e/native-fulfillment.spec.ts": "ca8a047b5e6255d2417566b63dc0edd9990bfcf1de638f21a65fb9e01df11e44",
+    "e2e/native-prescribing.spec.ts": "b4bb39f4afa6bf61f89d6fe462a432f0efd5c6a8aec72ae7848676bc48d6dd58",
+    "e2e/native-record-releases.spec.ts": "d4fe0b45609a60d341c4cc19ad4e3082d94fdc1f4e1ffc8469b369519876d712",
+    "e2e/native-refills.spec.ts": "d23d9deca58c557515653c8fe5bcb216b9995d4702bbe7f497741c40678a4645",
+    "e2e/patients-list.spec.ts": "092e4723fec64c03e963b923d65c9d32992031c51e11adbd739da53131ef687b",
+    "e2e/patients.spec.ts": "525a146ebe70b66c3f2159d3a8a73ce33852b5cc68edf9d95b65400228259f50",
+    "e2e/prescription-item-imports.spec.ts": "e66a9414ad49f4e7e7130a197a0d84a141658ecfc70509b9715990a862c917ed",
+    "e2e/processing-review.spec.ts": "500ffe54350338a7cf94940011d4d2a89cb6cd5d1978dee7add42fa2fb1d1a7a",
+    "e2e/records-requests.spec.ts": "9a65349ac3230557c63f03f64c4c76afca38667e428d66423d1c7a98d32a9a5b",
+    "e2e/reminder-delivery-settings.spec.ts": "79ff525ad321b8d8cd28a2a062ee51aee7958b04618db7eef719ec58578ac7b0",
+    "e2e/reviewed-clinical-history.spec.ts": "1e1117328d848f045736aa6e6a942695aebeeb85ec512f5277f925840454610a",
+    "e2e/reviewed-vaccinations.spec.ts": "dee9ff33e16a049e4117ecf19bf3a4178b49ea1de6f838a352f9117581c8ae4d",
+    "e2e/shared-documents.spec.ts": "4e0703d341eafa53cfeb45045f72ce9efac7642482bd0fcedce99345849970f4",
+    "e2e/vaccination-imports.spec.ts": "f4617896caca84703413835a1d8797b8187cdb03a578213cc86b012a248acceb",
+    "playwright.config.ts": "45a739e0ed920e631a9b3b7f3b1d10a305c4dc79e950ea6557f3c1a4c220e0b3",
+    "scripts/hub-workflow-readiness.mjs": "4c47faa390b2749bdc173050009e2406b320cc4c8718d141e588dff39c9a83ba",
+    "scripts/supabase-schema-inventory.mjs": "52d55410580f39317d3d327c1144351ec5412c9a503537e0fa835c49100fe91b",
+    "src/hub/components/timesheet/AllStaffTimesheet.tsx": "862e8fc451d978668cc9ab7fe3b7896310d12c6f7cfb05b67e36286ac1a5d6da",
+    "src/hub/features/anesthesia/PatientAnesthesiaRecords.tsx": "9699910ea78853ef12b7f6c56bbfcc84aeb6da8e48f255de9b9c14ead321ca6f",
+    "src/hub/features/care-charts/useCareMutation.ts": "45709cb0acbc1820692946c035fe8d62439397326948d6f9a2dbd7672282ddca",
+    "src/hub/features/certificates/PatientCertificates.tsx": "f4bf087e3dfb78296d435ed46b664e07b5575673164b17da6eb4003bacde235f",
+    "src/hub/features/clinical/ClinicalWorkspace.tsx": "03b7524560ea9877f9d424c84a69c068c68ff192f5a1a1d6ec1b7cb7950a9c02",
+    "src/hub/features/clinical/PatientProblems.tsx": "4b98ebd6f79415fda8584e6c3f25360ab213fc4aaf089e7776a599d703f0712b",
+    "src/hub/features/dental/PatientDentalChart.tsx": "92560ec6435340f69f004dd78d8c0b82a63dbfd857f6af3a4d9141f48774763f",
+    "src/hub/features/diagnostics/pdf-jobs/DiagnosticPdfReview.tsx": "8db6f8f84070528f41c0efc941aa6c4f25356a54edec8450346d35246d0565d7",
+    "src/hub/features/inventory/useStockMutation.ts": "d693133994213231a888f13743723a5da501f9bac61edccace622af06c1b7537",
+    "src/hub/features/patients/PatientFormDialog.tsx": "556f7bfff50cc9c8f06cab191204e30de4d0e920f2610c9856341b192a47f50d",
+    "src/hub/features/patients/WeightHistory.tsx": "ef29c76e84f6369b6f64e472a45a1aab781cb9e40af290bbe523afd1cb407ce0",
+    "src/hub/features/record-releases/refresh.ts": "26b139f8c2186667a41e7466b00c670d8dd673b9bf6283b3939e73ee391eea64",
+    "src/hub/features/time-clock/admin-time-entry.ts": "b46001cba931242e5ab95bfc3178c85c0c781eacb17c996a72747aa660039301",
+    "src/hub/features/time-clock/time-totals.ts": "23f5144c55f8e94cca6b196adb8a300cb88bf83c9d49b18264591c896edffbc1",
+    "src/hub/hooks/use-time-clock.ts": "ec320d6feb72b6b896b2f51d2dba03816c3bd58862559a4d5e0bb64199d0c4c7",
+    "src/hub/pages/MyTimePage.tsx": "e90d110718e7a95a1684a7b07fc086d4e31693326edcf9e4f901e43466e54ba8",
+    "src/hub/pages/TimeClockPage.tsx": "00b2a2dd09b0e1d96c2c471e1fe211e9fb96a2e9c166440ca685f1ee8753cb9f",
+    "src/pages/Contact.tsx": "fc84f758bb7614b2f3a3145b50b2f9981609e3343514370626b396cee1f2d275",
+    "tests/deployment/hub-readiness.test.ts": "3885709bddbcd8afd48af95f5896067966540f755974112513b8b1f90192731c",
+    "tests/hub/time-clock.test.ts": "47df7197eb4aab0d64b2b2e1589c601e27c5ac1d88cafcde659e19963da3f8ef",
+    "tests/readiness/schema-inventory-project.test.ts": "346fcb285adaff723d99f18a515f484415f05c38b71374c3f8037f574783c0b1",
+    "tests/record-releases/refresh.test.ts": "cc9bfeb2d8050111d618cc326f466a6714318ba01cd86cce6f55259231d744f0",
+    "package-lock.json": "a39299c33e0a62edcbfaa9324a9846895c4d5b870d0c6235d98a9af3aa30ba6f"
+  },
+  "localLogSha256": {
+    "lrv-beta-e2e-final.log": "372382c72bb71e3d79a23555abeab63be4dbeea92267d410bd49fe1368911f4f",
+    "lrv-beta-clinical-final.log": "e5aa005c0370dd466f9cd0f8cb7db1b91c9201d201fa0692bf797b5a56895078",
+    "lrv-beta-time-clock-browser.log": "8a8ec202ee36e71b93a6858541972a6c91a3df675086b2753980e75020b2eeb5",
+    "lrv-beta-cloudtalk-final.log": "8433de33fd9aee8204284272dae82dbd3d083a9010dfa2a4408e5a85eac51ea8",
+    "lrv-beta-check-final.log": "b179a3f11a4d644edd053e3c5ece9a326c58b88fc31214ec6807801ef656fcd2"
+  },
+  "documentationLinks": {
+    "markdownFiles": 307,
+    "relativeFileTargets": 792,
+    "broken": 0,
+    "scope": "README and all docs Markdown, excluding fenced/inline code. File existence only; no anchor or external-link verification."
+  }
+}

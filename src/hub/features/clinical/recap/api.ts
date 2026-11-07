@@ -32,7 +32,7 @@ interface RpcClient {
 }
 const uuid = z
   .string()
-  .uuid()
+  .guid()
   .refine((value) => value === value.toLowerCase());
 export class RecapApiError extends Error {
   refusal: ReturnType<typeof normalizeRecapRefusal>;

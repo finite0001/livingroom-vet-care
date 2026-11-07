@@ -1,0 +1,69 @@
+{
+  "observedAt": "2026-11-06T22:41:12.727125+00:00",
+  "projectRef": "kothoqicubowyhwfsrte",
+  "origin": "https://livingroom-vet-care-etuoflidw-daves-projects-e0da43ba.vercel.app",
+  "keyVersion": "beta-20261106-v1",
+  "freshStagingOnlyKey": true,
+  "existingKeysRotated": false,
+  "productionKeysCopied": false,
+  "publicCapabilityRetrievalEnabled": true,
+  "outboundDelivery": "disabled",
+  "previewSnapshot": "interim; final candidate rebuild pending",
+  "realAuthSignIn": true,
+  "attempts": [
+    {
+      "syntheticActor": "4b624daa-26b3-494f-be10-5dc2bdd605a6",
+      "failure": "{'status': 400, 'path': '/rest/v1/rpc/record_sms_consent', 'code': '23514', 'message': 'Shared phone numbers require separate consent review'}",
+      "syntheticActorDeactivated": true
+    },
+    {
+      "syntheticActor": "f80f0e6a-96bb-4a1b-b8f7-ef51bac7fc29",
+      "failure": "Expecting value: line 1 column 1 (char 0)",
+      "syntheticActorDeactivated": true,
+      "syntheticGrant": "94e9521d-9940-42e9-9bad-9ddd08cf42dc",
+      "syntheticProduct": "08b67059-e082-401b-9f5d-c2c8e777670e",
+      "grantCleanupError": "Expecting value: line 1 column 1 (char 0)",
+      "productCleanupError": "{'status': 404, 'path': '/rest/v1/products?id=eq.08b67059-e082-401b-9f5d-c2c8e777670e&select=version,name,kind,manufacturer,unit,unit_price_cents', 'code': 'PGRST205', 'message': \"Could not find the table 'public.products' in the schema cache\"}",
+      "grantRevoked": true,
+      "productRetired": true
+    },
+    {
+      "syntheticActor": "2c66b1a6-d0c6-4c63-a5f2-ccd3850cb1c5",
+      "failure": "{'status': 403, 'path': '/rest/v1/rpc/revoke_document_link', 'code': '42501', 'message': 'Unavailable'}",
+      "syntheticActorDeactivated": true
+    },
+    {
+      "syntheticActor": "d8823f64-6cf0-4668-9ef2-c602473b9f2a",
+      "failure": "SQL failure: {\"_tag\":\"Error\",\"error\":{\"code\":\"DbQueryUnexpectedStatusError\",\"message\":\"unexpected status 400: {\\\"message\\\":\\\"Failed to run sql query: ERROR:  42703: column \\\\\\\"revoked_at\\\\\\\" does not exist\\\\nLINE 1: select revoked_at is not null as revoked from document_link_grants where id='94e9521d-9940-42e9-9bad-9ddd08cf42dc';\\\\n               ^\\\\n\\\"}\"}}\n",
+      "syntheticActorDeactivated": true
+    }
+  ],
+  "syntheticInvoice": "77c13127-4cef-4f16-9992-c6a528aa4caa",
+  "prepareReplayIdentical": true,
+  "unreviewedDenied": true,
+  "syntheticActor": "6c86ef9f-6af3-4aca-963a-56f299f46127",
+  "syntheticProduct": "09b0d5cf-15e6-4e49-998e-ebfeba328de1",
+  "syntheticGrant": "ff2ec4b9-b04d-41a9-b482-1f94a75a5376",
+  "reviewedManifestRetrieved": true,
+  "frozenArtifactRetrieved": true,
+  "artifactBytes": 2645,
+  "artifactSha256": "f390f979c24e1c1aded69c48990c2b4f450ddf309194ca36ea2b8e02f0cda886",
+  "invalidSelectorsAndTokenDenied": true,
+  "browser": {
+    "passed": true,
+    "output": "{\"actualDeployedSharedRoute\":true,\"manifestOpened\":true,\"sandboxedReportViewed\":true,\"closeClearedAccess\":true,\"pageErrors\":0}\n"
+  },
+  "grantRevoked": true,
+  "revokedDenied": true,
+  "httpAcceptancePassed": true,
+  "messagesSent": false,
+  "productRetired": true,
+  "syntheticActorDeactivated": true,
+  "acceptanceCompletedAt": "2026-11-06T22:47:17.597530+00:00",
+  "cleanupVerified": {
+    "activeSyntheticActors": 0,
+    "allSyntheticGrantsRevoked": true,
+    "communicationAttempts": 0
+  },
+  "harnessLimitations": "Initial shared fictional phone rejected correctly; corrected harness supports void RPC responses, actual catalog table and state-based revocation. Prior attempts preserved and cleanup verified."
+}

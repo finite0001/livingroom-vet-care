@@ -7,9 +7,9 @@ import {
 } from "./patient-photo-image.ts";
 
 const documentSchema = z.object({
-  id: z.string().uuid(),
-  pet_id: z.string().uuid(),
-  created_by: z.string().uuid(),
+  id: z.string().guid(),
+  pet_id: z.string().guid(),
+  created_by: z.string().guid(),
   file_path: z.string(),
   file_size: z.number().int().min(1).max(MAX_PHOTO_BYTES),
   mime_type: z.literal("image/png"),
@@ -19,12 +19,12 @@ const documentSchema = z.object({
 });
 const uploadSchema = z.object({
   document: documentSchema,
-  object_id: z.string().uuid(),
+  object_id: z.string().guid(),
   expected_sha256: z.string().regex(/^[a-f0-9]{64}$/),
 });
 const receiptSchema = z.object({
-  id: z.string().uuid(),
-  actor_id: z.string().uuid(),
+  id: z.string().guid(),
+  actor_id: z.string().guid(),
   sha256: z.string(),
   width: z.number().int(),
   height: z.number().int(),
@@ -67,7 +67,7 @@ export function createPatientPhotoVerificationHandler(
       if (!auth) return reply(401, "Staff sign-in required");
       let id: string;
       try {
-        id = z.object({ id: z.string().uuid() }).strict().parse(
+        id = z.object({ id: z.string().guid() }).strict().parse(
           JSON.parse(await boundedBody(request, 1024)),
         ).id;
       } catch (error) {

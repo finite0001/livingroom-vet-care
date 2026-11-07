@@ -1,0 +1,104 @@
+{
+  "observedAt": "2026-11-06T23:33:52.458374+00:00",
+  "projectId": "prj_Dn1g9AIBEth78S7V3pqhYHueICl7",
+  "teamId": "team_BDI4hvAq1AWGIREoc8sRwNLH",
+  "before": {
+    "autoAssignCustomDomains": true,
+    "autoAssignCustomDomainsUpdatedBy": "system",
+    "productionBranch": "main",
+    "gitProviderOptions": {
+      "createDeployments": "enabled"
+    },
+    "ignoreBuildCommand": null,
+    "productionDeploymentId": "dpl_6t1ZKxW7DzoYMnA2X2zeCqhG2BYD",
+    "productionSha": "b8767ff2e560f23d884194b5e9f875c0c647532a",
+    "productionState": "PROMOTED",
+    "aliases": [
+      {
+        "domain": "thelivingroom.vet",
+        "deploymentId": "dpl_6t1ZKxW7DzoYMnA2X2zeCqhG2BYD"
+      },
+      {
+        "domain": "www.thelivingroom.vet",
+        "deploymentId": "dpl_6t1ZKxW7DzoYMnA2X2zeCqhG2BYD"
+      },
+      {
+        "domain": "livingroom-vet-care.vercel.app",
+        "deploymentId": "dpl_6t1ZKxW7DzoYMnA2X2zeCqhG2BYD"
+      },
+      {
+        "domain": "livingroom-vet-care-git-main-daves-projects-e0da43ba.vercel.app",
+        "deploymentId": "dpl_6t1ZKxW7DzoYMnA2X2zeCqhG2BYD"
+      }
+    ]
+  },
+  "proposedPatch": {
+    "autoAssignCustomDomains": false
+  },
+  "endpoint": "PATCH /v9/projects/prj_Dn1g9AIBEth78S7V3pqhYHueICl7?teamId=team_BDI4hvAq1AWGIREoc8sRwNLH",
+  "expectedBehavior": "Git production builds continue but remain staged; current production aliases do not advance. Preview builds and manual preview remain available. No domain/deployment operation.",
+  "beforeWriteChecks": [
+    "Exact project/team/production branch",
+    "autoAssignCustomDomains still true",
+    "Current production ID/SHA and all four aliases unchanged"
+  ],
+  "afterWriteChecks": [
+    "autoAssignCustomDomains false",
+    "All other setting fields unchanged except platform audit timestamps/actor",
+    "Production ID/SHA and all four aliases unchanged"
+  ],
+  "restoration": {
+    "patch": {
+      "autoAssignCustomDomains": true
+    },
+    "prerequisites": [
+      "Current211 native CI passed",
+      "Staging211 applied and genuine Auth acceptance passed",
+      "Production210/211 reviewed/applied with module guards",
+      "Exact production build verified against production public configuration and accepted schema"
+    ],
+    "sequence": "Keep auto assignment false while merging. Verify merged build is STAGED and current aliases unchanged. After backend gates, manually promote the exact tested production deployment and verify aliases; restore prior true setting explicitly if promotion has not already restored it."
+  },
+  "sources": [
+    "https://vercel.com/docs/deployments/promoting-a-deployment",
+    "https://vercel.com/docs/rest-api/projects/update-an-existing-project",
+    "https://vercel.com/changelog/stage-and-manually-promote-deployments-to-production"
+  ],
+  "executed": true,
+  "heldAt": "2026-11-06T23:34:26.918079+00:00",
+  "actualChangedProjectFields": [
+    "autoAssignCustomDomains",
+    "autoAssignCustomDomainsUpdatedBy",
+    "updatedAt"
+  ],
+  "unexpectedChangedProjectFields": [],
+  "after": {
+    "autoAssignCustomDomains": false,
+    "productionDeploymentId": "dpl_6t1ZKxW7DzoYMnA2X2zeCqhG2BYD",
+    "productionSha": "b8767ff2e560f23d884194b5e9f875c0c647532a",
+    "aliases": [
+      {
+        "domain": "thelivingroom.vet",
+        "deploymentId": "dpl_6t1ZKxW7DzoYMnA2X2zeCqhG2BYD"
+      },
+      {
+        "domain": "www.thelivingroom.vet",
+        "deploymentId": "dpl_6t1ZKxW7DzoYMnA2X2zeCqhG2BYD"
+      },
+      {
+        "domain": "livingroom-vet-care.vercel.app",
+        "deploymentId": "dpl_6t1ZKxW7DzoYMnA2X2zeCqhG2BYD"
+      },
+      {
+        "domain": "livingroom-vet-care-git-main-daves-projects-e0da43ba.vercel.app",
+        "deploymentId": "dpl_6t1ZKxW7DzoYMnA2X2zeCqhG2BYD"
+      }
+    ]
+  },
+  "allOtherProjectFieldsPreserved": true,
+  "currentProductionObjectExact": true,
+  "allFourAliasesPreserved": true,
+  "holdReason": "Merged candidate requires migration210 RPCs absent in current production209. Staging207 is blocked awaiting existing native PostgreSQL credential. Keep promotion held until native211 proof, authorized hosted migration and acceptance.",
+  "automaticRestorationAllowed": false,
+  "domainOrDeploymentMutationIssued": false
+}

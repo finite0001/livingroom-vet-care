@@ -6,7 +6,7 @@ import { z } from "zod";
 import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
 import type { PrescriptionRpc } from "./prescription-api.ts";
 import type { PrescriptionOperation } from "./prescription-state.ts";
-const uuid = z.string().uuid(),
+const uuid = z.string().guid(),
   hash = z.string().regex(/^[a-f0-9]{64}$/);
 const sequence = z.number().int().min(1).max(2147483647);
 const instant = z

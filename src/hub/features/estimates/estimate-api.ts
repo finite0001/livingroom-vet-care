@@ -81,7 +81,7 @@ export interface EstimateHistory {
 }
 
 const maximumCents = 9223372036854775807n;
-const uuid = z.string().uuid().refine(v => v === v.toLowerCase());
+const uuid = z.string().guid().refine(v => v === v.toLowerCase());
 const revision = z.number().int().min(1).max(2147483647);
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const instant = z.string().datetime({ offset: true }).refine(v => Number.isFinite(Date.parse(v)) && !/\.\d{7}/.test(v));

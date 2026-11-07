@@ -263,7 +263,7 @@ const Contact = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main id="main-content" className="flex-grow">
+      <main id="main-content" className="flex-grow overflow-x-clip">
         {/* Hero */}
         <section className="pt-32 pb-16 bg-cream">
           <div className="container">
@@ -611,9 +611,7 @@ const Contact = () => {
                       </p>
                     )}
                     <p className="text-sm text-muted-foreground mt-4">
-                      This form is not monitored for emergencies. For urgent
-                      care, contact an open veterinary emergency hospital
-                      directly.
+                      This form is not monitored for emergencies. {practice.emergencyInstructions}
                     </p>
                   </CardContent>
                 </Card>

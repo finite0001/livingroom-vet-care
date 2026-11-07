@@ -30,8 +30,8 @@ export async function listVaccinationReviewMappings(pet: string) {
   const rows = z
     .array(
       z.object({
-        link_id: z.string().uuid(),
-        pet_id: z.string().uuid(),
+        link_id: z.string().guid(),
+        pet_id: z.string().guid(),
         source_origin: z.string().url(),
         source_site_uid: z.string(),
         external_id: z.string(),
@@ -55,7 +55,7 @@ export async function listVaccinationReviewCandidates(
 ) {
   const p = pagination
     .extend({
-      animal_link_id: z.string().uuid(),
+      animal_link_id: z.string().guid(),
       resource: z.literal("vaccination"),
       candidates: z.array(candidateSchema).max(20),
     })
@@ -201,7 +201,7 @@ export async function listReviewVaccineProducts(search: string) {
   return z
     .array(
       z.object({
-        id: z.string().uuid(),
+        id: z.string().guid(),
         name: z.string(),
         version: z.number().int().positive(),
         kind: z.literal("vaccine"),

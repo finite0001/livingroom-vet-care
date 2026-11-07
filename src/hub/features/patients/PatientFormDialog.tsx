@@ -1,3 +1,4 @@
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { patientProblemsKey } from "../clinical/alert-review";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -83,7 +84,7 @@ export function PatientFormDialog({ clientId, patient, clientContacts }: Patient
       });
       if (saveError) { if (saveError.code === "PT409") setConflict(true); throw saveError; }
       if (!data) throw new Error("Patient could not be saved. Reload before retrying.");
-      await Promise.all([queryClient.invalidateQueries({ queryKey: ["client", clientId] }), queryClient.invalidateQueries({ queryKey: ["clients"] }), queryClient.invalidateQueries({ queryKey: ["patient", data.id] }), queryClient.invalidateQueries({ queryKey: patientProblemsKey(data.id) }), ...["patient-care-plans", "recurring-care-due", "care-plan-history", "care-due-dashboard", "care-reminder-jobs", "patient-360", "household-360", "daily-communications", "reminder-outbox-links", "reminder-outbox-outcomes"].map(key => queryClient.invalidateQueries({ queryKey: [key] }))]);
+      await Promise.all([refreshPatientReleases(queryClient, data.id), queryClient.invalidateQueries({ queryKey: ["client", clientId] }), queryClient.invalidateQueries({ queryKey: ["clients"] }), queryClient.invalidateQueries({ queryKey: ["patient", data.id] }), queryClient.invalidateQueries({ queryKey: patientProblemsKey(data.id) }), ...["patient-care-plans", "recurring-care-due", "care-plan-history", "care-due-dashboard", "care-reminder-jobs", "patient-360", "household-360", "daily-communications", "reminder-outbox-links", "reminder-outbox-outcomes"].map(key => queryClient.invalidateQueries({ queryKey: [key] }))]);
       setOpen(false); toast.success("Patient details saved");
       if (!patient) navigate(`/hub/patient/${data.id}`);
     } catch (cause) { setError(cause instanceof Error ? cause.message : typeof cause === "object" && cause && "message" in cause ? String(cause.message) : "Patient could not be saved. Your entries are still here."); }

@@ -23,7 +23,7 @@ async function rpc(name: string, args: Record<string, unknown>) {
   if (error) throw error;
   return data;
 }
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 export async function list(
   pet: string,
   before: z.infer<typeof cursorSchema> | null,

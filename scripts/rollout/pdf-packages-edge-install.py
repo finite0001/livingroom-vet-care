@@ -38,5 +38,5 @@ for s in slugs:
  result.append({'slug':s,'before_version':b['version'],'after_version':a['version'],'verify_jwt':a['verify_jwt']})
 for b in before:
  if b['slug'] not in slugs:assert next(f for f in after if f['slug']==b['slug'])['version']==b['version']
-receipt={'project':P,'functions':result,'protected_source_backups':True,'unaffected_versions_unchanged':True,'prune':False,'secrets_changed':False,'explicit_pinned_import_map':'npm:zod@3.25.76'}
+receipt={'project':P,'functions':result,'protected_source_backups':True,'unaffected_versions_unchanged':True,'prune':False,'secrets_changed':False,'explicit_pinned_import_map':json.loads((R/'supabase/functions/prepare-invoice-email/deno.json').read_text())['imports']['zod']}
 (D/'receipt.json').write_text(json.dumps(receipt,indent=2));print(json.dumps(receipt))

@@ -280,6 +280,44 @@ test("preparation handler validates staff and reuses durable capture without red
   );
   assert.equal(unauthorized.status, 401);
 });
+
+test("missing sender preserves the original preparation and an explicit configured retry captures only once", async () => {
+  const f = fixture();
+  const saved = { request: { ...f.intent, state: "prepared" }, payload_hash: null as string | null,
+    manifest: null, report_html: null, receipt: null };
+  const intents = new Set<string>();
+  let downloads = 0, captures = 0;
+  const handler = (sender: typeof f.sender) => createPrepareReleaseEmailHandler({
+    authenticate: async () => ({ actorId: "actor", db: { rpc: async (name, args) => {
+      assert.ok(["prepare_release_email", "recover_release_email"].includes(name));
+      assert.equal(args.p_request_id, f.intent.id);
+      intents.add(String(args.p_request_id));
+      return { data: saved, error: null };
+    } } }),
+    service: { rpc: async (name, args) => {
+      if (name === "release_email_capture_context") return { data: { request: f.intent, bundle: f.bundle, captured: !!saved.payload_hash }, error: null };
+      assert.equal(name, "capture_release_email_payload");
+      captures++;
+      saved.payload_hash = await sha256Hex(new TextEncoder().encode(String(args.p_payload_text)));
+      saved.request.state = "ready";
+      return { data: saved, error: null };
+    } },
+    download: async () => { downloads++; return pdf; }, sender,
+  });
+  const request = () => new Request("http://local/prepare", { method: "POST",
+    headers: { Authorization: "Bearer synthetic" }, body: JSON.stringify({
+      p_request_id: f.intent.id, p_release_id: releaseId, p_conversation_id: "conversation",
+      p_subject: f.intent.subject, p_body: f.intent.body, p_release_hash: f.intent.release_hash,
+    }) });
+  const missing = await handler({ from: "", replyTo: f.sender.replyTo })(request());
+  assert.equal(missing.status, 500);
+  assert.equal((await missing.json()).retry_requires_recovery, true);
+  assert.equal(captures, 0); assert.equal(downloads, 0); assert.equal(intents.size, 1);
+  const configured = handler(f.sender);
+  assert.equal((await configured(request())).status, 200);
+  assert.equal((await configured(request())).status, 200);
+  assert.equal(intents.size, 1); assert.equal(captures, 1); assert.equal(downloads, 1);
+});
 test("malformed preparation and private server failures never expose paths or bytes", async () => {
   const handler = createPrepareReleaseEmailHandler({
     authenticate: async () => ({

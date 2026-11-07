@@ -1,10 +1,16 @@
 # Dependency and CI baseline
 
+## November 6, 2026 audit update
+
+The initial audit found 18 vulnerable npm package entries (6 high, 12 moderate). The authorized repair upgraded Zod to 4.6.7, Vite to 7.3.7 and affected transitive packages; current full and production-filtered npm audits report **zero advisories**. The standalone renderer also reports zero. See [the dependency remediation](beta-readiness-dependencies-2026-11-06.md), [new machine evidence](evidence/beta-dependency-remediation-2026-11-06.json), and the preserved [initial audit](evidence/beta-dependency-audit-2026-11-06.json). Historical source-bound proof does not automatically carry over to this new package lock.
+
+## Historical September baseline
+
 Audited 2026-09-12 with `npm audit --json`. The validated npm lock now uses Vite 7.3.6, `@vitejs/plugin-react-swc` 4.x and React Router DOM **7.18.3**, with **zero reported vulnerabilities**. React remains on 18, Tailwind on 3, and the Lovable SWC/tagger configuration remains intact. The user explicitly approved React Router v7 for this repository; see [project instructions](../AGENTS.md).
 
 ## Reproducible checks
 
-Use Node 22.12 or newer and `npm ci`, then `npm run check`. The check command runs ESLint, both frontend and Vite-config TypeScript projects, the Node TypeScript tests, and the production build. GitHub Actions runs this on pull requests and main pushes with read-only repository permission and synthetic Supabase frontend values. It never receives a production database password, service-role key, or provider credentials. Edge Functions are not included in the frontend TypeScript projects. A separate CI job installs the npm lockfile and checks every `supabase/functions/*/index.ts` entry point with Deno 2.9.6 and `--frozen`; shared-policy and database tests cover behavior separately.
+Use Node 22.12 or newer and `npm ci`, then `npm run check`. The check command runs ESLint, application, Vite-config and renderer TypeScript projects, the Node TypeScript tests, and the production build. GitHub Actions runs this on pull requests and main pushes with read-only repository permission and synthetic Supabase frontend values. It never receives a production database password, service-role key, or provider credentials. Edge Functions are not included in the frontend TypeScript projects. A separate CI job installs the npm lockfile and checks every `supabase/functions/*/index.ts` entry point with Deno 2.9.6 and `--frozen`; shared-policy and database tests cover behavior separately.
 
 `package-lock.json` is authoritative for CI and the npm workflow. The repository already also contains `bun.lock` and legacy `bun.lockb`; these are retained to avoid changing Lovable's package-manager behavior without a round-trip validation in Lovable. **They have not received this npm security refresh.** Do not treat a Bun install as equivalent to the verified npm install. Configure Vercel's install command as `npm ci`. Before accepting the next Lovable dependency update, synchronize the selected Bun lock with the manifest, verify the npm lock again, and remove redundant lock formats only after verifying Lovable still builds. CI catches a manifest/npm-lock mismatch.
 

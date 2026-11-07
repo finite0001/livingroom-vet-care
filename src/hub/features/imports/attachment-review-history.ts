@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { OriginalCapture } from "./attachment-capture-state.ts";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const date = z.string().datetime({ offset: true }).refine(value =>
   Number.isFinite(Date.parse(value)) && !/\.\d{7}/.test(value));

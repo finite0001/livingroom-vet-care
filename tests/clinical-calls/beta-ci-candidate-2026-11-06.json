@@ -1,0 +1,37 @@
+{
+  "contract": "lrv-call-beta-offline-ci-candidate-v1",
+  "generatedFor": "Current-source offline CI fixtures; no hosted provider admission",
+  "previousCandidate": "tests/clinical-calls/beta-uuid-candidate.json",
+  "previousCandidateSha256": "985241238fa00d1bcc8c261eaea2dd0ab563c4563ebe78d8f5d767ece5c24bc8",
+  "bundle_sha256": "28da2a2d8fee0dd8ae172a924792830b666b9f0076150cc75a3a0d3d4d466c82",
+  "source_sha256": {
+    "tests/clinical-calls/evaluation-corpus.ts": "8807f953a4984662524eb72b88db9ee9670936ba9366aca3883fc93521f19ade",
+    "tests/clinical-calls/evaluation-offline.ts": "0afcefb16009d0e4045b7c38d56dad2e1c9d889716a8b754b4b8211a85e50f53",
+    "tests/clinical-calls/evaluation-cli.ts": "37796c84a3a44501370f519634fad3bcd43b750273024c18c2ac79a9ba364131",
+    "tests/clinical-calls/evaluation-offline.test.ts": "9b2a1430b6e8234b3262cf7bf0e490163441e3e98973b145b55a9b52bd26eef0",
+    "package-lock.json": "89e5ec7bd74d1fe33a93fa1915fee1bbe9d134fd9befa502a901ed01892d6d33",
+    "supabase/functions/_shared/clinical-audio-model.ts": "68d4b929d2fa6113a637fc5c2d39fbdf8833a415ab21318b9efa53cb36f9e603",
+    "supabase/functions/_shared/clinical-call-handler.ts": "4b3ee057ad27aba5d1c921812a3b2504eb525a34608502ed7f0c38c758af31e7",
+    "supabase/functions/_shared/clinical-call-model.ts": "4901d8c131d2c22e6220f4a87f6387d63e3e39c222d68a805977945bd1a91986",
+    "supabase/functions/_shared/clinical-call-note-model.ts": "99b992a7dc0824d81acfcd1c5db15d7f85e6840f41ca55e0ae9f676a91e3b6b2",
+    "supabase/functions/_shared/clinical-call-note-provider.ts": "ee69eb3f59bca5a5ef3e6586d34c70de5e31e265512f0212e5e379fa141fe294",
+    "supabase/functions/_shared/clinical-call-note-handler.ts": "11431b34ec39234042e3c189857e93aa926584dac5f841e71fc99d2c2eec69b6",
+    "supabase/functions/_shared/clinical-call-note-processing-model.ts": "2bc01c40274cc81d3de07251f07a88219af55a647bf4209f514199762eb70f38",
+    "supabase/functions/_shared/clinical-note-model.ts": "101e0a2ec3ac7c39424fbac312aa6e87ddde1ec08269c23e720bb4521bb85e57",
+    "supabase/functions/_shared/clinical-veterinary-context.ts": "1a3182b1a3ce4a00fdca7d6e8450b46ac167524fcf4016a26d8fd7ae100705a6"
+  },
+  "transport_source_sha256": {
+    "tests/clinical-calls/synthetic-provider-plan.ts": "7e007f329fad47ff25c3465167a85deb4633df79de62861664baea95464bc354",
+    "tests/clinical-calls/synthetic-provider.py": "d9a7677982364778f7b267c563bdbc82032d81459fcd9189da09d9391cd9cdc4",
+    "tests/clinical-calls/synthetic-provider-probe.ts.in": "8dcebec17c6b304e0476d5f99aa62f110630f4cb50571d0683d806aa2e86d324",
+    "tests/clinical-calls/synthetic-provider-plan.test.ts": "d69d16d24ce3048fdf4d2844548bf3331cd8fd6d141eec41a12b02a596938e41",
+    "tests/clinical-calls/test_synthetic_provider.py": "cff7e665598cf3ad717182399659f1be53f757bb3f63b9daa1fc65df74d7c022",
+    "tests/clinical-calls/synthetic_provider_hosted.py": "ff0aff56cabcd53403e7fe8636e6e1b3d7456330cc7d388d16419e10661798a8",
+    "tests/clinical-calls/test_synthetic_provider_hosted.py": "f1147be1c25ddb7ecc3c754a5826a83da9bfe3d4d643016937fb28319b7a4795",
+    "supabase/functions/clinical-call-note-process/deno.json": "c8192d27ba24f9ba2710b9f271407c74cb31056fb45bce1b85e75afad793c81a",
+    "supabase/functions/clinical-call-note-process/deno.lock": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+  },
+  "provider_admission": false,
+  "provider_requests": 0,
+  "historical_provider_bundle_unchanged": "9127a1ce40add23f6e92f92cb1fef5501e380e84f012b774f70e024ac8925a42"
+}

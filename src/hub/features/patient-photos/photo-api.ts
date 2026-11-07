@@ -1,21 +1,21 @@
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 export const photoStateSchema = z.object({
-  pet_id: z.string().uuid(),
+  pet_id: z.string().guid(),
   version: z.number().int().min(0),
-  document_id: z.string().uuid().nullable(),
+  document_id: z.string().guid().nullable(),
   document: z.object({
-    id: z.string().uuid(),
-    pet_id: z.string().uuid(),
+    id: z.string().guid(),
+    pet_id: z.string().guid(),
     file_path: z.string(),
     mime_type: z.enum(["image/png", "image/jpeg"]),
   }).nullable(),
 });
 export const pendingPhotoSchema = z.object({
-  id: z.string().uuid(),
-  actionId: z.string().uuid(),
-  petId: z.string().uuid(),
-  actorId: z.string().uuid(),
+  id: z.string().guid(),
+  actionId: z.string().guid(),
+  petId: z.string().guid(),
+  actorId: z.string().guid(),
   expectedVersion: z.number().int().min(0),
   sha256: z.string().regex(/^[a-f0-9]{64}$/),
   size: z.number().int().min(1).max(5242880),
@@ -61,9 +61,9 @@ export async function readPhoto(petId: string) {
 export async function reservePhoto(p: PendingPhoto) {
   const result = z.object({
     document: z.object({
-      id: z.string().uuid(),
-      pet_id: z.string().uuid(),
-      created_by: z.string().uuid(),
+      id: z.string().guid(),
+      pet_id: z.string().guid(),
+      created_by: z.string().guid(),
       file_path: z.string(),
       status: z.enum(["uploading", "ready"]),
     }),
@@ -91,9 +91,9 @@ export async function reservePhoto(p: PendingPhoto) {
 }
 export async function choosePhoto(p: PendingPhoto) {
   const result = z.object({
-    id: z.string().uuid(),
-    pet_id: z.string().uuid(),
-    document_id: z.string().uuid().nullable(),
+    id: z.string().guid(),
+    pet_id: z.string().guid(),
+    document_id: z.string().guid().nullable(),
     version: z.number().int().min(1),
   })
     .parse(

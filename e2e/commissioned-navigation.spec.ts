@@ -59,7 +59,7 @@ async function fixture(page: Page, baseURL: string | undefined, actor = staff) {
   };
   await page.route("**/*", (route) =>
     new URL(route.request().url()).origin ===
-    new URL(baseURL ?? "http://127.0.0.1:8080").origin
+    new URL(baseURL ?? test.info().project.use.baseURL!).origin
       ? route.continue()
       : route.abort(),
   );
@@ -189,6 +189,15 @@ async function fixture(page: Page, baseURL: string | undefined, actor = staff) {
       return route.fulfill({ json: null });
     if (path === "/rest/v1/rpc/read_communication_draft")
       return route.fulfill({ json: null });
+    if (path === "/rest/v1/cloudtalk_projection_failures" && method === "HEAD")
+      return route.fulfill({
+        status: 200,
+        body: "",
+        headers: {
+          "access-control-expose-headers": "content-range",
+          "content-range": "*/0",
+        },
+      });
     return route.fulfill({ json: [] });
   });
   return state;
@@ -254,7 +263,9 @@ test("CloudTalk direct routes show staff activity without mounting legacy callin
   expect(
     state.requests
       .filter((r) => r.path.startsWith("/rest/v1/cloudtalk_"))
-      .every((r) => r.method === "GET"),
+      .every((r) => r.method === "GET" || (
+        r.path === "/rest/v1/cloudtalk_projection_failures" && r.method === "HEAD"
+      )),
   ).toBe(true);
 });
 

@@ -15,7 +15,7 @@ const candidateSchema = z.object({
   created_at: z.string(),
   external_id: z.string(),
   payload_hash: z.string(),
-  payload: z.record(z.unknown()),
+  payload: z.record(z.string(), z.unknown()),
   head_version: z.number(),
   current_snapshot_id: z.string(),
   approval_id: z.string().nullable(),

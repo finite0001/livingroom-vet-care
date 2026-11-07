@@ -53,7 +53,7 @@ async function fixture(page: Page) {
   });
   page.on('request', (request) => state.requests.push(request.url()));
   await page.route('**/*', (route) => {
-    if (new URL(route.request().url()).origin === 'http://127.0.0.1:8080') return route.continue();
+    if (new URL(route.request().url()).origin === test.info().project.use.baseURL!) return route.continue();
     state.external.push(route.request().url()); return route.abort();
   });
   await page.route(endpoint, async (route) => {
@@ -106,7 +106,7 @@ test('public estimate isolates the token and requires explicit exact document re
   const state = await fixture(page);
   await page.goto(`/estimate/${grant}#${token}`);
   await expect(page.getByRole('button', { name: 'Open estimate', exact: true })).toBeVisible();
-  expect(page.url()).toBe(`http://127.0.0.1:8080/estimate/${grant}`);
+  expect(page.url()).toBe(`${test.info().project.use.baseURL}/estimate/${grant}`);
   expect(state.calls).toHaveLength(0);
   await page.getByRole('button', { name: 'Open estimate', exact: true }).click();
   await expect(page.frameLocator('iframe').getByRole('heading', { name: 'Exact care proposal' })).toBeVisible();

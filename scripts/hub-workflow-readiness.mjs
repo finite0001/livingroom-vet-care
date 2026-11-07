@@ -21,23 +21,17 @@ const files = {
 
 const workflows = [
   {
-    id: 'contact-submissions',
-    label: 'Contact submission triage',
-    route: '/hub/contact-submissions',
-    page: 'src/hub/pages/ContactSubmissionsPage.tsx',
-    hook: 'src/hub/hooks/use-contact-submissions.ts',
-    pageSymbol: 'ContactSubmissionsPage',
-    hookSymbols: ['useContactSubmissions', 'useContactSubmissionCount'],
-    requiredHookPatterns: [
-      /contact_submissions/g,
-      /triage_status/g,
-      /reviewed_by/g,
-      /contacted_at/g,
-      /closed_at/g,
-    ],
+    id: 'website-inquiries',
+    label: 'Website inquiry triage and reply handoff',
+    route: '/hub/inquiries',
+    page: 'src/hub/features/inquiries/WebsiteInquiriesPage.tsx',
+    hook: null,
+    pageSymbol: 'WebsiteInquiriesPage',
+    requiredPagePatterns: [/list_website_inquiries/, /read_website_inquiry/, /update_website_inquiry/, /authorize_website_inquiry_reply/, /useMessageQueue/],
     hostedObjects: {
-      functions: ['public.guard_contact_submission'],
+      functions: ['public.list_website_inquiries', 'public.read_website_inquiry', 'public.update_website_inquiry', 'public.authorize_website_inquiry_reply'],
     },
+    hostedFunctions: ['public-contact', 'enqueue-message'],
   },
   {
     id: 'appointments',
@@ -46,13 +40,10 @@ const workflows = [
     page: 'src/hub/features/scheduling/SchedulePage.tsx',
     hook: null,
     pageSymbol: 'SchedulePage',
-    requiredPagePatterns: [
-      /save_appointment/g,
-      /schedule_clinicians/g,
-      /version/g,
-      /denverInstant/g,
-      /HousecallDayRoute/g,
-      /reminderOffsets/g,
+    requiredPagePatterns: [/useScheduleDay/, /AppointmentEditor/, /denverLocal/, /HousecallDayRoute/],
+    dependencies: [
+      { path: 'src/hub/features/scheduling/AppointmentEditor.tsx', patterns: [/save_appointment/, /schedule_clinicians/, /denverInstant/, /reminderOffsets/] },
+      { path: 'src/hub/features/scheduling/use-schedule-day.ts', patterns: [/appointments/] },
     ],
     hostedObjects: {
       functions: ['public.save_appointment', 'public.schedule_clinicians'],
@@ -60,12 +51,14 @@ const workflows = [
   },
   {
     id: 'outbound-deliveries',
-    label: 'Outbound delivery operations',
+    label: 'Daily communications and retained delivery recovery',
     route: '/hub/deliveries',
     page: 'src/hub/pages/DeliveriesPage.tsx',
     hook: 'src/hub/hooks/use-outbound-deliveries.ts',
     pageSymbol: 'DeliveriesPage',
-    hookSymbols: ['useOutboundDeliveries', 'useRetryOutboundDelivery', 'useCancelOutboundDelivery'],
+    hookSymbols: ['useRetryOutboundDelivery', 'useCancelOutboundDelivery'],
+    requiredPagePatterns: [/listDailyCommunications/, /readDailyCommunication/],
+    dependencies: [{ path: 'src/hub/features/daily-communications/api.ts', patterns: [/list_daily_communications/, /read_daily_communication/] }],
     requiredHookPatterns: [
       /outbound_deliveries/g,
       /retry_outbound_delivery/g,
@@ -74,13 +67,13 @@ const workflows = [
     ],
     hostedObjects: {
       tables: ['public.outbound_deliveries'],
-      functions: ['public.retry_outbound_delivery', 'public.cancel_outbound_delivery'],
+      functions: ['public.list_daily_communications', 'public.read_daily_communication', 'public.retry_outbound_delivery', 'public.cancel_outbound_delivery'],
     },
     hostedFunctions: [
       'dispatch-outbound-deliveries',
+      'dispatch-outbox',
       'resend-delivery-webhook',
-      'twilio-message-status-callback',
-      'twilio-inbound-sms',
+      'cloudtalk-webhook',
     ],
   },
 ];
@@ -134,10 +127,11 @@ function latestEvidenceFile(pattern) {
 function hostedPresence(schemaInventory, functionInventory, workflow) {
   const result = [];
   const schemaFunctionSet = new Set(schemaInventory?.objects?.functions ?? []);
+  const schemaTableSet = new Set(schemaInventory?.objects?.tables ?? []);
 
   for (const table of workflow.hostedObjects?.tables ?? []) {
     const item = schemaInventory?.readinessPresence?.tables?.find((candidate) => candidate.name === table);
-    result.push({ kind: 'table', name: table, present: Boolean(item?.present) });
+    result.push({ kind: 'table', name: table, present: Boolean(item?.present) || schemaTableSet.has(table) });
   }
 
   for (const fn of workflow.hostedObjects?.functions ?? []) {
@@ -146,12 +140,15 @@ function hostedPresence(schemaInventory, functionInventory, workflow) {
   }
 
   for (const slug of workflow.hostedFunctions ?? []) {
-    const item = functionInventory?.readinessPresence?.find((candidate) => candidate.slug === slug);
+    const item = functionInventory?.remoteFunctions?.find((candidate) => candidate.slug === slug);
+    const config = read('supabase/config.toml');
+    const section = config.split(`[functions.${slug}]`)[1]?.split(/\n\[/)[0];
+    const expectedJwt = section?.match(/verify_jwt\s*=\s*(true|false)/)?.[1];
     result.push({
-      kind: 'edge-function',
-      name: slug,
-      present: Boolean(item?.remotePresent),
-      verifyJwtMatches: Boolean(item?.verifyJwtMatches),
+      kind: 'edge-function', name: slug,
+      present: Boolean(item),
+      verifyJwtMatches: Boolean(item && expectedJwt !== undefined && item.verifyJwt === (expectedJwt === 'true')),
+      active: item?.status === 'ACTIVE',
     });
   }
 
@@ -166,6 +163,14 @@ const hubHomeSource = read(files.hubHome);
 const schemaInventory = loadJson(files.remoteSchemaInventory);
 const functionInventory = loadJson(files.edgeFunctionInventory);
 const findings = [];
+// A new report must not turn old or failed inventories into current evidence.
+for (const [name, inventory] of [['schema', schemaInventory], ['functions', functionInventory]]) {
+  const age = Date.now() - Date.parse(inventory?.generatedAt ?? '');
+  const successful = name === 'schema' ? inventory?.dump?.ok : inventory?.command?.ok;
+  if (!successful || !Number.isFinite(age) || age < -300000 || age > 86400000 || inventory?.projectRef !== 'mgadheotkdnrsatfivjy') {
+    addFinding(findings, 'hosted-blocker', 'evidence', 'inventory', `${name} inventory must be successful, identify the primary project, and be less than 24 hours old.`, { generatedAt: inventory?.generatedAt ?? null });
+  }
+}
 
 const workflowReports = workflows.map((workflow) => {
   const pageExists = existsSync(workflow.page);
@@ -193,6 +198,13 @@ const workflowReports = workflows.map((workflow) => {
     addFinding(findings, 'blocker', workflow.id, 'mobile-nav', 'Workflow route is missing from mobile Hub navigation.', files.bottomTabBar);
   }
 
+  for (const dependency of workflow.dependencies ?? []) {
+    const source = existsSync(dependency.path) ? read(dependency.path) : '';
+    for (const pattern of dependency.patterns) {
+      if (!pattern.test(source)) addFinding(findings, 'blocker', workflow.id, 'dependency-contract', `Expected dependency contract is missing: ${pattern.source}.`, dependency.path);
+    }
+  }
+
   for (const pattern of workflow.requiredPagePatterns ?? []) {
     if (!pattern.test(pageSource)) {
       addFinding(findings, 'blocker', workflow.id, 'page-contract', `Expected page contract pattern is missing: ${pattern.source}.`, workflow.page);
@@ -217,13 +229,13 @@ const workflowReports = workflows.map((workflow) => {
 
   const hosted = hostedPresence(schemaInventory, functionInventory, workflow);
   for (const item of hosted) {
-    if (!item.present) {
+    if (!item.present || (item.kind === 'edge-function' && (!item.verifyJwtMatches || !item.active))) {
       addFinding(
         findings,
         'hosted-blocker',
         workflow.id,
         'hosted-dependency',
-        `Hosted dependency is missing: ${item.kind} ${item.name}.`,
+        `Hosted dependency is missing or its active/authentication configuration is unverified: ${item.kind} ${item.name}.`,
         item,
       );
     }
@@ -253,6 +265,7 @@ const warnings = findings.filter((finding) => finding.severity === 'warning');
 
 const report = {
   generatedAt: new Date().toISOString(),
+  scope: 'Static wiring for inquiry, schedule, and daily communications only; not full beta acceptance or hosted execution proof.',
   status: blockers.length === 0 ? 'local-hub-ready' : 'local-hub-not-ready',
   hostedStatus: hostedBlockers.length === 0 ? 'hosted-dependencies-ready' : 'hosted-dependencies-blocked',
   summary: {

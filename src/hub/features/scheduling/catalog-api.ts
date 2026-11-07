@@ -33,7 +33,7 @@ export async function catalogPage(
   return catalogPageSchema.parse(
     await rpc("list_appointment_catalog", {
       p_kind: kindSchema.parse(kind),
-      p_after: z.string().uuid().nullable().parse(after),
+      p_after: z.string().guid().nullable().parse(after),
       p_limit: 50,
     }),
   );
@@ -89,9 +89,9 @@ export function catalogArgs(
     .strict()
     .parse(action.values);
   return {
-    p_actor_id: z.string().uuid().parse(actorId),
-    p_action_id: z.string().uuid().parse(actionId),
-    p_id: z.string().uuid().parse(action.id),
+    p_actor_id: z.string().guid().parse(actorId),
+    p_action_id: z.string().guid().parse(actionId),
+    p_id: z.string().guid().parse(action.id),
     p_expected_version: z
       .number()
       .int()
@@ -109,9 +109,9 @@ export function bookingArgs(
   action: BookingAction,
 ) {
   return {
-    p_actor_id: z.string().uuid().parse(actorId),
-    p_action_id: z.string().uuid().parse(actionId),
-    p_id: z.string().uuid().nullable().parse(action.id),
+    p_actor_id: z.string().guid().parse(actorId),
+    p_action_id: z.string().guid().parse(actionId),
+    p_id: z.string().guid().nullable().parse(action.id),
     p_expected_version: z
       .number()
       .int()
@@ -167,7 +167,7 @@ export async function appointmentBinding(id: string) {
     .nullable()
     .parse(
       await rpc("read_appointment_catalog_binding", {
-        p_id: z.string().uuid().parse(id),
+        p_id: z.string().guid().parse(id),
       }),
     );
 }

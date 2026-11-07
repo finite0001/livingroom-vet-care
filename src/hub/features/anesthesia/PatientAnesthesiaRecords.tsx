@@ -1,3 +1,4 @@
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { AnesthesiaHistorySnapshot } from "./AnesthesiaHistorySnapshot";
 import { AnesthesiaDrugAdministrations } from "./AnesthesiaDrugAdministrations";
 import { useEffect, useRef, useState } from "react";
@@ -196,6 +197,7 @@ export function PatientAnesthesiaRecords({
   }
   async function refresh(recordId: string) {
     await Promise.all([
+      refreshPatientReleases(cache, petId),
       cache.invalidateQueries({ queryKey: ["anesthesia", petId] }),
       cache.invalidateQueries({ queryKey: ["anesthesia-history", recordId] }),
       cache.invalidateQueries({ queryKey: ["anesthesia-addenda", recordId] }),

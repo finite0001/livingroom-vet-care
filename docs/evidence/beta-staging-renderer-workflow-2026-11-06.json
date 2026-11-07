@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-11-06T23:15:11.974610+00:00",
+  "fullWorkflowAccepted": true,
+  "proof": {
+    "project": "kothoqicubowyhwfsrte",
+    "acceptedImage": "lrv-diagnostic-pdf@sha256:a8ce75e5241a44d1f566eafde611c77414e2f9106e6ee58f3fad34ce319bf22b",
+    "previewOrigin": "https://livingroom-vet-care-etuoflidw-daves-projects-e0da43ba.vercel.app",
+    "priorPreview": true,
+    "checks": 201,
+    "genuine_auth": true,
+    "currentPackageChecks": 67,
+    "historicalPackageChecks": 67,
+    "review": {
+      "checks": 46,
+      "native_deployed_edge": true,
+      "browser": [
+        "desktop",
+        "mobile"
+      ],
+      "byte_equality": true,
+      "page_errors": 0,
+      "original_owner_inactive": true,
+      "historical_retained": true,
+      "real_expiry_seconds": 30,
+      "token_in_receipt": false,
+      "protection_changed": false,
+      "origin": "https://livingroom-vet-care-etuoflidw-daves-projects-e0da43ba.vercel.app"
+    },
+    "generated": 1,
+    "validated": 2,
+    "byte_length": 32696,
+    "exact_http_readback": true,
+    "direct_staff_storage_denied": true,
+    "deleted_object_unavailable": true,
+    "regeneration": 0,
+    "provider_requests": 0,
+    "cleanup": {
+      "active_patients": 0,
+      "active_profiles": 0,
+      "objects": 0,
+      "open_sessions": 0
+    },
+    "policies": {
+      "disclosure": 0,
+      "outbox": 1,
+      "outbox_hash": "0519320abf6db5521557a91e83485dd96ed9f54c7e84462ad4f6e7e9580529fd",
+      "release": 0,
+      "runtime": 0,
+      "staff_disclosure": 0,
+      "worker": 0
+    }
+  },
+  "scope": {
+    "stagingOnly": true,
+    "currentAdmittedImage": true,
+    "previewSourceEqualsFinalCandidate": false,
+    "previewExplanation": "Exact interim protected staging preview predates PostgreSQL UUID domain-preservation source edits; current-image and deployed Edge proofs are separate from final-preview source equivalence.",
+    "deliveryProviderRequests": 0,
+    "temporaryPolicyRestorationVerified": true,
+    "ownedGrantRevocationFinally": true
+  },
+  "sourceSha256": {
+    "scripts/rollout/pdf-packages-beta-staging-auth.ts": "a304e0c4a47537aaa89388d853514cd209db4b82b78556b9256f686f534ca991",
+    "scripts/rollout/pdf-packages-beta-staging-browser.ts": "394a109d0d2522b78cc0a1f99400da1267dae59ab8df8b61784e1db500731619",
+    "scripts/rollout/pdf-packages-beta-capture-proof.ts": "a2807effd7f1dd68a47dd016f913d0f2f3bb6b1469cff420c3a0797456455ec3",
+    "scripts/diagnostics/process-private-pdf.ts": "bf2d3582ee09be74a7925c0ee1aa7e5482fb3eb5367b85d5c477c0df9b36a17b",
+    "services/diagnostic-renderer/trusted.ts": "9cad173543bf60b89f4f9dd6f40c9cf152c440fee46dbc849d27d579b59b54b3",
+    "package-lock.json": "89e5ec7bd74d1fe33a93fa1915fee1bbe9d134fd9befa502a901ed01892d6d33"
+  },
+  "priorIncompleteReceipts": [
+    "docs/evidence/beta-staging-renderer-initial-attempt-2026-11-06.json",
+    "docs/evidence/beta-staging-renderer-second-attempt-2026-11-06.json"
+  ]
+}

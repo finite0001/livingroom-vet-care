@@ -1,13 +1,13 @@
 import { z } from "zod";
 
 export const appointmentDictationSchema = z.object({
-  actor_id: z.string().uuid(), pet_id: z.string().uuid(), appointment_id: z.string().uuid(),
+  actor_id: z.string().guid(), pet_id: z.string().guid(), appointment_id: z.string().guid(),
   version: z.number().int().positive(), patient_name: z.string(), species: z.string(),
   household_name: z.string(), scheduled_at: z.string().datetime({ offset: true }),
   visit_type: z.enum(["clinic", "housecall"]), location: z.string().nullable(),
   appointment_type: z.string(), status: z.enum(["SCHEDULED", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"]),
-  assigned_dvm_id: z.string().uuid().nullable(), assigned_dvm_name: z.string().nullable(), eligible: z.boolean(), context_changed: z.boolean(),
-  encounter_id: z.string().uuid().nullable(), encounter_status: z.enum(["draft", "signed"]).nullable(),
+  assigned_dvm_id: z.string().guid().nullable(), assigned_dvm_name: z.string().nullable(), eligible: z.boolean(), context_changed: z.boolean(),
+  encounter_id: z.string().guid().nullable(), encounter_status: z.enum(["draft", "signed"]).nullable(),
 });
 export type AppointmentDictationContext = z.infer<typeof appointmentDictationSchema>;
 

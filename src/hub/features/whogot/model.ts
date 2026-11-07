@@ -11,7 +11,7 @@ const date = z
   );
 export const filtersSchema = z
   .object({
-    productId: z.union([z.literal(""), z.string().uuid()]),
+    productId: z.union([z.literal(""), z.string().guid()]),
     eventType: z.enum(["", "administered", "dispensed", "performed"]),
     from: date,
     to: date,
@@ -50,12 +50,12 @@ export const emptyFilters: WhogotFilters = {
 export const cursorSchema = z.object({
   occurred_at: z.string().datetime({ offset: true }),
   event_type: z.enum(["administered", "dispensed", "performed"]),
-  id: z.string().uuid(),
+  id: z.string().guid(),
 });
 export const rowSchema = z.object({
-  id: z.string().uuid(),
-  pet_id: z.string().uuid(),
-  product_id: z.string().uuid().nullable(),
+  id: z.string().guid(),
+  pet_id: z.string().guid(),
+  product_id: z.string().guid().nullable(),
   product_name: z.string(),
   event_type: z.enum(["administered", "dispensed", "performed"]),
   item_kind: z.enum(["medication", "vaccine", "service"]),
@@ -65,15 +65,15 @@ export const rowSchema = z.object({
   lots: z.string(),
   correction_status: z.enum(["current", "corrected", "annotated"]),
   correction_reason: z.string().nullable(),
-  replacement_id: z.string().uuid().nullable(),
-  encounter_id: z.string().uuid().nullable(),
-  authorization_id: z.string().uuid().nullable(),
+  replacement_id: z.string().guid().nullable(),
+  encounter_id: z.string().guid().nullable(),
+  authorization_id: z.string().guid().nullable(),
   source_note: z.string(),
   patient_name: z.string(),
   species: z.string(),
   deceased_at: z.string().nullable(),
   archived_at: z.string().nullable(),
-  client_id: z.string().uuid(),
+  client_id: z.string().guid(),
   client_name: z.string(),
   phone: z.string().nullable(),
   email: z.string().nullable(),
@@ -88,7 +88,7 @@ export type WhogotPage = z.infer<typeof pageSchema>;
 export type WhogotCursor = z.infer<typeof cursorSchema>;
 export const productsSchema = z.array(
   z.object({
-    id: z.string().uuid(),
+    id: z.string().guid(),
     name: z.string(),
     kind: z.enum(["medication", "vaccine", "service"]),
     active: z.boolean(),

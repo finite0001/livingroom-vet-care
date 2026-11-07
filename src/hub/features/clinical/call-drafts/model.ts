@@ -7,7 +7,7 @@ import {
   callSourceSummarySchema,
 } from "../../../../../supabase/functions/_shared/clinical-call-model.ts";
 export * from "../../../../../supabase/functions/_shared/clinical-call-model.ts";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 export const pendingCallSchema = z.object({
   actor_id: uuid,
   action_id: uuid,

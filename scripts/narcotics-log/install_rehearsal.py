@@ -125,6 +125,17 @@ def source_admission():
     evidence = 'docs/controlled-drugs/product-history-readcut-20261028.json'
     pins[evidence] = sha(prefix.regular(ROOT / evidence))
     prefix.canonical206(ROOT)
+    # A successor is source-admitted separately; this installer still proves
+    # only its original208 ledger. Recheck the successor bytes through cleanup
+    # so a concurrent edit cannot retain even that narrower passing result.
+    if (ROOT / "supabase/migrations" / prefix.BETA_MIGRATION).exists():
+        prefix.beta210(ROOT)
+        for name in (prefix.BETA_MANIFEST, "supabase/migrations/" + prefix.BETA_MIGRATION):
+            pins[name] = sha(prefix.regular(ROOT / name))
+    if (ROOT / "supabase/migrations" / prefix.BETA_FOLLOWUP_MIGRATION).exists():
+        prefix.beta211(ROOT)
+        for name in (prefix.BETA_FOLLOWUP_MANIFEST, "supabase/migrations/" + prefix.BETA_FOLLOWUP_MIGRATION):
+            pins[name] = sha(prefix.regular(ROOT / name))
     return candidate, layout, pins
 
 

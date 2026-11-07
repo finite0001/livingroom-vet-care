@@ -1,0 +1,1291 @@
+{
+  "kind": "livingroom-beta-remediation-verification-v1",
+  "recordedAt": "2026-11-06T23:18:48.878548+00:00",
+  "branch": "audit/lrv-beta-readiness-20261106",
+  "codeHead": "d417f1e9e5a9077f9e047d444123d706901235e5",
+  "baseline": "b8767ff2e560f23d884194b5e9f875c0c647532a",
+  "localChecks": {
+    "lint": {
+      "passed": true,
+      "errors": 0,
+      "existingFastRefreshWarnings": 7
+    },
+    "typecheck": {
+      "passed": true,
+      "configurations": [
+        "tsconfig.app.json",
+        "tsconfig.node.json",
+        "tsconfig.renderer.json"
+      ]
+    },
+    "unit": {
+      "passed": 2799,
+      "failed": 0,
+      "skipped": 0,
+      "concurrency": 2,
+      "command": "PATH=/opt/homebrew/opt/node@22/bin:$PATH sh -c 'node --experimental-strip-types --test --test-concurrency=2 tests/**/*.test.ts'"
+    },
+    "productionBuild": {
+      "passed": true,
+      "largeChunkWarnings": true
+    },
+    "publicReadiness": {
+      "blockers": 0,
+      "warnings": 0
+    }
+  },
+  "browser": {
+    "full": {
+      "total": 608,
+      "passed": 605,
+      "failed": 2,
+      "skipped": 1,
+      "workers": 3,
+      "retries": 0,
+      "testTimeoutMs": 60000,
+      "assertionTimeoutMs": 15000
+    },
+    "focused": [
+      {
+        "scenario": "contact CTA reaches a working form with accurate launch and domain information",
+        "passed": true,
+        "change": "Explicit expected opening date corrected to approved late2027; approved emergency wording asserted."
+      },
+      {
+        "scenario": "DVM acknowledgment is separate and never carries forward to a corrected report",
+        "passed": true,
+        "change": "None. Original trace showed outer smooth scrolling during pointer activation before any lab API request; single-worker rerun passed unchanged."
+      },
+      {
+        "scenario": "CloudTalk direct routes show staff activity without mounting legacy calling hooks",
+        "passed": true,
+        "flag": "VITE_CLOUDTALK_ENABLED=true"
+      }
+    ],
+    "distinctCurrentScenariosPassing": 608,
+    "singleCleanFullSuite": false,
+    "scope": "HTTP-mocked frontend behavior; not hosted Auth/database/provider acceptance."
+  },
+  "databaseProof": {
+    "currentPythonSafeguards": 126,
+    "framingTests": 2,
+    "isolatedMetadataControls": 13,
+    "isolatedClockGroups": 8,
+    "boundedClockMarkerControls": 3,
+    "isolatedAppointmentGroups": 11,
+    "retainedBaselineNativeWorkflowJobs": 19,
+    "retainedBaselineSource": "0da567533c8877b21cf4fbe141b6c1bf3f20492c",
+    "current211RuntimeAcceptance": false,
+    "current211SourceManifestSha256": "7bd40565f64cfb8882f6ddaddfcfb268856f0210056acdfa23eb8d94ec94278f"
+  },
+  "hosted": {
+    "stagingProject": "kothoqicubowyhwfsrte",
+    "migrationCheckpoint": 207,
+    "affectedEdgeRuntimeBundlesVerified": 23,
+    "edgeLockfilesVerifiedRemotely": false,
+    "rendererWorkflowChecks": 201,
+    "rendererMode": "commissioned staging operator-invoked one-job",
+    "frontendScope": "Named interim preview; complete candidate refresh follows guarded database rollout.",
+    "productionChanges": {
+      "projectRef": "mgadheotkdnrsatfivjy",
+      "breachedPasswordProtectionEnabled": true,
+      "cleanupPreviewDeployedAndRuntimeVerified": true,
+      "cleanupPreview": {
+        "status": 200,
+        "graceHours": 168,
+        "candidates": 0,
+        "complete": 0
+      },
+      "unauthenticatedCleanupStatus": 401,
+      "ordinaryCleanupDisabledStatus": 503,
+      "storageClaimsOrDeletes": 0,
+      "cronActivations": 0,
+      "otherFunctionRevisionsAdvancedBySecretUpdate": 55,
+      "otherFunctionBundleHashesJwtAndStatusUnchanged": true
+    },
+    "stagingSyntheticReminderSuppressed": true
+  },
+  "humanAcceptance": {
+    "reviewerAssigned": "David Edler",
+    "clinicalPending": 18,
+    "staffPending": 15,
+    "checkerExpectedStatus": "blocked",
+    "signoffsInvented": false
+  },
+  "remainingGates": [
+    "Explicit permission to push review branch and run current211 CI",
+    "Existing native staging PostgreSQL credential for exact guarded208/209 transport",
+    "Current211 native acceptance before210/211 deployment and real-Auth clock/appointment regression",
+    "Refresh exact candidate staging preview and perform owner walkthrough"
+  ],
+  "priorAttempts": {
+    "uuidBrowserAttempt": "Interrupted after incompatibility identified; source fixed and final suite repeated.",
+    "compilerInCompositeCheck": "Stopped deliberately under shared memory pressure; all three configurations subsequently passed.",
+    "localFullDatabaseRehearsals": "Failed unchanged deadline; preserved as failures, not substituted for native current211 acceptance."
+  },
+  "sourceFiles": {
+    ".github/workflows/beta-candidate.yml": {
+      "bytes": 4837,
+      "sha256": "75a0407ffa299589cf460625da4068686918588a6c90e0a2ebd235d94d04c9a9"
+    },
+    ".github/workflows/narcotics-installation.yml": {
+      "bytes": 19040,
+      "sha256": "699a553692fafc7963dd1556e9f43b189edc92de50cc2acd41c0de4eb51bd3fb"
+    },
+    "deno.lock": {
+      "bytes": 6398,
+      "sha256": "6be48b112a0e79a045a2cf566bbdf858dd5865a6997c1e754ca9b3d1c9fb5376"
+    },
+    "e2e/anesthesia.spec.ts": {
+      "bytes": 16057,
+      "sha256": "aec2918ced39e66e4eabce0f49b364d3b263961339d7e0be60bc7fcc9f79aa61"
+    },
+    "e2e/billing.spec.ts": {
+      "bytes": 12700,
+      "sha256": "da96415fa1576e28b1fd7229f289e4032ed4f29e509e07bfcec3a7aac895964d"
+    },
+    "e2e/care-plans.spec.ts": {
+      "bytes": 22712,
+      "sha256": "71d507742fd66acbd5e32b896120fea0c15473b5d16d9093ee59a0cf98e7638e"
+    },
+    "e2e/care-reminders.spec.ts": {
+      "bytes": 11342,
+      "sha256": "f71102e62001b93958e3092fe7d81cfeda1dee1965f96b5bb7ceb0930d293524"
+    },
+    "e2e/client-estimate-decision.spec.ts": {
+      "bytes": 21814,
+      "sha256": "964459270b45317dab0c4cbf8e589503920956254cdc6120b3887a6caf84c614"
+    },
+    "e2e/client-payment.spec.ts": {
+      "bytes": 12199,
+      "sha256": "47329ff2c114f0179d1c9b5c449a4f048fdcd95163286bfca88cc10c65d54d98"
+    },
+    "e2e/clients.spec.ts": {
+      "bytes": 10013,
+      "sha256": "a52a0426fd60e2af86980048264343b355680d73b6953654ce1176661142ba6d"
+    },
+    "e2e/clinical-imports.spec.ts": {
+      "bytes": 14795,
+      "sha256": "0f665dcf83e29861be3bda574662ca4f0c9624d85c656f258cfc9ef1a764990d"
+    },
+    "e2e/clinical.spec.ts": {
+      "bytes": 13650,
+      "sha256": "348d995ef22f3fb29959b94182e4deb8c28435363a6610aebed048811319e92c"
+    },
+    "e2e/commissioned-navigation.spec.ts": {
+      "bytes": 15468,
+      "sha256": "b1fb5a22cf3d36b0d161fa8c03eaa1e93356af010c20462adaa436ed8c35a100"
+    },
+    "e2e/dental.spec.ts": {
+      "bytes": 14519,
+      "sha256": "08d386befcd67b115994592e88f1c5e8e9a75fc5245d2cf699e5549766c651e0"
+    },
+    "e2e/documents.spec.ts": {
+      "bytes": 10094,
+      "sha256": "6445dd8e57ad8afb502444779f98d73fa8dc27a0249cb3b2ec16926c5d3c7bb5"
+    },
+    "e2e/foundation.spec.ts": {
+      "bytes": 8073,
+      "sha256": "de52a3445280cd8c4b1603efad08f43773118e569dea3c90945e8c2eb205d54e"
+    },
+    "e2e/global-search.spec.ts": {
+      "bytes": 3671,
+      "sha256": "e7ec74cc07286fc067acf2b6b576f6110e3405967a28164a2787dd61cd04ccef"
+    },
+    "e2e/hub-error-states.spec.ts": {
+      "bytes": 11262,
+      "sha256": "f0d91a2a16b36445f99808beb55fd0631ffb613bc5f080526542458c5b050743"
+    },
+    "e2e/inbound-review.spec.ts": {
+      "bytes": 11009,
+      "sha256": "07e300b9b70056c722d1e6b8fa820ce473ff9f73bb833379d831accad8132602"
+    },
+    "e2e/lab-results.spec.ts": {
+      "bytes": 23198,
+      "sha256": "c4735966b366114df19a949560f9cbd2aba0e4950a1a987f9e23755bf0ccfc18"
+    },
+    "e2e/lab-work.spec.ts": {
+      "bytes": 9608,
+      "sha256": "690d4fd9791df717d5b623777fa118828761540b625f7fbecc30a7f1e3fc7bfe"
+    },
+    "e2e/migration-resolutions.spec.ts": {
+      "bytes": 19297,
+      "sha256": "e70523fbd8e33af4f1f37621fce955508e8f1da72d7bc6a6218aa1ddad45fbf0"
+    },
+    "e2e/migration-workspace.spec.ts": {
+      "bytes": 55054,
+      "sha256": "f1b07715bd39092b9d6caaa461cdef4a2b2984876d9a0e94ddc5d21bba65f314"
+    },
+    "e2e/native-fulfillment.spec.ts": {
+      "bytes": 59728,
+      "sha256": "ca8a047b5e6255d2417566b63dc0edd9990bfcf1de638f21a65fb9e01df11e44"
+    },
+    "e2e/native-prescribing.spec.ts": {
+      "bytes": 24605,
+      "sha256": "b4bb39f4afa6bf61f89d6fe462a432f0efd5c6a8aec72ae7848676bc48d6dd58"
+    },
+    "e2e/native-record-releases.spec.ts": {
+      "bytes": 17660,
+      "sha256": "d4fe0b45609a60d341c4cc19ad4e3082d94fdc1f4e1ffc8469b369519876d712"
+    },
+    "e2e/native-refills.spec.ts": {
+      "bytes": 16042,
+      "sha256": "d23d9deca58c557515653c8fe5bcb216b9995d4702bbe7f497741c40678a4645"
+    },
+    "e2e/patients-list.spec.ts": {
+      "bytes": 4462,
+      "sha256": "092e4723fec64c03e963b923d65c9d32992031c51e11adbd739da53131ef687b"
+    },
+    "e2e/patients.spec.ts": {
+      "bytes": 13399,
+      "sha256": "525a146ebe70b66c3f2159d3a8a73ce33852b5cc68edf9d95b65400228259f50"
+    },
+    "e2e/prescription-item-imports.spec.ts": {
+      "bytes": 19177,
+      "sha256": "e66a9414ad49f4e7e7130a197a0d84a141658ecfc70509b9715990a862c917ed"
+    },
+    "e2e/processing-review.spec.ts": {
+      "bytes": 12732,
+      "sha256": "500ffe54350338a7cf94940011d4d2a89cb6cd5d1978dee7add42fa2fb1d1a7a"
+    },
+    "e2e/records-requests.spec.ts": {
+      "bytes": 21131,
+      "sha256": "9a65349ac3230557c63f03f64c4c76afca38667e428d66423d1c7a98d32a9a5b"
+    },
+    "e2e/reminder-delivery-settings.spec.ts": {
+      "bytes": 14605,
+      "sha256": "79ff525ad321b8d8cd28a2a062ee51aee7958b04618db7eef719ec58578ac7b0"
+    },
+    "e2e/reviewed-clinical-history.spec.ts": {
+      "bytes": 24141,
+      "sha256": "1e1117328d848f045736aa6e6a942695aebeeb85ec512f5277f925840454610a"
+    },
+    "e2e/reviewed-vaccinations.spec.ts": {
+      "bytes": 20285,
+      "sha256": "dee9ff33e16a049e4117ecf19bf3a4178b49ea1de6f838a352f9117581c8ae4d"
+    },
+    "e2e/shared-documents.spec.ts": {
+      "bytes": 6236,
+      "sha256": "4e0703d341eafa53cfeb45045f72ce9efac7642482bd0fcedce99345849970f4"
+    },
+    "e2e/vaccination-imports.spec.ts": {
+      "bytes": 17492,
+      "sha256": "f4617896caca84703413835a1d8797b8187cdb03a578213cc86b012a248acceb"
+    },
+    "package-lock.json": {
+      "bytes": 332451,
+      "sha256": "89e5ec7bd74d1fe33a93fa1915fee1bbe9d134fd9befa502a901ed01892d6d33"
+    },
+    "package.json": {
+      "bytes": 4918,
+      "sha256": "eb01e7f2b6e0c1021e5d7ef4a3525f1adfd5ad87c45775ce3cc066296626253a"
+    },
+    "scripts/clinical-staff-acceptance-readiness.mjs": {
+      "bytes": 12173,
+      "sha256": "2bd5a1a97ac62494cc0b2d0ae4521a760b01cf0c5139af9488028dc5a0d1d1d7"
+    },
+    "scripts/diagnostics/process-private-pdf.ts": {
+      "bytes": 1393,
+      "sha256": "bf2d3582ee09be74a7925c0ee1aa7e5482fb3eb5367b85d5c477c0df9b36a17b"
+    },
+    "scripts/diagnostics/prove-renderer-dependency-candidate.ts": {
+      "bytes": 7783,
+      "sha256": "11664c04283bd52015f42e0bed6abea7ab53b284740abc7300841e7f8ead6759"
+    },
+    "scripts/diagnostics/publish-renderer-proof-image.py": {
+      "bytes": 4053,
+      "sha256": "a014c98162e29dc7955e41433dcb8c2cb7aef9c83d8dd10b50b0c3a6c7d204de"
+    },
+    "scripts/hub-workflow-readiness.mjs": {
+      "bytes": 12342,
+      "sha256": "4c47faa390b2749bdc173050009e2406b320cc4c8718d141e588dff39c9a83ba"
+    },
+    "scripts/narcotics-log/beta-browser-source-proof.json": {
+      "bytes": 771,
+      "sha256": "90c236f9104f13a931251b3d2e1faf60325e63463f0a45c682a2e6cf370c4a61"
+    },
+    "scripts/narcotics-log/beta-candidate-source.json": {
+      "bytes": 240506,
+      "sha256": "7bd40565f64cfb8882f6ddaddfcfb268856f0210056acdfa23eb8d94ec94278f"
+    },
+    "scripts/narcotics-log/beta-migration210.json": {
+      "bytes": 2869,
+      "sha256": "9a8d0da7ef2747445548ef86d973a85534ccf38d343fbeb69e1b2770a28aefa7"
+    },
+    "scripts/narcotics-log/beta-migration211.json": {
+      "bytes": 722,
+      "sha256": "4674914ab8ae4823fa9af942454015039b507620878404402a54ddcf65ac8d19"
+    },
+    "scripts/narcotics-log/beta-time-clock-source-proof.json": {
+      "bytes": 1071,
+      "sha256": "c7cbd4d95c0a4d53771345bf916607f2f2caa43975bcc6362fad92a0c4cabb81"
+    },
+    "scripts/narcotics-log/beta_browser_runner.py": {
+      "bytes": 15983,
+      "sha256": "2387cbcf2c360aea48a3f1f5203d0b86088041dd22380aefc786f379f73fe7a7"
+    },
+    "scripts/narcotics-log/beta_browser_source.py": {
+      "bytes": 4634,
+      "sha256": "dd0d13bf7df041ac67a90e0a6d67d22359d2069254eda365b306ba7a9514948f"
+    },
+    "scripts/narcotics-log/beta_rehearsal.py": {
+      "bytes": 18747,
+      "sha256": "75a11782dfb6a52d2d4aeeb06b74ca57b8d83c27668af389a7c06563245d2918"
+    },
+    "scripts/narcotics-log/beta_time_clock_source.py": {
+      "bytes": 15373,
+      "sha256": "157e6b7a4a2bd551e5f4f1412ead38fd009a0ffa6a7020bf087b4072aeaeb99f"
+    },
+    "scripts/narcotics-log/frame-beta-appointment.mjs": {
+      "bytes": 1428,
+      "sha256": "130f701a762081c1c5c578a68c47d6c6840c93fe5b4e479e904ef8d17503d6ab"
+    },
+    "scripts/narcotics-log/frame-beta.mjs": {
+      "bytes": 1412,
+      "sha256": "1f3161e9b608dea68a4210ac08f916d5d01b0e559375214c3cc9d500bc0aaeac"
+    },
+    "scripts/narcotics-log/install_rehearsal.py": {
+      "bytes": 22120,
+      "sha256": "d2b8d1a90322a442956d08f4532f7e15f4153202f15b0191a2f7088e4f05a3e1"
+    },
+    "scripts/narcotics-log/prefix_view.py": {
+      "bytes": 12110,
+      "sha256": "66d67b67cb743607adc292296331372dc0bcb7fc5a004289726b31b08b40f39a"
+    },
+    "scripts/narcotics-log/test_beta_rehearsal.py": {
+      "bytes": 3745,
+      "sha256": "841f43caa4bb189e02e47ce304f7f6acd2cac225be3e2f020dbd8c85cde3404c"
+    },
+    "scripts/narcotics-log/test_beta_source.py": {
+      "bytes": 3219,
+      "sha256": "327ec4f2603fca95bfa5bbf36dd87632adbb3da7522c9627d6f2ee57913182ad"
+    },
+    "scripts/narcotics-log/test_beta_time_clock_source.py": {
+      "bytes": 2518,
+      "sha256": "5fdb9691c4300161397089b0870260fd1828eb0b065cfb822291aeaee6c5c59c"
+    },
+    "scripts/narcotics-log/verify_beta_metadata.py": {
+      "bytes": 8638,
+      "sha256": "9415b0edfd40c5a36ec610f9e469ad9d22e37c7389363ba18717078869088570"
+    },
+    "scripts/public-site-readiness.mjs": {
+      "bytes": 6620,
+      "sha256": "758a02aad707a1d93ca4a3baea6052a21635d18a9ff8bcfe4ae050218903bfc9"
+    },
+    "scripts/rollout/pdf-packages-beta-capture-proof.ts": {
+      "bytes": 19134,
+      "sha256": "a2807effd7f1dd68a47dd016f913d0f2f3bb6b1469cff420c3a0797456455ec3"
+    },
+    "scripts/rollout/pdf-packages-beta-staging-auth.ts": {
+      "bytes": 17208,
+      "sha256": "a304e0c4a47537aaa89388d853514cd209db4b82b78556b9256f686f534ca991"
+    },
+    "scripts/rollout/pdf-packages-beta-staging-browser.ts": {
+      "bytes": 12438,
+      "sha256": "394a109d0d2522b78cc0a1f99400da1267dae59ab8df8b61784e1db500731619"
+    },
+    "scripts/rollout/pdf-packages-edge-install.py": {
+      "bytes": 3349,
+      "sha256": "f210265ce239703e7303aa4b56fc5cfa6058ad923aeebc35c8a17fe922eb032c"
+    },
+    "scripts/scheduling/terminal-appointment-baseline.sql": {
+      "bytes": 5116,
+      "sha256": "73d090ebc1a0140933e62b2183f069c54d1632f33f39826ede58a9a7f4881a70"
+    },
+    "scripts/scheduling/terminal-appointment-clinician.sql": {
+      "bytes": 4558,
+      "sha256": "d61fea9edd24f4c9598307c3320b3c1a6da70dcc1a81d1d11668b66898c8ed6f"
+    },
+    "scripts/scheduling/verify-terminal-appointment.py": {
+      "bytes": 10543,
+      "sha256": "41fe5a6e66903e155c3171a1a89d455f6ad8a33305423754a5ec71760e2d8fc4"
+    },
+    "scripts/supabase-schema-inventory.mjs": {
+      "bytes": 6672,
+      "sha256": "52d55410580f39317d3d327c1144351ec5412c9a503537e0fa835c49100fe91b"
+    },
+    "scripts/time-clock/atomic-time-clock.sql": {
+      "bytes": 6351,
+      "sha256": "0cbb8076575dbeb36d1d0dee010ee3b643b083cadb7a0df7e674546df96dfcca"
+    },
+    "scripts/time-clock/verify.py": {
+      "bytes": 16904,
+      "sha256": "f5b566522d1a506979c2c12049c684e646f1126531fbbd1cab69ecec35a55277"
+    },
+    "scripts/verify-record-edge-isolation.py": {
+      "bytes": 1984,
+      "sha256": "39a5a839d044b7e6465aab69aeea2cd566ca9a1f3cbb9287b8d8856a7f310ca2"
+    },
+    "services/diagnostic-renderer/README.md": {
+      "bytes": 5690,
+      "sha256": "da034e22fd0553781c875dc78cd277ce73f08602e829662bd3601530aeebba60"
+    },
+    "services/diagnostic-renderer/package-lock.json": {
+      "bytes": 1500,
+      "sha256": "842e8e0c82586d98d090954bc3199506f5ee7625bc82d2c36d3a7f044e68a446"
+    },
+    "services/diagnostic-renderer/package.json": {
+      "bytes": 152,
+      "sha256": "de46b36d30d499c262c7f78b35a85bbbf8c0844f7286fd237418b4670ac6b861"
+    },
+    "services/diagnostic-renderer/processing.ts": {
+      "bytes": 15173,
+      "sha256": "94752399be9e627981e16ad31a257277dd97ae60270021e4650ec83067135a89"
+    },
+    "services/diagnostic-renderer/sandbox.ts": {
+      "bytes": 8184,
+      "sha256": "24af7bbc32bdd7330b60f6b4a1937316f1a6fa90e3b36dca19b3627298c94a9c"
+    },
+    "services/diagnostic-renderer/trusted.ts": {
+      "bytes": 2074,
+      "sha256": "9cad173543bf60b89f4f9dd6f40c9cf152c440fee46dbc849d27d579b59b54b3"
+    },
+    "services/diagnostic-renderer/worker.mjs": {
+      "bytes": 7388,
+      "sha256": "0ceed44d2e9941f23e6eeb066fa07531cb52b661d6abab1afd195e39a29186ce"
+    },
+    "src/config/practice.ts": {
+      "bytes": 1891,
+      "sha256": "1fa973a1b2570e325c565566b6c933e9f51dfe9deafc5ef9dc3d04e79df42381"
+    },
+    "src/config/public-site.ts": {
+      "bytes": 6730,
+      "sha256": "82eb617e11ea4bff10c6bce4c01f6e009c140853332549e5f90d66ff29f8a77d"
+    },
+    "src/hub/components/timesheet/AllStaffTimesheet.tsx": {
+      "bytes": 19663,
+      "sha256": "c68d06c4c39d5b971b7068f4a0ec420e8de92e82c8fe0c1890c915ee0cf9fb17"
+    },
+    "src/hub/features/anesthesia/PatientAnesthesiaRecords.tsx": {
+      "bytes": 29468,
+      "sha256": "9699910ea78853ef12b7f6c56bbfcc84aeb6da8e48f255de9b9c14ead321ca6f"
+    },
+    "src/hub/features/billing/reminders/api.ts": {
+      "bytes": 4081,
+      "sha256": "6e4f1a7d2d00e3af335bca248e14fb38e3294fbd9e20ff805d40cb5656e28d2c"
+    },
+    "src/hub/features/billing/reminders/model.ts": {
+      "bytes": 5632,
+      "sha256": "2a40c189e0f4d5843fdbcff54503a2b9f0fbb7cbf991ef84ac7087b478901c6d"
+    },
+    "src/hub/features/care-charts/useCareMutation.ts": {
+      "bytes": 2706,
+      "sha256": "45709cb0acbc1820692946c035fe8d62439397326948d6f9a2dbd7672282ddca"
+    },
+    "src/hub/features/care-plans/api.ts": {
+      "bytes": 6318,
+      "sha256": "a11062db32d49e57304d2d9930e733ea1a5a9d0ad4489b35fd6d98486d38ca05"
+    },
+    "src/hub/features/care-plans/model.ts": {
+      "bytes": 8952,
+      "sha256": "bd506efa585d4bf73c0cb09caa1c32c2d70e0384e26becbae1d2df7627a8814a"
+    },
+    "src/hub/features/certificates/PatientCertificates.tsx": {
+      "bytes": 28670,
+      "sha256": "f4bf087e3dfb78296d435ed46b664e07b5575673164b17da6eb4003bacde235f"
+    },
+    "src/hub/features/clinical/ClinicalWorkspace.tsx": {
+      "bytes": 17651,
+      "sha256": "03b7524560ea9877f9d424c84a69c068c68ff192f5a1a1d6ec1b7cb7950a9c02"
+    },
+    "src/hub/features/clinical/PatientProblems.tsx": {
+      "bytes": 8958,
+      "sha256": "4b98ebd6f79415fda8584e6c3f25360ab213fc4aaf089e7776a599d703f0712b"
+    },
+    "src/hub/features/clinical/appointment-dictation/api.ts": {
+      "bytes": 2312,
+      "sha256": "5691fd3b49396930004e2095a34921c6ee764e803ce40a14f1631dc72d61372a"
+    },
+    "src/hub/features/clinical/appointment-dictation/model.ts": {
+      "bytes": 1703,
+      "sha256": "85f905ee20a9aa6765ba672a528a07735acda1082aeade0c54cf735092ceb14f"
+    },
+    "src/hub/features/clinical/call-drafts/api.ts": {
+      "bytes": 5062,
+      "sha256": "fea47700393ee14b92614e750631751be17b4a75ac210c3e3f35052235e654bc"
+    },
+    "src/hub/features/clinical/call-drafts/model.ts": {
+      "bytes": 6468,
+      "sha256": "be24a5bdbbe0240092f60edb4f4bbdb5920ec949660af33b0bab95499deb253b"
+    },
+    "src/hub/features/clinical/call-drafts/note-api.ts": {
+      "bytes": 8325,
+      "sha256": "b0e8c86740138c85cd5f4287a5d074ca4e86321c18877480b0e30ff706a5d0d6"
+    },
+    "src/hub/features/clinical/call-drafts/note-pending.ts": {
+      "bytes": 2678,
+      "sha256": "f85c5d77c87545d23d6d8d71c5705e96c64273364e83d574f2635654ed4b51b6"
+    },
+    "src/hub/features/clinical/dictation/audio/api.ts": {
+      "bytes": 3813,
+      "sha256": "e9e89567125fd9344a752f4930126978dc63433eef1b9e746e787f1a7b0848ea"
+    },
+    "src/hub/features/clinical/dictation/model.ts": {
+      "bytes": 7589,
+      "sha256": "f5b98d7c98711643e9aaad702222d7ecb98ddcb866fe83d96544da0e4c85bd67"
+    },
+    "src/hub/features/clinical/recap/api.ts": {
+      "bytes": 11722,
+      "sha256": "309a679c5b07ba70f3e3c8f5631ea36f740ecbb5840fb278265fb40fe4e9081c"
+    },
+    "src/hub/features/clinical/recap/model.ts": {
+      "bytes": 8632,
+      "sha256": "b85420a5d0874605d475bfe38cd76032c5e55d719facc895b8e4f9a4a6eb60d4"
+    },
+    "src/hub/features/clinical/templates/ClinicalNoteDrafts.tsx": {
+      "bytes": 27377,
+      "sha256": "87529c97d3afa1f309903e15ccfe4f5d9d2c7ec69375842172edfca07a363054"
+    },
+    "src/hub/features/clinical/templates/api.ts": {
+      "bytes": 7032,
+      "sha256": "b4813d7612397107d270d52800efcdd350aaea765456d5cc806a0ad4f03d6151"
+    },
+    "src/hub/features/clinical/templates/model.ts": {
+      "bytes": 3679,
+      "sha256": "bf4e5acf3c9e08d797c87856a64e9bde6400413c893a364ed62fc0c3f9c7463e"
+    },
+    "src/hub/features/controlled-drugs/administration/configuration-query.ts": {
+      "bytes": 4279,
+      "sha256": "4fb97e361c9e8473e1714d9ecdb47bfd778225c561639e06d90dccf1f97d3db7"
+    },
+    "src/hub/features/controlled-drugs/draft-api.ts": {
+      "bytes": 2919,
+      "sha256": "c82a8a8c1520c3fe90dc057985770071a2c1687540756ce2aa2bf925bb0a56cc"
+    },
+    "src/hub/features/controlled-drugs/draft-model.ts": {
+      "bytes": 6446,
+      "sha256": "1c88e6109e1ffc2bb260dee9970dee35d2da1ed9f3763089575a9f229bf60549"
+    },
+    "src/hub/features/controlled-drugs/entry/legacy-intent.ts": {
+      "bytes": 7619,
+      "sha256": "531c470c7c432b36b96d0141c8ce39ca5b324f75106d5ca273d273d8b0cf4b1e"
+    },
+    "src/hub/features/controlled-drugs/entry/legacy-result.ts": {
+      "bytes": 2487,
+      "sha256": "2bde3e337fcadd99e2607c02719a4cc5d44c876cfd5fbf98ab1f5b9e058f6dbb"
+    },
+    "src/hub/features/controlled-drugs/entry/saved-result.ts": {
+      "bytes": 3728,
+      "sha256": "4afba2aeba842f160c868097594bafe25ec78929a179f2ceb25b76655fb018f7"
+    },
+    "src/hub/features/controlled-drugs/record-review/request.ts": {
+      "bytes": 2634,
+      "sha256": "11f245af2e2f9deb2d85b5e2a9843439ef884b6c33e23f56e5432258a55d716a"
+    },
+    "src/hub/features/controlled-drugs/review-pointer.ts": {
+      "bytes": 3045,
+      "sha256": "1b37430df143ec0aff2833b8608a1a2be203df582df24c4cd4fed7cce8218cf8"
+    },
+    "src/hub/features/daily-communications/model.ts": {
+      "bytes": 3824,
+      "sha256": "12b00f2630bb97f4e03d14ec6a43c0e288a765769ad9002ab2ba16b44274712b"
+    },
+    "src/hub/features/daily-tasks/task-api.ts": {
+      "bytes": 9037,
+      "sha256": "448dcd4dd5e7d87d162cea5963e860e00f9c460603ec14d2fef831ac2e6cb14a"
+    },
+    "src/hub/features/daily-tasks/task-model.ts": {
+      "bytes": 26000,
+      "sha256": "8baeac69eda729b1329eb8f1619877e4bbb87a60a2f5496a61d21628ebd5b604"
+    },
+    "src/hub/features/dental/PatientDentalChart.tsx": {
+      "bytes": 26960,
+      "sha256": "92560ec6435340f69f004dd78d8c0b82a63dbfd857f6af3a4d9141f48774763f"
+    },
+    "src/hub/features/diagnostics/PatientDiagnostics.tsx": {
+      "bytes": 41967,
+      "sha256": "e661f85417f79d2ee6ac9fbf0e72ea5b49c5f60d2d2cd011a2368624845f60b0"
+    },
+    "src/hub/features/diagnostics/api.ts": {
+      "bytes": 3302,
+      "sha256": "175b25b192ba1bab6f3edea491a24ac6bdbbbda5b4f28088ae3e3ab66802cf78"
+    },
+    "src/hub/features/diagnostics/model.ts": {
+      "bytes": 8278,
+      "sha256": "8e00653b8ae8b48b7fdaae416eada6416f4cb765bf8b170927e7f67be3da2d6c"
+    },
+    "src/hub/features/diagnostics/pdf-jobs/DiagnosticPdfReview.tsx": {
+      "bytes": 4747,
+      "sha256": "8db6f8f84070528f41c0efc941aa6c4f25356a54edec8450346d35246d0565d7"
+    },
+    "src/hub/features/diagnostics/pdf-jobs/api.ts": {
+      "bytes": 1707,
+      "sha256": "5a89fc07a8815418277be0c18fead20fd040a09b0e883821b463adebac5bf7ef"
+    },
+    "src/hub/features/diagnostics/pdf-jobs/model.ts": {
+      "bytes": 5322,
+      "sha256": "e5a4ec7395a2d74eb23bc3c0362dca2acd5c97166cb13dd6a2246e412828c860"
+    },
+    "src/hub/features/diagnostics/pdf-jobs/release-scope-api.ts": {
+      "bytes": 857,
+      "sha256": "567eeb5e08c4b61c91167d50129d19e696028d092f908db6388a4e9ef33d0acf"
+    },
+    "src/hub/features/diagnostics/pdf-jobs/release-scope-model.ts": {
+      "bytes": 1690,
+      "sha256": "848426a43fd9c0f9c22e521a8c0f304dbe1ba9d4dd7e2854ab1acb2f2001f09a"
+    },
+    "src/hub/features/diagnostics/pdf-jobs/review-api.ts": {
+      "bytes": 3691,
+      "sha256": "d554cfca3f7a40f42201d250b83b28eb582039ff1257dac289fae238cdad8dd2"
+    },
+    "src/hub/features/estimates/decision-grant-api.ts": {
+      "bytes": 14108,
+      "sha256": "7dc3424fdc613e04b1def5272e970d80b085242a8afedc4ee193ee75852ff97b"
+    },
+    "src/hub/features/estimates/decision-staff-api.ts": {
+      "bytes": 9355,
+      "sha256": "29c2b83115be7f2c80a8d5604521fafc690734e0159a27c9f4f684630e1e8515"
+    },
+    "src/hub/features/estimates/estimate-api.ts": {
+      "bytes": 13399,
+      "sha256": "fbdaae0e03d01ec4ebc9b96fb25e7bd85af98de4c733abc9b91b3b0dc68b9e7d"
+    },
+    "src/hub/features/estimates/publication-api.ts": {
+      "bytes": 29253,
+      "sha256": "ad788f64cd6cb61a7759fde985e083d888ce53e8f256415177b0f24e2ab712e6"
+    },
+    "src/hub/features/external-records/ExternalRecordState.ts": {
+      "bytes": 9065,
+      "sha256": "4d1bb056720af7c4b3a67bd97d0ffb9741b89cead45f6aff810585bff04c0075"
+    },
+    "src/hub/features/imaging/model.ts": {
+      "bytes": 8001,
+      "sha256": "3ea49f1dd73361f283851eabaf3fdf040cba57b6519a17428819e145a2c07e22"
+    },
+    "src/hub/features/imports/EzyVetWeightImports.tsx": {
+      "bytes": 23731,
+      "sha256": "09fc87140bc94c5cd0601ea49fc17d3fe9262e9b94ae734a8f757c6d87f93a82"
+    },
+    "src/hub/features/imports/attachment-api.ts": {
+      "bytes": 7973,
+      "sha256": "6c6f555f7d504485255aee2ed39a9dbc4a7a4080a6686795d51c03ae7699b7f2"
+    },
+    "src/hub/features/imports/attachment-capture-state.ts": {
+      "bytes": 7529,
+      "sha256": "bfb76f67a28df78b4b8912ec39b192102ae7d10f1609726baa689d85ec2757b5"
+    },
+    "src/hub/features/imports/attachment-chart-state.ts": {
+      "bytes": 2477,
+      "sha256": "559df8fc0af03c0d67e80048ebd9819383214ca4988ec94c059937bd360ab992"
+    },
+    "src/hub/features/imports/attachment-decision-state.ts": {
+      "bytes": 4043,
+      "sha256": "ce84f1974444eb70677a155a3829a4da4a803d86f83f41a767ab6da930758d86"
+    },
+    "src/hub/features/imports/attachment-review-history.ts": {
+      "bytes": 3629,
+      "sha256": "1974c836a7c344a173abf3c482daac4598cc18bac191290d4bf1cd3af5ec2e75"
+    },
+    "src/hub/features/imports/clinical-api.ts": {
+      "bytes": 7800,
+      "sha256": "c51166344c0424015f004d1038dde2a7a360c68f9fc0e2b5ccf7e77535ddcb5b"
+    },
+    "src/hub/features/imports/history-state.ts": {
+      "bytes": 12667,
+      "sha256": "6920a3f6916b46a6d0d7f365d12be6a2e2ef1e1247781296a9c325dec7a9c0a6"
+    },
+    "src/hub/features/imports/migration-capture-api.ts": {
+      "bytes": 4897,
+      "sha256": "c8652c1338d7170821998e9b5010e09a03fb4b4b4fcda83690f4cb59ea7ed99f"
+    },
+    "src/hub/features/imports/migration-history-api.ts": {
+      "bytes": 3549,
+      "sha256": "ba3ef0e6bdcf1d3d8f1c57ea96aecec17d85ac9405c2988a64b3d9f47013c6f4"
+    },
+    "src/hub/features/imports/migration-identity-api.ts": {
+      "bytes": 2594,
+      "sha256": "23294a2f79af0fd558f5606c7f816f6cae1d94fcd0f98ba041a260c6fc6de9db"
+    },
+    "src/hub/features/imports/migration-items-api.ts": {
+      "bytes": 4735,
+      "sha256": "476d2e0166532bfb3f0b1422c09ab1d121fbddaedb03850ae0f86476e80e401d"
+    },
+    "src/hub/features/imports/migration-prescription-api.ts": {
+      "bytes": 4439,
+      "sha256": "1c0fa754f7eb5fcfd630c76c266b830d9ae539c7eb6c51a8e85d5f33d99ecbb7"
+    },
+    "src/hub/features/imports/migration-prescription-item-api.ts": {
+      "bytes": 4533,
+      "sha256": "eff54ea252bae78d4573b41cef3969f0e408376ff73953a0656bc1beb70abc80"
+    },
+    "src/hub/features/imports/migration-resolution-api.ts": {
+      "bytes": 13311,
+      "sha256": "b14e97d121517a6bea584d72db0b6f4c4ca7c1b79aba8a1e7a45e96b30966132"
+    },
+    "src/hub/features/imports/migration-resume-api.ts": {
+      "bytes": 8596,
+      "sha256": "5a3f13f72b08639431af7638e3e22223f25a063b8886739f5236006494cf95b5"
+    },
+    "src/hub/features/imports/migration-run-api.ts": {
+      "bytes": 16622,
+      "sha256": "feaeaa7ed4beabb7488e27802907c49d6b6c2da6b7725e421c610552246a2c96"
+    },
+    "src/hub/features/imports/migration-selection-api.ts": {
+      "bytes": 10728,
+      "sha256": "bf19933e29f00ce949503b1a53f8436c5582a38d05178a5b6892467c3134c88c"
+    },
+    "src/hub/features/imports/migration-vaccination-api.ts": {
+      "bytes": 3765,
+      "sha256": "ef2cf4d7d7147bf890b3ea9b9d1eadc2fecbed3bf7101ef7a04e4f7393f6f29b"
+    },
+    "src/hub/features/imports/migration-weight-api.ts": {
+      "bytes": 4311,
+      "sha256": "cf400a771752aead5c8a9ca09013fb390fde0261083034783483008be4e3aa47"
+    },
+    "src/hub/features/imports/prescription-api.ts": {
+      "bytes": 7907,
+      "sha256": "613f87ee32a6c34c913f26f79f49f65c99d70d1f5e836d7aed2dc36dd32148d2"
+    },
+    "src/hub/features/imports/prescription-item-api.ts": {
+      "bytes": 10526,
+      "sha256": "b27236642c15c48161cdc5cb8b8746b03bc95d008eb89ccac3e614407782e9ce"
+    },
+    "src/hub/features/imports/prescription-review-api.ts": {
+      "bytes": 7309,
+      "sha256": "df6eecfb4b0dc635ea3993d18fd272553f4eb1922f505a2f3137b39879c35f0e"
+    },
+    "src/hub/features/imports/prescription-review-operation-state.ts": {
+      "bytes": 8811,
+      "sha256": "51e50b57b03abf6bc991ee136ac9da7f1dffa9698e65669f964ce09bed40e6b0"
+    },
+    "src/hub/features/imports/prescription-review-state.ts": {
+      "bytes": 8055,
+      "sha256": "6ed270ae7824dc78b59f30bde2720e93021ab3dea5e25a04bb302d147f686e1c"
+    },
+    "src/hub/features/imports/vaccination-api.ts": {
+      "bytes": 10091,
+      "sha256": "162bccb57c7e5f8329f578c886791c38cea9bf9d0fe6b9c87d06771ec4714a12"
+    },
+    "src/hub/features/imports/vaccination-review-api.ts": {
+      "bytes": 5760,
+      "sha256": "2d7d00608b297122b628d67623f177c91c425698cb4c15e321ce7257975d9810"
+    },
+    "src/hub/features/imports/vaccination-review-state.ts": {
+      "bytes": 8788,
+      "sha256": "c287fc27dd6bcaf4740daf48791a996ac7923325f70b59712f748cb9e76dcab9"
+    },
+    "src/hub/features/inbound-review/InboundReviewState.ts": {
+      "bytes": 4139,
+      "sha256": "441a88ca95fcfb7af727689fbf7035cd419ec1e80760b1d77e45cd5a8fe10aa1"
+    },
+    "src/hub/features/inbound-review/ProcessingState.ts": {
+      "bytes": 5261,
+      "sha256": "081577639e33631115604befd35320ef588ec993eeb82c8bc4c26d742e4dff69"
+    },
+    "src/hub/features/inventory/supplier-imports/identifier-model.ts": {
+      "bytes": 1417,
+      "sha256": "d008e29e32fef422e0335e413b4dc2e23336003656f40ead248ab9dbf90fa2c8"
+    },
+    "src/hub/features/inventory/supplier-imports/package-api.ts": {
+      "bytes": 3569,
+      "sha256": "b2348723baf31bbf92a01f263a1dbab5a3d3f83814d9185b414b6063b0c4af46"
+    },
+    "src/hub/features/inventory/supplier-imports/package-model.ts": {
+      "bytes": 9737,
+      "sha256": "621823af37fde4815201c7c7616e0c71e148e4f01ca447b2a5f2462ab40b364e"
+    },
+    "src/hub/features/inventory/supplier-imports/review-pointer.ts": {
+      "bytes": 3118,
+      "sha256": "a0001f7058544deb1c4ff31eaf83ef25f05d3c2a6bfd34fa01055ce3fbb55e02"
+    },
+    "src/hub/features/inventory/useStockMutation.ts": {
+      "bytes": 4834,
+      "sha256": "d693133994213231a888f13743723a5da501f9bac61edccace622af06c1b7537"
+    },
+    "src/hub/features/lab-work/LabResultState.ts": {
+      "bytes": 10712,
+      "sha256": "9cc7f746d4aff1fff84400c79b40f31f47abcf7d4393ea06c3cd05841be9aa56"
+    },
+    "src/hub/features/operations/OperationsState.ts": {
+      "bytes": 6888,
+      "sha256": "912a4b724774a0b2f67b12f7ea24c2728291404e526495478c1897c9431ba7a8"
+    },
+    "src/hub/features/outbox-retry/OutboxRetryState.ts": {
+      "bytes": 5193,
+      "sha256": "caed21718b55e27cfa1d0be900840a83d1775aeb1f9f2f3bd9d15db5d1790897"
+    },
+    "src/hub/features/patient-photos/photo-api.ts": {
+      "bytes": 3505,
+      "sha256": "4b0db96e5703c441d9bf56f63ea8ff1dc6beddf53fdccb031767d66a47366752"
+    },
+    "src/hub/features/patients/PatientFormDialog.tsx": {
+      "bytes": 12550,
+      "sha256": "556f7bfff50cc9c8f06cab191204e30de4d0e920f2610c9856341b192a47f50d"
+    },
+    "src/hub/features/patients/WeightHistory.tsx": {
+      "bytes": 9254,
+      "sha256": "ef29c76e84f6369b6f64e472a45a1aab781cb9e40af290bbe523afd1cb407ce0"
+    },
+    "src/hub/features/prescriptions/dispense-finance-api.ts": {
+      "bytes": 21419,
+      "sha256": "d109744b4e8a0ed0bed412c4d44a5c03373bc7c7a1ff3bc3d413bebd9423051b"
+    },
+    "src/hub/features/prescriptions/fulfillment-api.ts": {
+      "bytes": 37415,
+      "sha256": "a035ed286a5ee831b9ee160b24f49166ddd3f5943574dff984195e8b0d3b2b2f"
+    },
+    "src/hub/features/prescriptions/fulfillment-corrections-api.ts": {
+      "bytes": 13295,
+      "sha256": "85ab00c3c33610f5f5f5351ca03b01211a508b3f1196dad9332924d4b38231a7"
+    },
+    "src/hub/features/prescriptions/fulfillment-reconciliation-api.ts": {
+      "bytes": 35486,
+      "sha256": "713596b2e92b5e052a8ca08a3e48efed50f3029d5239fbe780582fecf8861d9f"
+    },
+    "src/hub/features/prescriptions/fulfillment-returns-api.ts": {
+      "bytes": 21678,
+      "sha256": "a00dce9ec6217f3d149ee17aa384a81b1fb06dc1522776c3a1ead76ef6a3114b"
+    },
+    "src/hub/features/prescriptions/prescription-api.ts": {
+      "bytes": 32639,
+      "sha256": "b5507864d14192d73da3a671bdee0f31272b4441ce39ae00c43541057d599823"
+    },
+    "src/hub/features/record-releases/refresh.ts": {
+      "bytes": 852,
+      "sha256": "26b139f8c2186667a41e7466b00c670d8dd673b9bf6283b3939e73ee391eea64"
+    },
+    "src/hub/features/records-requests/api.ts": {
+      "bytes": 6254,
+      "sha256": "fcd5a37938a8494c534d2c8d10929ed97dc22420a79bd8a985811cd87cae71f6"
+    },
+    "src/hub/features/records-requests/model.ts": {
+      "bytes": 7711,
+      "sha256": "320743ac6f8d1a931b942ee1835f2a58dcc8cf2e80b843d89f5e045014ddbb15"
+    },
+    "src/hub/features/refills/refill-api.ts": {
+      "bytes": 16050,
+      "sha256": "5e2c55a67f68bc83f1c5e3a99626f4cf1bae25d01211891fdcb3407c1293ed01"
+    },
+    "src/hub/features/scheduling/catalog-api.ts": {
+      "bytes": 4880,
+      "sha256": "346c82bfd6ddde8798a4ea3ba82c12df21944f600a795c52e449792aac960636"
+    },
+    "src/hub/features/scheduling/catalog-model.ts": {
+      "bytes": 7285,
+      "sha256": "fa9ff42f25d6e7683afb1860f11462901ccc86ab36b06842455bd0a28266836a"
+    },
+    "src/hub/features/scheduling/next-visit-api.ts": {
+      "bytes": 5208,
+      "sha256": "d96e7002b8d4e9622b9b87859db0c1369dc2899afd5569ce525c80c177a0aff2"
+    },
+    "src/hub/features/scheduling/next-visit-model.ts": {
+      "bytes": 9385,
+      "sha256": "906a965e6c1a9504363c5899c468ebc253ba442fa8560c3d243f8149e8da9281"
+    },
+    "src/hub/features/scheduling/next-visit-review-api.ts": {
+      "bytes": 3898,
+      "sha256": "8aa833bff7bfbc0318714eecc4b33783060e82dfb0da8ee4ae2aead45fd54779"
+    },
+    "src/hub/features/scheduling/next-visit-review-model.ts": {
+      "bytes": 6754,
+      "sha256": "eb64bbdf34b06df74e8767103fa8c2d20645e919e4b698b10105d02be0f61ac5"
+    },
+    "src/hub/features/time-clock/admin-time-entry.ts": {
+      "bytes": 2440,
+      "sha256": "942edac838c4227f947c7699dc8bce53823fb530265a6e41de2fb37a6c77e9ec"
+    },
+    "src/hub/features/time-clock/time-totals.ts": {
+      "bytes": 1074,
+      "sha256": "23f5144c55f8e94cca6b196adb8a300cb88bf83c9d49b18264591c896edffbc1"
+    },
+    "src/hub/features/vaccines/vaccine-status.ts": {
+      "bytes": 9511,
+      "sha256": "44312ab7b833bb4a6596faba069538f09286f7ba055a31703beff60d2a824a69"
+    },
+    "src/hub/features/whogot/PerformedServices.tsx": {
+      "bytes": 17563,
+      "sha256": "d21317fbd86d8cfc1c08bbec837f4d7acad068935c1fc9fe171a484e5aa6e27d"
+    },
+    "src/hub/features/whogot/WhogotSourcePage.tsx": {
+      "bytes": 8010,
+      "sha256": "2a84e4715d18b264658ea975cae1a85ca6151fbd4d767be85cdeacedb74d7d75"
+    },
+    "src/hub/features/whogot/model.ts": {
+      "bytes": 4471,
+      "sha256": "14ae20c1554e41efc288fd46650df06126221267a3c374eec6961c01ca68e455"
+    },
+    "src/hub/hooks/use-time-clock.ts": {
+      "bytes": 7474,
+      "sha256": "be8fb0d9f833c002744e6c1eb6ea5e9a348874e14cfe3f305b7a40829e1bc6c0"
+    },
+    "src/hub/pages/MyTimePage.tsx": {
+      "bytes": 12047,
+      "sha256": "e90d110718e7a95a1684a7b07fc086d4e31693326edcf9e4f901e43466e54ba8"
+    },
+    "src/hub/pages/TimeClockPage.tsx": {
+      "bytes": 8389,
+      "sha256": "00b2a2dd09b0e1d96c2c471e1fe211e9fb96a2e9c166440ca685f1ee8753cb9f"
+    },
+    "src/pages/Contact.tsx": {
+      "bytes": 29411,
+      "sha256": "525fe3fd077e6e5bd853f7571d22aa133ea37d7dcfe96d853297c7a915fb9915"
+    },
+    "src/pages/Terms.tsx": {
+      "bytes": 4924,
+      "sha256": "2d0b948ac1ec1fe7d7d421d986f0656ee190faaf25054bf65821e0d904f9ca63"
+    },
+    "src/pages/services/Surgery.tsx": {
+      "bytes": 6282,
+      "sha256": "87c49a191a1a33c119b9f1c0d3fbb09f8d45f86295e864029f46977bc8fa969e"
+    },
+    "src/shared/estimate-decision-public-api.ts": {
+      "bytes": 10114,
+      "sha256": "5a0f4e76a6c9420939e42007f2cabe4e9bef7ecf4593522c74254123e1d7b1b7"
+    },
+    "supabase/functions/_shared/cleanup-abandoned-handler.ts": {
+      "bytes": 5860,
+      "sha256": "a9178d7bb0b2b256a60ef29edce5beb44430b1174d9aff85fa3ff99543bb3ad8"
+    },
+    "supabase/functions/_shared/clinical-audio-model.ts": {
+      "bytes": 8622,
+      "sha256": "68d4b929d2fa6113a637fc5c2d39fbdf8833a415ab21318b9efa53cb36f9e603"
+    },
+    "supabase/functions/_shared/clinical-call-handler.ts": {
+      "bytes": 9461,
+      "sha256": "4b3ee057ad27aba5d1c921812a3b2504eb525a34608502ed7f0c38c758af31e7"
+    },
+    "supabase/functions/_shared/clinical-call-model.ts": {
+      "bytes": 6558,
+      "sha256": "4901d8c131d2c22e6220f4a87f6387d63e3e39c222d68a805977945bd1a91986"
+    },
+    "supabase/functions/_shared/clinical-call-note-processing-model.ts": {
+      "bytes": 13947,
+      "sha256": "2bc01c40274cc81d3de07251f07a88219af55a647bf4209f514199762eb70f38"
+    },
+    "supabase/functions/_shared/clinical-call-note-provider.ts": {
+      "bytes": 13344,
+      "sha256": "ee69eb3f59bca5a5ef3e6586d34c70de5e31e265512f0212e5e379fa141fe294"
+    },
+    "supabase/functions/_shared/clinical-note-model.ts": {
+      "bytes": 9143,
+      "sha256": "101e0a2ec3ac7c39424fbac312aa6e87ddde1ec08269c23e720bb4521bb85e57"
+    },
+    "supabase/functions/_shared/clinical-recap-model.ts": {
+      "bytes": 28584,
+      "sha256": "db5b767fb7e6bcfb2a41871006bab46a6a65d91d166669232c1fb28b2a1a91cd"
+    },
+    "supabase/functions/_shared/diagnostic-pdf-download.ts": {
+      "bytes": 5725,
+      "sha256": "a5cebebdd629fca4ffa823febb80c565c254ba9b0967e2fc689d1afa56d27787"
+    },
+    "supabase/functions/_shared/estimate-decision-contract.ts": {
+      "bytes": 6393,
+      "sha256": "b4c38f3c3ce18686b992f36816247d97c541b0b60b1891df3aeaf19945266188"
+    },
+    "supabase/functions/_shared/estimate-decision-grant-http.ts": {
+      "bytes": 10240,
+      "sha256": "74c74815bb4a8353fc6a6e61a3cb80d4f6baea20f9cb79becae0b9849aaa6b7b"
+    },
+    "supabase/functions/_shared/estimate-decision-http.ts": {
+      "bytes": 10329,
+      "sha256": "f3d987fdc382edd896a9c9adc9ddf8970b85178ac34b65773b9544fcdd84ddc0"
+    },
+    "supabase/functions/_shared/estimate-publication-document.ts": {
+      "bytes": 11864,
+      "sha256": "201a1db3df2964c1c5e6cf66e5e429cc63a10ad356a6fe6b16ef77a1d21fcd54"
+    },
+    "supabase/functions/_shared/estimate-publication-http.ts": {
+      "bytes": 11500,
+      "sha256": "664e8eca3c26738bd7a6dc034b8cb6334f6afdf3704bc5b37428fbae2a348a73"
+    },
+    "supabase/functions/_shared/invoice-document.ts": {
+      "bytes": 6425,
+      "sha256": "6ddedccba3569a56a151b148945ac082f05a871731d4fbf62dca27efae8b955b"
+    },
+    "supabase/functions/_shared/invoice-reminder-handler.ts": {
+      "bytes": 3877,
+      "sha256": "b64d2a110850207d77992fcfeeab11a0833bf9b7d38597b61aef71a464c4144f"
+    },
+    "supabase/functions/_shared/operational-reconciliation-contract.ts": {
+      "bytes": 6400,
+      "sha256": "2531bdd2503b2a047eecab05bce6d62e1df372263615170ec12b840607035cf3"
+    },
+    "supabase/functions/_shared/patient-photo-verification.ts": {
+      "bytes": 4579,
+      "sha256": "3b662e1830b56cdd084977e61c50aaa001909cfa6f64f8c85e43bb2fadaa6188"
+    },
+    "supabase/functions/_shared/record-release-diagnostics.ts": {
+      "bytes": 7722,
+      "sha256": "19ef7dc1f57f1c181ef6bde915e21b08efeaf70a0294520088e7427547984716"
+    },
+    "supabase/functions/capture-conversation-email/deno.json": {
+      "bytes": 50,
+      "sha256": "507e01bf60f7d9f60576de82963dda73a95482604abd60cf56153a9f87d6d6fe"
+    },
+    "supabase/functions/capture-conversation-email/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/clinical-audio-process/deno.json": {
+      "bytes": 36,
+      "sha256": "c8192d27ba24f9ba2710b9f271407c74cb31056fb45bce1b85e75afad793c81a"
+    },
+    "supabase/functions/clinical-audio-process/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/clinical-call-capture/deno.json": {
+      "bytes": 42,
+      "sha256": "ebfa75d3f596ef1853fccadfe078869c1bb51d2f9cbec7b8630d069848e4feff"
+    },
+    "supabase/functions/clinical-call-capture/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/clinical-call-note-process/deno.json": {
+      "bytes": 36,
+      "sha256": "c8192d27ba24f9ba2710b9f271407c74cb31056fb45bce1b85e75afad793c81a"
+    },
+    "supabase/functions/clinical-call-note-process/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/clinical-note-process/deno.json": {
+      "bytes": 36,
+      "sha256": "c8192d27ba24f9ba2710b9f271407c74cb31056fb45bce1b85e75afad793c81a"
+    },
+    "supabase/functions/clinical-note-process/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/clinical-recap-process/deno.json": {
+      "bytes": 42,
+      "sha256": "ebfa75d3f596ef1853fccadfe078869c1bb51d2f9cbec7b8630d069848e4feff"
+    },
+    "supabase/functions/clinical-recap-process/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/dispatch-outbox/deno.json": {
+      "bytes": 50,
+      "sha256": "507e01bf60f7d9f60576de82963dda73a95482604abd60cf56153a9f87d6d6fe"
+    },
+    "supabase/functions/dispatch-outbox/deno.lock": {
+      "bytes": 3378,
+      "sha256": "2516a9cb4a7f1d5cc6700202577dac02b4400b056f16060eb7f8a11e5384885a"
+    },
+    "supabase/functions/download-diagnostic-pdf/deno.json": {
+      "bytes": 36,
+      "sha256": "c8192d27ba24f9ba2710b9f271407c74cb31056fb45bce1b85e75afad793c81a"
+    },
+    "supabase/functions/download-diagnostic-pdf/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/estimate-decision/deno.json": {
+      "bytes": 44,
+      "sha256": "42035794617b9f834d335744e473ee109527ae7f2fa0854dd88ba4097a9f4996"
+    },
+    "supabase/functions/estimate-decision/deno.lock": {
+      "bytes": 441,
+      "sha256": "a62bc0df4891736e7261de8bfdf6b5ae22c74a8b36a1054a018667af8d832ea4"
+    },
+    "supabase/functions/prepare-document-link/deno.json": {
+      "bytes": 50,
+      "sha256": "507e01bf60f7d9f60576de82963dda73a95482604abd60cf56153a9f87d6d6fe"
+    },
+    "supabase/functions/prepare-document-link/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/prepare-estimate-decision-grant/deno.json": {
+      "bytes": 44,
+      "sha256": "42035794617b9f834d335744e473ee109527ae7f2fa0854dd88ba4097a9f4996"
+    },
+    "supabase/functions/prepare-estimate-decision-grant/deno.lock": {
+      "bytes": 441,
+      "sha256": "a62bc0df4891736e7261de8bfdf6b5ae22c74a8b36a1054a018667af8d832ea4"
+    },
+    "supabase/functions/prepare-estimate-publication/deno.json": {
+      "bytes": 44,
+      "sha256": "42035794617b9f834d335744e473ee109527ae7f2fa0854dd88ba4097a9f4996"
+    },
+    "supabase/functions/prepare-estimate-publication/deno.lock": {
+      "bytes": 441,
+      "sha256": "a62bc0df4891736e7261de8bfdf6b5ae22c74a8b36a1054a018667af8d832ea4"
+    },
+    "supabase/functions/prepare-invoice-email/deno.json": {
+      "bytes": 50,
+      "sha256": "507e01bf60f7d9f60576de82963dda73a95482604abd60cf56153a9f87d6d6fe"
+    },
+    "supabase/functions/prepare-invoice-email/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/prepare-payment-delivery/deno.json": {
+      "bytes": 50,
+      "sha256": "507e01bf60f7d9f60576de82963dda73a95482604abd60cf56153a9f87d6d6fe"
+    },
+    "supabase/functions/prepare-payment-delivery/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/prepare-release-email/deno.json": {
+      "bytes": 50,
+      "sha256": "507e01bf60f7d9f60576de82963dda73a95482604abd60cf56153a9f87d6d6fe"
+    },
+    "supabase/functions/prepare-release-email/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/queue-invoice-reminders/deno.json": {
+      "bytes": 57,
+      "sha256": "68cbbd22a542d915b977287954f16877d85c17a0388c0dfbc93f11c88d0935b7"
+    },
+    "supabase/functions/queue-invoice-reminders/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/read-estimate-publication-artifact/deno.json": {
+      "bytes": 44,
+      "sha256": "42035794617b9f834d335744e473ee109527ae7f2fa0854dd88ba4097a9f4996"
+    },
+    "supabase/functions/read-estimate-publication-artifact/deno.lock": {
+      "bytes": 441,
+      "sha256": "a62bc0df4891736e7261de8bfdf6b5ae22c74a8b36a1054a018667af8d832ea4"
+    },
+    "supabase/functions/reconcile-operational-tasks/deno.json": {
+      "bytes": 69,
+      "sha256": "89cd7dd90130c633cf3999a8f745bfbf4d0c1b10a42b7726a8583f951711c960"
+    },
+    "supabase/functions/reconcile-operational-tasks/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/recover-document-link/deno.json": {
+      "bytes": 50,
+      "sha256": "507e01bf60f7d9f60576de82963dda73a95482604abd60cf56153a9f87d6d6fe"
+    },
+    "supabase/functions/recover-document-link/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/recover-estimate-decision-grant/deno.json": {
+      "bytes": 44,
+      "sha256": "42035794617b9f834d335744e473ee109527ae7f2fa0854dd88ba4097a9f4996"
+    },
+    "supabase/functions/recover-estimate-decision-grant/deno.lock": {
+      "bytes": 441,
+      "sha256": "a62bc0df4891736e7261de8bfdf6b5ae22c74a8b36a1054a018667af8d832ea4"
+    },
+    "supabase/functions/recover-estimate-publication-preparation/deno.json": {
+      "bytes": 44,
+      "sha256": "42035794617b9f834d335744e473ee109527ae7f2fa0854dd88ba4097a9f4996"
+    },
+    "supabase/functions/recover-estimate-publication-preparation/deno.lock": {
+      "bytes": 441,
+      "sha256": "a62bc0df4891736e7261de8bfdf6b5ae22c74a8b36a1054a018667af8d832ea4"
+    },
+    "supabase/functions/retrieve-document-link/deno.json": {
+      "bytes": 50,
+      "sha256": "507e01bf60f7d9f60576de82963dda73a95482604abd60cf56153a9f87d6d6fe"
+    },
+    "supabase/functions/retrieve-document-link/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/functions/verify-patient-photo/deno.json": {
+      "bytes": 50,
+      "sha256": "507e01bf60f7d9f60576de82963dda73a95482604abd60cf56153a9f87d6d6fe"
+    },
+    "supabase/functions/verify-patient-photo/deno.lock": {
+      "bytes": 1943,
+      "sha256": "101fe276b00a689e835ab445f23f32ade7f34a3c66ffa5e76d5c2649b6c81a84"
+    },
+    "supabase/migrations/20261106170000_atomic_time_clock_corrections.sql": {
+      "bytes": 176972,
+      "sha256": "1e92fcc69ec4de1f410c7fff3c0f25825151c0bddfa231abf9fbeccad62b5e02"
+    },
+    "supabase/migrations/20261106173000_terminal_appointment_clinician.sql": {
+      "bytes": 4558,
+      "sha256": "d61fea9edd24f4c9598307c3320b3c1a6da70dcc1a81d1d11668b66898c8ed6f"
+    },
+    "tests/clinical-calls/beta-dependency-candidate.json": {
+      "bytes": 2126,
+      "sha256": "e8d62c02d2aa1a643a8a57c019d2421bc5b04309c73dff11476e71c4654d04f0"
+    },
+    "tests/clinical-calls/beta-uuid-candidate.json": {
+      "bytes": 2139,
+      "sha256": "985241238fa00d1bcc8c261eaea2dd0ab563c4563ebe78d8f5d767ece5c24bc8"
+    },
+    "tests/clinical-calls/synthetic-provider-plan.test.ts": {
+      "bytes": 14634,
+      "sha256": "3928bccaa4830da86fefe301d96e3056bf5cff7d60566b5ae26e202e8b1262d8"
+    },
+    "tests/clinical-calls/synthetic-provider-plan.ts": {
+      "bytes": 4463,
+      "sha256": "7e007f329fad47ff25c3465167a85deb4633df79de62861664baea95464bc354"
+    },
+    "tests/communications/cleanup-abandoned-handler.test.ts": {
+      "bytes": 7679,
+      "sha256": "8d4953e1a137bed7967c1317077e7638d03047739dd55e143fc121c1c4b6b552"
+    },
+    "tests/controlled-drugs/controlled-legacy-intent.test.ts": {
+      "bytes": 10310,
+      "sha256": "3d611690d7b9f5fba17b655894057319d456e9770c27d6160b1e387d4a06193d"
+    },
+    "tests/controlled-drugs/count-uuid-compatibility.test.ts": {
+      "bytes": 2844,
+      "sha256": "ab22baeaed997c817c2da85f756991dafad642b0bda712d14ccffb18c9c78e98"
+    },
+    "tests/controlled-drugs/run-beta-authenticated-count-finalize.mjs": {
+      "bytes": 24711,
+      "sha256": "7a9b39e186047b79ff022ca02788e5bd2f42d3f1ae51c8b9e75ca9dd6996f511"
+    },
+    "tests/dependencies/validation-boundaries.test.ts": {
+      "bytes": 2660,
+      "sha256": "bc8b17e572c6b41b110cebf9b2b28cbc273c95613ed57e4f70e93dbd529883ba"
+    },
+    "tests/deployment/acceptance-readiness.test.ts": {
+      "bytes": 3648,
+      "sha256": "0d4d1ef47a3c91b18675fca32792939753e37452e11e570a94adfd7460bfbabb"
+    },
+    "tests/deployment/hub-readiness.test.ts": {
+      "bytes": 3740,
+      "sha256": "3885709bddbcd8afd48af95f5896067966540f755974112513b8b1f90192731c"
+    },
+    "tests/diagnostics/registration-docker.ts": {
+      "bytes": 7740,
+      "sha256": "3401cb82732d4082b0fe3e97bf967f43a997093b5dab31c37bea7bdb8cf6d0cf"
+    },
+    "tests/hub/time-clock.test.ts": {
+      "bytes": 4727,
+      "sha256": "1de7f623ba3fe9ac87ace39ef4a31566d4b2b7cd31e9a5a3e79e309e9ecf8727"
+    },
+    "tests/readiness/schema-inventory-project.test.ts": {
+      "bytes": 2836,
+      "sha256": "346fcb285adaff723d99f18a515f484415f05c38b71374c3f8037f574783c0b1"
+    },
+    "tests/record-releases/refresh.test.ts": {
+      "bytes": 2722,
+      "sha256": "cc9bfeb2d8050111d618cc326f466a6714318ba01cd86cce6f55259231d744f0"
+    },
+    "tests/release-email/payload.test.ts": {
+      "bytes": 11507,
+      "sha256": "3b3169c187ef9c8dd613ffa3fee2d11c4b42770f8d5c3f175d690d4ac9363d7d"
+    },
+    "tests/restore/current-migration-guards.test.ts": {
+      "bytes": 17426,
+      "sha256": "b01250e1f67b7e515f3eb85c620ca26e58ebb5c640d8c1fa3ee33de458d937ce"
+    }
+  },
+  "localLogHashes": {
+    "/tmp/lrv-beta-remediation-final-check.log": "049c299c4bb46c79b50f02be907c4b0931d8ecadc62146a2ee5fd44ffebbf38b",
+    "/tmp/lrv-beta-remediation-final-typecheck.log": "ade18b6a0a2a12d023c7783464788fbba01358ab9d9552f074e14b0b99518272",
+    "/tmp/lrv-beta-remediation-final-unit.log": "efac4442da615a1dd20ed03c6f522add36f96afb6af8c0a5ff6936e6757b1668",
+    "/tmp/lrv-beta-remediation-final-build.log": "42479a127738575fd6728da568c2e1079f4cf293037ce07ca2cece963ed6b1c7",
+    "/tmp/lrv-beta-remediation-final-browser.log": "3c3f8a12fed874beab344b542eae33a440d64ec82b9953637e23e750aae09bec",
+    "/tmp/lrv-beta-remediation-focused-browser.log": "5b29d8bd61fdbe6e2529664599fd5bb06e9e0395fe6bd9f3dec14a74c48a4a08",
+    "/tmp/lrv-beta-lab-focused.log": "ccc0d290e313f7d496ca2c78ff7a3edd0a67195f129fba9ec88468d1f4f49c31",
+    "/tmp/lrv-beta-remediation-final-public.log": "3a1c342dec79089a38faa46c88284304b43428c38132a22d5e8f0d399e4a955c"
+  },
+  "documentation": {
+    "markdownFilesChecked": 312,
+    "brokenRelativeFileTargets": [],
+    "exclusions": [
+      "code fences",
+      "anchors",
+      "external URLs"
+    ]
+  }
+}

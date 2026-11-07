@@ -19,7 +19,7 @@ async function fixture(page: Page) {
   const state = { calls: [] as Request[], denied: false, corrupted: false, wrongMime: false, wrongManifest: false, requests: [] as string[], externalAttempts: [] as string[] };
   page.on("request", request => state.requests.push(request.url()));
   await page.route("**/*", route => {
-    if (new URL(route.request().url()).origin === "http://127.0.0.1:8080") return route.continue();
+    if (new URL(route.request().url()).origin === test.info().project.use.baseURL!) return route.continue();
     state.externalAttempts.push(route.request().url());
     return route.abort();
   });
@@ -38,7 +38,7 @@ test("capability stays out of URL/storage and staff app; opening is explicit", a
   const state = await fixture(page);
   await page.goto(`/shared/${grant}#${token}`);
   await expect(page.getByRole("heading", { name: "Your documents" })).toBeVisible();
-  expect(page.url()).toBe(`http://127.0.0.1:8080/shared/${grant}`);
+  expect(page.url()).toBe(`${test.info().project.use.baseURL}/shared/${grant}`);
   expect(state.calls).toHaveLength(0);
   await page.getByRole("button", { name: "Open documents", exact: true }).click();
   await expect(page.getByText("lab.pdf", { exact: true })).toBeVisible();

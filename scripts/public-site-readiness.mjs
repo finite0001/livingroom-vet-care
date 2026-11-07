@@ -43,7 +43,7 @@ const terms = read(files.terms);
 
 const findings = [];
 
-for (const setting of ['phone', 'email', 'emergencyPhone', 'hours']) {
+for (const setting of ['phone', 'email', 'hours']) {
   if (hasNullSetting(practice, setting)) {
     addFinding(
       findings,
@@ -53,6 +53,16 @@ for (const setting of ['phone', 'email', 'emergencyPhone', 'hours']) {
       `${files.practice}: ${setting}: null`,
     );
   }
+}
+
+// The owner can approve referral instructions instead of a named hospital number.
+const emergencyInstructions = practice.match(/emergencyInstructions:\s*"([^"\n]+)"/)?.[1]?.trim();
+const emergencyPhone = practice.match(/emergencyPhone:\s*"([^"\n]+)"/)?.[1]?.trim();
+if (!emergencyPhone && !emergencyInstructions) {
+  addFinding(findings, 'blocker', 'owner-content', 'Practice emergency contact or referral instructions are not configured.', files.practice);
+}
+if (emergencyInstructions && !contact.includes('practice.emergencyInstructions')) {
+  addFinding(findings, 'blocker', 'owner-content', 'Approved emergency instructions must appear on the contact page.', files.contact);
 }
 
 if (!/domain:\s*"thelivingroom\.vet"/.test(practice)) {

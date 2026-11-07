@@ -1,0 +1,240 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-11-06T23:44:05.989494+00:00",
+  "baseHead": "e709160ecf706bedc08e10e525c1a1f2fd542da2",
+  "purpose": "PR321 general frontend CI followup; separate from controlled proof and hosted readiness",
+  "initialCiFailure": {
+    "runUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42312651903",
+    "jobId": 128217605888,
+    "step": "Verify offline synthetic call transport safeguards",
+    "errors": [
+      "OfflineTransportTests.setUpClass: offline_bundle_or_transport_source_validation_failed",
+      "HostedTests.setUpClass: offline_bundle_or_transport_source_validation_failed"
+    ],
+    "cause": "Fresh current bundle was passed to deliberately unchanged historical hosted admission during fixture setup.",
+    "observedTestCount": 0,
+    "logSha256": "ffdf0fa8b277044646dd5da1e213c4e8eaf4e5f4ae8c02e246389d775e3232d2"
+  },
+  "repair": {
+    "scope": "Only offline test fixture and exact separate CI transport binding; production hosted planner pin unchanged.",
+    "pythonSuites": {
+      "passed": 28,
+      "failed": 0,
+      "logSha256": "31490de4ace553f6c66914142264053b3c2779d575617d9104d6a595e0d92d80"
+    },
+    "nodePlanner": {
+      "passed": 2,
+      "failed": 0,
+      "generatedCallbackModes": 23,
+      "logSha256": "0ef9eae43ef82334145766d61f60cf4be750eb410e61d3bd79e898c300e3f041"
+    },
+    "realHostedAdmissionRejectionRetained": true,
+    "historicalUuidCandidatePreserved": true
+  },
+  "firstLocalAttempts": [
+    {
+      "name": "retained-verifier",
+      "command": [
+        "python3",
+        "-I",
+        "-B",
+        "evidence/controlled-record-review/backend-workflow-proofs-v1/verify.py"
+      ],
+      "startedAt": "2026-11-06T23:42:07.372129+00:00",
+      "durationSeconds": 1.945,
+      "exitCode": 0,
+      "log": "/tmp/lrv-pr321-retained-verifier.log",
+      "logSha256": "40ed6b67ddf99030959ca54312a3a69d0f836660116b3de4c3721e2fbd2f1387",
+      "sitemapBeforeSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241",
+      "sitemapAfterSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241"
+    },
+    {
+      "name": "retained-verifier-tests",
+      "command": [
+        "python3",
+        "-I",
+        "-B",
+        "evidence/controlled-record-review/backend-workflow-proofs-v1/test_verifier.py"
+      ],
+      "startedAt": "2026-11-06T23:42:09.320093+00:00",
+      "durationSeconds": 0.295,
+      "exitCode": 0,
+      "log": "/tmp/lrv-pr321-retained-verifier-tests.log",
+      "logSha256": "837668fcd1b852b06a8f5151dabbdda5b9aead3d8b417da56395ec5bcb507c21",
+      "sitemapBeforeSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241",
+      "sitemapAfterSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241"
+    },
+    {
+      "name": "public-readiness-before",
+      "command": [
+        "node",
+        "scripts/public-site-readiness.mjs",
+        "--fail-on-blockers"
+      ],
+      "startedAt": "2026-11-06T23:42:09.616018+00:00",
+      "durationSeconds": 0.328,
+      "exitCode": 0,
+      "log": "/tmp/lrv-pr321-public-readiness-before.log",
+      "logSha256": "6726782f5b9c19e9587d364adf6e5dc4f814db9a4486b0bdab369a0b13573af0",
+      "sitemapBeforeSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241",
+      "sitemapAfterSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241"
+    },
+    {
+      "name": "sitemap-generator",
+      "command": [
+        "node",
+        "--experimental-strip-types",
+        "scripts/generate-sitemap.ts"
+      ],
+      "startedAt": "2026-11-06T23:42:09.945044+00:00",
+      "durationSeconds": 0.392,
+      "exitCode": 0,
+      "log": "/tmp/lrv-pr321-sitemap-generator.log",
+      "logSha256": "2be78cf8d93c9f072cfb3d3becb20033af0d86043abf7c3ada0baa0acf0518e9",
+      "sitemapBeforeSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241",
+      "sitemapAfterSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241"
+    },
+    {
+      "name": "public-readiness-after",
+      "command": [
+        "node",
+        "scripts/public-site-readiness.mjs",
+        "--fail-on-blockers"
+      ],
+      "startedAt": "2026-11-06T23:42:10.338051+00:00",
+      "durationSeconds": 0.307,
+      "exitCode": 0,
+      "log": "/tmp/lrv-pr321-public-readiness-after.log",
+      "logSha256": "53c49fbeb95ce513442a84da6e0695e40735ce08b7c3c04c21a1a6fb46b28281",
+      "sitemapBeforeSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241",
+      "sitemapAfterSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241"
+    },
+    {
+      "name": "lint",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "startedAt": "2026-11-06T23:42:10.646868+00:00",
+      "durationSeconds": 31.444,
+      "exitCode": 0,
+      "log": "/tmp/lrv-pr321-lint.log",
+      "logSha256": "d57b5166c1a5539ddb5bd9f2d2c4cd2477bf69bcdf3195edab740056cb76391b",
+      "sitemapBeforeSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241",
+      "sitemapAfterSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241"
+    },
+    {
+      "name": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "startedAt": "2026-11-06T23:42:42.092810+00:00",
+      "durationSeconds": 18.552,
+      "exitCode": 0,
+      "log": "/tmp/lrv-pr321-build.log",
+      "logSha256": "d20e125bbb79a613b38ca978d9e8e7eccec82307750f2b2353825d7014af4238",
+      "sitemapBeforeSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241",
+      "sitemapAfterSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241"
+    },
+    {
+      "name": "scanner-browser",
+      "command": [
+        "node",
+        "tests/inventory/scanner-browser.mjs"
+      ],
+      "startedAt": "2026-11-06T23:43:00.653287+00:00",
+      "durationSeconds": 16.283,
+      "exitCode": 0,
+      "log": "/tmp/lrv-pr321-scanner-browser.log",
+      "logSha256": "73964979b94e954cddf0083f152f822ae5eebf6103d5383c3d65f260c2f94221",
+      "sitemapBeforeSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241",
+      "sitemapAfterSha256": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241"
+    }
+  ],
+  "publicReadinessBefore": {
+    "generatedAt": "2026-11-06T23:42:09.932Z",
+    "status": "ready-for-owner-review",
+    "summary": {
+      "blockers": 0,
+      "warnings": 0,
+      "publicRoutes": 15,
+      "sitemapRoutes": 15
+    },
+    "findings": []
+  },
+  "publicReadinessAfter": {
+    "generatedAt": "2026-11-06T23:42:10.635Z",
+    "status": "ready-for-owner-review",
+    "summary": {
+      "blockers": 0,
+      "warnings": 0,
+      "publicRoutes": 15,
+      "sitemapRoutes": 15
+    },
+    "findings": []
+  },
+  "scanner": {
+    "checks": 16,
+    "source_sha256": {
+      "src/hub/features/inventory/barcode-scanner/camera-lease.ts": "3b996bfdaeb4f285238af1bdaff2350016829336fabbc4fea97d9173bef114fc",
+      "src/hub/features/inventory/barcode-scanner/decoder-contract.ts": "261a85bf99096dad058f1b0ae8401a3abe9d6ac05bd33beb68224825a961f999",
+      "src/hub/features/inventory/barcode-scanner/barcode-worker.ts": "b78e5ac475af36ec20f5f60ba901e3e782e49665b8ef141e5024a2bb3fef4b33",
+      "src/hub/features/inventory/barcode-scanner/BarcodeScanDialog.tsx": "6e6745c95fd87daab8324074ba4080276e10a754b62a333c19c0c7c8c6646078",
+      "src/hub/features/inventory/supplier-imports/SupplierIdentityPanel.tsx": "6b82c593b3d856c4b533c925af11c27580ba24580afddf80c9753ad05eed59e0",
+      "package.json": "eb01e7f2b6e0c1021e5d7ef4a3525f1adfd5ad87c45775ce3cc066296626253a",
+      "package-lock.json": "89e5ec7bd74d1fe33a93fa1915fee1bbe9d134fd9befa502a901ed01892d6d33",
+      "vite.config.ts": "078ab8ab10e802f1123e671c638f52abced168e1a9d0b19d68a4d78bca1658e3"
+    },
+    "built_worker_and_hash_checked_wasm": true,
+    "restricted_document_and_worker_csp": true,
+    "javascript_eval_permission": false,
+    "simulated_camera": true,
+    "real_iphone": false,
+    "real_supplier_labels": false,
+    "local_only_requests": true,
+    "permission_cancel_and_late_tracks": true,
+    "permission_denial_retry": true,
+    "preview_startup_deadline": true,
+    "simulated_hidden_and_pagehide_cleanup": true,
+    "touch_targets_checked": true,
+    "repeat_scan": true,
+    "original_text": "0036000291452",
+    "page_errors": 0
+  },
+  "lint": {
+    "errors": 0,
+    "existingFastRefreshWarnings": 7
+  },
+  "build": {
+    "passed": true,
+    "largeChunkWarnings": true,
+    "environment": "CI localhost backend URL and placeholder public key; not a deployable production configuration",
+    "envFilesOverwritten": false
+  },
+  "reusedUnchangedEvidence": {
+    "receipt": "docs/evidence/beta-remediation-verification-2026-11-06.json",
+    "typecheckConfigurations": 3,
+    "unitPassed": 2799,
+    "unitFailed": 0,
+    "browserSourceUnchanged": true,
+    "frontendPackageConfigDiffAgainstHead": [],
+    "fullBroadSuitesRerun": false
+  },
+  "sourceSha256": {
+    "tests/clinical-calls/test_synthetic_provider.py": "cff7e665598cf3ad717182399659f1be53f757bb3f63b9daa1fc65df74d7c022",
+    "tests/clinical-calls/synthetic-provider-plan.test.ts": "d69d16d24ce3048fdf4d2844548bf3331cd8fd6d141eec41a12b02a596938e41",
+    "tests/clinical-calls/beta-ci-candidate-2026-11-06.json": "e2964a2704b81e76f49c6046c3d53bc03fd428097e17fd85be5c70f4aa809988",
+    "tests/clinical-calls/beta-uuid-candidate.json": "985241238fa00d1bcc8c261eaea2dd0ab563c4563ebe78d8f5d767ece5c24bc8",
+    "package.json": "eb01e7f2b6e0c1021e5d7ef4a3525f1adfd5ad87c45775ce3cc066296626253a",
+    "package-lock.json": "89e5ec7bd74d1fe33a93fa1915fee1bbe9d134fd9befa502a901ed01892d6d33",
+    "scripts/generate-sitemap.ts": "be994dd8788c8fa7b2992f9cb147e597db50c6d6e9a4a70f6ca31fb28a1c1803",
+    "scripts/public-site-readiness.mjs": "758a02aad707a1d93ca4a3baea6052a21635d18a9ff8bcfe4ae050218903bfc9",
+    "public/sitemap.xml": "1cc83618c333347460cfe87303bfcf2fa9c6c87b3585b738a6a294d211f4b241"
+  },
+  "hostedWrites": false,
+  "githubRerunPassed": false,
+  "githubRerunNote": "Fix remains a local followup awaiting batched push; these local checks do not relabel the failed initial GitHub job."
+}

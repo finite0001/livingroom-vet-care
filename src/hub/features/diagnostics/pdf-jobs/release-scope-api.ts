@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { diagnosticReleaseScopeSchema } from "./release-scope-model";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 export async function readReleaseScope(
   job: string,
   pet: string,

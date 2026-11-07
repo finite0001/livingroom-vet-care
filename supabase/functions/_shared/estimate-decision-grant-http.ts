@@ -4,7 +4,7 @@ import { materializeEstimateDecision, validEstimateDecisionCapability, type Esti
 import { validateEstimatePublicReview } from './estimate-decision-http.ts';
 import type { EstimatePublicationDependencies } from './estimate-publication-http.ts';
 
-const uuid=z.string().uuid().refine(v=>v===v.toLowerCase());
+const uuid=z.string().guid().refine(v=>v===v.toLowerCase());
 const hash=z.string().regex(/^[a-f0-9]{64}$/);
 const instant=z.string().datetime().refine(v=>Number.isFinite(Date.parse(v))&&!/\.\d{7}/.test(v));
 const text=(max:number)=>z.string().refine(v=>v===v.trim()&&Array.from(v).length>=1&&Array.from(v).length<=max&&!/[\uD800-\uDFFF]/u.test(v)&&!Array.from(v).some(c=>{const n=c.charCodeAt(0);return n===127||(n<32&&n!==9&&n!==10);}));

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { identityCanonical } from "../inventory/supplier-imports/package-model.ts";
 export { identityCanonical as draftCanonical };
-const uuid = z.string().uuid().refine(value => value === value.toLowerCase() && value !== "00000000-0000-0000-0000-000000000000");
+const uuid = z.string().guid().refine(value => value === value.toLowerCase() && value !== "00000000-0000-0000-0000-000000000000");
 const version = z.number().int().min(1).max(2147483647);
 const instant = z.string().datetime({ offset: true }).refine(value => Number.isFinite(Date.parse(value)));
 const cleanText = (maximum: number, multiline = false) => z.string().min(1).refine(value => value === value.trim() &&

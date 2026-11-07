@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { sourceLabels } from '../src/hub/features/record-releases/selection';
 
 const backend = 'http://127.0.0.1:54321';
 const staffId = '11111111-1111-4111-8111-111111111111';
@@ -15,8 +16,9 @@ async function fixture(page: Page, inactive = false) {
   const payload = Buffer.from(JSON.stringify({ sub: staffId, exp: expires, role: 'authenticated', aud: 'authenticated' })).toString('base64url');
   const session = { access_token: `eyJhbGciOiJIUzI1NiJ9.${payload}.synthetic`, refresh_token: 'synthetic', token_type: 'bearer', expires_in: 3600, expires_at: expires, user };
   await page.addInitScript(value => localStorage.setItem('sb-127-auth-token', JSON.stringify(value)), session);
-  const state: { row: Encounter | null; conflict: boolean; saves: number; addenda: { id: string; encounter_id: string; content: string; created_by: string; created_at: string }[] } = { row: null, conflict: false, saves: 0, addenda: [] };
-  await page.route('**/*', route => new URL(route.request().url()).origin === 'http://127.0.0.1:8080' ? route.continue() : route.abort());
+  const state: { row: Encounter | null; conflict: boolean; saves: number; sourceReads: number; addenda: { id: string; encounter_id: string; content: string; created_by: string; created_at: string }[] } = { row: null, conflict: false, saves: 0, sourceReads: 0, addenda: [] };
+  const appOrigin = new URL(test.info().project.use.baseURL!).origin;
+  await page.route('**/*', route => new URL(route.request().url()).origin === appOrigin ? route.continue() : route.abort());
   await page.route(`${backend}/**`, async route => {
     const url = new URL(route.request().url());
     const path = url.pathname;
@@ -29,6 +31,17 @@ async function fixture(page: Page, inactive = false) {
     if (path === '/rest/v1/patient_problems') return route.fulfill({ json: [problem] });
     if (path === '/rest/v1/clinical_addenda') return route.fulfill({ json: state.addenda });
     if (path === '/rest/v1/clinical_encounters') return route.fulfill({ json: url.searchParams.has('id') ? state.row : state.row ? [state.row] : [] });
+    if (path === '/rest/v1/rpc/list_record_release_sources_v13') {
+      state.sourceReads++;
+      return route.fulfill({ json: {
+        pet_id: petId, client_id: clientId, client_name: 'Synthetic Household',
+        email: 'synthetic@example.test', phone: null, policy_accepted: true, policy_v13_accepted: true,
+        has_more: Object.fromEntries(Object.keys(sourceLabels).map(kind => [kind, false])),
+        ...Object.fromEntries(Object.keys(sourceLabels).map(kind => [kind, []])),
+        encounter_ids: state.row?.status === 'signed' ? [{ id: state.row.id, label: 'Newly signed encounter', recorded_at: state.row.visit_at, version: state.row.version }] : [],
+      } });
+    }
+    if (path === '/rest/v1/rpc/save_patient_problem') return route.fulfill({ json: { ...problem, ...Object.fromEntries(Object.entries(route.request().postDataJSON()).map(([key, value]) => [key.replace(/^p_/, ''), value])), id: problem.id, version: problem.version + 1 } });
     if (path === '/rest/v1/rpc/read_clinical_audio_provenance') return route.fulfill({ json: null });
     if (path === '/rest/v1/rpc/read_clinical_audio') return route.fulfill({ json: {actor_id:staffId,pet_id:petId,encounter_id:state.row!.id,policy:{version:1,status:'draft',consent_text:'Synthetic draft',audio_retention:'not_stored',transcript_retention:'Clinical source history',transcription_model:'gpt-transcribe',soap_model:'gpt-6-luna',reviewed_by:null,reviewed_at:null,created_at:'2026-10-16T00:00:00Z'},jobs:[]} });
     if (path === '/rest/v1/rpc/read_clinical_dictation') return route.fulfill({ json: { actor_id: staffId, pet_id: petId, encounter_id: state.row!.id, items: [], has_more: false } });
@@ -103,4 +116,43 @@ test('unsaved SOAP text blocks route navigation until staff explicitly discards 
   await page.getByRole('link', { name: 'Synthetic Household', exact: true }).click();
   await page.getByRole('button', { name: 'Discard and leave' }).click();
   await expect(page).toHaveURL(`/hub/client/${clientId}`);
+});
+
+test('saved clinical changes refresh the already-mounted record release sources', async ({ page }) => {
+  const state = await fixture(page);
+  await page.goto(`/hub/patient/${petId}?tab=documents`);
+  await expect(page.getByRole('heading', { name: 'Synthetic Juniper' })).toBeVisible({ timeout: 20000 });
+  await expect.poll(() => state.sourceReads).toBe(1);
+  await page.getByRole('tab', { name: 'Medical', exact: true }).click();
+  await page.getByRole('button', { name: 'New encounter', exact: true }).click();
+  await page.getByLabel('Visit date and time').fill('2026-09-12T09:30');
+  await page.getByLabel('Subjective', { exact: true }).fill('Clinical release refresh regression');
+  let before = state.sourceReads;
+  await page.getByRole('button', { name: 'Save draft', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Draft saved' })).toBeVisible();
+  await expect.poll(() => state.sourceReads).toBeGreaterThan(before);
+  before = state.sourceReads;
+  await page.getByRole('button', { name: 'Review and sign' }).click();
+  await page.getByRole('button', { name: 'Sign saved encounter' }).click();
+  await expect(page.getByText(/Signed by Synthetic Staff/)).toBeVisible();
+  await expect.poll(() => state.sourceReads).toBeGreaterThan(before);
+  await page.getByRole('tab', { name: 'Documents', exact: true }).click();
+  await expect(page.getByText(/^Newly signed encounter ·/)).toBeVisible();
+  await page.getByRole('tab', { name: 'Medical', exact: true }).click();
+  before = state.sourceReads;
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Reload latest saved record' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Latest saved encounter loaded' })).toBeVisible();
+  expect(state.sourceReads).toBe(before);
+  before = state.sourceReads;
+  await page.getByLabel('Append a correction or additional information').fill('New addendum retained in release sources.');
+  await page.getByRole('button', { name: 'Save addendum' }).click();
+  await expect(page.getByText('New addendum retained in release sources.', { exact: true })).toBeVisible();
+  await expect.poll(() => state.sourceReads).toBeGreaterThan(before);
+  before = state.sourceReads;
+  await page.getByRole('button', { name: 'Add problem', exact: true }).click();
+  await page.getByLabel('Problem or diagnosis', { exact: true }).fill('New documented problem');
+  await page.getByRole('button', { name: 'Save problem', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Problem saved' })).toBeVisible();
+  await expect.poll(() => state.sourceReads).toBeGreaterThan(before);
 });

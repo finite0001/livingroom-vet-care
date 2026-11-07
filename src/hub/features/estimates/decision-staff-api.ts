@@ -10,7 +10,7 @@ import {
   sameEstimateDecisionEvidence as equal,
 } from "../../../../supabase/functions/_shared/estimate-decision-contract.ts";
 
-const uuid = z.string().uuid().refine((value) => value === value.toLowerCase());
+const uuid = z.string().guid().refine((value) => value === value.toLowerCase());
 const provenance = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("grant"), grant_id: uuid }).strict(),
   z.object({

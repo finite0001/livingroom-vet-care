@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { finalizedSchema } from "../model.ts";
-const uuid = z.string().uuid(),
+const uuid = z.string().guid(),
   hash = z.string().regex(/^[a-f0-9]{64}$/),
   instant = z.string().datetime({ offset: true }),
   positive = z.number().int().positive();

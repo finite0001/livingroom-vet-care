@@ -12,7 +12,9 @@ const uploadId = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$
 /** Candidates discovered per scheduled call. Each still passes the per-upload claim, which is the authorization. */
 export const CLEANUP_BATCH_DISCOVERY_LIMIT = 25;
 /**
- * Two request shapes:
+ * Three request shapes:
+ *  - `{"dry_run":true}` previews only the candidate count, even while cleanup is disabled.
+ *    It never claims uploads or accesses Storage; the count is capped at25, not a total.
  *  - `{"upload_id":"<uuid>"}` attempts exactly that upload (operator recovery).
  *  - `{}` (what the scheduler posts) discovers up to 25 eligible uploads with the
  *    server-configured grace and attempts each in turn within the batch budget.
@@ -29,7 +31,6 @@ export function createAbandonedCleanupHandler(env: AttachmentCleanupEnvironment,
     if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
     const credential = authenticateWorker(request, env);
     if (!credential) return json({ error: "Worker authentication required" }, 401);
-    if (env.ATTACHMENT_CLEANUP_ENABLED !== "true") return json({ error: "Attachment cleanup is disabled" }, 503);
     const configuredGrace = env.ATTACHMENT_CLEANUP_GRACE_HOURS ?? "";
     const grace = Number(configuredGrace);
     if (!/^\d+$/.test(configuredGrace) || !Number.isInteger(grace) || grace < 24 || grace > 720)
@@ -38,6 +39,17 @@ export function createAbandonedCleanupHandler(env: AttachmentCleanupEnvironment,
     try { input = JSON.parse(await boundedBody(request, 512)); } catch { return json({ error: "Exact upload identity required" }, 400); }
     if (!input || typeof input !== "object" || Array.isArray(input)) return json({ error: "Exact upload identity required" }, 400);
     const body = input as Record<string, unknown>;
+    const preview = Object.keys(body).length === 1 && body.dry_run === true;
+    if (preview) {
+      if (!discover) return json({ error: "Cleanup discovery is unavailable" }, 503);
+      try {
+        const candidates = await discover(grace, CLEANUP_BATCH_DISCOVERY_LIMIT, credential);
+        if (!Array.isArray(candidates) || candidates.length > CLEANUP_BATCH_DISCOVERY_LIMIT || candidates.some(id => typeof id !== "string" || !uploadId.test(id)))
+          throw new Error("Discovery shape");
+        return json({ mode: "preview", dry_run: true, grace_hours: grace, candidates: candidates.length, limit: CLEANUP_BATCH_DISCOVERY_LIMIT, complete: 0 });
+      } catch { return json({ error: "Cleanup discovery is unavailable" }, 503); }
+    }
+    if (env.ATTACHMENT_CLEANUP_ENABLED !== "true") return json({ error: "Attachment cleanup is disabled" }, 503);
     if (discover && Object.keys(body).length === 0) return await batch(grace, credential);
     if (Object.keys(body).length !== 1 || typeof body.upload_id !== "string" || !uploadId.test(body.upload_id))
       return json({ error: "Exact upload identity required" }, 400);

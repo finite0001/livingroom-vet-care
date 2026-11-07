@@ -8,10 +8,10 @@ export interface EstimatePublicationDependencies {
   authenticate(token: string): Promise<{ actorId: string; db: EstimatePublicationDatabase } | null>;
   service: EstimatePublicationDatabase;
 }
-const uuid = z.string().uuid().refine(value => value === value.toLowerCase());
+const uuid = z.string().guid().refine(value => value === value.toLowerCase());
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const revision = z.number().int().min(1).max(2147483647);
-const shape = estimatePublicationSnapshotSchema.innerType().shape;
+const shape = estimatePublicationSnapshotSchema.shape;
 const head = z.object({ event_id: uuid.nullable(), version: z.number().int().min(0).max(2147483647), record_hash: hash.nullable() }).strict()
   .refine(value => value.version === 0 ? value.event_id === null && value.record_hash === null : value.event_id !== null && value.record_hash !== null);
 export const estimatePublicationPrepareRequestSchema = z.object({

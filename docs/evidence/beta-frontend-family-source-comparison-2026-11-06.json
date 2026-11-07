@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "kind": "beta-frontend-family-unchanged-input-closure-v1",
+  "capturedAt": "2026-11-07T02:05:09.459128+00:00",
+  "baselineCommit": "86d9c177533cbd3ddbf245fe28a8ea896ebdc5cd",
+  "candidateBinding": {
+    "mode": "Frozen working-tree candidate before parent commit",
+    "betaCandidateManifestSha256": "8146e9752b4472d5ee8333893ba2d8a1fefcaa9ee60c932921a37bd3c778c9d7",
+    "migration210Sha256": "66908ec41dfadb7d363043d30a1f69fb7804ea9e5bee5a57ad17fd9087847823",
+    "guardTemplateSha256": "690f7d90798e0018f2f662823dadebb69b0e960328c01339b52e1787174a1498"
+  },
+  "method": "Read all baseline tracked Git blobs, hash every corresponding working-tree file with git hash-object, compare exact blob identities; inventory untracked nonignored files and refuse any addition except documentation or the explicitly enumerated new native family-verifier test. Group inventory digests bind sorted path, mode and Git blob IDs. No test input is edited.",
+  "trackedFilesCompared": 4965,
+  "unchangedInputGroups": {
+    "application": {
+      "files": 726,
+      "identical": true,
+      "sortedPathModeGitBlobInventorySha256": "4c1336d6f4d3d3c199a3f3ffbd724424d932ac43b1e23a880f27ce48264e30e7"
+    },
+    "browserTestsAndFixtures": {
+      "files": 778,
+      "identical": true,
+      "sortedPathModeGitBlobInventorySha256": "cc6c8a2ed454fe0299eefe200ea94d9974722cd76b780753d7ce110e9a3c22cf"
+    },
+    "publicAssets": {
+      "files": 13,
+      "identical": true,
+      "sortedPathModeGitBlobInventorySha256": "c4cec71ce40de097e70dcb85feea1d06ea72218d234198b5bcc712ae78265b20"
+    },
+    "rootConfigsAndDependencies": {
+      "files": 28,
+      "identical": true,
+      "sortedPathModeGitBlobInventorySha256": "963dfa2db98d5fec0a54fdfc7eb705b150676cca43d4fd0ee36c48328fd83b87"
+    },
+    "buildAndCiCommands": {
+      "files": 106,
+      "identical": true,
+      "sortedPathModeGitBlobInventorySha256": "cf58e1f7198cddcda6561c9228cc75cbcf0ed448b90c07e773445d25819fb53b"
+    },
+    "edgeAndRendererSources": {
+      "files": 234,
+      "identical": true,
+      "sortedPathModeGitBlobInventorySha256": "883bdcb96211bdc7eeb4b83ed245ebfa7d99d8be97a1c8ed357df44c257c17ec"
+    }
+  },
+  "completeChangedTrackedPaths": [
+    "docs/beta-remediation-2026-11-06.md",
+    "docs/evidence/beta-controlled-candidate-2026-11-06.md",
+    "scripts/narcotics-log/beta-candidate-source.json",
+    "scripts/narcotics-log/beta-migration210.json",
+    "scripts/narcotics-log/beta-time-clock-source-proof.json",
+    "scripts/narcotics-log/beta_recovery_diagnostic.py",
+    "scripts/narcotics-log/beta_rehearsal.py",
+    "scripts/narcotics-log/beta_time_clock_source.py",
+    "scripts/narcotics-log/test_beta_recovery_diagnostic.py",
+    "scripts/narcotics-log/test_beta_time_clock_source.py",
+    "scripts/narcotics-log/verify_beta_metadata.py",
+    "supabase/migrations/20261106170000_atomic_time_clock_corrections.sql"
+  ],
+  "newUntrackedPaths": [
+    "docs/evidence/beta-controlled-metadata-rejected-explorations-2026-11-06.json",
+    "docs/evidence/beta-controlled-metadata-template-family-2026-11-06.json",
+    "docs/evidence/beta-current211-fifth-ci-2026-11-06.json",
+    "docs/evidence/beta-current211-leaf-writer-diagnostics-2026-11-06.json",
+    "scripts/narcotics-log/test_beta_family_runtime.py"
+  ],
+  "changedNativeProofSources": {
+    "scripts/narcotics-log/beta-candidate-source.json": "8146e9752b4472d5ee8333893ba2d8a1fefcaa9ee60c932921a37bd3c778c9d7",
+    "scripts/narcotics-log/beta-migration210.json": "068307f0364301599ac612bd2b1a1d0b3947f4c0acc46032b4d9d8c742f2d6eb",
+    "scripts/narcotics-log/beta-time-clock-source-proof.json": "7c9545478c7dbd27cf32b5c21131bfe00ac8b1a58e76473c6f389cec03f84cd1",
+    "scripts/narcotics-log/beta_recovery_diagnostic.py": "6f11ec908c679654c6eeab5dbde0ad492a3f9354ce395693b98d625786ca2ad0",
+    "scripts/narcotics-log/beta_rehearsal.py": "04c1beb55e15987565bba83bcca36920bb4ea60192a23a329191b59bb5922902",
+    "scripts/narcotics-log/beta_time_clock_source.py": "3f11d21889459571245958b2f7acb5c634cf8b6e404faad22aa8b8223181f37c",
+    "scripts/narcotics-log/test_beta_recovery_diagnostic.py": "d0d6866f098235bc982eea3f3805a19c87fbb5839cf9489e6444104e59cd4645",
+    "scripts/narcotics-log/test_beta_time_clock_source.py": "9cdc414e537d3f3755f9019c07532bdeb4abe36ff8d8091902546544630b2b99",
+    "scripts/narcotics-log/verify_beta_metadata.py": "7750010b83b9fa5cb3838434fc19c835c16cbe0dc609b9f8491bb297c85195cf",
+    "supabase/migrations/20261106170000_atomic_time_clock_corrections.sql": "66908ec41dfadb7d363043d30a1f69fb7804ea9e5bee5a57ad17fd9087847823",
+    "scripts/narcotics-log/test_beta_family_runtime.py": "c4a8c7f0ce0b3a8a0adfee4fe2b6d1498e67eae258d263735f4f0b7c459918a0"
+  },
+  "unitDependencyException": {
+    "test": "tests/restore/current-migration-guards.test.ts",
+    "reason": "Unchanged test reads changed migration210 and its framing manifest; old full unit result alone is insufficient for this check.",
+    "followupLog": "/tmp/lrv-family-current-migration-guards.log",
+    "passed": 11,
+    "failed": 0,
+    "exitCode": 0,
+    "logSha256": "b8b7fe517b42cb4c86e668a5bef058292072576c90bbac165e97ff1e898cd8a3",
+    "command": "node --experimental-strip-types --test tests/restore/current-migration-guards.test.ts"
+  },
+  "interpretation": "The successful 86d9 mock-browser, application build/typecheck and scanner input closure is byte-identical to this source-template SQL candidate. This permits precisely scoped reuse of those completed results, not a claim that future CI reruns completed. Changed native guard/source/framing/diagnostic work requires separate current211 runtime/source tests. The one identified Node test reading changed migration bytes is rerun separately.",
+  "readinessAdmission": false,
+  "current211RuntimeAcceptance": false,
+  "trackedFileModeChanges": 0,
+  "baselineFrontendEvidence": {
+    "jobUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42323925126/job/128254760518",
+    "jobConclusion": "success",
+    "sourceCommit": "86d9c177533cbd3ddbf245fe28a8ea896ebdc5cd",
+    "browserPassed": 607,
+    "browserSkipped": 1,
+    "browserFailures": 0,
+    "browserRetriesObserved": 0,
+    "skip": "CloudTalk direct-route scenario intentionally disabled without its provider feature flag",
+    "unitTestsPassed": 2799,
+    "logSha256": "91be46b82084ae3aa60da443da751c712fabd22e5d1697e05d7638b40412062b",
+    "archivedLocalReceipt": "/tmp/lrv-86d9-frontend-final-receipt.json"
+  },
+  "earlierEquivalentFrontendReceipt": "docs/evidence/beta-frontend-ci-fd5f-2026-11-06.json"
+}

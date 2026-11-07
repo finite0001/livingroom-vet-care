@@ -1,0 +1,29 @@
+{
+  "projectRef": "kothoqicubowyhwfsrte",
+  "observedAt": "2026-11-06T22:51:13.419735+00:00",
+  "failure": "prepare-release-email returned preparation_unconfirmed500 with RESEND_FROM absent",
+  "sourceCause": "buildReleaseEmailPayload rejects empty sender before capture",
+  "addedField": "RESEND_FROM",
+  "syntheticSender": "Synthetic Beta <no-delivery@example.test>",
+  "allExistingSecretDigestsUnchanged": true,
+  "outboundDelivery": "disabled",
+  "providerRequests": 0,
+  "existingAgentMailConfigPreserved": true,
+  "realSenderCommissioned": false,
+  "positiveRerunPending": false,
+  "positiveRerun": {
+    "observedAt": "2026-11-06T22:59:58.700883+00:00",
+    "deployedPrepareReleaseEmailStatus": 200,
+    "capturedOriginalPdfBytesExact": true,
+    "evidenceOwner": "documentation agent bounded PDF package runner",
+    "fullPipelinePassed": false,
+    "remainingHarnessIssue": "Unset LRV_SYNTHETIC_LINK_VERSION omitted p_key_version in prior direct RPC call; beta runner now uses deployed prepare-document-link; next hosted run waits for migration window."
+  },
+  "finalPipelineAcceptance": {
+    "observedAt": "2026-11-06T23:15:11.974610+00:00",
+    "passed": true,
+    "checks": 201,
+    "evidence": "docs/evidence/beta-staging-renderer-workflow-2026-11-06.json",
+    "priorHarnessIssueResolved": true
+  }
+}

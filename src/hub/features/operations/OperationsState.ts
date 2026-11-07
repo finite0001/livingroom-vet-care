@@ -9,7 +9,7 @@ function micros(value: string) {
     BigInt(fraction.padEnd(6, "0").slice(3, 6))
   );
 }
-const id = z.string().uuid();
+const id = z.string().guid();
 const label = z.string().regex(/^[a-z][a-z0-9_]{0,79}$/);
 export const runSchema = z
   .object({

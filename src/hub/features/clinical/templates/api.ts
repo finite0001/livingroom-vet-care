@@ -18,7 +18,7 @@ interface RpcClient {
     args: Record<string, unknown>,
   ): PromiseLike<{ data: unknown; error: unknown }>;
 }
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 async function call(name: string, args: Record<string, unknown>) {
   const { data, error } = await (supabase as unknown as RpcClient).rpc(
     name,

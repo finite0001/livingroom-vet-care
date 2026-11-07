@@ -88,7 +88,7 @@ test("mobile household adds two patients, retains identity fields and dated weig
       const body=route.request().postDataJSON();
       expect(body.capture_hash).toBe("b".repeat(64));
       return route.fulfill({status:200,body:tamperOriginal?Buffer.from([255,216,255,9,2,3,4]):originalBytes,
-        headers:{"Access-Control-Allow-Origin":"http://127.0.0.1:8080","Access-Control-Expose-Headers":"X-Capture-Hash, X-Content-SHA256, Content-Length, Content-Type","Content-Type":"image/jpeg","Content-Length":String(originalBytes.length),"X-Capture-Hash":"b".repeat(64),"X-Content-SHA256":originalSha}});
+        headers:{"Access-Control-Allow-Origin":test.info().project.use.baseURL!,"Access-Control-Expose-Headers":"X-Capture-Hash, X-Content-SHA256, Content-Length, Content-Type","Content-Type":"image/jpeg","Content-Length":String(originalBytes.length),"X-Capture-Hash":"b".repeat(64),"X-Content-SHA256":originalSha}});
     }
     if (path === "/rest/v1/rpc/read_ezyvet_attachment_chart") {
       if (failChart) return route.fulfill({ status: 500, json: { message: "unavailable" } });

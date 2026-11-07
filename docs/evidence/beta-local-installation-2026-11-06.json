@@ -1,0 +1,25 @@
+{
+  "all_ten_writers_verified": false,
+  "application_Auth_verified": false,
+  "authenticated_browser_verified": false,
+  "common269_source_properties": true,
+  "copied_migrations_rechecked": true,
+  "count_business_verified": false,
+  "elapsed_seconds": 311.3395750001073,
+  "failure_types": [
+    "RuntimeError"
+  ],
+  "hosted_writes": 0,
+  "kind": "narcotics-forward-installation-only-v1",
+  "normal_owned_cleanup": true,
+  "passed": false,
+  "prefix_sources_rechecked": true,
+  "production_deployed": false,
+  "provider_requests": 0,
+  "source_rechecked": true,
+  "unchanged_canonical206_bootstrap": true,
+  "sourceCommit": "b8767ff2e560f23d884194b5e9f875c0c647532a",
+  "command": "python3 -I -B scripts/narcotics-log/install_rehearsal.py --run-synthetic-local",
+  "failureSummary": "Official CLI migration up command exceeded unchanged 30-second owner deadline while applying 20261027223544; output reported Migrations applied, but timely process completion and final proof checks were not established.",
+  "scope": "Fresh owned disposable local runtime only. No hosted or provider operations. Not beta acceptance."
+}

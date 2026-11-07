@@ -65,8 +65,9 @@ test("contact CTA reaches a working form with accurate launch and domain informa
   await page.getByRole("link", { name: "Request a Visit", exact: true }).first().click();
   await expect(page).toHaveURL(/\/contact#contact-form$/);
   await expect(page.getByRole("heading", { name: "Request a Visit or Ask a Question" })).toBeInViewport();
-  await expect(page.getByText(/Housecalls: targeting late october 2026/).first()).toBeVisible();
+  await expect(page.getByText(/Housecalls: targeting late 2027/).first()).toBeVisible();
   await expect(page.getByText(/Clinic: targeting early 2027/).first()).toBeVisible();
+  await expect(page.getByText(/If you can’t reach us, contact your nearest local 24-hour emergency veterinary service\./)).toBeVisible();
   await expect(page.getByText("2619 Spruce Street, Boulder, CO", { exact: true }).first()).toBeVisible();
   const contactLinks = page.locator("#main-content");
   await expect(contactLinks.locator('a[href="tel:+17207646677"]')).toHaveText("(720) 764-6677");

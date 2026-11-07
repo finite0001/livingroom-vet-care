@@ -197,7 +197,7 @@ export interface EstimatePublicationEdge {
 }
 const uuid = z
     .string()
-    .uuid()
+    .guid()
     .refine((v) => v === v.toLowerCase()),
   hash = z.string().regex(/^[a-f0-9]{64}$/),
   revision = z.number().int().min(1).max(2147483647),
@@ -205,7 +205,7 @@ const uuid = z
     .string()
     .datetime({ offset: true })
     .refine((v) => Number.isFinite(Date.parse(v)) && !/\.\d{7}/.test(v));
-const shape = estimatePublicationSnapshotSchema.innerType().shape,
+const shape = estimatePublicationSnapshotSchema.shape,
   target = shape.target;
 const reason = z.string().refine(
   (v) =>

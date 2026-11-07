@@ -32,11 +32,11 @@ interface Props {
   onDirtyChange: (dirty: boolean) => void;
 }
 const pendingSchema = z
-  .object({ action_id: z.string().uuid(), action: actionSchema })
+  .object({ action_id: z.string().guid(), action: actionSchema })
   .strict();
 const sourceChoiceSchema = z.object({
-  id: z.string().uuid(),
-  pet_id: z.string().uuid(),
+  id: z.string().guid(),
+  pet_id: z.string().guid(),
   version: z.number().int().positive(),
   file_name: z.string().optional(),
   test_name: z.string().optional(),
@@ -295,8 +295,8 @@ function Workspace({
       if (error) throw error;
       const doc = z
         .object({
-          id: z.string().uuid(),
-          pet_id: z.string().uuid(),
+          id: z.string().guid(),
+          pet_id: z.string().guid(),
           version: z.number().int().positive(),
           file_name: z.string(),
           file_path: z.string(),

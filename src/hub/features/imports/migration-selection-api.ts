@@ -4,7 +4,7 @@ import type { Database } from "@/integrations/supabase/types";
 import type { RpcArgs } from "@/integrations/supabase/rpc";
 import type { MigrationScopeInput, MigrationManifest, MigrationCursor } from "./migration-run-api.ts";
 export const migrationResourceLabels: Record<MigrationScopeInput["resource"], string> = { contact: "Contacts", animal: "Patients", healthstatus: "Weights", consult: "Consultations", history: "Clinical history", vaccination: "Vaccinations", prescription: "Prescriptions", prescriptionitem: "Prescription items", attachment: "Attachments" };
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const cursorSchema = z.object({ before_at: z.string().datetime({ offset: true }), before_id: uuid }).strict();
 import { precedes } from "./attachment-review-history.ts";
 const mappingSchema = z.object({ id: uuid, resource: z.enum(["contact", "animal"]), client_id: uuid, pet_id: uuid.nullable(), external_id: z.string(), snapshot_id: uuid, head_version: z.number().int().positive(), source_origin: z.enum(["https://api.trial.ezyvet.com", "https://api.ezyvet.com"]), source_site_uid: z.string() }).strict();

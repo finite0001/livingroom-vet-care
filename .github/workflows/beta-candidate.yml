@@ -1,0 +1,172 @@
+name: Exact beta candidate acceptance
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/beta-candidate.yml'
+      - 'scripts/narcotics-log/**'
+      - 'scripts/time-clock/**'
+      - 'scripts/scheduling/**'
+      - 'supabase/migrations/**'
+      - 'src/**'
+      - 'tests/controlled-drugs/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'index.html'
+      - 'tsconfig.app.json'
+      - 'tsconfig.narcotics-proof.json'
+      - 'vite.config.ts'
+      - 'scripts/owned_canonical_bootstrap.py'
+  workflow_dispatch:
+    inputs:
+      recovery_diagnostic:
+        description: Run engineering-only recovery trace (never acceptance)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: beta-candidate-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  source:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - run: npm ci --ignore-scripts
+      - name: Derive original source framing without database access
+        run: |
+          node scripts/narcotics-log/frame-cli.mjs --write-candidate
+          node scripts/narcotics-log/frame-hosted-history.mjs --write-candidate
+          node scripts/narcotics-log/frame-beta.mjs --check
+          node scripts/narcotics-log/frame-beta-appointment.mjs --check
+      - name: Verify finite successor, browser inverses and source controls
+        run: |
+          python3 -I -B scripts/narcotics-log/beta_time_clock_source.py --check-source
+          python3 -I -B scripts/narcotics-log/beta_browser_source.py --check-source
+          python3 -I -B scripts/narcotics-log/beta_release_source.py --check-source
+          python3 -B -m unittest discover -s scripts/narcotics-log -p 'test_*.py'
+          node --test scripts/narcotics-log/frame-cli.test.mjs
+          python3 -I -B scripts/narcotics-log/beta_rehearsal.py --check-source
+      - name: Exercise exact finite metadata tamper controls in isolated PostgreSQL
+        run: python3 -B scripts/narcotics-log/verify_beta_metadata.py --run-synthetic-local > /tmp/beta-metadata-component.json
+      - name: Retain metadata component result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: beta-metadata-component
+          path: /tmp/beta-metadata-component.json
+
+  current-runtime:
+    needs: source
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        profile:
+          - commission_all
+          - count_agreement
+          - browser_lost_finalize
+          - ordinary_none
+          - record_review_signing
+          - independent_witness
+          - variance_reconciliation
+          - scalars
+          - clinical
+          - native_pickup_annotation
+          - native_return_v1
+          - native_return_v2_discrepancy
+          - operational-browser
+          - populated-recovery
+          - current-tamper-rollback
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - name: Cache the unchanged approved PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
+      - run: npm ci --ignore-scripts
+      - name: Install the exact locked browser
+        if: matrix.profile == 'browser_lost_finalize' || matrix.profile == 'operational-browser'
+        run: npx playwright install --with-deps chromium
+      - name: Independently derive retained source framing
+        run: |
+          node scripts/narcotics-log/frame-cli.mjs --write-candidate
+          node scripts/narcotics-log/frame-hosted-history.mjs --write-candidate
+      - name: Run exact current candidate with original deadlines and cleanup
+        run: python3 -I -B scripts/narcotics-log/beta_rehearsal.py --run-synthetic-local --profile ${{ matrix.profile }}
+      - name: Retain nonsecret result and timing evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: beta-candidate-${{ matrix.profile }}
+          retention-days: 14
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/bootstrap/*-status.json
+            /tmp/lrv-narcotics-install-*/primary-failure.txt
+            /tmp/lrv-narcotics-install-*/cleanup-failure.txt
+            /tmp/lrv-narcotics-install-*/source-failure.txt
+            /tmp/lrv-narcotics-install-*/rpc-failure.json
+            /tmp/lrv-narcotics-install-*/receiver/rpc-failure.json
+            /tmp/lrv-narcotics-install-*/beta-current-tamper-rollback.json
+            /tmp/lrv-narcotics-install-*/operational-browser-failure.json
+            scripts/narcotics-log/beta-candidate-source.json
+
+  recovery-diagnostic:
+    if: github.event_name == 'workflow_dispatch' && inputs.recovery_diagnostic
+    name: Engineering recovery error trace (never acceptance)
+    needs: source
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - name: Cache the unchanged approved PostgreSQL image
+        run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
+      - run: npm ci --ignore-scripts
+      - name: Independently derive retained source framing
+        run: |
+          node scripts/narcotics-log/frame-cli.mjs --write-candidate
+          node scripts/narcotics-log/frame-hosted-history.mjs --write-candidate
+      - name: Capture the native current211 recovery exception without admitting acceptance
+        run: python3 -I -B scripts/narcotics-log/beta_rehearsal.py --run-synthetic-local --profile recovery-diagnostic
+      - name: Retain bounded synthetic native error and non-admitting result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: beta-recovery-engineering-trace
+          retention-days: 14
+          if-no-files-found: ignore
+          path: |
+            /tmp/lrv-narcotics-install-*/result.json
+            /tmp/lrv-narcotics-install-*/primary-failure.txt
+            /tmp/lrv-narcotics-install-*/cleanup-failure.txt
+            /tmp/lrv-narcotics-install-*/source-failure.txt
+            /tmp/lrv-narcotics-install-*/rpc-failure.json
+            /tmp/lrv-narcotics-install-*/beta-recovery-native-trace.json
+            /tmp/lrv-narcotics-install-*/beta-recovery-diagnostic-source.json

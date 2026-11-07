@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import type { PrescriptionItemMapping } from "./prescription-item-api";
 export interface AttachmentMapping extends Required<PrescriptionItemMapping> {}
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const date = z.string().refine((v) => Number.isFinite(Date.parse(v)));
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const sourceId = z

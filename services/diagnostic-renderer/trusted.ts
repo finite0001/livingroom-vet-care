@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { sha256 } from "./sandbox.ts";
 import { provenanceSchema } from "./processing.ts";
-/** Accepted #241 image; changing executable/template provenance requires a reviewed rollout. */
+/** Accepted dependency refresh: docs/evidence/beta-renderer-uuid-proof-2026-11-06.json.
+ * The historical #241 image/proof remains unchanged; runtime admission stays exact. */
 export const ACCEPTED_IMAGE =
-  "lrv-diagnostic-pdf@sha256:e74492886124237c6fdeb1b887709f9dd08778f0713ef7998dee9f1a1d1520c0";
+  "lrv-diagnostic-pdf@sha256:a8ce75e5241a44d1f566eafde611c77414e2f9106e6ee58f3fad34ce319bf22b";
 export function trustedProvenance() {
   const files = {
     "template.ts":
@@ -12,7 +13,7 @@ export function trustedProvenance() {
     "pdf_admission.py":
       "ac1f2695539b0fc2d0ab72d423c21091f5c97071693f94738d239846a635bdc2",
     "worker.mjs":
-      "9cc103aa331e71e6160ba92b705152d6da514bc95a2a66333b535fbfd3b6fd5f",
+      "0ceed44d2e9941f23e6eeb066fa07531cb52b661d6abab1afd195e39a29186ce",
   };
   for (const [file, accepted] of Object.entries(files))
     assert.equal(

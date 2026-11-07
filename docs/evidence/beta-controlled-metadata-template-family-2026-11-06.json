@@ -1,0 +1,595 @@
+{
+  "kind": "finite-source-derived-template-family-component-v1",
+  "observedAt": "2026-11-07T02:04:10.110312+00:00",
+  "engineeringOnly": true,
+  "nativeAcceptance": false,
+  "previousCandidate": "86d9c177533cbd3ddbf245fe28a8ea896ebdc5cd",
+  "sourceProof": {
+    "additional_admission_read_bound_to_later_read": true,
+    "ambient_catalog_used_as_expected": false,
+    "canonical_expectation_hash_embedded": true,
+    "catalog_snapshot_calls_unchanged": true,
+    "catalog_snapshot_order_unchanged": true,
+    "changed_properties": [
+      "ordinary_relations.time_entries.acl",
+      "ordinary_relations.time_entries.policies",
+      "functions.controlled_count_entry_v1.require_bound_module().body_sha256"
+    ],
+    "core_sha256": "0cbb8076575dbeb36d1d0dee010ee3b643b083cadb7a0df7e674546df96dfcca",
+    "database_operations": 0,
+    "descriptor_hash_canonical_bytes_preserved": true,
+    "descriptor_same_value_materialized_once": true,
+    "expected_projection_inline": false,
+    "external_expected_accessor": false,
+    "full_canonical_text_comparison": true,
+    "historical_descriptors_rewritten": false,
+    "historical_receipts_rewritten": false,
+    "immutable_admission_body_sha256": "e5a5b32210d1660ba58c46854b92189f5d998ad47e449b8c8c0d055644f3952f",
+    "kind": "finite-beta-time-clock-metadata-successor-source-v2",
+    "migration_bytes": 181665,
+    "migration_sha256": "66908ec41dfadb7d363043d30a1f69fb7804ea9e5bee5a57ad17fd9087847823",
+    "observed_self_hash_authenticated_before_normalization": true,
+    "original_require_bound_body_sha256": "f6feeae8a261d68cbd2c674d0c8d6dafcb2de7dfd1b628b39dd62d1c99376380",
+    "source_projection_installation_only": true,
+    "successor_kind": "source-derived-finite-body-family-v1",
+    "template_body_bytes": 113958,
+    "template_body_sha256": "690f7d90798e0018f2f662823dadebb69b0e960328c01339b52e1787174a1498",
+    "template_hash_embedded": true,
+    "whole_comparison_body_inverse": true
+  },
+  "components": {
+    "metadataControls": {
+      "kind": "finite-beta-metadata-postgres-component-v1",
+      "passed": true,
+      "checks": [
+        "exact generated body independently derived from source-created canonical expectation",
+        "exact descriptor wrapper bytes and SHA256 preserved",
+        "same selected descriptor materialized without changing any JSON or SQL NULL value",
+        "exact current delta accepted from immutable original descriptor",
+        "restored direct write ACL refused",
+        "changed comparison function source refused",
+        "admission schema exposure refused",
+        "admission table exposure refused",
+        "disabled admission RLS refused",
+        "disabled immutable trigger refused",
+        "replaced immutable function refused",
+        "admission data mutation refused",
+        "admission data mutation refused",
+        "admission data mutation refused",
+        "self-consistent unrelated expectation tamper refused",
+        "unknown null root member refused",
+        "missing null root member refused",
+        "Unicode-normalized distinct root key refused",
+        "unchanged nested array order drift refused",
+        "scalar actual root refused",
+        "unchanged root numeric encoding drift refused",
+        "unchanged function numeric encoding drift refused",
+        "unchanged relation numeric encoding drift refused",
+        "self-consistent numeric encoding expectation tamper refused",
+        "substituted view refused before executing its read side effect",
+        "forced RLS refused before early admission data read",
+        "inherited admission relation refused before early read",
+        "changed stored template with self-consistent row hash refused",
+        "changed saved generated-body hash refused",
+        "descriptor linkage drift refused",
+        "changed observed generated guard body refused",
+        "original old guard body never normalizes as valid successor",
+        "missing observed guard row refused",
+        "self owner drift retained in complete comparison",
+        "self ACL drift retained in complete comparison",
+        "self configuration drift retained in complete comparison",
+        "later body hash differs from early authenticated family",
+        "later template differs from early authenticated template",
+        "independent legitimate source overlay preserves 1.00 and generates different exact H and G",
+        "1.00 source overlay rejects canonically distinct 1.0 despite JSONB numeric equality",
+        "all application roles denied private admission access"
+      ],
+      "migration_sha256": "66908ec41dfadb7d363043d30a1f69fb7804ea9e5bee5a57ad17fd9087847823",
+      "hosted_writes": 0,
+      "application_Auth_verified": false,
+      "full_controlled_business_verified": false,
+      "owned_cleanup": true,
+      "independent_family": {
+        "expected_hash": "64665c0d28a3c7598241daf99d7dd0e929af7e729046eec64257ead2b9423394",
+        "template_hash": "690f7d90798e0018f2f662823dadebb69b0e960328c01339b52e1787174a1498",
+        "body_sha256": "107b58cab8a6b6eb798f6347d1e7f9c11551213544ee224b9a8d85d2b5ad432e"
+      },
+      "descriptor_hash_equivalence": {
+        "cases": 13,
+        "bytes_equal": true,
+        "hashes_equal": true
+      },
+      "descriptor_materialization_equivalence": {
+        "cases": 13,
+        "bytes_equal": true
+      }
+    },
+    "strongTemplatePrototype": {
+      "engineeringOnly": true,
+      "nativeAcceptance": false,
+      "descriptorBytes": 9136568,
+      "measurements": [
+        {
+          "round": 0,
+          "variant": "baseline",
+          "ms": 137.742
+        },
+        {
+          "round": 0,
+          "variant": "cached",
+          "ms": 80.053
+        },
+        {
+          "round": 1,
+          "variant": "cached",
+          "ms": 85.331
+        },
+        {
+          "round": 1,
+          "variant": "baseline",
+          "ms": 178.73
+        },
+        {
+          "round": 2,
+          "variant": "baseline",
+          "ms": 128.85
+        },
+        {
+          "round": 2,
+          "variant": "cached",
+          "ms": 81.537
+        },
+        {
+          "round": 3,
+          "variant": "cached",
+          "ms": 80.403
+        },
+        {
+          "round": 3,
+          "variant": "baseline",
+          "ms": 123.613
+        },
+        {
+          "round": 4,
+          "variant": "baseline",
+          "ms": 124.125
+        },
+        {
+          "round": 4,
+          "variant": "cached",
+          "ms": 77.064
+        },
+        {
+          "round": 5,
+          "variant": "cached",
+          "ms": 75.81
+        },
+        {
+          "round": 5,
+          "variant": "baseline",
+          "ms": 123.347
+        },
+        {
+          "round": 6,
+          "variant": "baseline",
+          "ms": 121.983
+        },
+        {
+          "round": 6,
+          "variant": "cached",
+          "ms": 79.361
+        },
+        {
+          "round": 7,
+          "variant": "cached",
+          "ms": 82.663
+        },
+        {
+          "round": 7,
+          "variant": "baseline",
+          "ms": 138.853
+        }
+      ],
+      "sourceMigration": "bf3cb81794a6577611d2df9419743082de3af34729d1a6028ef3d09dfdc3406f",
+      "templateBytes": 114260,
+      "templateHash": "9f7329e1ad3d43a8a39f029ec7447610e28991f18e0a580ce99bb02c58d78cf5",
+      "renderedBodyHash": "144130b9f72614ce8d62565590bd6e0bc0d07214717a3ab27a5f6a80833ba207",
+      "normalizationHash": "b3af6b07de428799b2bb3c63517e7893f43464be52e1659725617c80b140443e",
+      "cacheTextBytes": 9112587,
+      "medians": {
+        "baseline": 124.125,
+        "cached": 80.403
+      },
+      "limits": [
+        "Actual original catalog snapshot construction excluded in both variants.",
+        "Cache hash is a fixed literal in authored component, not a hash accepted from its row.",
+        "Normalized actual input models the CASE performed during the original functions-root construction; full-root normalization copy is not assumed.",
+        "Cache variant includes early hG read and equality to retained later validated row; fixed template text hash and rendered G body hash independently bound to literals; complete production generator/inverse not implemented.",
+        "Local shared macOS Docker component proof only, not native RPC acceptance."
+      ],
+      "passed": true,
+      "ownedCleanup": true
+    },
+    "finalConservativeCopyFixture": {
+      "kind": "finite-beta-metadata-postgres-component-v1",
+      "passed": true,
+      "checks": [
+        "exact generated body independently derived from source-created canonical expectation",
+        "exact descriptor wrapper bytes and SHA256 preserved",
+        "same selected descriptor materialized without changing any JSON or SQL NULL value",
+        "exact current delta accepted from immutable original descriptor"
+      ],
+      "migration_sha256": "66908ec41dfadb7d363043d30a1f69fb7804ea9e5bee5a57ad17fd9087847823",
+      "hosted_writes": 0,
+      "application_Auth_verified": false,
+      "full_controlled_business_verified": false,
+      "owned_cleanup": true,
+      "independent_family": {
+        "expected_hash": "ae713025fc7f72f84d3da9f73d210b6916d374c6dd585c536899a36efc59f60a",
+        "template_hash": "690f7d90798e0018f2f662823dadebb69b0e960328c01339b52e1787174a1498",
+        "body_sha256": "500d6fe5fbbbb82ddf7d1d228bcfdfdfdfef0372e716b0f2e4a9042a36b364af"
+      },
+      "descriptor_hash_equivalence": {
+        "cases": 13,
+        "bytes_equal": true,
+        "hashes_equal": true
+      },
+      "descriptor_materialization_equivalence": {
+        "cases": 13,
+        "bytes_equal": true
+      },
+      "measurements": [
+        {
+          "iteration": 0,
+          "variant": "baseline",
+          "elapsed_ms": 182.268
+        },
+        {
+          "iteration": 0,
+          "variant": "family",
+          "elapsed_ms": 137.99
+        },
+        {
+          "iteration": 1,
+          "variant": "family",
+          "elapsed_ms": 124.012
+        },
+        {
+          "iteration": 1,
+          "variant": "baseline",
+          "elapsed_ms": 134.04
+        },
+        {
+          "iteration": 2,
+          "variant": "baseline",
+          "elapsed_ms": 128.877
+        },
+        {
+          "iteration": 2,
+          "variant": "family",
+          "elapsed_ms": 111.229
+        },
+        {
+          "iteration": 3,
+          "variant": "family",
+          "elapsed_ms": 117.754
+        },
+        {
+          "iteration": 3,
+          "variant": "baseline",
+          "elapsed_ms": 140.003
+        },
+        {
+          "iteration": 4,
+          "variant": "baseline",
+          "elapsed_ms": 123.857
+        },
+        {
+          "iteration": 4,
+          "variant": "family",
+          "elapsed_ms": 115.436
+        },
+        {
+          "iteration": 5,
+          "variant": "family",
+          "elapsed_ms": 120.171
+        },
+        {
+          "iteration": 5,
+          "variant": "baseline",
+          "elapsed_ms": 123.55
+        },
+        {
+          "iteration": 6,
+          "variant": "baseline",
+          "elapsed_ms": 145.809
+        },
+        {
+          "iteration": 6,
+          "variant": "family",
+          "elapsed_ms": 112.327
+        },
+        {
+          "iteration": 7,
+          "variant": "family",
+          "elapsed_ms": 108.755
+        },
+        {
+          "iteration": 7,
+          "variant": "baseline",
+          "elapsed_ms": 119.548
+        },
+        {
+          "iteration": 8,
+          "variant": "baseline",
+          "elapsed_ms": 150.615
+        },
+        {
+          "iteration": 8,
+          "variant": "family",
+          "elapsed_ms": 161.451
+        },
+        {
+          "iteration": 9,
+          "variant": "family",
+          "elapsed_ms": 181.719
+        },
+        {
+          "iteration": 9,
+          "variant": "baseline",
+          "elapsed_ms": 165.601
+        }
+      ],
+      "medians": {
+        "baseline": 134.44,
+        "family": 116.595
+      },
+      "descriptor_json_bytes": 9136781,
+      "canonical_expectation_bytes": 9112752,
+      "component_only": true,
+      "limitations": [
+        "Original catalog snapshot construction excluded both variants; currentfamily control additionally reads generated pg_proc and normalizes full fixture root, conservatively including extra work compared to live CASE.",
+        "Exact current template, pre-read relation gate, full immutable/catalog/source checks and full canonical text comparison execute.",
+        "Historical baseline private schema renamed solely to coexist with the exact candidate component; captured source expectations remain original.",
+        "Shared local host timings are not native RPC acceptance or a guarantee of additive savings."
+      ]
+    },
+    "finalFlatActualFixture": {
+      "kind": "finite-beta-metadata-postgres-component-v1",
+      "passed": true,
+      "checks": [
+        "exact generated body independently derived from source-created canonical expectation",
+        "exact descriptor wrapper bytes and SHA256 preserved",
+        "same selected descriptor materialized without changing any JSON or SQL NULL value",
+        "exact current delta accepted from immutable original descriptor"
+      ],
+      "migration_sha256": "66908ec41dfadb7d363043d30a1f69fb7804ea9e5bee5a57ad17fd9087847823",
+      "hosted_writes": 0,
+      "application_Auth_verified": false,
+      "full_controlled_business_verified": false,
+      "owned_cleanup": true,
+      "independent_family": {
+        "expected_hash": "ae713025fc7f72f84d3da9f73d210b6916d374c6dd585c536899a36efc59f60a",
+        "template_hash": "690f7d90798e0018f2f662823dadebb69b0e960328c01339b52e1787174a1498",
+        "body_sha256": "500d6fe5fbbbb82ddf7d1d228bcfdfdfdfef0372e716b0f2e4a9042a36b364af"
+      },
+      "descriptor_hash_equivalence": {
+        "cases": 13,
+        "bytes_equal": true,
+        "hashes_equal": true
+      },
+      "descriptor_materialization_equivalence": {
+        "cases": 13,
+        "bytes_equal": true
+      },
+      "measurements": [
+        {
+          "iteration": 0,
+          "variant": "baseline",
+          "elapsed_ms": 127.685
+        },
+        {
+          "iteration": 0,
+          "variant": "family",
+          "elapsed_ms": 64.042
+        },
+        {
+          "iteration": 1,
+          "variant": "family",
+          "elapsed_ms": 74.245
+        },
+        {
+          "iteration": 1,
+          "variant": "baseline",
+          "elapsed_ms": 119.505
+        },
+        {
+          "iteration": 2,
+          "variant": "baseline",
+          "elapsed_ms": 128.828
+        },
+        {
+          "iteration": 2,
+          "variant": "family",
+          "elapsed_ms": 65.697
+        },
+        {
+          "iteration": 3,
+          "variant": "family",
+          "elapsed_ms": 65.505
+        },
+        {
+          "iteration": 3,
+          "variant": "baseline",
+          "elapsed_ms": 111.78
+        },
+        {
+          "iteration": 4,
+          "variant": "baseline",
+          "elapsed_ms": 110.108
+        },
+        {
+          "iteration": 4,
+          "variant": "family",
+          "elapsed_ms": 61.907
+        },
+        {
+          "iteration": 5,
+          "variant": "family",
+          "elapsed_ms": 65.101
+        },
+        {
+          "iteration": 5,
+          "variant": "baseline",
+          "elapsed_ms": 106.19
+        },
+        {
+          "iteration": 6,
+          "variant": "baseline",
+          "elapsed_ms": 113.209
+        },
+        {
+          "iteration": 6,
+          "variant": "family",
+          "elapsed_ms": 65.75
+        },
+        {
+          "iteration": 7,
+          "variant": "family",
+          "elapsed_ms": 64.466
+        },
+        {
+          "iteration": 7,
+          "variant": "baseline",
+          "elapsed_ms": 108.673
+        },
+        {
+          "iteration": 8,
+          "variant": "baseline",
+          "elapsed_ms": 107.686
+        },
+        {
+          "iteration": 8,
+          "variant": "family",
+          "elapsed_ms": 67.501
+        },
+        {
+          "iteration": 9,
+          "variant": "family",
+          "elapsed_ms": 67.606
+        },
+        {
+          "iteration": 9,
+          "variant": "baseline",
+          "elapsed_ms": 118.202
+        }
+      ],
+      "medians": {
+        "baseline": 110.944,
+        "family": 65.601
+      },
+      "descriptor_json_bytes": 9136781,
+      "canonical_expectation_bytes": 9112752,
+      "component_only": true,
+      "limitations": [
+        "Original catalog snapshot construction excluded both variants; current family control additionally reads generated pg_proc and verifies the exact authored selfhash CASE against the normalized flat fixture; no extra full-root normalization copy.",
+        "Exact current template, pre-read relation gate, full immutable/catalog/source checks and full canonical text comparison execute.",
+        "Historical baseline private schema renamed solely to coexist with the exact candidate component; captured source expectations remain original.",
+        "Shared local host timings are not native RPC acceptance or a guarantee of additive savings."
+      ]
+    },
+    "fullSizeTransportAndBinder": {
+      "engineeringOnly": true,
+      "hostedWrites": 0,
+      "fullControlledModuleValidated": false,
+      "AuthAcceptance": false,
+      "stdoutAndInputCap": 67108864,
+      "ownerDeadlineSeconds": 30,
+      "observations": [
+        {
+          "label": "full-source-envelope",
+          "inputBytes": 9277818,
+          "stdoutBytes": 10011755,
+          "elapsedSeconds": 0.5663,
+          "exitCode": 0
+        },
+        {
+          "label": "full-independent-family-source-expectation",
+          "inputBytes": 9279583,
+          "stdoutBytes": 9987301,
+          "elapsedSeconds": 0.7625,
+          "exitCode": 0
+        },
+        {
+          "label": "owned-binding-fixture",
+          "inputBytes": 18769132,
+          "stdoutBytes": 0,
+          "elapsedSeconds": 0.7871,
+          "exitCode": 0
+        },
+        {
+          "label": "full-original-binding",
+          "inputBytes": 538,
+          "stdoutBytes": 20227371,
+          "elapsedSeconds": 0.3391,
+          "exitCode": 0
+        },
+        {
+          "label": "engineering-source-wrapper-expectation",
+          "inputBytes": 9278010,
+          "stdoutBytes": 10011755,
+          "elapsedSeconds": 0.5183,
+          "exitCode": 0
+        },
+        {
+          "label": "engineering-wrapper-family-source-expectation",
+          "inputBytes": 9279583,
+          "stdoutBytes": 9987301,
+          "elapsedSeconds": 0.5973,
+          "exitCode": 0
+        },
+        {
+          "label": "engineering-only-current211-execute-trace",
+          "inputBytes": 28050022,
+          "stdoutBytes": 0,
+          "elapsedSeconds": 1.2242,
+          "exitCode": 0
+        },
+        {
+          "label": "engineering-current211-source-derived-trace-binding-binding",
+          "inputBytes": 538,
+          "stdoutBytes": 20227371,
+          "elapsedSeconds": 0.248,
+          "exitCode": 0
+        }
+      ],
+      "sourceCanonicalBytes": 9135924,
+      "normalizedCanonicalBytes": 9112104,
+      "passed": true,
+      "rawNumericSpellingPreserved": true,
+      "diagnosticGuardAndCacheRebound": true,
+      "ownedCleanup": true
+    }
+  },
+  "checks": {
+    "primaryPythonControls": 141,
+    "diagnosticFocusedControls": 30,
+    "postgresNegativeAndEquivalenceControls": 41
+  },
+  "invariants": [
+    "Original descriptor hash and every original catalog observation remain; no source helper read is removed, cached, or reordered.",
+    "A narrow early relation gate precedes the extra admission read; original later catalog/immutability checks and read remain.",
+    "N is the complete source-created expected properties with only authored ACL/policy deletions and the original self body hash. PostgreSQL canonical text preserves numeric spelling.",
+    "T is an exact source-derived body template with two unique placeholder literals; H=SHA256(UTF8(Ntext)), TH=SHA256(UTF8(T)), G=T(H,TH). No hash cycle.",
+    "G embeds H and TH; it authenticates savedT, derives exactG and hG, and verifies early/later bindings before full canonical comparison. Selfconsistent row hashes cannot substitute another N or T.",
+    "Only the exact self signature normalizes to originalhash, and only when the observed source hash matches derivedhG. A mismatch emits JSONnull.",
+    "Runtime independently derives N/H/T/G from lossless source-reference text, never the installed descriptor/cache/function body; observed body and admission are checked exactly against that independent result.",
+    "Diagnostic wrapper changes necessarily produce their own independently source-derived H/G; product migration and template remain identical, not the instrumented runtime body."
+  ],
+  "limitations": [
+    "Component performance excludes original complete catalog snapshot construction and does not predict additive end-to-end gains.",
+    "Final flat fixture reflects actual metadata already normalized during construction; conservative prior fixture additionally copied the whole actual root and repeated TOAST reads absent in the live source CASE. Both are preserved.",
+    "All 15 normal native profiles and matching actual writer timing diagnostics remain required under unchanged 8s application/30s owner/64MiB transport bounds.",
+    "No current controlled-business, Auth or recovery acceptance is claimed from these local components."
+  ]
+}

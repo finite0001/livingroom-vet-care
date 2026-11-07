@@ -79,7 +79,7 @@ async function fixture(
   };
   await page.route("**/*", (route) =>
     new URL(route.request().url()).origin ===
-    new URL(baseURL ?? "http://127.0.0.1:8080").origin
+    new URL(baseURL ?? test.info().project.use.baseURL!).origin
       ? route.continue()
       : route.abort(),
   );

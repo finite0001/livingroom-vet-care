@@ -1,0 +1,445 @@
+{
+  "schemaVersion": 1,
+  "kind": "current211-second-native-ci-evidence-v1",
+  "capturedAt": "2026-11-07T00:07:45.947339+00:00",
+  "runtimeAcceptance": false,
+  "readinessAdmission": false,
+  "run": {
+    "conclusion": "failure",
+    "createdAt": "2026-11-06T23:54:01Z",
+    "headSha": "4a77ef1c173f6f174781285e27356bb1345538a0",
+    "status": "completed",
+    "updatedAt": "2026-11-07T00:03:11Z",
+    "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899"
+  },
+  "jobs": [
+    {
+      "name": "source",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128224863324,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128224863324",
+      "startedAt": "2026-11-06T23:54:05Z",
+      "completedAt": "2026-11-06T23:55:38Z",
+      "failedSteps": []
+    },
+    {
+      "name": "Engineering recovery error trace (never acceptance)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128225402108,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402108",
+      "startedAt": "2026-11-06T23:55:42Z",
+      "completedAt": "2026-11-07T00:01:39Z",
+      "failedSteps": [
+        "Capture the native current211 recovery exception without admitting acceptance"
+      ]
+    },
+    {
+      "name": "current-runtime (native_return_v1)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128225402278,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402278",
+      "startedAt": "2026-11-06T23:55:42Z",
+      "completedAt": "2026-11-07T00:01:15Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (native_pickup_annotation)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128225402296,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402296",
+      "startedAt": "2026-11-06T23:55:42Z",
+      "completedAt": "2026-11-07T00:01:27Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (count_agreement)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128225402305,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402305",
+      "startedAt": "2026-11-06T23:55:42Z",
+      "completedAt": "2026-11-07T00:02:31Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (populated-recovery)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128225402307,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402307",
+      "startedAt": "2026-11-06T23:55:42Z",
+      "completedAt": "2026-11-07T00:01:35Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (operational-browser)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128225402309,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402309",
+      "startedAt": "2026-11-06T23:55:42Z",
+      "completedAt": "2026-11-07T00:01:58Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (independent_witness)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128225402329,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402329",
+      "startedAt": "2026-11-06T23:55:42Z",
+      "completedAt": "2026-11-07T00:02:05Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (browser_lost_finalize)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128225402344,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402344",
+      "startedAt": "2026-11-06T23:55:42Z",
+      "completedAt": "2026-11-07T00:02:53Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (commission_all)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128225402353,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402353",
+      "startedAt": "2026-11-06T23:55:42Z",
+      "completedAt": "2026-11-07T00:01:25Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (ordinary_none)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128225402377,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402377",
+      "startedAt": "2026-11-06T23:55:42Z",
+      "completedAt": "2026-11-07T00:01:48Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (current-tamper-rollback)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128225402383,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402383",
+      "startedAt": "2026-11-06T23:55:42Z",
+      "completedAt": "2026-11-07T00:02:48Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (clinical)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128225402384,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402384",
+      "startedAt": "2026-11-06T23:55:42Z",
+      "completedAt": "2026-11-07T00:01:22Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (record_review_signing)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128225402481,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402481",
+      "startedAt": "2026-11-06T23:55:42Z",
+      "completedAt": "2026-11-07T00:01:16Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (native_return_v2_discrepancy)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128225402484,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402484",
+      "startedAt": "2026-11-06T23:55:43Z",
+      "completedAt": "2026-11-07T00:01:33Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (scalars)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128225402563,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402563",
+      "startedAt": "2026-11-06T23:55:43Z",
+      "completedAt": "2026-11-07T00:01:24Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (variance_reconciliation)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128225402615,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42314856899/job/128225402615",
+      "startedAt": "2026-11-06T23:55:42Z",
+      "completedAt": "2026-11-07T00:03:10Z",
+      "failedSteps": []
+    }
+  ],
+  "summary": {
+    "normalProfiles": 15,
+    "normalProfilesPassed": 6,
+    "normalProfilesFailed": 9,
+    "diagnosticAcceptance": false
+  },
+  "artifacts": [
+    {
+      "created_at": "2026-11-07T00:03:07Z",
+      "digest": "sha256:693d7b01d3cadaeed860166201326456591342b8a229d730dc547e3fa81794b7",
+      "expired": false,
+      "id": 13551140333,
+      "name": "beta-candidate-variance_reconciliation",
+      "size_in_bytes": 222558
+    },
+    {
+      "created_at": "2026-11-07T00:01:36Z",
+      "digest": "sha256:c902d3347896eccacfee2bb6898a4e942598a92c539030bd37f4279233cc1b77",
+      "expired": false,
+      "id": 13551120689,
+      "name": "beta-recovery-engineering-trace",
+      "size_in_bytes": 3791
+    },
+    {
+      "created_at": "2026-11-07T00:01:47Z",
+      "digest": "sha256:8ff1d16ab8f7dcd33a3d512b314cdd4382b9afaa92979ea0140db0969fdf622a",
+      "expired": false,
+      "id": 13550886125,
+      "name": "beta-candidate-ordinary_none",
+      "size_in_bytes": 198649
+    },
+    {
+      "created_at": "2026-11-07T00:02:03Z",
+      "digest": "sha256:c3dfe232be23f2f566962fff46188becd628997ec0ccbac2da964f485186874d",
+      "expired": false,
+      "id": 13550571845,
+      "name": "beta-candidate-independent_witness",
+      "size_in_bytes": 204935
+    },
+    {
+      "created_at": "2026-11-07T00:02:51Z",
+      "digest": "sha256:2cf037143a8ee33dec85dc43bb2bf5a7aa409ecc0d4848b29df595a19b493bde",
+      "expired": false,
+      "id": 13550477200,
+      "name": "beta-candidate-browser_lost_finalize",
+      "size_in_bytes": 213167
+    },
+    {
+      "created_at": "2026-11-07T00:02:28Z",
+      "digest": "sha256:147f11192a30b059246471a8c926b73905ba05fcc988c7ad70bb644df320f646",
+      "expired": false,
+      "id": 13550373097,
+      "name": "beta-candidate-count_agreement",
+      "size_in_bytes": 213873
+    },
+    {
+      "created_at": "2026-11-07T00:01:33Z",
+      "digest": "sha256:fd21f83eeed1cb13097772edee33557da5141843bab1a2891633f590f8eabe1c",
+      "expired": false,
+      "id": 13550203503,
+      "name": "beta-candidate-populated-recovery",
+      "size_in_bytes": 248714
+    },
+    {
+      "created_at": "2026-11-07T00:01:25Z",
+      "digest": "sha256:bf80fa05f10d534a73f3e06ab7f9042e32d338d501f617ef2da7fbc43d8b74af",
+      "expired": false,
+      "id": 13550153538,
+      "name": "beta-candidate-native_pickup_annotation",
+      "size_in_bytes": 201501
+    },
+    {
+      "created_at": "2026-11-07T00:02:45Z",
+      "digest": "sha256:5356b45dd433e9a7420892467ec17afc854fa9a0f9b91c2b8dc95f7940b73462",
+      "expired": false,
+      "id": 13550133349,
+      "name": "beta-candidate-current-tamper-rollback",
+      "size_in_bytes": 219855
+    },
+    {
+      "created_at": "2026-11-07T00:01:21Z",
+      "digest": "sha256:fafe3336d7dab54ddf5d308286943d252dd0a045d55f2d361e44ca09c0370483",
+      "expired": false,
+      "id": 13550054586,
+      "name": "beta-candidate-scalars",
+      "size_in_bytes": 198605
+    },
+    {
+      "created_at": "2026-11-07T00:01:14Z",
+      "digest": "sha256:9699457f0b3d51ec90ec6fb0bbb1c0064b5f5220a957e33e47174c966ff76ca4",
+      "expired": false,
+      "id": 13550044503,
+      "name": "beta-candidate-record_review_signing",
+      "size_in_bytes": 198645
+    },
+    {
+      "created_at": "2026-11-06T23:55:36Z",
+      "digest": "sha256:fec95ca97fb0f6ad5b1d04b857009955d88efae05ad1ad7f6504a706fc1db6f5",
+      "expired": false,
+      "id": 13549839058,
+      "name": "beta-metadata-component",
+      "size_in_bytes": 592
+    },
+    {
+      "created_at": "2026-11-07T00:01:13Z",
+      "digest": "sha256:68cf2bb409402bd7fda6343b031628c5c31bbb81ed222da4e63994114d79e106",
+      "expired": false,
+      "id": 13549763826,
+      "name": "beta-candidate-native_return_v1",
+      "size_in_bytes": 201517
+    },
+    {
+      "created_at": "2026-11-07T00:01:30Z",
+      "digest": "sha256:18f34cfd1a38f626a12f2c92ee4390880d6a21cdceaa8f84c26690724c803fd0",
+      "expired": false,
+      "id": 13549629074,
+      "name": "beta-candidate-native_return_v2_discrepancy",
+      "size_in_bytes": 201519
+    },
+    {
+      "created_at": "2026-11-07T00:01:21Z",
+      "digest": "sha256:60b32acecb510e6bceab6beb11a12a3a8d269171e7136acb141d5ab7ee32ef52",
+      "expired": false,
+      "id": 13549629053,
+      "name": "beta-candidate-clinical",
+      "size_in_bytes": 200361
+    },
+    {
+      "created_at": "2026-11-07T00:01:22Z",
+      "digest": "sha256:fc85b30e742cbcd94e1282680628a1ed78a926c7a2ad5c431654db010f26d334",
+      "expired": false,
+      "id": 13549609126,
+      "name": "beta-candidate-commission_all",
+      "size_in_bytes": 198910
+    },
+    {
+      "created_at": "2026-11-07T00:01:55Z",
+      "digest": "sha256:45b9a636c8a7254531534f1eb1b01aa98c45e9e80345eeb3f3628853b489e4a2",
+      "expired": false,
+      "id": 13549469560,
+      "name": "beta-candidate-operational-browser",
+      "size_in_bytes": 217744
+    }
+  ],
+  "diagnostic": {
+    "scope": "Engineering-only wrapper source inversion; no normal runtime admission and no production SQL change.",
+    "nativeTrace": {
+      "elapsed_seconds": 8.073626324000088,
+      "engineering_only": true,
+      "error": {
+        "code": "57014",
+        "details": "PL/pgSQL function controlled_count_entry_v1.require_bound_module() line 99 at IF\nSQL statement \"SELECT controlled_count_entry_v1.require_bound_module()\"\nPL/pgSQL function controlled_count_entry_v1.recovery_post_frontier_required() line 6 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.recovery_post_frontier_required()\"\nPL/pgSQL function acquire_shared_product_relation_frontier() line 40 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.acquire_shared_product_relation_frontier()\"\nPL/pgSQL function acquire_ordinary_relation_frontier() line 2 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.acquire_ordinary_relation_frontier()\"\nPL/pgSQL function before_parent_gate(uuid,uuid) line 5 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.before_parent_gate(p_actor,p_id)\"\nPL/pgSQL function controlled_stock_gate(uuid,uuid) line 4 at PERFORM\nPL/pgSQL function read_controlled_stock_action(uuid,uuid) line 2 during statement block local variable initialization\nPL/pgSQL function managed_reply(jsonb) line 40 at assignment\nPL/pgSQL function managed_execute(jsonb,jsonb) line 12 at assignment\nPL/pgSQL function execute_managed_stock_intent_v1(jsonb) line 6 at assignment",
+        "hint": "",
+        "message": "canceling statement due to statement timeout"
+      },
+      "normal_acceptance": false,
+      "rpc": "execute_managed_stock_intent_v1",
+      "status": 500
+    },
+    "sourceBinding": {
+      "diagnostic_body_sha256": "01e54c986a52afb0bf39a1f7d528f8bc6cdf4887dc2059dea6ef08e7be676666",
+      "engineering_only": true,
+      "normal_acceptance": false,
+      "original_body_sha256": "b437e0c3fcce34dcb83778f6e0eefbf60ccb3b7089724dc8d21125216e763caf",
+      "production_SQL_changed": false,
+      "signature": "public.execute_managed_stock_intent_v1(jsonb)",
+      "source_derived_descriptor_and_finite_admission": true,
+      "whole_wrapper_source_inverse": true
+    },
+    "result": {
+      "all_ten_writers_verified": false,
+      "application_Auth_verified": false,
+      "authenticated_browser_verified": false,
+      "beta210_only_three_reviewed_controlled_property_changes": true,
+      "beta210_original_controlled_descriptor_unchanged": true,
+      "beta210_original_rows_and_sequences_preserved": true,
+      "beta211_controlled_properties_rows_and_sequences_preserved": true,
+      "beta_candidate_profile": "recovery-diagnostic",
+      "beta_candidate_source_sha256": "ebcc2ae10412b34378d5819704855b4f40302c6bc9dd6caaa4e01bb67a08ac66",
+      "business_profile_verified": false,
+      "common269_source_properties": true,
+      "complete_independent_source_reference_properties": true,
+      "complete_source_derived208_ledger": true,
+      "complete_source_derived209_ledger": true,
+      "complete_source_derived210_ledger": true,
+      "complete_source_derived211_ledger": true,
+      "copied_migrations_rechecked": true,
+      "count_business_verified": false,
+      "current211_normal_acceptance": false,
+      "diagnostic_function": "public.execute_managed_stock_intent_v1(jsonb)",
+      "diagnostic_function_body_sha256": "01e54c986a52afb0bf39a1f7d528f8bc6cdf4887dc2059dea6ef08e7be676666",
+      "elapsed_seconds": 302.8706581649999,
+      "engineering_only": true,
+      "failure_types": [
+        "ValueError"
+      ],
+      "full121_source_module_properties": true,
+      "historical_ledger_rows_rewritten": false,
+      "hosted_client_contact_check_validated_before_installation": true,
+      "hosted_writes": 0,
+      "independent_record_review_signing_verified": false,
+      "kind": "narcotics-populated-receiver-rehearsal-v1",
+      "new_count_tables_empty_except_source_descriptor": true,
+      "normal_owned_cleanup": true,
+      "old_rows_preserved_exact_declared_additions_only": true,
+      "original204_rows_preserved_with_source_declared_appends": true,
+      "original_parent_rows_verified": true,
+      "passed": false,
+      "populated_receiver_verified": false,
+      "prefix_sources_rechecked": true,
+      "production_deployed": false,
+      "profile": "count_agreement",
+      "provider_requests": 0,
+      "scheduler_paused_before_first_project_SQL": true,
+      "source_only_audit_column_controls": {
+        "Auth_acceptance": false,
+        "cases": 7,
+        "domain_writes": 0
+      },
+      "source_rechecked": true,
+      "source_sequences_verified": true,
+      "validated_client_constraint_controls": {
+        "cases": 7,
+        "raw_client_check_still_validated": true,
+        "same_original_metadata": true
+      }
+    },
+    "filesSha256": {
+      "beta-recovery-diagnostic-source.json": "9daa385cd9fdcd586c080b686273663aedda1fee4e4b211034579d12ec5730ea",
+      "beta-recovery-native-trace.json": "0c51999474f9b303eec8a764072496f7da21c6fccb20b690adad1012a10d6545",
+      "primary-failure.txt": "82b813c1d1425a9c2e9bc849487e017acb383ec0dad8619c74353526fd8960eb",
+      "result.json": "4be41dc4cf747050dbd2f871a1e71d6afa08b362541538ce8455df7e29d15882",
+      "rpc-failure.json": "90172e363ea8c0c1b6f17dd960a0511a638596b7eab2b4f4b5ed3c5e83a838e5"
+    },
+    "finding": "Actual PostgreSQL57014 statement timeout returned HTTP500 after8.073626324000088seconds; native context identifies require_bound_module line99 inside recovery_post_frontier_required during execute_managed_stock_intent_v1. Existing8-second application deadline was not raised."
+  },
+  "previousRunReceipt": "docs/evidence/beta-current211-initial-ci-2026-11-06.json",
+  "interpretation": "Six normal profiles passed and nine failed; source admission and partial profile passes do not establish complete current211 readiness. The diagnostic identifies a real timeout, and does not convert the failed normal run into acceptance. Guard optimization and exact successor evidence remain separate."
+}

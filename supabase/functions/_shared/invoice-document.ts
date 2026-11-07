@@ -6,7 +6,7 @@ const timestamp = z
   .refine((value) => Number.isFinite(Date.parse(value)), "Invalid timestamp");
 export const invoiceDocumentSchema = z
   .object({
-    id: z.string().uuid(),
+    id: z.string().guid(),
     status: z.enum(["draft", "issued", "void"]),
     currency: z.literal("usd"),
     version: z.number().int().positive(),
@@ -15,13 +15,13 @@ export const invoiceDocumentSchema = z
     voided_at: timestamp.nullable(),
     rendered_at: timestamp,
     client: z.object({
-      id: z.string().uuid(),
+      id: z.string().guid(),
       name: z.string(),
       mailing_address: z.string().nullable(),
     }),
     items: z.array(
       z.object({
-        id: z.string().uuid(),
+        id: z.string().guid(),
         description: z.string(),
         quantity: z.string().regex(/^\d+(\.\d+)?$/),
         unit_price_cents: cents,
@@ -30,7 +30,7 @@ export const invoiceDocumentSchema = z
     ),
     credits: z.array(
       z.object({
-        id: z.string().uuid(),
+        id: z.string().guid(),
         amount_cents: cents,
         created_at: timestamp,
       }),

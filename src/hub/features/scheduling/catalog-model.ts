@@ -9,7 +9,7 @@ export const resourceKindSchema = z.enum([
   "equipment",
   "other",
 ]);
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const text = (max: number) =>
   z
     .string()

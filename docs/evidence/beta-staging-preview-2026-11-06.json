@@ -1,0 +1,55 @@
+{
+  "observedAt": "2026-11-06T22:37:34.598857+00:00",
+  "projectRef": "kothoqicubowyhwfsrte",
+  "sourceSha256": "be00d1506d417e0067298c497df1c01fd0b2f22823b051a8508f583662141381",
+  "response": {
+    "status": "ok",
+    "deployment": {
+      "id": "dpl_DFFHUGZNFCB3TirkFDK4B92jiDUU",
+      "url": "https://livingroom-vet-care-etuoflidw-daves-projects-e0da43ba.vercel.app",
+      "inspectorUrl": "https://vercel.com/daves-projects-e0da43ba/livingroom-vet-care/DFFHUGZNFCB3TirkFDK4B92jiDUU",
+      "readyState": "INITIALIZING",
+      "target": null,
+      "deploymentApiUrl": "https://api.vercel.com/v13/deployments/dpl_DFFHUGZNFCB3TirkFDK4B92jiDUU",
+      "buildMachine": {
+        "cores": 4,
+        "memory": 8192,
+        "machine": "standard",
+        "selectionType": "elastic",
+        "selectionSource": "elastic-algorithm"
+      }
+    },
+    "message": "Deployment livingroom-vet-care-etuoflidw-daves-projects-e0da43ba.vercel.app ready.",
+    "next": [
+      {
+        "command": "vercel curl https://livingroom-vet-care-etuoflidw-daves-projects-e0da43ba.vercel.app",
+        "when": "Verify deployment, including when Deployment Protection is enabled"
+      },
+      {
+        "command": "vercel inspect livingroom-vet-care-etuoflidw-daves-projects-e0da43ba.vercel.app --cwd /var/folders/j9/dv101nxj5_xd3rjcjkq6_xd40000gn/T/lrv-beta-staging-preview-l8wtgila --scope team_BDI4hvAq1AWGIREoc8sRwNLH",
+        "when": "Inspect deployment"
+      },
+      {
+        "command": "vercel deploy --prod --cwd /var/folders/j9/dv101nxj5_xd3rjcjkq6_xd40000gn/T/lrv-beta-staging-preview-l8wtgila --scope team_BDI4hvAq1AWGIREoc8sRwNLH",
+        "when": "Promote to production"
+      }
+    ]
+  },
+  "target": "preview",
+  "aliasCommandsIssued": false,
+  "contactIntakeEnabled": false,
+  "cloudtalkEnabled": false,
+  "readyState": "READY",
+  "compiledBackendRefs": [
+    "kothoqicubowyhwfsrte"
+  ],
+  "protectedAssetVerification": true,
+  "javascriptBytesChecked": 395523,
+  "buildGuardPassed": true,
+  "candidateStatus": "interim; predates final PostgreSQL UUID compatibility correction",
+  "humanAcceptanceReady": false,
+  "hostedAtomicTimeClockAvailable": false,
+  "finalRebuildRequired": true,
+  "previousStableAliasPreserved": true,
+  "previousStableDeploymentId": "dpl_Fgcvk2G4CPBVbBEKpp7WMXXARi7D"
+}

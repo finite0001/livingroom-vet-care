@@ -1,0 +1,398 @@
+{
+  "schemaVersion": 1,
+  "kind": "current211-fourth-native-ci-evidence-v1",
+  "capturedAt": "2026-11-07T01:17:43.668235+00:00",
+  "runtimeAcceptance": false,
+  "readinessAdmission": false,
+  "run": {
+    "conclusion": "failure",
+    "createdAt": "2026-11-07T00:44:25Z",
+    "headSha": "aca45386f05d718f62bfa50cef476bed78c4f0e3",
+    "status": "completed",
+    "updatedAt": "2026-11-07T00:56:03Z",
+    "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247"
+  },
+  "jobs": [
+    {
+      "name": "source",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242120763,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242120763",
+      "startedAt": "2026-11-07T00:44:30Z",
+      "completedAt": "2026-11-07T00:46:13Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (native_pickup_annotation)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242731950,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242731950",
+      "startedAt": "2026-11-07T00:46:17Z",
+      "completedAt": "2026-11-07T00:52:32Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (ordinary_none)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242731955,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242731955",
+      "startedAt": "2026-11-07T00:46:19Z",
+      "completedAt": "2026-11-07T00:52:16Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (record_review_signing)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242731986,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242731986",
+      "startedAt": "2026-11-07T00:46:17Z",
+      "completedAt": "2026-11-07T00:52:08Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (scalars)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242731989,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242731989",
+      "startedAt": "2026-11-07T00:46:17Z",
+      "completedAt": "2026-11-07T00:52:07Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (native_return_v1)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242731990,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242731990",
+      "startedAt": "2026-11-07T00:46:18Z",
+      "completedAt": "2026-11-07T00:52:20Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (commission_all)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242731997,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242731997",
+      "startedAt": "2026-11-07T00:46:17Z",
+      "completedAt": "2026-11-07T00:51:32Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (clinical)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128242732002,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242732002",
+      "startedAt": "2026-11-07T00:46:19Z",
+      "completedAt": "2026-11-07T00:52:14Z",
+      "failedSteps": [
+        "Run exact current candidate with original deadlines and cleanup"
+      ]
+    },
+    {
+      "name": "current-runtime (current-tamper-rollback)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242732017,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242732017",
+      "startedAt": "2026-11-07T00:46:17Z",
+      "completedAt": "2026-11-07T00:52:31Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (native_return_v2_discrepancy)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242732031,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242732031",
+      "startedAt": "2026-11-07T00:46:18Z",
+      "completedAt": "2026-11-07T00:52:41Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (independent_witness)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242732044,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242732044",
+      "startedAt": "2026-11-07T00:46:17Z",
+      "completedAt": "2026-11-07T00:52:23Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (operational-browser)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242732050,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242732050",
+      "startedAt": "2026-11-07T00:46:17Z",
+      "completedAt": "2026-11-07T00:52:28Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (variance_reconciliation)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242732068,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242732068",
+      "startedAt": "2026-11-07T00:46:19Z",
+      "completedAt": "2026-11-07T00:53:42Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (populated-recovery)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242732109,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242732109",
+      "startedAt": "2026-11-07T00:46:17Z",
+      "completedAt": "2026-11-07T00:56:02Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (browser_lost_finalize)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242732138,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242732138",
+      "startedAt": "2026-11-07T00:46:17Z",
+      "completedAt": "2026-11-07T00:53:06Z",
+      "failedSteps": []
+    },
+    {
+      "name": "current-runtime (count_agreement)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128242732150,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242732150",
+      "startedAt": "2026-11-07T00:46:17Z",
+      "completedAt": "2026-11-07T00:52:36Z",
+      "failedSteps": []
+    },
+    {
+      "name": "Engineering recovery error trace (never acceptance)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "databaseId": 128242733366,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045247/job/128242733366",
+      "startedAt": "2026-11-07T00:46:13Z",
+      "completedAt": "2026-11-07T00:46:13Z",
+      "failedSteps": []
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13553510180,
+      "name": "beta-candidate-native_pickup_annotation",
+      "size_in_bytes": 212524,
+      "digest": "sha256:fc673e1a23802ff87ec9a8fec73ee4e8fc8dbf2e1f2f6ca8e3c4c60b505697c3",
+      "created_at": "2026-11-07T00:52:29Z",
+      "expired": false
+    },
+    {
+      "id": 13553490802,
+      "name": "beta-candidate-populated-recovery",
+      "size_in_bytes": 251692,
+      "digest": "sha256:d83277cbfd5ca0f6961955fa007c359e7af00358ec81353a9b1ccbf89f98a4e9",
+      "created_at": "2026-11-07T00:56:00Z",
+      "expired": false
+    },
+    {
+      "id": 13553450512,
+      "name": "beta-candidate-count_agreement",
+      "size_in_bytes": 213861,
+      "digest": "sha256:872a82046dd81970349a92d4116892cd27be1d6e9e28af21a9b80a287a6f0a5f",
+      "created_at": "2026-11-07T00:52:34Z",
+      "expired": false
+    },
+    {
+      "id": 13553435423,
+      "name": "beta-candidate-current-tamper-rollback",
+      "size_in_bytes": 219811,
+      "digest": "sha256:1849e25fb10fcedc92da25e187b7ac943dffd5691cbc13a9d7911ecbffe71fad",
+      "created_at": "2026-11-07T00:52:29Z",
+      "expired": false
+    },
+    {
+      "id": 13553410388,
+      "name": "beta-candidate-clinical",
+      "size_in_bytes": 203477,
+      "digest": "sha256:214df661da64e6011593e2d4cd9e821b0a500a460a271ca48507298f31c7c722",
+      "created_at": "2026-11-07T00:52:12Z",
+      "expired": false
+    },
+    {
+      "id": 13553375174,
+      "name": "beta-candidate-operational-browser",
+      "size_in_bytes": 217768,
+      "digest": "sha256:c77fafbcc5b2e631acf81f9db64138f8edb9ba5ab0addfe1ba1dee97f94977ed",
+      "created_at": "2026-11-07T00:52:26Z",
+      "expired": false
+    },
+    {
+      "id": 13553180947,
+      "name": "beta-candidate-browser_lost_finalize",
+      "size_in_bytes": 213175,
+      "digest": "sha256:ed4e377e27eae944bbaca187fac44faa09ae9812b824ee7d5249f9537bcc6c27",
+      "created_at": "2026-11-07T00:53:03Z",
+      "expired": false
+    },
+    {
+      "id": 13553090537,
+      "name": "beta-candidate-scalars",
+      "size_in_bytes": 205893,
+      "digest": "sha256:978ea87f2f269f6fa8eb629eb577d5e5dcf2683bce8e359485008c2804971bf9",
+      "created_at": "2026-11-07T00:52:05Z",
+      "expired": false
+    },
+    {
+      "id": 13553061892,
+      "name": "beta-candidate-native_return_v2_discrepancy",
+      "size_in_bytes": 213203,
+      "digest": "sha256:268c0779ea4131277c9eb3290f3e4c6e5abdea549a1b0b9e5d5a6d8934a9b651",
+      "created_at": "2026-11-07T00:52:39Z",
+      "expired": false
+    },
+    {
+      "id": 13552832800,
+      "name": "beta-candidate-independent_witness",
+      "size_in_bytes": 209369,
+      "digest": "sha256:ca79eef7ad9d51e66d3ad5a05b3e8e563a928e8ca9f5feef4ce39b62a4fa70b7",
+      "created_at": "2026-11-07T00:52:21Z",
+      "expired": false
+    },
+    {
+      "id": 13552637685,
+      "name": "beta-candidate-variance_reconciliation",
+      "size_in_bytes": 222594,
+      "digest": "sha256:56d842f2363ec2917f38fe55ef4b23a756ac072722126277dd5495ed991cb00d",
+      "created_at": "2026-11-07T00:53:41Z",
+      "expired": false
+    },
+    {
+      "id": 13552572434,
+      "name": "beta-candidate-commission_all",
+      "size_in_bytes": 198915,
+      "digest": "sha256:1b99d68188e28dbe36cee9f9baaa605333d2079efbf9fba30c74841118121929",
+      "created_at": "2026-11-07T00:51:29Z",
+      "expired": false
+    },
+    {
+      "id": 13552528606,
+      "name": "beta-candidate-native_return_v1",
+      "size_in_bytes": 210066,
+      "digest": "sha256:296e559b17b6d0dd606dc0fa6cb8f2693dde60f1f05dacd4fd67acf0069ca47b",
+      "created_at": "2026-11-07T00:52:18Z",
+      "expired": false
+    },
+    {
+      "id": 13552384096,
+      "name": "beta-candidate-record_review_signing",
+      "size_in_bytes": 209344,
+      "digest": "sha256:8bc32ee61ddee5f0d14cd8a56b4c315ecfc4685c49bd463045d172c52d257ba0",
+      "created_at": "2026-11-07T00:52:06Z",
+      "expired": false
+    },
+    {
+      "id": 13552174973,
+      "name": "beta-candidate-ordinary_none",
+      "size_in_bytes": 205197,
+      "digest": "sha256:b0bb29e7bf7d7128a7147ff7739988c459f5410e96a8f65b414e829b105c886c",
+      "created_at": "2026-11-07T00:52:15Z",
+      "expired": false
+    },
+    {
+      "id": 13551674411,
+      "name": "beta-metadata-component",
+      "size_in_bytes": 703,
+      "digest": "sha256:cd730ce0f5e5c16d9af569a469d1fbee4d3bd20ad2dc4435b77762486b654db2",
+      "created_at": "2026-11-07T00:46:10Z",
+      "expired": false
+    }
+  ],
+  "summary": {
+    "normalProfiles": 15,
+    "normalProfilesPassed": 14,
+    "normalProfilesFailed": 1,
+    "onlyFailedProfile": "clinical",
+    "nativeReturnV1Passed": true,
+    "populatedRecoveryPassed": true
+  },
+  "clinicalFailure": {
+    "result": {
+      "all_ten_writers_verified": false,
+      "application_Auth_verified": false,
+      "authenticated_browser_verified": false,
+      "beta210_only_three_reviewed_controlled_property_changes": true,
+      "beta210_original_controlled_descriptor_unchanged": true,
+      "beta210_original_rows_and_sequences_preserved": true,
+      "beta211_controlled_properties_rows_and_sequences_preserved": true,
+      "beta_candidate_profile": "clinical",
+      "beta_candidate_source_sha256": "e06dc6e641a2032f4c6a05baaae1dcf55286b5289d632c3adc0f9f7bc464b777",
+      "cold209_empty_count_preflight_verified": true,
+      "common269_source_properties": true,
+      "complete_independent_source_reference_properties": true,
+      "complete_source_derived208_ledger": true,
+      "complete_source_derived209_ledger": true,
+      "complete_source_derived210_ledger": true,
+      "complete_source_derived211_ledger": true,
+      "copied_migrations_rechecked": true,
+      "count_business_verified": false,
+      "elapsed_seconds": 301.467637357,
+      "failure_types": [
+        "ValueError"
+      ],
+      "full121_source_module_properties": true,
+      "historical_ledger_rows_rewritten": false,
+      "hosted_client_contact_check_validated_before_installation": true,
+      "hosted_writes": 0,
+      "kind": "livingroom-beta211-genuine-business-profile-v1",
+      "new_count_tables_empty_except_source_descriptor": true,
+      "normal_owned_cleanup": true,
+      "old_rows_preserved_exact_declared_additions_only": true,
+      "original204_rows_preserved_with_source_declared_appends": true,
+      "passed": false,
+      "prefix_sources_rechecked": true,
+      "production_deployed": false,
+      "profile": "clinical",
+      "provider_requests": 0,
+      "scheduler_paused_before_first_project_SQL": true,
+      "source_only_audit_column_controls": {
+        "Auth_acceptance": false,
+        "cases": 7,
+        "domain_writes": 0
+      },
+      "source_rechecked": true,
+      "validated_client_constraint_controls": {
+        "cases": 7,
+        "raw_client_check_still_validated": true,
+        "same_original_metadata": true
+      }
+    },
+    "filesSha256": {
+      "primary-failure.txt": "0828eee45b6cb884cbd6c4db7662b6a329638cbbfd63771a8d035416a0f1da35",
+      "result.json": "b8cb3c820acd269b7cf90e54bb75627c4de182afbd0a5da67708129dc93fd37e",
+      "rpc-failure.json": "ef1a0ce11f7983dfb16748a271060e2d0c4c671243a989471bad60d0774e77f9"
+    },
+    "primaryFailureLastLine": "ValueError: Unexpected fixed RPC status: execute_managed_stock_intent_v1 400",
+    "rpcFailure": {
+      "error": {
+        "code": "P0001",
+        "details": "",
+        "hint": "",
+        "message": "stock_entry_request_failed"
+      },
+      "rpc": "execute_managed_stock_intent_v1",
+      "status": 400
+    },
+    "callTimings": []
+  },
+  "previousRunReceipt": "docs/evidence/beta-current211-third-ci-2026-11-06.json",
+  "interpretation": "The compact whole-object comparison improved normal acceptance to 14 of 15 profiles. Clinical execution still failed closed; no current211 release acceptance is claimed. Native return and populated recovery passed on the exact aca45386 candidate. Separate timing/profiling runs explain remaining latency and never replace this normal result."
+}

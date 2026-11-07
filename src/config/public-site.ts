@@ -33,7 +33,7 @@ export const publicRoutes = [
     path: "/",
     title: "Housecall & Clinic Veterinary Care Coming to Boulder",
     description:
-      "Comfort-focused veterinary care preparing for Boulder, with housecalls targeted for late October 2026 and a future clinic home base on Spruce Street.",
+      "Comfort-focused veterinary care preparing for Boulder, with housecalls targeted for late 2027 and a future clinic home base on Spruce Street.",
     changeFrequency: "weekly",
     priority: 1,
   },

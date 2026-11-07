@@ -81,3 +81,29 @@ test("uncertain errors do not expose private details", async () => {
   const handler = createAbandonedCleanupHandler(env, async () => { throw new Error("private/path secret-value"); });
   const response = await handler(request()); assert.equal(response.status, 503); assert.doesNotMatch(await response.text(), /private|secret-value/);
 });
+
+test("authenticated preview works with cleanup disabled and never claims or deletes", async () => {
+  let mutations = 0;
+  const handler = createAbandonedCleanupHandler({ ...env, ATTACHMENT_CLEANUP_ENABLED: "false" }, async () => { mutations++; return { status: "empty" }; }, async (grace, limit, credential) => {
+    assert.equal(grace, 168); assert.equal(limit, 25); assert.equal(credential, env.SUPABASE_SERVICE_ROLE_KEY); return ids;
+  });
+  const response = await handler(request({ dry_run: true }));
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { mode: "preview", dry_run: true, grace_hours: 168, candidates: 3, limit: 25, complete: 0 });
+  assert.equal(mutations, 0);
+});
+test("preview rejects unauthorized, unconfigured or malformed discovery without mutations", async () => {
+  let calls = 0;
+  const run = async () => { calls++; return { status: "empty" as const }; };
+  const discover = async () => { calls++; return ids; };
+  assert.equal((await createAbandonedCleanupHandler(env, run, discover)(request({ dry_run: true }, "wrong"))).status, 401);
+  assert.equal((await createAbandonedCleanupHandler({ ...env, ATTACHMENT_CLEANUP_GRACE_HOURS: "1" }, run, discover)(request({ dry_run: true }))).status, 503);
+  assert.equal(calls, 0);
+  for (const bad of [async () => ["private/path"], async () => Array(26).fill(id), async () => { throw new Error("private secret"); }]) {
+    const response = await createAbandonedCleanupHandler(env, run, bad)(request({ dry_run: true }));
+    assert.equal(response.status, 503); assert.doesNotMatch(await response.text(), /private|secret/);
+  }
+  assert.equal(calls, 0);
+  assert.equal((await createAbandonedCleanupHandler(env, run, discover)(request({ dry_run: true, upload_id: id }))).status, 400);
+  assert.equal(calls, 0);
+});

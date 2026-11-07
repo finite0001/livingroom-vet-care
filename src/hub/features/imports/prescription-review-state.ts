@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { equalHistoryPayload, historyCursor } from "./history-state.ts";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const positive = z.number().int().positive();
 const timestamp = z.string().refine((v) => Number.isFinite(Date.parse(v)));
@@ -22,7 +22,7 @@ export const prescriptionObservationSchema = z.object({
   observed_head_version: positive,
   external_id: z.string().min(1),
   page: positive,
-  original: z.record(z.unknown()),
+  original: z.record(z.string(), z.unknown()),
 });
 export const prescriptionItemEvidenceSchema = z
   .object({

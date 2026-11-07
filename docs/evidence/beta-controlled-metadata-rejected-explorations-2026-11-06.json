@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "kind": "beta-metadata-rejected-explorations-v1",
+  "capturedAt": "2026-11-07T01:47:19.534545+00:00",
+  "engineeringOnly": true,
+  "nativeAcceptance": false,
+  "readinessAdmission": false,
+  "productCandidateModified": false,
+  "context": "Engineering investigations following normal clinical failure in run42323925194. These alternatives were not selected as the repair; component measurements do not establish full RPC performance or acceptance.",
+  "sourceArtifactsSha256": {
+    "numeric": "91b0d19cf8b1af9c7ec0af0bbf2eeaf54b7cde514fb8f15a7ee456a85cf4b1be",
+    "canonical": "3215b596a6af6246a00652ac7e7d06bf11193987e9e4feaa479bad0e22b9c336",
+    "jit": "4c0da21e0c73cb98d1a8e4862cc821df31e6810dfd6d73603b6f0854de352fcb"
+  },
+  "structuralNumericComparison": {
+    "candidateQuery": "a IS NOT DISTINCT FROM b AND jsonb_path_query_array(a, 'strict $.** ? (@.type() == \"number\")')::text IS NOT DISTINCT FROM jsonb_path_query_array(b, 'strict $.** ? (@.type() == \"number\")')::text",
+    "fixtureEquivalence": {
+      "pairs": 625,
+      "equivalent": true
+    },
+    "numericTokens": {
+      "bytes": 9112011,
+      "tokens": 8788,
+      "equivalent": true
+    },
+    "reportedMedianMs": {
+      "canonical": 85.213,
+      "structural_numeric": 78.416
+    },
+    "samplesPerVariant": {
+      "canonical": 8,
+      "structural_numeric": 8
+    },
+    "ownedCleanup": true,
+    "disposition": "Rejected as insufficient performance improvement for the unresolved full clinical deadline. Fixture equivalence is not a universal equivalence proof or native acceptance."
+  },
+  "fixedCanonicalFormat": {
+    "descriptorBytes": 9112155,
+    "reportedMedianMs": {
+      "actual_base": 44.287,
+      "actual_format": 37.9225,
+      "expected_base": 51.054500000000004,
+      "expected_format": 43.3245
+    },
+    "samplesPerComponent": {
+      "actual_base": 12,
+      "actual_format": 12,
+      "expected_base": 12,
+      "expected_format": 12
+    },
+    "allComponentHashesEqual": true,
+    "componentOutputSha256": "da9df7e2c9bb0394a27c4bbbf51bcfcffb7760ddf92678752376394a48966fe8",
+    "limits": "Actual fixed root assembly with flat per-member values; excludes original catalog snapshots. Expected side enumerates all members and canonical key order. Local shared host component benchmark only.",
+    "ownedCleanup": true,
+    "disposition": "Rejected as insufficient full-workflow headroom. Actual and expected component gains are not summed into an RPC guarantee; snapshots and full clinical work are excluded."
+  },
+  "jitInvestigation": {
+    "observed": {
+      "jit": "on",
+      "version": "PostgreSQL 17.6 on aarch64-unknown-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+      "available": false,
+      "above_cost": "100000",
+      "inline_cost": "500000",
+      "optimize_cost": "500000",
+      "image": "public.ecr.aws/supabase/postgres:17.6.1.171",
+      "default_fresh_cluster_not_CLI_runtime": true
+    },
+    "disposition": "The inspected approved arm64 image reports JIT unavailable despite its nominal jit=on setting. Disabling LLVM JIT therefore cannot explain or repair latency in that inspected environment. This was a fresh cluster, not a measurement of a CLI-owned application RPC."
+  },
+  "nextDesign": "A source-anchored normalized expected-text design is under separate review and benchmarking. No source binding, accepted speedup or native readiness is asserted by this receipt."
+}

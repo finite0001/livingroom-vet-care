@@ -2,8 +2,8 @@ import { z } from "zod";
 import { decodeExactJson, type ExactJson } from "../record-review/exact-json.ts";
 import { controlledStockWriterSchema, type ControlledStockWriter } from "./gateway.ts";
 
-const uuid = z.string().uuid();
-const request = z.record(z.unknown());
+const uuid = z.string().guid();
+const request = z.record(z.string(), z.unknown());
 // Original BridgeV3 public signatures have no argument defaults. Null is a
 // supplied SQL value; an absent/undefined argument is never silently invented.
 const schemas = {

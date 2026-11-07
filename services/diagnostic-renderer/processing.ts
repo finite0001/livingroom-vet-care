@@ -15,7 +15,7 @@ import {
   type RenderReceipt,
 } from "./sandbox.ts";
 const hash = z.string().regex(/^[a-f0-9]{64}$/),
-  uuid = z.string().uuid();
+  uuid = z.string().guid();
 const imageSchema = z
   .string()
   .regex(/^lrv-diagnostic-pdf@sha256:[a-f0-9]{64}$/);
@@ -38,7 +38,7 @@ export const provenanceSchema = z
     validator_sha: hash,
     worker_sha: hash,
     font_sha: hash,
-    settings: z.record(z.unknown()),
+    settings: z.record(z.string(), z.unknown()),
   })
   .strict();
 export const runtimeConfigSchema = z

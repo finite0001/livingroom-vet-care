@@ -3,7 +3,7 @@ import { parseMigrationBinding } from "./migration-run-api.ts";
 import type { MigrationBinding, MigrationCursor, MigrationRpc } from "./migration-run-api.ts";
 import type { MigrationItem } from "./migration-items-api.ts";
 import { precedes } from "./attachment-review-history.ts";
-const uuid = z.string().uuid(), hash = z.string().regex(/^[a-f0-9]{64}$/);
+const uuid = z.string().guid(), hash = z.string().regex(/^[a-f0-9]{64}$/);
 const date = z.string().datetime({ offset: true }).refine(value => Number.isFinite(Date.parse(value)) && !/\.\d{7}/.test(value));
 const count = z.number().int().nonnegative().safe();
 const cursorSchema = z.object({ before_at: date, before_id: uuid }).strict();

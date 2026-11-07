@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { captureSchema, type Capture } from "../lab-work/LabResultState.ts";
-const id = z.string().uuid(),
+const id = z.string().guid(),
   version = z.number().int().positive(),
   hash = z.string().regex(/^[a-f0-9]{64}$/),
   date = z.string().refine((v) => Number.isFinite(Date.parse(v)));

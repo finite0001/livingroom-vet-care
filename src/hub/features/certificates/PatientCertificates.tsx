@@ -1,3 +1,4 @@
+import { refreshPatientReleases } from "../record-releases/refresh";
 import { denverLocal } from "../scheduling/time";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -322,9 +323,10 @@ export function PatientCertificates({
       setReason("");
       setDetails({});
       setTreatment("");
-      await cache.invalidateQueries({
-        queryKey: ["patient-certificates", petId],
-      });
+      await Promise.all([
+        refreshPatientReleases(cache, petId),
+        cache.invalidateQueries({ queryKey: ["patient-certificates", petId] }),
+      ]);
       setOpened(await readCertificate(parseCertificateRow(data).id));
     });
   const open = (id: string) =>
@@ -375,10 +377,11 @@ export function PatientCertificates({
       if (error) throw error;
       voidRef.current = null;
       setVoidReason("");
+      await Promise.all([
+        refreshPatientReleases(cache, petId),
+        cache.invalidateQueries({ queryKey: ["patient-certificates", petId] }),
+      ]);
       setOpened(await readCertificate(args.p_certificate_id));
-      await cache.invalidateQueries({
-        queryKey: ["patient-certificates", petId],
-      });
     });
   const setDetail = (
     key: keyof CertificateSnapshot["details"],

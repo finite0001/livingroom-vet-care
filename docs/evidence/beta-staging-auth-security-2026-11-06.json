@@ -1,0 +1,27 @@
+{
+  "projectRef": "kothoqicubowyhwfsrte",
+  "observedAt": "2026-11-06T22:28:13.118448+00:00",
+  "plan": "pro",
+  "billingChanged": false,
+  "emailsSent": false,
+  "changedFields": [
+    "password_hibp_enabled"
+  ],
+  "verifiedEnabled": true,
+  "weakPasswordProbe": {
+    "status": 422,
+    "code": 422,
+    "message": "Password is known to be weak and easy to guess, please choose a different one.",
+    "weak_password": {
+      "reasons": [
+        "pwned"
+      ]
+    }
+  },
+  "weakPasswordRejected": true,
+  "syntheticAuthUserDeleted": false,
+  "syntheticAuthUserBanned": true,
+  "syntheticAuthUserId": "4db380ba-3ead-4553-99aa-9da1ecd4e17f",
+  "syntheticProfileActive": false,
+  "syntheticBanVerifiedUntil": "2126-10-13T22:28:20.419852Z"
+}

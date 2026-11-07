@@ -6,7 +6,7 @@ const hash = z.string().regex(/^[a-f0-9]{64}$/);
 export const renderInputSchema = z
   .object({
     version: z.literal(1),
-    job_id: z.string().uuid(),
+    job_id: z.string().guid(),
     source_hash: hash,
     snapshot_hash: hash,
     html_sha256: hash,
@@ -45,7 +45,7 @@ const validationSchema = z
 export const renderReceiptSchema = z
   .object({
     version: z.literal(1),
-    job_id: z.string().uuid(),
+    job_id: z.string().guid(),
     source_hash: hash,
     snapshot_hash: hash,
     html_sha256: hash,

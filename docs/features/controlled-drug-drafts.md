@@ -1,4 +1,6 @@
-# Controlled-drug draft configuration
+# Controlled-drug draft configuration — C0 scope
+
+This page documents the original C0 metadata increment and its dated proof. Later narcotics setup, witness, count, review, reports and recovery surfaces are present in the repository. Use the [current beta map](../beta-readiness-documentation-2026-11-06.md) and [narcotics release sequence](../controlled-drugs/narcotics-release-sequence-20261028.md) for the complete scope and current metadata evidence. “No endpoint introduced” below refers to C0 alone; it is not a claim that later workflows are absent or clinically commissioned.
 
 C0 proposes medication configuration for review. It is not a running drug register. Every stored entry has the database-constrained state `draft`; no opening, physical event, witness, waste, count or activation endpoint is introduced. No drug classification, registration or physical quantity is seeded.
 

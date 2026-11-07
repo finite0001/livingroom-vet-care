@@ -114,7 +114,7 @@ export function createClinicalCallHandler(deps: ClinicalCallDependencies) {
     try {
       const raw = await boundedBody(new Response(request.body), 2048);
       if (raw.length > 2048) return json({ error: { code: "invalid_request" } }, 422);
-      id = z.object({ capture_id: z.string().uuid() }).strict().parse(JSON.parse(raw)).capture_id;
+      id = z.object({ capture_id: z.string().guid() }).strict().parse(JSON.parse(raw)).capture_id;
       const auth = await deps.authenticate(token);
       if (!auth) return json({ error: { code: "authentication_required" } }, 401);
       const current = callCaptureReadSchema.parse(await auth.read(id));

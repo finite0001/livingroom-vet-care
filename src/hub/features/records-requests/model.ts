@@ -6,7 +6,7 @@ export const requestSourceLabels = {
   diagnostic_pdf_historical_ids: "Historical diagnostic PDFs",
 } as const;
 export type RequestSourceKind = keyof typeof requestSourceLabels;
-const uuid = z.string().uuid(),
+const uuid = z.string().guid(),
   version = z.number().int().positive();
 export const statuses = [
   "requested",

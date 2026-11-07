@@ -22,7 +22,7 @@ async function call(name: string, args: Record<string, unknown>) {
   if (error) throw error;
   return data;
 }
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 export async function readAudio(actor: string, pet: string, encounter: string) {
   const v = audioReadSchema.parse(
     await call("read_clinical_audio", {

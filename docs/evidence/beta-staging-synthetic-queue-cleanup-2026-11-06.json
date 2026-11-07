@@ -1,0 +1,14 @@
+{
+  "projectRef": "kothoqicubowyhwfsrte",
+  "observedAt": "2026-11-06T23:16:22.441152+00:00",
+  "providerRequests": 0,
+  "messagesSent": false,
+  "syntheticActor": "49ba0db4-05e2-49b4-a2fc-f12def5f1429",
+  "preservedOutbox": {
+    "id": "9c2ea24b-7323-49ca-9e12-b43fa0b1267d",
+    "state": "failed",
+    "last_error": "recipient_suppressed"
+  },
+  "passed": true,
+  "actorDeactivated": true
+}

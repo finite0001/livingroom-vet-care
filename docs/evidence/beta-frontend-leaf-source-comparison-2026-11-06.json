@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "kind": "beta-frontend-leaf-unchanged-input-closure-v1",
+  "capturedAt": "2026-11-07T01:24:03.585030+00:00",
+  "baselineCommit": "aca45386f05d718f62bfa50cef476bed78c4f0e3",
+  "candidateBinding": {
+    "mode": "Frozen working-tree candidate before parent commit",
+    "betaCandidateManifestSha256": "0826d1da2f64f6e6a7c99815446c64bdec6fcb8b7535ca2d2f88d389e206fef7",
+    "migration210Sha256": "bf3cb81794a6577611d2df9419743082de3af34729d1a6028ef3d09dfdc3406f"
+  },
+  "method": "Read all baseline tracked Git blobs, hash every corresponding working-tree file with git hash-object, compare exact blob identities; inventory untracked nonignored files and refuse any non-documentation addition. Group inventory digests bind sorted path, mode and Git blob IDs. No test input is edited.",
+  "trackedFilesCompared": 4960,
+  "unchangedInputGroups": {
+    "application": {
+      "files": 726,
+      "identical": true,
+      "sortedPathModeGitBlobInventorySha256": "4c1336d6f4d3d3c199a3f3ffbd724424d932ac43b1e23a880f27ce48264e30e7"
+    },
+    "browserTestsAndFixtures": {
+      "files": 778,
+      "identical": true,
+      "sortedPathModeGitBlobInventorySha256": "cc6c8a2ed454fe0299eefe200ea94d9974722cd76b780753d7ce110e9a3c22cf"
+    },
+    "publicAssets": {
+      "files": 13,
+      "identical": true,
+      "sortedPathModeGitBlobInventorySha256": "c4cec71ce40de097e70dcb85feea1d06ea72218d234198b5bcc712ae78265b20"
+    },
+    "rootConfigsAndDependencies": {
+      "files": 28,
+      "identical": true,
+      "sortedPathModeGitBlobInventorySha256": "963dfa2db98d5fec0a54fdfc7eb705b150676cca43d4fd0ee36c48328fd83b87"
+    },
+    "buildAndCiCommands": {
+      "files": 106,
+      "identical": true,
+      "sortedPathModeGitBlobInventorySha256": "cf58e1f7198cddcda6561c9228cc75cbcf0ed448b90c07e773445d25819fb53b"
+    },
+    "edgeAndRendererSources": {
+      "files": 234,
+      "identical": true,
+      "sortedPathModeGitBlobInventorySha256": "883bdcb96211bdc7eeb4b83ed245ebfa7d99d8be97a1c8ed357df44c257c17ec"
+    }
+  },
+  "completeChangedTrackedPaths": [
+    "docs/beta-remediation-2026-11-06.md",
+    "docs/evidence/beta-controlled-candidate-2026-11-06.md",
+    "scripts/narcotics-log/beta-candidate-source.json",
+    "scripts/narcotics-log/beta-migration210.json",
+    "scripts/narcotics-log/beta-time-clock-source-proof.json",
+    "scripts/narcotics-log/beta_time_clock_source.py",
+    "scripts/narcotics-log/test_beta_recovery_diagnostic.py",
+    "scripts/narcotics-log/test_beta_time_clock_source.py",
+    "scripts/narcotics-log/verify_beta_metadata.py",
+    "supabase/migrations/20261106170000_atomic_time_clock_corrections.sql"
+  ],
+  "newUntrackedPaths": [
+    "docs/evidence/beta-controlled-metadata-leaf-2026-11-06.json",
+    "docs/evidence/beta-current211-compact-profiling-2026-11-06.json",
+    "docs/evidence/beta-current211-compact-writer-diagnostics-2026-11-06.json",
+    "docs/evidence/beta-current211-fourth-ci-2026-11-06.json"
+  ],
+  "changedNativeProofSources": {
+    "scripts/narcotics-log/beta-candidate-source.json": "0826d1da2f64f6e6a7c99815446c64bdec6fcb8b7535ca2d2f88d389e206fef7",
+    "scripts/narcotics-log/beta-migration210.json": "965ff12470fd753e8c8fa49f774946b24c203e33affba2057d7830f7a69624bf",
+    "scripts/narcotics-log/beta-time-clock-source-proof.json": "f4a598c8b6eaf07f6d2dd786da795ec05fc2b003f05caff7ab8235e042cecb8c",
+    "scripts/narcotics-log/beta_time_clock_source.py": "5abb8dc6df2543b33d4d57e10b7a6a561f7a48b7ce35601b58f92750d458dd89",
+    "scripts/narcotics-log/test_beta_recovery_diagnostic.py": "f0bba8cdc2160cf85bf93ef47ae72b87da33cb1ccc8662b90d1f20ce93bb5315",
+    "scripts/narcotics-log/test_beta_time_clock_source.py": "5ec96b564e2adc6601eb96ff6e370caac26cad7671a814374df7d82d3fbd1380",
+    "scripts/narcotics-log/verify_beta_metadata.py": "1f60f68e6d06fc5cabe4ab4cec56dfed2fb3741abccf604b7fa6951cbe45070e",
+    "supabase/migrations/20261106170000_atomic_time_clock_corrections.sql": "bf3cb81794a6577611d2df9419743082de3af34729d1a6028ef3d09dfdc3406f"
+  },
+  "unitDependencyException": {
+    "test": "tests/restore/current-migration-guards.test.ts",
+    "reason": "Unchanged test reads changed migration210 and its framing manifest; old full unit result alone is insufficient for this check.",
+    "followupLog": "/tmp/lrv-leaf-current-migration-guards.log",
+    "passed": 11,
+    "failed": 0,
+    "exitCode": 0,
+    "logSha256": "4fa04e96700b82260eb14fc049ed12273f1783e9631614679b06907f237f5a2f",
+    "command": "node --experimental-strip-types --test tests/restore/current-migration-guards.test.ts"
+  },
+  "interpretation": "The successful aca45386 mock-browser, application build/typecheck and scanner input closure is byte-identical to this leaf/hash SQL candidate. This permits precisely scoped reuse of those completed results, not a claim that future CI reruns completed. Changed native guard/source/framing/diagnostic work requires separate current211 runtime/source tests. The one identified Node test reading changed migration bytes is rerun separately.",
+  "readinessAdmission": false,
+  "current211RuntimeAcceptance": false,
+  "trackedFileModeChanges": 0,
+  "baselineFrontendEvidence": {
+    "jobUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42320045248/job/128242198396",
+    "jobConclusion": "success",
+    "sourceCommit": "aca45386f05d718f62bfa50cef476bed78c4f0e3",
+    "browserPassed": 607,
+    "browserSkipped": 1,
+    "browserFailures": 0,
+    "browserRetriesObserved": 0,
+    "skip": "CloudTalk direct-route scenario intentionally disabled without its provider feature flag",
+    "unitTestsPassed": 2799,
+    "logSha256": "d0e14e92f1ec0f9a3f592a4efb3cdef8f185668d7703a7d5704fd83fed94e67d",
+    "archivedLocalReceipt": "/tmp/lrv-aca-frontend-final-receipt.json"
+  },
+  "earlierEquivalentFrontendReceipt": "docs/evidence/beta-frontend-ci-fd5f-2026-11-06.json"
+}

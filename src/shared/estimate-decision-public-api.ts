@@ -2,10 +2,10 @@ import { z } from "zod";
 import { estimatePublicationSnapshotSchema } from "../../supabase/functions/_shared/estimate-publication-document.ts";
 import { estimateClientDecisionOperationSchema, estimateDecisionBindingSchema, estimateDecisionHeadSchema, estimatePublicDecisionSchema, estimatePublicDecisionReceiptSchema, verifyEstimateDecisionResolution, sameEstimateDecisionEvidence as equal } from "../../supabase/functions/_shared/estimate-decision-contract.ts";
 import { retainPendingEstimateDecision, resolvePendingEstimateDecision, type EstimateDecisionStorage } from "./estimate-decision-state.ts";
-const uuid=z.string().uuid().refine(v=>v===v.toLowerCase());
+const uuid=z.string().guid().refine(v=>v===v.toLowerCase());
 const hash=z.string().regex(/^[a-f0-9]{64}$/);
 const instant=z.string().datetime().refine(v=>Number.isFinite(Date.parse(v))&&!/\.\d{7}/.test(v));
-const s=estimatePublicationSnapshotSchema.innerType().shape;
+const s=estimatePublicationSnapshotSchema.shape;
 const artifact=z.object({filename:z.string().max(255).regex(/^estimate-[a-f0-9-]{36}-draft-[1-9]\d{0,9}-publication-[a-f0-9-]{36}\.html$/),mime_type:z.literal('text/html; charset=utf-8'),byte_length:z.number().int().min(1).max(2097152),sha256:hash,renderer_version:z.literal(1)}).strict();
 export const estimatePublicReviewSchema=z.object({
   version:z.literal(1),grant_id:uuid,binding:estimateDecisionBindingSchema,publication_head:estimateDecisionHeadSchema,

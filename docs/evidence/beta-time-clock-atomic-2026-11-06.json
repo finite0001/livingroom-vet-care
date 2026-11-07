@@ -1,0 +1,26 @@
+{
+  "kind": "atomic-time-clock-postgres-v1",
+  "passed": true,
+  "checks": [
+    "active-admin-only RPC, anonymous and direct-write denial, stale legacy flag cannot falsify duty list",
+    "stale note/staff/time and invalid interval reject without changing duty",
+    "open correction closes atomically; closed entry cannot reopen",
+    "open deletion clears duty atomically",
+    "profile failure rolls back time-entry correction",
+    "concurrent admin-close/staff-clock-in serializes; delayed legacy duty write cannot change authoritative read",
+    "inactive self-clock rejected; profile privilege and actor audit preserved",
+    "both incorrect legacy flag directions ignored; inactive staff excluded; frozen profile guard unchanged"
+  ],
+  "hostedWrites": 0,
+  "syntheticAuth": true,
+  "ownedCleanup": true,
+  "runnerSha256": "f5b566522d1a506979c2c12049c684e646f1126531fbbd1cab69ecec35a55277",
+  "sqlSha256": "0cbb8076575dbeb36d1d0dee010ee3b643b083cadb7a0df7e674546df96dfcca",
+  "concurrentLockObservation": {
+    "staffWaitEventType": "Lock",
+    "adminState": "idle in transaction",
+    "adminPidInPgBlockingPids": true,
+    "beforeAdminCommit": true,
+    "elapsedSeconds": 0.30570674990303814
+  }
+}

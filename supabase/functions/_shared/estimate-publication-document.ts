@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const maximumCents = 9223372036854775807n;
-const uuid = z.string().uuid().refine(value => value === value.toLowerCase());
+const uuid = z.string().guid().refine(value => value === value.toLowerCase());
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const revision = z.number().int().min(1).max(2147483647);
 const text = (min: number, max: number) => z.string().refine(value =>

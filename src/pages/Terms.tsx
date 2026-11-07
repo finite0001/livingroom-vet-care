@@ -22,7 +22,7 @@ const termsSections: readonly LegalSection[] = [
     title: "No Emergency Monitoring",
     body: [
       "The public website and contact form are not emergency or urgent-care channels.",
-      "If your pet needs urgent help, contact an open veterinary emergency hospital directly.",
+      practice.emergencyInstructions,
     ],
   },
   {

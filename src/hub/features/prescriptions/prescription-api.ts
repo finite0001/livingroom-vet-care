@@ -2,7 +2,7 @@ import { renderNativePrescriptionV4, type NativePrescriptionPrintV4 } from "../.
 import type { RpcArgs, RpcName } from "@/integrations/supabase/rpc";
 import { z } from "zod";
 import type { PrescriptionOperation } from "./prescription-state.ts";
-const uuid = z.string().uuid(), hash = z.string().regex(/^[a-f0-9]{64}$/), revision = z.number().int().min(1).max(2147483647);
+const uuid = z.string().guid(), hash = z.string().regex(/^[a-f0-9]{64}$/), revision = z.number().int().min(1).max(2147483647);
 const instant = z.string().datetime({ offset: true }).refine(v => Number.isFinite(Date.parse(v)) && !/\.\d{7}/.test(v));
 const text = (max: number) => z.string().min(1).refine(v => Array.from(v).length <= max).refine(v => v === v.trim() && ![...v].some(c => { const n = c.charCodeAt(0); return (n < 32 && n !== 9 && n !== 10) || n === 127; }));
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v => Number.isFinite(Date.parse(`${v}T00:00:00Z`)) && new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v);

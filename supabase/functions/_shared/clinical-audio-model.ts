@@ -3,7 +3,7 @@ export const AUDIO_RATE = 16000;
 export const AUDIO_MAX_FRAMES = AUDIO_RATE * 600;
 export const AUDIO_MAX_BYTES = 44 + AUDIO_MAX_FRAMES * 2;
 export const AUDIO_CONTRACT = "clinical-audio-v1";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const bounded = (n: number) =>
   z
     .string()

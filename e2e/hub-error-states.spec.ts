@@ -6,7 +6,7 @@ const staff = "11111111-1111-4111-8111-111111111111";
 interface FixtureOptions {
   /** REST paths (e.g. "/rest/v1/tickets") that must answer 403. */
   failing?: string[];
-  /** Fail the on-duty staff list read (profiles without an id filter), not the signed-in profile read. */
+  /** Fail the authoritative on-duty RPC, not the signed-in profile read. */
   failOnDutyStaff?: boolean;
 }
 
@@ -42,7 +42,7 @@ async function fixture(page: Page, baseURL: string | undefined, options: Fixture
   const hits: Record<string, number> = {};
 
   await page.route("**/*", (route) =>
-    new URL(route.request().url()).origin === new URL(baseURL ?? "http://127.0.0.1:8080").origin
+    new URL(route.request().url()).origin === new URL(baseURL ?? test.info().project.use.baseURL!).origin
       ? route.continue()
       : route.abort(),
   );
@@ -55,7 +55,7 @@ async function fixture(page: Page, baseURL: string | undefined, options: Fixture
     if (path === "/auth/v1/token") return route.fulfill({ json: session });
     if (path === "/auth/v1/user") return route.fulfill({ json: user });
     if (path === "/auth/v1/logout") return route.fulfill({ status: 204, body: "" });
-    if (options.failOnDutyStaff && path === "/rest/v1/profiles" && !url.searchParams.has("id"))
+    if (options.failOnDutyStaff && path === "/rest/v1/rpc/read_on_duty_staff")
       return route.fulfill({
         status: 403,
         json: { code: "42501", message: "Synthetic read unavailable" },
@@ -145,4 +145,87 @@ test("the time clock reports a failed read for each of its three lists", async (
   await expect(page.getByText("Not clocked in")).toHaveCount(0);
   await expect(page.getByText("No staff clocked in.")).toHaveCount(0);
   await expect(page.getByText("No shifts in the last 30 days.")).toHaveCount(0);
+});
+
+for (const allStaff of [false, true]) {
+  test(`the ${allStaff ? "all-staff" : "personal"} timesheet refuses to report or export a failed read`, async ({ page, baseURL }) => {
+    const state = await fixture(page, baseURL, { failing: ["/rest/v1/time_entries"] });
+    await page.goto("/hub/timesheet");
+    if (allStaff) await page.getByRole("tab", { name: "All staff" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "Timesheet could not be loaded." })).toBeVisible(retryBudget);
+    await expect(page.getByRole("button", { name: "Export CSV" })).toBeDisabled();
+    await expect(page.getByText("No time entries yet")).toHaveCount(0);
+    const before = state.hits["/rest/v1/time_entries"] ?? 0;
+    await page.getByRole("button", { name: "Try again" }).click();
+    await expect.poll(() => state.hits["/rest/v1/time_entries"] ?? 0).toBeGreaterThan(before);
+  });
+}
+
+test("admin timesheets use atomic corrections with reviewed values and preserve conflicts", async ({ page, baseURL }) => {
+  await fixture(page, baseURL);
+  const closed = {
+    id: "22222222-2222-4222-8222-222222222222", staff_id: staff,
+    clock_in_at: "2026-01-02T16:00:13.456Z", clock_out_at: "2026-01-02T17:00:27.123Z",
+    note: "Original note", created_at: "2026-01-02T16:00:00.000Z",
+  };
+  let open = { ...closed, id: "33333333-3333-4333-8333-333333333333", clock_out_at: null, note: "Active shift" };
+  let current = { ...closed };
+  let conflict = false;
+  const writes: Record<string, unknown>[] = [];
+  const profileWrites: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/rest/v1/profiles") && request.method() === "PATCH") profileWrites.push(request.url());
+  });
+  await page.route(`${backend}/rest/v1/time_entries*`, async (route) => {
+    expect(route.request().method()).toBe("GET");
+    const url = new URL(route.request().url());
+    if (url.searchParams.get("clock_out_at") === "is.null") return route.fulfill({ json: [open] });
+    return route.fulfill({ json: [open, current] });
+  });
+  await page.route(`${backend}/rest/v1/rpc/admin_correct_time_entry`, async (route) => {
+    const args = route.request().postDataJSON();
+    writes.push(args);
+    if (conflict) return route.fulfill({ status: 409, json: { code: "PT409", message: "This entry changed. Refresh the timesheet and review it again" } });
+    const values = { clock_in_at: args.p_clock_in_at, clock_out_at: args.p_clock_out_at, note: args.p_note };
+    if (args.p_id === open.id) {
+      open = { ...open, ...values };
+      return route.fulfill({ json: open });
+    }
+    current = { ...current, ...values };
+    return route.fulfill({ json: current });
+  });
+  await page.goto("/hub/timesheet");
+  await page.getByRole("tab", { name: "All staff" }).click();
+  const openRow = page.getByRole("row").filter({ hasText: "Active shift" });
+  await expect(openRow.getByRole("button", { name: "Edit entry" })).toBeEnabled();
+  await expect(openRow.getByRole("button", { name: "Delete entry" })).toBeEnabled();
+  await expect(page.getByText("Corrections update the shift and duty status together.", { exact: false })).toBeVisible();
+
+  await page.getByRole("row").filter({ hasText: "Original note" }).getByRole("button", { name: "Edit entry" }).click();
+  await page.getByLabel("Note", { exact: true }).fill("Reviewed correction");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("row").filter({ hasText: "Reviewed correction" })).toBeVisible();
+  expect(writes).toHaveLength(1);
+  expect(writes[0]).toMatchObject({
+    p_id: closed.id, p_staff_id: staff,
+    p_expected_clock_in_at: closed.clock_in_at,
+    p_expected_clock_out_at: closed.clock_out_at,
+    p_expected_note: "Original note", p_note: "Reviewed correction", p_delete: false,
+    p_clock_in_at: closed.clock_in_at, p_clock_out_at: closed.clock_out_at,
+  });
+  await openRow.getByRole("button", { name: "Edit entry" }).click();
+  await page.getByLabel("Note", { exact: true }).fill("Open shift corrected");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(writes[1]).toMatchObject({ p_id: open.id, p_expected_clock_out_at: null, p_clock_out_at: null, p_note: "Open shift corrected" });
+  expect(profileWrites).toEqual([]);
+
+  conflict = true;
+  await page.getByRole("row").filter({ hasText: "Reviewed correction" }).getByRole("button", { name: "Edit entry" }).click();
+  await page.getByLabel("Note", { exact: true }).fill("Stale overwrite");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("This entry changed. Refresh the timesheet and review it again")).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  expect(profileWrites).toEqual([]);
 });

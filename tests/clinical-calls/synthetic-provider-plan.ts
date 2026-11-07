@@ -14,10 +14,10 @@ export const TRANSPORT_FILES = [
   "supabase/functions/clinical-call-note-process/deno.json", "supabase/functions/clinical-call-note-process/deno.lock",
 ];
 export const PROBE_SHARED_FILES = ["clinical-call-note-provider.ts", "clinical-call-model.ts", "clinical-call-note-model.ts", "clinical-note-model.ts", "clinical-veterinary-context.ts", "clinical-audio-model.ts"];
-export async function planCallProviderBundle(bytes: Uint8Array) {
+async function buildCallProviderPlan(bytes: Uint8Array) {
   if (bytes.byteLength > 4000000) throw Error("Frozen call bundle exceeds planner limit.");
   const bundle = await verifyFrozenCallBundle(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
-  if (bundle.bundle_sha256 !== CALL_PROVIDER_BUNDLE_SHA256 || bundle.requested_model !== "gpt-6-luna"
+  if (bundle.requested_model !== "gpt-6-luna"
     || bundle.corpus_revision !== "lrv-call-fidelity-ten-v2" || !bundle.synthetic_only || bundle.cases.length !== 10) {
     throw Error("This transport accepts only the reviewed ten-case frozen candidate.");
   }
@@ -38,6 +38,17 @@ export async function planCallProviderBundle(bytes: Uint8Array) {
     probe_shared_sha256: Object.fromEntries(PROBE_SHARED_FILES.map((name) => [name, bundle.source_sha256["supabase/functions/_shared/" + name]])),
     transport_source_sha256: Object.fromEntries(TRANSPORT_FILES.map((file) => [file, sha(readFileSync(new URL("../../" + file, import.meta.url)))])),
     cases };
+}
+/** Current-source offline proof only. Its distinct contract cannot authorize the hosted probe. */
+export async function planOfflineCallProviderBundle(bytes: Uint8Array) {
+  return { ...await buildCallProviderPlan(bytes), contract: "lrv-call-provider-offline-input-v1", provider_admission: false as const };
+}
+
+/** Preserve the historical reviewed provider admission; dependency updates cannot broaden it. */
+export async function planCallProviderBundle(bytes: Uint8Array) {
+  const plan = await buildCallProviderPlan(bytes);
+  if (plan.bundle_sha256 !== CALL_PROVIDER_BUNDLE_SHA256) throw Error("This transport accepts only the reviewed ten-case frozen candidate.");
+  return plan;
 }
 if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
   try { process.stdout.write(JSON.stringify(await planCallProviderBundle(readFileSync(process.argv[2]))) + "\n"); }

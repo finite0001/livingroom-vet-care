@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const date = z
   .string()
   .refine((v) => Number.isFinite(Date.parse(v)), "Invalid timestamp");
@@ -52,7 +52,7 @@ const cursorSchema = z.object({ before_at: date, before_id: uuid });
 export type PrescriptionItemCursor = z.infer<typeof cursorSchema>;
 export const candidateSchema = z.object({
   id: uuid,
-  payload: z.record(z.unknown()),
+  payload: z.record(z.string(), z.unknown()),
   payload_hash: z.string().regex(/^[a-f0-9]{64}$/),
   external_id: z.string(),
   resource: resourceSchema,
