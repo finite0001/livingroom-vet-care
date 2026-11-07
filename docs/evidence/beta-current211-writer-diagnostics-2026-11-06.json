@@ -1,0 +1,316 @@
+{
+  "schemaVersion": 1,
+  "kind": "current211-writer-engineering-diagnostics-v1",
+  "capturedAt": "2026-11-07T00:34:23.187410+00:00",
+  "runtimeAcceptance": false,
+  "readinessAdmission": false,
+  "run": {
+    "conclusion": "failure",
+    "createdAt": "2026-11-07T00:23:53Z",
+    "headSha": "3609e83d8bc14094883ac55efffd28119dbcb8db",
+    "status": "completed",
+    "updatedAt": "2026-11-07T00:32:14Z",
+    "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42317970662"
+  },
+  "jobs": [
+    {
+      "name": "source",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 128235219752,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42317970662/job/128235219752",
+      "startedAt": "2026-11-07T00:23:58Z",
+      "completedAt": "2026-11-07T00:25:49Z",
+      "failedSteps": []
+    },
+    {
+      "name": "Engineering writer trace (clinical, never acceptance)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128235866694,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42317970662/job/128235866694",
+      "startedAt": "2026-11-07T00:25:54Z",
+      "completedAt": "2026-11-07T00:32:02Z",
+      "failedSteps": [
+        "Capture the native current211 writer exception without admitting acceptance"
+      ]
+    },
+    {
+      "name": "Engineering writer trace (native_return_v1, never acceptance)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 128235866705,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42317970662/job/128235866705",
+      "startedAt": "2026-11-07T00:25:53Z",
+      "completedAt": "2026-11-07T00:32:13Z",
+      "failedSteps": [
+        "Capture the native current211 writer exception without admitting acceptance"
+      ]
+    },
+    {
+      "name": "current-runtime",
+      "status": "completed",
+      "conclusion": "skipped",
+      "databaseId": 128235868559,
+      "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42317970662/job/128235868559",
+      "startedAt": "2026-11-07T00:25:50Z",
+      "completedAt": "2026-11-07T00:25:49Z",
+      "failedSteps": []
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13552560040,
+      "name": "beta-writer-engineering-trace-native_return_v1",
+      "size_in_bytes": 2856,
+      "digest": "sha256:fc53d184629341ea2b0db1d8a477ac199115a07b648a68a23f1c2de29f7ca5e3",
+      "created_at": "2026-11-07T00:32:11Z",
+      "expired": false
+    },
+    {
+      "id": 13551691692,
+      "name": "beta-metadata-component",
+      "size_in_bytes": 634,
+      "digest": "sha256:7f1149d2cfc7e75061601f6f014da922d7099cfc0e051c5de3b1e1a8286335c5",
+      "created_at": "2026-11-07T00:25:45Z",
+      "expired": false
+    },
+    {
+      "id": 13551074495,
+      "name": "beta-writer-engineering-trace-clinical",
+      "size_in_bytes": 5349,
+      "digest": "sha256:cacab4bcd751f9c8218218d1d04410930107358811df76e136b5076a0e0579f1",
+      "created_at": "2026-11-07T00:32:00Z",
+      "expired": false
+    }
+  ],
+  "engineeringOnly": true,
+  "productHeadSha": "fd5f673110aedc21f7a13413ee24d82c833c52f4",
+  "diagnosticDiffPaths": [
+    ".github/workflows/beta-candidate.yml",
+    "scripts/narcotics-log/beta-candidate-source.json",
+    "scripts/narcotics-log/beta_writer_diagnostic.py",
+    "scripts/narcotics-log/test_beta_writer_diagnostic.py"
+  ],
+  "productionSqlChanged": false,
+  "scope": "Separate workflow_dispatch diagnostic branch; no normal acceptance jobs, no hosted writes. A reversible wrapper exposes native errors in disposable owned databases. Product SQL bytes match the failed normal fd5f candidate, while the diagnostic source manifest is separately bound.",
+  "profiles": {
+    "clinical": {
+      "result": {
+        "all_ten_writers_verified": false,
+        "application_Auth_verified": false,
+        "authenticated_browser_verified": false,
+        "beta210_only_three_reviewed_controlled_property_changes": true,
+        "beta210_original_controlled_descriptor_unchanged": true,
+        "beta210_original_rows_and_sequences_preserved": true,
+        "beta211_controlled_properties_rows_and_sequences_preserved": true,
+        "beta_candidate_profile": "engineering-writer-clinical",
+        "beta_candidate_source_sha256": "7b90a19a9608f1b375698d41729ae96435080ac808773ed9da31832b47bff0b0",
+        "business_profile_verified": false,
+        "cold209_empty_count_preflight_verified": true,
+        "common269_source_properties": true,
+        "complete_independent_source_reference_properties": true,
+        "complete_source_derived208_ledger": true,
+        "complete_source_derived209_ledger": true,
+        "complete_source_derived210_ledger": true,
+        "complete_source_derived211_ledger": true,
+        "copied_migrations_rechecked": true,
+        "count_business_verified": false,
+        "current211_normal_acceptance": false,
+        "diagnostic_function": "public.execute_managed_stock_intent_v1(jsonb)",
+        "diagnostic_function_body_sha256": "01e54c986a52afb0bf39a1f7d528f8bc6cdf4887dc2059dea6ef08e7be676666",
+        "elapsed_seconds": 319.70831766199996,
+        "engineering_only": true,
+        "failure_types": [
+          "ValueError"
+        ],
+        "full121_source_module_properties": true,
+        "historical_ledger_rows_rewritten": false,
+        "hosted_client_contact_check_validated_before_installation": true,
+        "hosted_writes": 0,
+        "kind": "engineering-current211-writer-diagnostic-v1",
+        "new_count_tables_empty_except_source_descriptor": true,
+        "normal_owned_cleanup": true,
+        "old_rows_preserved_exact_declared_additions_only": true,
+        "original204_rows_preserved_with_source_declared_appends": true,
+        "passed": false,
+        "populated_receiver_verified": false,
+        "prefix_sources_rechecked": true,
+        "production_deployed": false,
+        "profile": "clinical",
+        "provider_requests": 0,
+        "scheduler_paused_before_first_project_SQL": true,
+        "source_only_audit_column_controls": {
+          "Auth_acceptance": false,
+          "cases": 7,
+          "domain_writes": 0
+        },
+        "source_rechecked": true,
+        "validated_client_constraint_controls": {
+          "cases": 7,
+          "raw_client_check_still_validated": true,
+          "same_original_metadata": true
+        }
+      },
+      "sourceBinding": {
+        "diagnostic_body_sha256": "01e54c986a52afb0bf39a1f7d528f8bc6cdf4887dc2059dea6ef08e7be676666",
+        "engineering_only": true,
+        "normal_acceptance": false,
+        "original_body_sha256": "b437e0c3fcce34dcb83778f6e0eefbf60ccb3b7089724dc8d21125216e763caf",
+        "production_SQL_changed": false,
+        "signature": "public.execute_managed_stock_intent_v1(jsonb)",
+        "source_derived_descriptor_and_finite_admission": true,
+        "whole_wrapper_source_inverse": true
+      },
+      "callTimings": [
+        {
+          "elapsed_seconds": 7.634967263000021,
+          "engineering_only": true,
+          "execute_index": 1,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "writer": "record_patient_treatment"
+        },
+        {
+          "elapsed_seconds": 8.029502052999987,
+          "engineering_only": true,
+          "execute_index": 2,
+          "expected_status_received": false,
+          "normal_acceptance": false,
+          "writer": "record_anesthesia_drug_administration"
+        }
+      ],
+      "filesSha256": {
+        "beta-recovery-diagnostic-source.json": "9daa385cd9fdcd586c080b686273663aedda1fee4e4b211034579d12ec5730ea",
+        "beta-recovery-native-trace.json": "8382556a5989f157a9de43a33e7af4a71c53faa63acd28e270284f02be6a7232",
+        "beta-writer-call-timing-001.json": "202109cbdd4e08357945ac0b27e54cc87bd80a75919817d0148753e6d9fc62a8",
+        "beta-writer-call-timing-002.json": "e72badf2b25ded0b33fbdd857dea95fc4e3f162f21d884953e9f73bf1db0b8b8",
+        "beta-writer-native-trace.json": "79f1c82e10595b6eacd781416f0be4fb5f217b526e7dd1567dbc76a24c9b5052",
+        "primary-failure.txt": "f1cf368daa7eccc5fe56c5e90085df5b239e0702411baf5112d27289a31e4988",
+        "result.json": "a74fdd28a64707cc6a9d3ec4ac9e59bccbfd6e1058300fb4d7541fd3157a729b",
+        "rpc-failure.json": "b78c9dd2e9d4ad32418fcd67b9f892e53c6c775eade9d920a598bbf1f522e099"
+      },
+      "primaryFailureLastLine": "ValueError: Unexpected fixed RPC status: execute_managed_stock_intent_v1 500",
+      "nativeTrace": {
+        "elapsed_seconds": 8.029502052999987,
+        "engineering_only": true,
+        "error": {
+          "code": "57014",
+          "details": "PL/pgSQL function controlled_count_entry_v1.require_bound_module() line 53 at IF\nSQL statement \"SELECT controlled_count_entry_v1.require_bound_module()\"\nPL/pgSQL function controlled_count_entry_v1.recovery_post_frontier_required() line 6 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.recovery_post_frontier_required()\"\nPL/pgSQL function acquire_shared_product_relation_frontier() line 40 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.acquire_shared_product_relation_frontier()\"\nPL/pgSQL function acquire_ordinary_relation_frontier() line 2 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.acquire_ordinary_relation_frontier()\"\nPL/pgSQL function before_parent_gate(uuid,uuid) line 5 at PERFORM\nSQL statement \"SELECT controlled_count_entry_v1.before_parent_gate(p_actor,p_id)\"\nPL/pgSQL function controlled_stock_gate(uuid,uuid) line 4 at PERFORM\nPL/pgSQL function read_controlled_stock_action(uuid,uuid) line 2 during statement block local variable initialization\nPL/pgSQL function managed_reply(jsonb) line 40 at assignment\nPL/pgSQL function managed_execute(jsonb,jsonb) line 12 at assignment\nPL/pgSQL function execute_managed_stock_intent_v1(jsonb) line 6 at assignment",
+          "hint": "",
+          "message": "canceling statement due to statement timeout"
+        },
+        "execute_index": 2,
+        "expected_status_received": false,
+        "normal_acceptance": false,
+        "rpc": "execute_managed_stock_intent_v1",
+        "status": 500,
+        "writer": "record_anesthesia_drug_administration"
+      }
+    },
+    "native_return_v1": {
+      "result": {
+        "all_ten_writers_verified": false,
+        "application_Auth_verified": false,
+        "authenticated_browser_verified": false,
+        "beta210_only_three_reviewed_controlled_property_changes": true,
+        "beta210_original_controlled_descriptor_unchanged": true,
+        "beta210_original_rows_and_sequences_preserved": true,
+        "beta211_controlled_properties_rows_and_sequences_preserved": true,
+        "beta_candidate_profile": "engineering-writer-native_return_v1",
+        "beta_candidate_source_sha256": "7b90a19a9608f1b375698d41729ae96435080ac808773ed9da31832b47bff0b0",
+        "business_profile_verified": false,
+        "cold209_empty_count_preflight_verified": true,
+        "common269_source_properties": true,
+        "complete_independent_source_reference_properties": true,
+        "complete_source_derived208_ledger": true,
+        "complete_source_derived209_ledger": true,
+        "complete_source_derived210_ledger": true,
+        "complete_source_derived211_ledger": true,
+        "copied_migrations_rechecked": true,
+        "count_business_verified": false,
+        "current211_normal_acceptance": false,
+        "diagnostic_function": "public.execute_managed_stock_intent_v1(jsonb)",
+        "diagnostic_function_body_sha256": "01e54c986a52afb0bf39a1f7d528f8bc6cdf4887dc2059dea6ef08e7be676666",
+        "elapsed_seconds": 329.500303604,
+        "engineering_only": true,
+        "failure_types": [
+          "RuntimeError"
+        ],
+        "full121_source_module_properties": true,
+        "genuine_policy_grammar_controls": 0,
+        "historical_ledger_rows_rewritten": false,
+        "hosted_client_contact_check_validated_before_installation": true,
+        "hosted_writes": 0,
+        "independent_record_review_signing_verified": false,
+        "kind": "engineering-current211-writer-diagnostic-v1",
+        "new_count_tables_empty_except_source_descriptor": true,
+        "normal_owned_cleanup": true,
+        "old_rows_preserved_exact_declared_additions_only": true,
+        "original204_rows_preserved_with_source_declared_appends": true,
+        "original_parent_rows_verified": true,
+        "passed": false,
+        "populated_receiver_verified": false,
+        "prefix_sources_rechecked": true,
+        "production_deployed": false,
+        "profile": "native_return_v1",
+        "provider_requests": 0,
+        "representative_writers_verified": [
+          "record_native_dispense",
+          "record_native_dispense_return"
+        ],
+        "scheduler_paused_before_first_project_SQL": true,
+        "source_only_audit_column_controls": {
+          "Auth_acceptance": false,
+          "cases": 7,
+          "domain_writes": 0
+        },
+        "source_rechecked": true,
+        "source_sequences_verified": true,
+        "validated_client_constraint_controls": {
+          "cases": 7,
+          "raw_client_check_still_validated": true,
+          "same_original_metadata": true
+        }
+      },
+      "sourceBinding": {
+        "diagnostic_body_sha256": "01e54c986a52afb0bf39a1f7d528f8bc6cdf4887dc2059dea6ef08e7be676666",
+        "engineering_only": true,
+        "normal_acceptance": false,
+        "original_body_sha256": "b437e0c3fcce34dcb83778f6e0eefbf60ccb3b7089724dc8d21125216e763caf",
+        "production_SQL_changed": false,
+        "signature": "public.execute_managed_stock_intent_v1(jsonb)",
+        "source_derived_descriptor_and_finite_admission": true,
+        "whole_wrapper_source_inverse": true
+      },
+      "callTimings": [
+        {
+          "elapsed_seconds": 7.9440625480000335,
+          "engineering_only": true,
+          "execute_index": 1,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "writer": "record_native_dispense"
+        },
+        {
+          "elapsed_seconds": 7.874467971999934,
+          "engineering_only": true,
+          "execute_index": 2,
+          "expected_status_received": true,
+          "normal_acceptance": false,
+          "writer": "record_native_dispense_return"
+        }
+      ],
+      "filesSha256": {
+        "beta-recovery-diagnostic-source.json": "9daa385cd9fdcd586c080b686273663aedda1fee4e4b211034579d12ec5730ea",
+        "beta-writer-call-timing-001.json": "80bfd6a8a30c50ddcdd61005b4ca55fc3e3fee5fddcbb926e77194132dfd473e",
+        "beta-writer-call-timing-002.json": "a87e46cc2d7c4715ddbdd8ac73078c98ca770089cf1f0e0ef0ab95bf333320f2",
+        "primary-failure.txt": "8de54b2375877840e4a13ed82788ceddc2c824d427307e77500fa2cb68d6d354",
+        "result.json": "3d16bf588219d403d122fa6f565b20b7058672e2d514a774fff28d6583ced4d2"
+      },
+      "primaryFailureLastLine": "RuntimeError: Engineering writer tracing cannot grant normal current211 acceptance"
+    }
+  },
+  "interpretation": "Clinical treatment execution completed in 7.634967263 seconds, then anesthesia execution exceeded the unchanged 8-second deadline: native SQLSTATE 57014 / HTTP 500 at 8.029502053 seconds, require_bound_module line 53. Native dispense/return completed at 7.944062548 / 7.874467972 seconds in this diagnostic run, then the harness intentionally failed to deny acceptance. These timings show insufficient deadline margin; they do not overturn the failed normal native_return_v1 job or admit the candidate.",
+  "normalRunReceipt": "docs/evidence/beta-current211-third-ci-2026-11-06.json"
+}

@@ -654,16 +654,16 @@ declare d controlled_count_v1.descriptor;actual jsonb;beta_saved beta_time_clock
  OR beta_saved.original_descriptor_hash IS DISTINCT FROM d.definition_hash
  OR beta_saved.expected_properties_hash IS DISTINCT FROM encode(sha256(convert_to(beta_saved_text,'UTF8')),'hex')THEN
  RAISE EXCEPTION 'beta_clock_admission_source_invalid' USING ERRCODE='23514';END IF;
- beta_original := d.definition;
+ beta_original := d.definition->'properties';
 
- beta_expected := beta_original->'properties';
+ beta_expected := beta_original;
  IF beta_expected#>>'{functions,controlled_count_entry_v1.require_bound_module(),body_sha256}'<>'f6feeae8a261d68cbd2c674d0c8d6dafcb2de7dfd1b628b39dd62d1c99376380'
  OR (SELECT count(*) FROM jsonb_array_elements(beta_expected#>'{ordinary_relations,time_entries,policies}')p
      WHERE p->>'name'IN('Admins update time entries','Admins delete time entries'))<>2 THEN
   RAISE EXCEPTION 'beta_clock_original_source_invalid' USING ERRCODE='23514';END IF;
- -- Rebuild only the two changed small branches, then the complete root once.
- -- The untouched root members are copied directly from the immutable source.
- beta_expected := beta_expected || jsonb_build_object(
+ -- Store only the two fully source-projected branches in the admission.
+ -- Every other root member is retained from the immutable original.
+ beta_expected := jsonb_build_object(
  'ordinary_relations',jsonb_set(beta_expected->'ordinary_relations','{time_entries}',
   jsonb_set(jsonb_set(beta_expected#>'{ordinary_relations,time_entries}','{acl}',
    (SELECT coalesce(jsonb_agg(a ORDER BY n),'[]'::jsonb)
@@ -679,7 +679,9 @@ declare d controlled_count_v1.descriptor;actual jsonb;beta_saved beta_time_clock
  beta_expected_text := beta_expected::text;
  IF beta_saved_text IS DISTINCT FROM beta_expected_text THEN
  RAISE EXCEPTION 'beta_clock_admission_delta_invalid' USING ERRCODE='23514';END IF;
- if actual::text is distinct from beta_expected_text then
+ -- One complete canonical object comparison covers every key and value.
+ beta_expected := beta_original || beta_expected;
+ if actual::text is distinct from beta_expected::text then
   raise exception 'count_module_invalid'using errcode='P0001',detail='',hint='';end if;
 end
 $$;
@@ -692,9 +694,9 @@ DO $beta_clock_source_admission$ DECLARE p_original jsonb;p_original_hash text;e
  OR (SELECT count(*) FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')p
      WHERE p->>'name'IN('Admins update time entries','Admins delete time entries'))<>2 THEN
   RAISE EXCEPTION 'beta_clock_original_source_invalid' USING ERRCODE='23514';END IF;
- -- Rebuild only the two changed small branches, then the complete root once.
- -- The untouched root members are copied directly from the immutable source.
- expected := expected || jsonb_build_object(
+ -- Store only the two fully source-projected branches in the admission.
+ -- Every other root member is retained from the immutable original.
+ expected := jsonb_build_object(
  'ordinary_relations',jsonb_set(expected->'ordinary_relations','{time_entries}',
   jsonb_set(jsonb_set(expected#>'{ordinary_relations,time_entries}','{acl}',
    (SELECT coalesce(jsonb_agg(a ORDER BY n),'[]'::jsonb)
@@ -704,11 +706,11 @@ DO $beta_clock_source_admission$ DECLARE p_original jsonb;p_original_hash text;e
     FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')WITH ORDINALITY t(p,n)
     WHERE p->>'name'NOT IN('Admins update time entries','Admins delete time entries')))),
  'functions',jsonb_set(expected->'functions','{controlled_count_entry_v1.require_bound_module(),body_sha256}',
-  to_jsonb('11fbab362f74e22cea1128f19d0457e5f3c39cd4ce73fe996e27dcbad5462a02'::text)));
+  to_jsonb('493c86052c67b0f819dba73fe95f59b17a32ef031e889f458c4e7c86765082b4'::text)));
 
 
  INSERT INTO beta_time_clock_v1.admission VALUES(1,p_original_hash,expected,
- encode(sha256(convert_to(expected::text,'UTF8')),'hex'),'11fbab362f74e22cea1128f19d0457e5f3c39cd4ce73fe996e27dcbad5462a02');
+ encode(sha256(convert_to(expected::text,'UTF8')),'hex'),'493c86052c67b0f819dba73fe95f59b17a32ef031e889f458c4e7c86765082b4');
 END $beta_clock_source_admission$;
 CREATE TRIGGER immutable_admission BEFORE INSERT OR UPDATE OR DELETE OR TRUNCATE
 ON beta_time_clock_v1.admission FOR EACH STATEMENT EXECUTE FUNCTION beta_time_clock_v1.immutable_admission();

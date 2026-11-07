@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "kind": "beta-frontend-ci-success-v1",
+  "capturedAt": "2026-11-07T00:42:27.005468+00:00",
+  "scope": "Successful current frontend job only; other workflow jobs and backend/runtime acceptance have separate receipts. This receipt never treats pending historical jobs as successful.",
+  "sourceCommit": "fd5f673110aedc21f7a13413ee24d82c833c52f4",
+  "sourceGitTree": "8e1e3ab288c81019164b566e250e4a296802e296",
+  "runUrl": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421156",
+  "job": {
+    "name": "frontend",
+    "status": "completed",
+    "conclusion": "success",
+    "databaseId": 128230095873,
+    "url": "https://github.com/finite0001/livingroom-vet-care/actions/runs/42316421156/job/128230095873",
+    "startedAt": "2026-11-07T00:09:13Z",
+    "completedAt": "2026-11-07T00:41:01Z",
+    "steps": [
+      {
+        "completedAt": "2026-11-07T00:09:15Z",
+        "conclusion": "success",
+        "name": "Set up job",
+        "number": 1,
+        "startedAt": "2026-11-07T00:09:14Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:09:25Z",
+        "conclusion": "success",
+        "name": "Run actions/checkout@v4",
+        "number": 2,
+        "startedAt": "2026-11-07T00:09:15Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:09:28Z",
+        "conclusion": "success",
+        "name": "Run actions/setup-node@v4",
+        "number": 3,
+        "startedAt": "2026-11-07T00:09:25Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:09:36Z",
+        "conclusion": "success",
+        "name": "Run npm ci",
+        "number": 4,
+        "startedAt": "2026-11-07T00:09:28Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:09:38Z",
+        "conclusion": "success",
+        "name": "Check read-only schema comparison safeguards",
+        "number": 5,
+        "startedAt": "2026-11-07T00:09:36Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:09:38Z",
+        "conclusion": "success",
+        "name": "Verify restore privilege diagnostics and original Storage metadata",
+        "number": 6,
+        "startedAt": "2026-11-07T00:09:38Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:09:39Z",
+        "conclusion": "success",
+        "name": "Verify offline synthetic recap evaluation safeguards",
+        "number": 7,
+        "startedAt": "2026-11-07T00:09:38Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:09:43Z",
+        "conclusion": "success",
+        "name": "Verify offline synthetic call transport safeguards",
+        "number": 8,
+        "startedAt": "2026-11-07T00:09:39Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:09:45Z",
+        "conclusion": "success",
+        "name": "Verify retained backend proof bytes without executing archived code",
+        "number": 9,
+        "startedAt": "2026-11-07T00:09:43Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:12:27Z",
+        "conclusion": "success",
+        "name": "Run npm run check",
+        "number": 10,
+        "startedAt": "2026-11-07T00:09:45Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:19:08Z",
+        "conclusion": "success",
+        "name": "Run npx playwright install --with-deps chromium",
+        "number": 11,
+        "startedAt": "2026-11-07T00:12:27Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:19:21Z",
+        "conclusion": "success",
+        "name": "Verify built local barcode worker and simulated camera cleanup",
+        "number": 12,
+        "startedAt": "2026-11-07T00:19:08Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:40:57Z",
+        "conclusion": "success",
+        "name": "Run npm run test:e2e",
+        "number": 13,
+        "startedAt": "2026-11-07T00:19:21Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:40:57Z",
+        "conclusion": "success",
+        "name": "Post Run actions/setup-node@v4",
+        "number": 25,
+        "startedAt": "2026-11-07T00:40:57Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:40:58Z",
+        "conclusion": "success",
+        "name": "Post Run actions/checkout@v4",
+        "number": 26,
+        "startedAt": "2026-11-07T00:40:57Z",
+        "status": "completed"
+      },
+      {
+        "completedAt": "2026-11-07T00:40:58Z",
+        "conclusion": "success",
+        "name": "Complete job",
+        "number": 27,
+        "startedAt": "2026-11-07T00:40:58Z",
+        "status": "completed"
+      }
+    ]
+  },
+  "logSha256": "b5d94385e689523e919b99a0af5296e02f22f425bf461569d6d9b344cee62d2c",
+  "results": {
+    "unitTestsPassed": 2799,
+    "unitTestsFailed": 0,
+    "browserScenariosDiscovered": 608,
+    "browserPassed": 607,
+    "browserSkipped": 1,
+    "browserFailed": 0,
+    "browserFlaky": 0,
+    "browserRetriesObserved": 0,
+    "browserDuration": "21.6m",
+    "scannerHarnessPassed": true,
+    "npmCheckPassed": true,
+    "offlineSyntheticTransportSafeguardsPassed": true
+  },
+  "intentionalSkip": {
+    "test": "CloudTalk direct routes show staff activity without mounting legacy calling hooks",
+    "path": "e2e/commissioned-navigation.spec.ts:243",
+    "condition": "process.env.VITE_CLOUDTALK_ENABLED !== \"true\"",
+    "reason": "CloudTalk phone remains gated until provider acceptance",
+    "relatedGatedRoutesTestPassed": true
+  },
+  "scopeLimitations": [
+    "The browser suite uses mock backend transports and does not establish hosted clinical or provider acceptance.",
+    "The separately retained feature-enabled focused CloudTalk proof is not merged into this CI passing count.",
+    "Reuse against a later SQL-only candidate requires a separate exact source-boundary comparison."
+  ],
+  "readinessAdmission": false
+}

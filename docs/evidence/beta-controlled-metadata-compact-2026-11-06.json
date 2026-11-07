@@ -1,0 +1,617 @@
+{
+  "kind": "finite-beta-compact-admission-comparison-v1",
+  "captured_at": "2026-11-07T00:41:46.135040+00:00",
+  "engineering_only": true,
+  "normal_runtime_acceptance": false,
+  "baseline_git_revision": "fd5f673110aedc21f7a13413ee24d82c833c52f4",
+  "baseline_generator_sha256": "5c18971ab3b0c4c06b0f61aa6b603db52b10c78e7e34a8331918dedc5a18ec40",
+  "final_generator_sha256": "2eba1e47f36a4b0b92fcf664759c38d108efa0d66d1a336e4823deb0c7794c9e",
+  "final_migration_sha256": "7234e91e772f4055b66baa0fa7a07868134e84458dd23aa4b01847eb1c553ad1",
+  "selected_strategy": "Validate exactly the two complete source-projected admission branches and hash, reconstruct original properties with those two replacements once, retain original whole canonical-text comparison.",
+  "equivalence": "The source-derived compact object contains exactly functions and ordinary_relations. After exact compact/hash/catalog/immutability validation, original_properties || compact replaces exactly those two branches and retains every other member. The original whole canonical JSONB text comparison then covers the complete key inventory, numeric encoding, array order, null/missing and Unicode distinctions.",
+  "host": "Shared macOS Docker host, postgres:17-alpine, isolated owned network-none containers",
+  "scope": "Actual generated inline comparison/admission DDL with complete original9MB descriptor and minimal ordinary time_entries fixture. Original catalog construction, Auth and full RPC are excluded. Final benchmark materializes the observed actual object once before invoking the guard, matching the original guard producing an in-memory catalog object.",
+  "statement_timeout_seconds": 8,
+  "final_benchmark": {
+    "kind": "finite-successor-full-size-overhead-benchmark",
+    "descriptor_json_bytes": 9136568,
+    "engineering_only": true,
+    "full_runtime_acceptance": false,
+    "measurements": [
+      {
+        "variant": "before",
+        "sample": 0,
+        "elapsed_ms": 315.202
+      },
+      {
+        "variant": "before",
+        "sample": 1,
+        "elapsed_ms": 416.587
+      },
+      {
+        "variant": "optimized",
+        "sample": 0,
+        "elapsed_ms": 242.902
+      },
+      {
+        "variant": "optimized",
+        "sample": 1,
+        "elapsed_ms": 249.917
+      },
+      {
+        "variant": "optimized",
+        "sample": 2,
+        "elapsed_ms": 242.204
+      },
+      {
+        "variant": "optimized",
+        "sample": 3,
+        "elapsed_ms": 256.45
+      },
+      {
+        "variant": "before",
+        "sample": 2,
+        "elapsed_ms": 411.866
+      },
+      {
+        "variant": "before",
+        "sample": 3,
+        "elapsed_ms": 394.51
+      },
+      {
+        "variant": "before",
+        "sample": 4,
+        "elapsed_ms": 282.006
+      },
+      {
+        "variant": "before",
+        "sample": 5,
+        "elapsed_ms": 327.824
+      },
+      {
+        "variant": "optimized",
+        "sample": 4,
+        "elapsed_ms": 209.597
+      },
+      {
+        "variant": "optimized",
+        "sample": 5,
+        "elapsed_ms": 212.443
+      }
+    ],
+    "owned_cleanup": true
+  },
+  "final_median_ms": {
+    "before": 361.16700000000003,
+    "optimized": 242.553
+  },
+  "final_median_reduction_percent": 32.84187093505221,
+  "metadata_controls": {
+    "kind": "finite-beta-metadata-postgres-component-v1",
+    "passed": true,
+    "checks": [
+      "exact current delta accepted from immutable original descriptor",
+      "restored direct write ACL refused",
+      "changed comparison function source refused",
+      "admission schema exposure refused",
+      "admission table exposure refused",
+      "disabled admission RLS refused",
+      "disabled immutable trigger refused",
+      "replaced immutable function refused",
+      "admission data mutation refused",
+      "admission data mutation refused",
+      "admission data mutation refused",
+      "self-consistent unrelated expectation tamper refused",
+      "unknown null root member refused",
+      "missing null root member refused",
+      "Unicode-normalized distinct root key refused",
+      "unchanged nested array order drift refused",
+      "scalar actual root refused",
+      "unchanged root numeric encoding drift refused",
+      "unchanged function numeric encoding drift refused",
+      "unchanged relation numeric encoding drift refused",
+      "self-consistent numeric encoding expectation tamper refused",
+      "all application roles denied private admission access"
+    ],
+    "migration_sha256": "7234e91e772f4055b66baa0fa7a07868134e84458dd23aa4b01847eb1c553ad1",
+    "hosted_writes": 0,
+    "application_Auth_verified": false,
+    "full_controlled_business_verified": false,
+    "owned_cleanup": true
+  },
+  "metadata_runner_sha256": "e053857dc074e64a97429418b82c86f2ce1bbd08480324f2f49c809e2da05c8e",
+  "source_size_analysis": {
+    "engineeringOnly": true,
+    "hostedWrites": 0,
+    "source": "scripts/narcotics-log/module-expected.json plus same minimal ordinary_relations as prior benchmark",
+    "sizes": {
+      "rootMembers": [
+        {
+          "key": "original269",
+          "textBytes": 4342880
+        },
+        {
+          "key": "immutable_parent_rows",
+          "textBytes": 2596326
+        },
+        {
+          "key": "functions",
+          "textBytes": 925269
+        },
+        {
+          "key": "private206",
+          "textBytes": 793493
+        },
+        {
+          "key": "parent205",
+          "textBytes": 287401
+        },
+        {
+          "key": "inventory",
+          "textBytes": 64590
+        },
+        {
+          "key": "types",
+          "textBytes": 61177
+        },
+        {
+          "key": "triggers",
+          "textBytes": 24388
+        },
+        {
+          "key": "app_cut",
+          "textBytes": 15556
+        },
+        {
+          "key": "ordinary_relations",
+          "textBytes": 791
+        },
+        {
+          "key": "schemas",
+          "textBytes": 723
+        },
+        {
+          "key": "auth_required",
+          "textBytes": 4
+        },
+        {
+          "key": "external_primitives",
+          "textBytes": 4
+        }
+      ],
+      "descriptorTextBytes": 9136568,
+      "propertiesTextBytes": 9112826,
+      "compactTwoBranchTextBytes": 926099
+    },
+    "equalityCases": [
+      {
+        "case": "exact",
+        "equivalent": true,
+        "wholeEqual": true,
+        "partitionEqual": true
+      },
+      {
+        "case": "different insertion order",
+        "equivalent": true,
+        "wholeEqual": true,
+        "partitionEqual": true
+      },
+      {
+        "case": "extra key",
+        "equivalent": true,
+        "wholeEqual": false,
+        "partitionEqual": false
+      },
+      {
+        "case": "missing key",
+        "equivalent": true,
+        "wholeEqual": false,
+        "partitionEqual": false
+      },
+      {
+        "case": "root null member",
+        "equivalent": true,
+        "wholeEqual": false,
+        "partitionEqual": false
+      },
+      {
+        "case": "numeric scale",
+        "equivalent": true,
+        "wholeEqual": false,
+        "partitionEqual": false
+      },
+      {
+        "case": "array order",
+        "equivalent": true,
+        "wholeEqual": false,
+        "partitionEqual": false
+      },
+      {
+        "case": "array length",
+        "equivalent": true,
+        "wholeEqual": false,
+        "partitionEqual": false
+      },
+      {
+        "case": "unicode key",
+        "equivalent": true,
+        "wholeEqual": false,
+        "partitionEqual": false
+      },
+      {
+        "case": "unicode value normalization",
+        "equivalent": true,
+        "wholeEqual": false,
+        "partitionEqual": false
+      },
+      {
+        "case": "empty key",
+        "equivalent": true,
+        "wholeEqual": false,
+        "partitionEqual": false
+      },
+      {
+        "case": "null versus absent child",
+        "equivalent": true,
+        "wholeEqual": false,
+        "partitionEqual": false
+      }
+    ],
+    "ownedCleanup": true
+  },
+  "limitations": [
+    "Shared host load varies substantially; results are component comparisons, not native latency acceptance.",
+    "The initial partitioned prototype repeatedly extracted the full original properties and regressed; it was rejected.",
+    "Normal15-profile CI and separately measured actual writer RPC timing remain required."
+  ],
+  "exploratory_measurements": [
+    {
+      "label": "rejected repeated full-properties extraction; toasted actual fixture",
+      "result": {
+        "kind": "finite-successor-full-size-overhead-benchmark",
+        "descriptor_json_bytes": 9136568,
+        "engineering_only": true,
+        "full_runtime_acceptance": false,
+        "measurements": [
+          {
+            "variant": "before",
+            "sample": 0,
+            "elapsed_ms": 313.596
+          },
+          {
+            "variant": "before",
+            "sample": 1,
+            "elapsed_ms": 221.057
+          },
+          {
+            "variant": "before",
+            "sample": 2,
+            "elapsed_ms": 211.709
+          },
+          {
+            "variant": "before",
+            "sample": 3,
+            "elapsed_ms": 245.09
+          },
+          {
+            "variant": "before",
+            "sample": 4,
+            "elapsed_ms": 214.469
+          },
+          {
+            "variant": "before",
+            "sample": 5,
+            "elapsed_ms": 240.13
+          },
+          {
+            "variant": "optimized",
+            "sample": 0,
+            "elapsed_ms": 395.281
+          },
+          {
+            "variant": "optimized",
+            "sample": 1,
+            "elapsed_ms": 398.792
+          },
+          {
+            "variant": "optimized",
+            "sample": 2,
+            "elapsed_ms": 353.602
+          },
+          {
+            "variant": "optimized",
+            "sample": 3,
+            "elapsed_ms": 350.48
+          },
+          {
+            "variant": "optimized",
+            "sample": 4,
+            "elapsed_ms": 409.261
+          },
+          {
+            "variant": "optimized",
+            "sample": 5,
+            "elapsed_ms": 366.648
+          }
+        ],
+        "owned_cleanup": true
+      }
+    },
+    {
+      "label": "cached per-invocation properties; materialized actual fixture",
+      "result": {
+        "kind": "finite-successor-full-size-overhead-benchmark",
+        "descriptor_json_bytes": 9136568,
+        "engineering_only": true,
+        "full_runtime_acceptance": false,
+        "measurements": [
+          {
+            "variant": "before",
+            "sample": 0,
+            "elapsed_ms": 394.204
+          },
+          {
+            "variant": "before",
+            "sample": 1,
+            "elapsed_ms": 321.32
+          },
+          {
+            "variant": "before",
+            "sample": 2,
+            "elapsed_ms": 440.536
+          },
+          {
+            "variant": "before",
+            "sample": 3,
+            "elapsed_ms": 339.117
+          },
+          {
+            "variant": "before",
+            "sample": 4,
+            "elapsed_ms": 372.383
+          },
+          {
+            "variant": "before",
+            "sample": 5,
+            "elapsed_ms": 391.337
+          },
+          {
+            "variant": "optimized",
+            "sample": 0,
+            "elapsed_ms": 178.27
+          },
+          {
+            "variant": "optimized",
+            "sample": 1,
+            "elapsed_ms": 182.112
+          },
+          {
+            "variant": "optimized",
+            "sample": 2,
+            "elapsed_ms": 210.524
+          },
+          {
+            "variant": "optimized",
+            "sample": 3,
+            "elapsed_ms": 199.919
+          },
+          {
+            "variant": "optimized",
+            "sample": 4,
+            "elapsed_ms": 213.482
+          },
+          {
+            "variant": "optimized",
+            "sample": 5,
+            "elapsed_ms": 315.655
+          }
+        ],
+        "owned_cleanup": true
+      }
+    },
+    {
+      "label": "sequential three-way comparison under varying host load",
+      "result": {
+        "kind": "finite-successor-full-size-overhead-benchmark",
+        "descriptor_json_bytes": 9136568,
+        "engineering_only": true,
+        "full_runtime_acceptance": false,
+        "measurements": [
+          {
+            "variant": "before",
+            "sample": 0,
+            "elapsed_ms": 441.344
+          },
+          {
+            "variant": "before",
+            "sample": 1,
+            "elapsed_ms": 647.474
+          },
+          {
+            "variant": "before",
+            "sample": 2,
+            "elapsed_ms": 469.631
+          },
+          {
+            "variant": "before",
+            "sample": 3,
+            "elapsed_ms": 440.961
+          },
+          {
+            "variant": "before",
+            "sample": 4,
+            "elapsed_ms": 454.813
+          },
+          {
+            "variant": "before",
+            "sample": 5,
+            "elapsed_ms": 478.995
+          },
+          {
+            "variant": "compact_members",
+            "sample": 0,
+            "elapsed_ms": 319.772
+          },
+          {
+            "variant": "compact_members",
+            "sample": 1,
+            "elapsed_ms": 300.728
+          },
+          {
+            "variant": "compact_members",
+            "sample": 2,
+            "elapsed_ms": 249.819
+          },
+          {
+            "variant": "compact_members",
+            "sample": 3,
+            "elapsed_ms": 298.57
+          },
+          {
+            "variant": "compact_members",
+            "sample": 4,
+            "elapsed_ms": 374.726
+          },
+          {
+            "variant": "compact_members",
+            "sample": 5,
+            "elapsed_ms": 257.509
+          },
+          {
+            "variant": "compact_full",
+            "sample": 0,
+            "elapsed_ms": 544.955
+          },
+          {
+            "variant": "compact_full",
+            "sample": 1,
+            "elapsed_ms": 302.69
+          },
+          {
+            "variant": "compact_full",
+            "sample": 2,
+            "elapsed_ms": 393.559
+          },
+          {
+            "variant": "compact_full",
+            "sample": 3,
+            "elapsed_ms": 405.822
+          },
+          {
+            "variant": "compact_full",
+            "sample": 4,
+            "elapsed_ms": 299.15
+          },
+          {
+            "variant": "compact_full",
+            "sample": 5,
+            "elapsed_ms": 399.004
+          }
+        ],
+        "owned_cleanup": true
+      }
+    },
+    {
+      "label": "interleaved three-way comparison; compact variants tied, simpler whole-object strategy selected",
+      "result": {
+        "kind": "finite-successor-full-size-overhead-benchmark",
+        "descriptor_json_bytes": 9136568,
+        "engineering_only": true,
+        "full_runtime_acceptance": false,
+        "measurements": [
+          {
+            "variant": "before",
+            "sample": 0,
+            "elapsed_ms": 433.203
+          },
+          {
+            "variant": "before",
+            "sample": 1,
+            "elapsed_ms": 514.292
+          },
+          {
+            "variant": "compact_members",
+            "sample": 0,
+            "elapsed_ms": 136.004
+          },
+          {
+            "variant": "compact_members",
+            "sample": 1,
+            "elapsed_ms": 167.23
+          },
+          {
+            "variant": "compact_full",
+            "sample": 0,
+            "elapsed_ms": 141.933
+          },
+          {
+            "variant": "compact_full",
+            "sample": 1,
+            "elapsed_ms": 170.839
+          },
+          {
+            "variant": "compact_members",
+            "sample": 2,
+            "elapsed_ms": 176.266
+          },
+          {
+            "variant": "compact_members",
+            "sample": 3,
+            "elapsed_ms": 152.405
+          },
+          {
+            "variant": "compact_full",
+            "sample": 2,
+            "elapsed_ms": 177.796
+          },
+          {
+            "variant": "compact_full",
+            "sample": 3,
+            "elapsed_ms": 172.782
+          },
+          {
+            "variant": "before",
+            "sample": 2,
+            "elapsed_ms": 921.139
+          },
+          {
+            "variant": "before",
+            "sample": 3,
+            "elapsed_ms": 504.257
+          },
+          {
+            "variant": "compact_full",
+            "sample": 4,
+            "elapsed_ms": 188.247
+          },
+          {
+            "variant": "compact_full",
+            "sample": 5,
+            "elapsed_ms": 160.957
+          },
+          {
+            "variant": "before",
+            "sample": 4,
+            "elapsed_ms": 345.078
+          },
+          {
+            "variant": "before",
+            "sample": 5,
+            "elapsed_ms": 407.69
+          },
+          {
+            "variant": "compact_members",
+            "sample": 4,
+            "elapsed_ms": 222.242
+          },
+          {
+            "variant": "compact_members",
+            "sample": 5,
+            "elapsed_ms": 219.4
+          }
+        ],
+        "owned_cleanup": true
+      }
+    }
+  ]
+}

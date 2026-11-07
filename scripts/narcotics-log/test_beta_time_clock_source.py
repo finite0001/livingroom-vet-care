@@ -30,6 +30,15 @@ class FiniteSuccessorTests(unittest.TestCase):
         self.assertEqual(current["functions"][source.SIGNATURE], {"owner": "postgres", "body_sha256": "a" * 64})
         self.assertEqual(current["other"], retained["other"])
 
+    def test_compact_admission_reconstructs_exact_full_source_projection(self):
+        original = self.original()
+        original["unrelated_large_metadata"] = {"numeric_scale": "1.0", "ordered": [2, 1]}
+        retained = deepcopy(original)
+        compact = source.admission_properties(original, "a" * 64)
+        self.assertEqual(set(compact), {"functions", "ordinary_relations"})
+        self.assertEqual({**original, **compact}, source.expected_properties(original, "a" * 64))
+        self.assertEqual(original, retained)
+
     def test_other_original_function_or_policy_inventory_is_rejected(self):
         original = self.original()
         original["functions"][source.SIGNATURE]["body_sha256"] = "b" * 64

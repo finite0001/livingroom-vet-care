@@ -31,15 +31,15 @@
     },
     "scripts/narcotics-log/beta-migration210.json": {
       "bytes": 2869,
-      "sha256": "ef99f51591cba9e2b5fa3dc2366e0eefa561475fb67d9dccdfeb316a241e4633"
+      "sha256": "f8dda9ebebcad09712f48a48044af43eeda122028157058b929325252cac2afc"
     },
     "scripts/narcotics-log/beta-migration211.json": {
       "bytes": 722,
       "sha256": "4674914ab8ae4823fa9af942454015039b507620878404402a54ddcf65ac8d19"
     },
     "scripts/narcotics-log/beta-time-clock-source-proof.json": {
-      "bytes": 1071,
-      "sha256": "f318422a6ab1fd88b22d6bb6bad95a5e07d274ff705f19902edd9cbeeb24d6a9"
+      "bytes": 1229,
+      "sha256": "6580e674be7116a794ce7b3afc71bd6455e19a346cdd470d783f8ca10a1f6fed"
     },
     "scripts/narcotics-log/beta_browser_runner.py": {
       "bytes": 15983,
@@ -54,8 +54,8 @@
       "sha256": "70f6486f61aeb46aacf8dc4e0bb642a9b97dbe7ec3c4d4c1fc264ed0615246b5"
     },
     "scripts/narcotics-log/beta_recovery_diagnostic.py": {
-      "bytes": 6619,
-      "sha256": "8eb2d1166e3a4ff8a2ba2fb410bb0fb28c0c4834283448a0feb3e77aca1b3512"
+      "bytes": 6620,
+      "sha256": "86caa672694cbf77d31f3ff7a8aa2dfa2ea407e33f3e5b6d752e5760e78ff1b3"
     },
     "scripts/narcotics-log/beta_rehearsal.py": {
       "bytes": 23767,
@@ -66,8 +66,8 @@
       "sha256": "b894a552d7ef9b724e68d35e2f8b302d6ca9803ceba9b7e5e1e8031669e0a894"
     },
     "scripts/narcotics-log/beta_time_clock_source.py": {
-      "bytes": 15745,
-      "sha256": "5c18971ab3b0c4c06b0f61aa6b603db52b10c78e7e34a8331918dedc5a18ec40"
+      "bytes": 16350,
+      "sha256": "2eba1e47f36a4b0b92fcf664759c38d108efa0d66d1a336e4823deb0c7794c9e"
     },
     "scripts/narcotics-log/boundary-reuse-controls.sql": {
       "bytes": 5342,
@@ -358,8 +358,8 @@
       "sha256": "dce9bc4df128cde16770c78025d373dc64de62ce9c6520a3aeed978fb99b680d"
     },
     "scripts/narcotics-log/test_beta_recovery_diagnostic.py": {
-      "bytes": 3535,
-      "sha256": "c95269e613003ab97e8de399298ca8b45bd6ea7b67a8d80b7ee879003001af72"
+      "bytes": 4200,
+      "sha256": "dfadddc112e256d8b55b7fb01b81e3620987fbcb353f43626e99411f61bce435"
     },
     "scripts/narcotics-log/test_beta_rehearsal.py": {
       "bytes": 3745,
@@ -374,8 +374,8 @@
       "sha256": "327ec4f2603fca95bfa5bbf36dd87632adbb3da7522c9627d6f2ee57913182ad"
     },
     "scripts/narcotics-log/test_beta_time_clock_source.py": {
-      "bytes": 2518,
-      "sha256": "5fdb9691c4300161397089b0870260fd1828eb0b065cfb822291aeaee6c5c59c"
+      "bytes": 3048,
+      "sha256": "ae7d73e88bee816177af131ecb7f5a7b442d90719f75d8cf90a34ebdcc504f4a"
     },
     "scripts/narcotics-log/test_boundary_projection.py": {
       "bytes": 1504,
@@ -498,8 +498,8 @@
       "sha256": "7568a71548d5461ddedaa3baca0030e9705330fdc98e12874759f7a24a01c289"
     },
     "scripts/narcotics-log/verify_beta_metadata.py": {
-      "bytes": 10035,
-      "sha256": "81ed2b78f4a987d9c80cc097c76a62f00eb355e8fad40ad2356a4add295dccbf"
+      "bytes": 10935,
+      "sha256": "e053857dc074e64a97429418b82c86f2ce1bbd08480324f2f49c809e2da05c8e"
     },
     "scripts/narcotics-log/workflows/auth_effects.py": {
       "bytes": 11844,
@@ -4418,8 +4418,8 @@
       "sha256": "68ea722271b2c7ddee528f7a8ec66fed7a57e3aa6f349a0d8eb8eeee5fbb813f"
     },
     "supabase/migrations/20261106170000_atomic_time_clock_corrections.sql": {
-      "bytes": 177536,
-      "sha256": "bb9d9ceb3892d0d172a34906e60c263c5dcbfaf74f084d1b4cb577de23524141"
+      "bytes": 177603,
+      "sha256": "7234e91e772f4055b66baa0fa7a07868134e84458dd23aa4b01847eb1c553ad1"
     },
     "supabase/migrations/20261106173000_terminal_appointment_clinician.sql": {
       "bytes": 4558,

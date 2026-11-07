@@ -20,7 +20,7 @@ def main():
     parser.parse_args()
     sql, proof = source.build()
     original = {"properties": {"functions": {source.SIGNATURE: {"body_sha256": source.OLD_BODY_SHA, "retained_number": 1}},
-        "other": {"retained": True, "retained_number": 1}, "ordinary_relations": {"time_entries": {
+        "other": {"retained": True, "retained_number": 1, "ordered": [1, 2]}, "nullable": None, "é": "retained", "ordinary_relations": {"time_entries": {
             "acl": [{"grantee": role, "privilege": privilege}
                     for role in ("postgres", "authenticated", "service_role")
                     for privilege in ("SELECT", "INSERT", "UPDATE", "DELETE")],
@@ -106,9 +106,22 @@ def main():
                           "DELETE FROM beta_time_clock_v1.admission;", "TRUNCATE beta_time_clock_v1.admission;"):
             refused("admission data mutation refused", statement, "beta_clock_admission_immutable")
         refused("self-consistent unrelated expectation tamper refused", "ALTER TABLE beta_time_clock_v1.admission DISABLE TRIGGER immutable_admission;"
-            "UPDATE beta_time_clock_v1.admission SET expected_properties=jsonb_set(expected_properties,'{other,retained}','false');"
+            "UPDATE beta_time_clock_v1.admission SET expected_properties=expected_properties||jsonb_build_object('other',jsonb_build_object('retained',false));"
             "UPDATE beta_time_clock_v1.admission SET expected_properties_hash=encode(sha256(convert_to(expected_properties::text,'UTF8')),'hex');"
             "ALTER TABLE beta_time_clock_v1.admission ENABLE TRIGGER immutable_admission;", "beta_clock_admission_delta_invalid")
+        changed = deepcopy(expected)
+        changed["unexpected"] = None
+        refused("unknown null root member refused", "", "count_module_invalid", changed)
+        changed = deepcopy(expected)
+        del changed["nullable"]
+        refused("missing null root member refused", "", "count_module_invalid", changed)
+        changed = deepcopy(expected)
+        changed["e\u0301"] = changed.pop("é")
+        refused("Unicode-normalized distinct root key refused", "", "count_module_invalid", changed)
+        changed = deepcopy(expected)
+        changed["other"]["ordered"] = [2, 1]
+        refused("unchanged nested array order drift refused", "", "count_module_invalid", changed)
+        refused("scalar actual root refused", "", "count_module_invalid", 1)
         # jsonb equality equates 1 and 1.0; the authored canonical text must not.
         for label, path in (
             ("unchanged root numeric encoding drift refused", ("other", "retained_number")),
@@ -123,7 +136,7 @@ def main():
             refused(label, "", "count_module_invalid", changed)
         refused("self-consistent numeric encoding expectation tamper refused",
             "ALTER TABLE beta_time_clock_v1.admission DISABLE TRIGGER immutable_admission;"
-            "UPDATE beta_time_clock_v1.admission SET expected_properties=jsonb_set(expected_properties,'{other,retained_number}','1.0');"
+            "UPDATE beta_time_clock_v1.admission SET expected_properties=jsonb_set(expected_properties,'{functions,controlled_count_entry_v1.require_bound_module(),retained_number}','1.0');"
             "UPDATE beta_time_clock_v1.admission SET expected_properties_hash=encode(sha256(convert_to(expected_properties::text,'UTF8')),'hex');"
             "ALTER TABLE beta_time_clock_v1.admission ENABLE TRIGGER immutable_admission;", "beta_clock_admission_delta_invalid")
         for role in ("anon", "authenticated", "service_role"):

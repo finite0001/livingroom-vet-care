@@ -50,17 +50,23 @@ def expected_properties(original, new_body_sha):
     return result
 
 
-def projection_sql(new_hash, expression=False):
+def admission_properties(original, new_body_sha):
+    """The finite admission stores only the two changed root branches."""
+    projected = expected_properties(original, new_body_sha)
+    return {name: projected[name] for name in ("functions", "ordinary_relations")}
+
+
+def projection_sql(new_hash, expression=False, properties_expression="p_original->'properties'"):
     # p_original is the immutable source descriptor, never the observed catalog.
     return """
- expected := p_original->'properties';
+ expected := """ + properties_expression + """;
  IF expected#>>'{functions,controlled_count_entry_v1.require_bound_module(),body_sha256}'<>""" + literal(OLD_BODY_SHA) + """
  OR (SELECT count(*) FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')p
      WHERE p->>'name'IN('Admins update time entries','Admins delete time entries'))<>2 THEN
   RAISE EXCEPTION 'beta_clock_original_source_invalid' USING ERRCODE='23514';END IF;
- -- Rebuild only the two changed small branches, then the complete root once.
- -- The untouched root members are copied directly from the immutable source.
- expected := expected || jsonb_build_object(
+ -- Store only the two fully source-projected branches in the admission.
+ -- Every other root member is retained from the immutable original.
+ expected := jsonb_build_object(
  'ordinary_relations',jsonb_set(expected->'ordinary_relations','{time_entries}',
   jsonb_set(jsonb_set(expected#>'{ordinary_relations,time_entries}','{acl}',
    (SELECT coalesce(jsonb_agg(a ORDER BY n),'[]'::jsonb)
@@ -160,12 +166,14 @@ def build():
  OR saved.original_descriptor_hash IS DISTINCT FROM d.definition_hash
  OR saved.expected_properties_hash IS DISTINCT FROM encode(sha256(convert_to(beta_saved_text,'UTF8')),'hex')THEN
  RAISE EXCEPTION 'beta_clock_admission_source_invalid' USING ERRCODE='23514';END IF;
- p_original := d.definition;
-""" + projection_sql("saved.require_bound_body_hash", expression=True) + """
+ p_original := d.definition->'properties';
+""" + projection_sql("saved.require_bound_body_hash", expression=True, properties_expression="p_original") + """
  beta_expected_text := expected::text;
  IF beta_saved_text IS DISTINCT FROM beta_expected_text THEN
  RAISE EXCEPTION 'beta_clock_admission_delta_invalid' USING ERRCODE='23514';END IF;
- if actual::text is distinct from beta_expected_text then"""
+ -- One complete canonical object comparison covers every key and value.
+ expected := p_original || expected;
+ if actual::text is distinct from expected::text then"""
     # The projection is inside the already source-bound comparison function.
     # There is no separately callable accessor whose replacement could bypass
     # its own integrity checks, and no mutually embedded digest cycle.
@@ -232,6 +240,8 @@ SELECT pg_notify('pgrst','reload schema');
     proof = dict(kind="finite-beta-time-clock-metadata-successor-source-v1", database_operations=0,
         original_require_bound_body_sha256=OLD_BODY_SHA, successor_require_bound_body_sha256=new_hash,
         expected_projection_inline=True, external_expected_accessor=False,
+        admission_root_branches=["functions", "ordinary_relations"],
+        complete_canonical_object_equality=True, per_member_comparison=False,
         immutable_admission_body_sha256=immutable_hash,
         core_sha256=sha(core), migration_sha256=sha(sql), migration_bytes=len(sql),
         historical_descriptors_rewritten=False, historical_receipts_rewritten=False,
