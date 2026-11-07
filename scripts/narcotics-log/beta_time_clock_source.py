@@ -55,37 +55,6 @@ def expected_properties(original, new_body_sha):
     return result
 
 
-def admission_properties(original, new_body_sha):
-    """The finite admission stores only the three changed metadata leaves."""
-    projected = expected_properties(original, new_body_sha)
-    return {"functions": {SIGNATURE: {"body_sha256": projected["functions"][SIGNATURE]["body_sha256"]}},
-            "ordinary_relations": {"time_entries": {name: projected["ordinary_relations"]["time_entries"][name]
-                for name in ("acl", "policies")}}}
-
-
-def projection_sql(new_hash, expression=False, properties_expression="p_original->'properties'"):
-    # p_original is the immutable source descriptor, never the observed catalog.
-    return """
- expected := """ + properties_expression + """;
- IF expected#>>'{functions,controlled_count_entry_v1.require_bound_module(),body_sha256}'<>""" + literal(OLD_BODY_SHA) + """
- OR (SELECT count(*) FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')p
-     WHERE p->>'name'IN('Admins update time entries','Admins delete time entries'))<>2 THEN
-  RAISE EXCEPTION 'beta_clock_original_source_invalid' USING ERRCODE='23514';END IF;
- -- Store only the three changed leaves; all other metadata stays source-owned.
- expected := jsonb_build_object(
- 'ordinary_relations',jsonb_build_object('time_entries',jsonb_build_object(
-   'acl',(SELECT coalesce(jsonb_agg(a ORDER BY n),'[]'::jsonb)
-    FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,acl}')WITH ORDINALITY t(a,n)
-    WHERE NOT(a->>'grantee'IN('PUBLIC','anon','authenticated')AND a->>'privilege'IN('INSERT','UPDATE','DELETE'))),
-   'policies',(SELECT coalesce(jsonb_agg(p ORDER BY n),'[]'::jsonb)
-    FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')WITH ORDINALITY t(p,n)
-    WHERE p->>'name'NOT IN('Admins update time entries','Admins delete time entries')))),
- 'functions',jsonb_build_object('controlled_count_entry_v1.require_bound_module()',jsonb_build_object(
-  'body_sha256',to_jsonb(""" + (new_hash if expression else literal(new_hash) + "::text") + """))));
-
-"""
-
-
 def ledger_preflight():
     rows, variants = history.sources(ROOT)
     expected = []
@@ -129,96 +98,143 @@ END $beta_clock_prior_ledger$;
 """
 
 
-def build():
-    source = prefix.regular(ROOT / "supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql").decode()
-    if source.count(HEADER) != 1:
-        raise ValueError("One original bound-module comparison required")
-    start = source.index(HEADER)
-    end = source.index("$$;", start) + 3
-    definition = source[start:end]
-    body = definition.split(" AS $$", 1)[1][:-3]
-    if sha(body.encode()) != OLD_BODY_SHA or definition.count(OLD_COMPARE) != 1:
-        raise ValueError("Complete original comparison body must match reviewed source")
-    immutable_body = "BEGIN RAISE EXCEPTION 'beta_clock_admission_immutable' USING ERRCODE='23514';END"
-    immutable_hash = sha(immutable_body.encode())
-    admission = """
- IF current_user<>'postgres' OR NOT EXISTS(SELECT 1 FROM pg_namespace n
- WHERE n.nspname='beta_time_clock_v1'AND n.nspowner='postgres'::regrole)
- OR EXISTS(SELECT 1 FROM unnest(ARRAY['anon','authenticated','service_role'])r
- WHERE has_schema_privilege(r,'beta_time_clock_v1','USAGE')OR has_schema_privilege(r,'beta_time_clock_v1','CREATE'))
- OR NOT EXISTS(SELECT 1 FROM pg_class c WHERE c.oid='beta_time_clock_v1.admission'::regclass
+EXPECTED_MARKER = '__LRV_BETA_EXPECTED_CANONICAL_SHA256__'
+TEMPLATE_MARKER = '__LRV_BETA_TEMPLATE_BODY_SHA256__'
+IMMUTABLE_BODY = "BEGIN RAISE EXCEPTION 'beta_clock_admission_immutable' USING ERRCODE='23514';END"
+CATALOG_CHECKS = " IF current_user<>'postgres' OR NOT EXISTS(SELECT 1 FROM pg_namespace n\n WHERE n.nspname='beta_time_clock_v1'AND n.nspowner='postgres'::regrole)\n OR EXISTS(SELECT 1 FROM unnest(ARRAY['anon','authenticated','service_role'])r\n WHERE has_schema_privilege(r,'beta_time_clock_v1','USAGE')OR has_schema_privilege(r,'beta_time_clock_v1','CREATE'))\n OR NOT EXISTS(SELECT 1 FROM pg_class c WHERE c.oid='beta_time_clock_v1.admission'::regclass\n AND c.relowner='postgres'::regrole AND c.relkind='r'AND c.relpersistence='p'AND c.relrowsecurity AND NOT c.relforcerowsecurity)\n OR EXISTS(SELECT 1 FROM unnest(ARRAY['anon','authenticated','service_role'])r\n CROSS JOIN unnest(ARRAY['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER'])v\n WHERE has_table_privilege(r,'beta_time_clock_v1.admission',v))THEN\n RAISE EXCEPTION 'beta_clock_admission_catalog_invalid' USING ERRCODE='23514';END IF;\n IF(SELECT count(*)FROM pg_trigger WHERE tgrelid='beta_time_clock_v1.admission'::regclass AND NOT tgisinternal)<>1\n OR NOT EXISTS(SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid\n WHERE t.tgrelid='beta_time_clock_v1.admission'::regclass AND t.tgname='immutable_admission'\n AND t.tgtype=62 AND t.tgenabled='O'AND NOT t.tgisinternal AND t.tgconstraint=0 AND t.tgnargs=0\n AND t.tgqual IS NULL AND t.tgargs=''::bytea\n AND p.oid='beta_time_clock_v1.immutable_admission()'::regprocedure\n AND p.proowner='postgres'::regrole AND NOT p.prosecdef\n AND p.proconfig=ARRAY['search_path=pg_catalog']::text[]\n AND encode(sha256(convert_to(p.prosrc,'UTF8')),'hex')='__IMMUTABLE_SHA__'\n AND NOT has_function_privilege('anon',p.oid,'EXECUTE')\n AND NOT has_function_privilege('authenticated',p.oid,'EXECUTE')\n AND NOT has_function_privilege('service_role',p.oid,'EXECUTE'))THEN\n RAISE EXCEPTION 'beta_clock_admission_immutability_invalid' USING ERRCODE='23514';END IF;\n SELECT * INTO STRICT beta_saved FROM beta_time_clock_v1.admission WHERE revision=1;\n"
+BODY_DIGEST = "encode(sha256(convert_to(p.prosrc,'UTF8')),'hex')"
+BODY_DIGEST_ANCHOR = "'body_sha256'," + BODY_DIGEST + ","
+
+
+def marker_expression(marker):
+    # The template itself contains each substitution marker exactly once.
+    split = len(marker) // 2
+    return literal(marker[:split]) + '||' + literal(marker[split:])
+
+
+def normalization_sql(properties_expression="p_original->'properties'"):
+    return """
+ expected := """ + properties_expression + """;
+ IF expected#>>'{functions,controlled_count_entry_v1.require_bound_module(),body_sha256}' IS DISTINCT FROM """ + literal(OLD_BODY_SHA) + """
+ OR(SELECT count(*)FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')p
+ WHERE p->>'name'IN('Admins update time entries','Admins delete time entries'))<>2 THEN
+ RAISE EXCEPTION 'beta_clock_original_source_invalid' USING ERRCODE='23514';END IF;
+ expected:=jsonb_set(expected,'{ordinary_relations,time_entries}',
+ (expected#>'{ordinary_relations,time_entries}')||jsonb_build_object(
+ 'acl',(SELECT coalesce(jsonb_agg(a ORDER BY n),'[]'::jsonb)
+ FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,acl}')WITH ORDINALITY t(a,n)
+ WHERE NOT(a->>'grantee'IN('PUBLIC','anon','authenticated')AND a->>'privilege'IN('INSERT','UPDATE','DELETE'))),
+ 'policies',(SELECT coalesce(jsonb_agg(p ORDER BY n),'[]'::jsonb)
+ FROM jsonb_array_elements(expected#>'{ordinary_relations,time_entries,policies}')WITH ORDINALITY t(p,n)
+ WHERE p->>'name'NOT IN('Admins update time entries','Admins delete time entries'))));
+"""
+
+
+def canonical_expectation_query(original_raw_json_text):
+    """Project independent source-created raw JSON using PostgreSQL's serializer."""
+    if not isinstance(original_raw_json_text, str):
+        raise TypeError('Raw independently source-created JSON text required')
+    return """DO $beta_independent_source$DECLARE p_original jsonb:=""" + literal(original_raw_json_text) + """::jsonb;expected jsonb;BEGIN
+""" + normalization_sql() + """
+ PERFORM pg_catalog.set_config('lrv_beta_source.canonical',expected::text,true);
+ PERFORM pg_catalog.set_config('lrv_beta_source.original_hash',encode(sha256(convert_to(
+ jsonb_build_object('domain','lrv.count.local_fixture.module.v1','definition',p_original)::text,'UTF8')),'hex'),true);
+END $beta_independent_source$;
+SELECT jsonb_build_object('canonical_text',current_setting('lrv_beta_source.canonical'),
+ 'sha256',encode(sha256(convert_to(current_setting('lrv_beta_source.canonical'),'UTF8')),'hex'),
+ 'original_descriptor_hash',current_setting('lrv_beta_source.original_hash'));
+"""
+
+
+def family_source():
+    raw = prefix.regular(ROOT / 'supabase/migrations/20261027223544_narcotics_count_and_stock_workflows.sql').decode()
+    if raw.count(HEADER) != 1:
+        raise ValueError('One original comparison function required')
+    start=raw.index(HEADER);end=raw.index('$$;',start)+3
+    definition=raw[start:end]
+    header,body=definition.split(' AS $$',1);body=body[:-3]
+    if sha(body.encode())!=OLD_BODY_SHA:
+        raise ValueError('Whole original function body required')
+    declaration='declare d controlled_count_v1.descriptor;actual jsonb;begin'
+    extended=("declare d controlled_count_v1.descriptor;actual jsonb;"
+        "beta_saved beta_time_clock_v1.admission;beta_early beta_time_clock_v1.admission;"
+        "beta_template text;beta_body text;beta_hg text;beta_text text;"
+        "beta_h text:="+literal(EXPECTED_MARKER)+";beta_th text:="+literal(TEMPLATE_MARKER)+";begin")
+    early="""
+ -- Finite pre-read relation gate; original later catalog checks remain intact.
+ IF NOT EXISTS(SELECT 1 FROM pg_namespace n WHERE n.nspname='beta_time_clock_v1'AND n.nspowner='postgres'::regrole)
+ OR NOT EXISTS(SELECT 1 FROM pg_class c WHERE c.oid=to_regclass('beta_time_clock_v1.admission')
  AND c.relowner='postgres'::regrole AND c.relkind='r'AND c.relpersistence='p'AND c.relrowsecurity AND NOT c.relforcerowsecurity)
- OR EXISTS(SELECT 1 FROM unnest(ARRAY['anon','authenticated','service_role'])r
- CROSS JOIN unnest(ARRAY['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER'])v
- WHERE has_table_privilege(r,'beta_time_clock_v1.admission',v))THEN
+ OR EXISTS(SELECT 1 FROM pg_rewrite WHERE ev_class=to_regclass('beta_time_clock_v1.admission'))
+ OR EXISTS(SELECT 1 FROM pg_inherits WHERE inhparent=to_regclass('beta_time_clock_v1.admission'))THEN
  RAISE EXCEPTION 'beta_clock_admission_catalog_invalid' USING ERRCODE='23514';END IF;
- IF(SELECT count(*)FROM pg_trigger WHERE tgrelid='beta_time_clock_v1.admission'::regclass AND NOT tgisinternal)<>1
- OR NOT EXISTS(SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid
- WHERE t.tgrelid='beta_time_clock_v1.admission'::regclass AND t.tgname='immutable_admission'
- AND t.tgtype=62 AND t.tgenabled='O'AND NOT t.tgisinternal AND t.tgconstraint=0 AND t.tgnargs=0
- AND t.tgqual IS NULL AND t.tgargs=''::bytea
- AND p.oid='beta_time_clock_v1.immutable_admission()'::regprocedure
- AND p.proowner='postgres'::regrole AND NOT p.prosecdef
- AND p.proconfig=ARRAY['search_path=pg_catalog']::text[]
- AND encode(sha256(convert_to(p.prosrc,'UTF8')),'hex')=""" + literal(immutable_hash) + """
- AND NOT has_function_privilege('anon',p.oid,'EXECUTE')
- AND NOT has_function_privilege('authenticated',p.oid,'EXECUTE')
- AND NOT has_function_privilege('service_role',p.oid,'EXECUTE'))THEN
- RAISE EXCEPTION 'beta_clock_admission_immutability_invalid' USING ERRCODE='23514';END IF;
- SELECT * INTO STRICT saved FROM beta_time_clock_v1.admission WHERE revision=1;
- beta_saved_text := saved.expected_properties::text;
+ SELECT * INTO STRICT beta_early FROM beta_time_clock_v1.admission WHERE revision=1;
+ beta_template:=beta_early.guard_template;
+ IF encode(sha256(convert_to(beta_template,'UTF8')),'hex')IS DISTINCT FROM beta_th THEN
+ RAISE EXCEPTION 'beta_clock_admission_template_invalid' USING ERRCODE='23514';END IF;
+ beta_body:=replace(replace(beta_template,"""+marker_expression(EXPECTED_MARKER)+""",beta_h),"""+marker_expression(TEMPLATE_MARKER)+""",beta_th);
+ beta_hg:=encode(sha256(convert_to(beta_body,'UTF8')),'hex');
+ IF beta_early.require_bound_body_hash IS DISTINCT FROM beta_hg THEN
+ RAISE EXCEPTION 'beta_clock_admission_template_invalid' USING ERRCODE='23514';END IF;
+"""
+    digest_case=("'body_sha256',CASE WHEN w.signature="+literal(SIGNATURE)+" THEN CASE WHEN "+BODY_DIGEST+
+        "=beta_hg THEN "+literal(OLD_BODY_SHA)+" ELSE NULL END ELSE "+BODY_DIGEST+" END,")
+    admission=CATALOG_CHECKS.replace('__IMMUTABLE_SHA__',sha(IMMUTABLE_BODY.encode()))+"""
  IF(SELECT count(*)FROM beta_time_clock_v1.admission)<>1
- OR saved.original_descriptor_hash IS DISTINCT FROM d.definition_hash
- OR saved.expected_properties_hash IS DISTINCT FROM encode(sha256(convert_to(beta_saved_text,'UTF8')),'hex')THEN
+ OR beta_saved.original_descriptor_hash IS DISTINCT FROM d.definition_hash
+ OR beta_saved.require_bound_body_hash IS DISTINCT FROM beta_hg
+ OR convert_to(beta_saved.guard_template,'UTF8')IS DISTINCT FROM convert_to(beta_template,'UTF8')THEN
  RAISE EXCEPTION 'beta_clock_admission_source_invalid' USING ERRCODE='23514';END IF;
- p_original := d.definition->'properties';
-""" + projection_sql("saved.require_bound_body_hash", expression=True, properties_expression="p_original") + """
- beta_expected_text := expected::text;
- IF beta_saved_text IS DISTINCT FROM beta_expected_text THEN
+ beta_text:=beta_saved.canonical_expectation;
+ IF encode(sha256(convert_to(beta_text,'UTF8')),'hex')IS DISTINCT FROM beta_h THEN
  RAISE EXCEPTION 'beta_clock_admission_delta_invalid' USING ERRCODE='23514';END IF;
- -- One complete canonical object comparison covers every key and value.
- expected := p_original || jsonb_build_object(
-  'functions',jsonb_set(p_original->'functions','{controlled_count_entry_v1.require_bound_module(),body_sha256}',
-   expected#>'{functions,controlled_count_entry_v1.require_bound_module(),body_sha256}'),
-  'ordinary_relations',jsonb_set(p_original->'ordinary_relations','{time_entries}',
-   (p_original#>'{ordinary_relations,time_entries}')||(expected#>'{ordinary_relations,time_entries}')));
- if actual::text is distinct from expected::text then"""
-    # The projection is inside the already source-bound comparison function.
-    # There is no separately callable accessor whose replacement could bypass
-    # its own integrity checks, and no mutually embedded digest cycle.
-    admission = re.sub(r"\bsaved\b", "beta_saved", admission)
-    admission = re.sub(r"\bexpected\b", "beta_expected", admission)
-    admission = re.sub(r"\bp_original\b", "beta_original", admission)
-    old_declaration = "declare d controlled_count_v1.descriptor;actual jsonb;begin"
-    new_declaration = ("declare d controlled_count_v1.descriptor;actual jsonb;"
-                       "beta_saved beta_time_clock_v1.admission;beta_expected jsonb;beta_original jsonb;"
-                       "beta_saved_text text;beta_expected_text text;begin")
-    if definition.count(old_declaration) != 1:
-        raise ValueError("Exact original comparison declaration required")
-    if definition.count(DESCRIPTOR_SELECT) != 1:
-        raise ValueError("Exact original source-descriptor read required")
-    if definition.count(DESCRIPTOR_HASH_ORIGINAL) != 1:
-        raise ValueError("Exact original source-descriptor hash expression required")
-    successor = (definition.replace(old_declaration, new_declaration, 1).replace(OLD_COMPARE, admission, 1)
-                 .replace(DESCRIPTOR_HASH_ORIGINAL, DESCRIPTOR_HASH_CANONICAL, 1)
-                 .replace(DESCRIPTOR_SELECT, DESCRIPTOR_FLAT_SELECT, 1))
-    if (successor.replace(admission, OLD_COMPARE, 1).replace(new_declaration, old_declaration, 1)
-            .replace(DESCRIPTOR_HASH_CANONICAL, DESCRIPTOR_HASH_ORIGINAL, 1)
-            .replace(DESCRIPTOR_FLAT_SELECT, DESCRIPTOR_SELECT, 1)) != definition:
-        raise ValueError("Whole comparison source inverse required")
-    new_hash = sha(successor.split(" AS $$", 1)[1][:-3].encode())
-    projection = projection_sql(new_hash)
-    core = prefix.regular(ROOT / "scripts/time-clock/atomic-time-clock.sql")
-    if re.search(rb"create\s+(?:or\s+replace\s+)?function\s+public\.protect_profile_privileges", core, re.I) or b"CREATE TABLE" in core.upper():
-        raise ValueError("Time-clock core cannot modify historical profiles guard or relation inventory")
-    preflight = """-- Reviewed finite beta successor. The original209 receipts and all descriptor rows remain immutable.
+ if actual::text is distinct from beta_text then"""
+    pairs=((declaration,extended),(DESCRIPTOR_SELECT,DESCRIPTOR_FLAT_SELECT),
+        (DESCRIPTOR_HASH_ORIGINAL,DESCRIPTOR_HASH_CANONICAL),
+        (' actual:=jsonb_build_object(',early+' actual:=jsonb_build_object('),
+        (BODY_DIGEST_ANCHOR,digest_case),(OLD_COMPARE,admission))
+    template=body
+    for original,replacement in pairs:
+        if template.count(original)!=1:
+            raise ValueError('Exact finite family source anchor required: '+original[:80])
+        template=template.replace(original,replacement,1)
+    inverse=template
+    for original,replacement in reversed(pairs):
+        if inverse.count(replacement)!=1:
+            raise ValueError('Unique finite family inverse required')
+        inverse=inverse.replace(replacement,original,1)
+    if inverse!=body or any(template.count(marker)!=1 for marker in (EXPECTED_MARKER,TEMPLATE_MARKER)):
+        raise ValueError('Whole original body and unique family markers required')
+    return dict(header=header,template_body=template,template_hash=sha(template.encode()),
+        original_body_sha256=OLD_BODY_SHA,whole_comparison_body_inverse=True)
+
+
+def render_family(normalized_canonical_text):
+    if not isinstance(normalized_canonical_text,str):
+        raise TypeError('PostgreSQL canonical text required')
+    family=family_source();expected_hash=sha(normalized_canonical_text.encode())
+    body=family['template_body'].replace(EXPECTED_MARKER,expected_hash,1).replace(TEMPLATE_MARKER,family['template_hash'],1)
+    # Replace only the declaration literals, never matching an unrelated digest.
+    inverse=body.replace('beta_h text:='+literal(expected_hash),'beta_h text:='+literal(EXPECTED_MARKER),1)
+    inverse=inverse.replace('beta_th text:='+literal(family['template_hash']),'beta_th text:='+literal(TEMPLATE_MARKER),1)
+    if inverse!=family['template_body']:
+        raise ValueError('Exact family substitution inverse required')
+    return dict(**family,expected_hash=expected_hash,canonical_text=normalized_canonical_text,
+        body=body,body_sha256=sha(body.encode()),definition=family['header']+' AS '+literal(body)+';')
+
+
+def build():
+    family=family_source();core=prefix.regular(ROOT/'scripts/time-clock/atomic-time-clock.sql')
+    if re.search(rb'create\s+(?:or\s+replace\s+)?function\s+public\.protect_profile_privileges',core,re.I) or b'CREATE TABLE' in core.upper():
+        raise ValueError('Time-clock core cannot modify historical profiles guard or relation inventory')
+    preflight="""-- Finite source-derived body family. Original209 receipts and descriptor rows remain immutable.
 SET LOCAL statement_timeout='30s';SET LOCAL lock_timeout='5s';
-""" + ledger_preflight() + """
-DO $beta_clock_original_module$ BEGIN
+"""+ledger_preflight()+"""
+DO $beta_clock_original_module$BEGIN
  IF current_user<>'postgres'OR to_regnamespace('beta_time_clock_v1')IS NOT NULL
  OR NOT EXISTS(SELECT 1 FROM pg_proc p WHERE p.oid='controlled_count_entry_v1.require_bound_module()'::regprocedure
  AND p.proowner='postgres'::regrole AND NOT p.prosecdef
- AND encode(sha256(convert_to(p.prosrc,'UTF8')),'hex')=""" + literal(OLD_BODY_SHA) + """ )THEN
+ AND encode(sha256(convert_to(p.prosrc,'UTF8')),'hex')="""+literal(OLD_BODY_SHA)+""" )THEN
  RAISE EXCEPTION 'beta_clock_exact_original_module_required' USING ERRCODE='23514';END IF;
  PERFORM controlled_count_entry_v1.require_bound_module();
 END $beta_clock_original_module$;
@@ -227,49 +243,52 @@ REVOKE ALL ON SCHEMA beta_time_clock_v1 FROM PUBLIC,anon,authenticated,service_r
 CREATE TABLE beta_time_clock_v1.admission(
  revision integer PRIMARY KEY CHECK(revision=1),
  original_descriptor_hash text NOT NULL CHECK(original_descriptor_hash~'^[0-9a-f]{64}$'),
- expected_properties jsonb NOT NULL,
- expected_properties_hash text NOT NULL CHECK(expected_properties_hash~'^[0-9a-f]{64}$'),
+ canonical_expectation text NOT NULL,
+ guard_template text NOT NULL,
  require_bound_body_hash text NOT NULL CHECK(require_bound_body_hash~'^[0-9a-f]{64}$')
 );
 ALTER TABLE beta_time_clock_v1.admission ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE beta_time_clock_v1.admission FROM PUBLIC,anon,authenticated,service_role;
 CREATE FUNCTION beta_time_clock_v1.immutable_admission() RETURNS trigger
-LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog AS $$""" + immutable_body + """$$;
+LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog AS $$"""+IMMUTABLE_BODY+"""$$;
 REVOKE ALL ON FUNCTION beta_time_clock_v1.immutable_admission() FROM PUBLIC,anon,authenticated,service_role;
 """
-    populate = """
-DO $beta_clock_source_admission$ DECLARE p_original jsonb;p_original_hash text;expected jsonb;BEGIN
+    populate="""
+DO $beta_clock_source_admission$DECLARE p_original jsonb;p_original_hash text;expected jsonb;
+ beta_text text;beta_h text;beta_th text:="""+literal(family['template_hash'])+""";
+ beta_template text:="""+literal(family['template_body'])+""";beta_body text;BEGIN
  SELECT definition,definition_hash INTO STRICT p_original,p_original_hash FROM controlled_count_v1.descriptor WHERE revision=1;
-""" + projection + """
- INSERT INTO beta_time_clock_v1.admission VALUES(1,p_original_hash,expected,
- encode(sha256(convert_to(expected::text,'UTF8')),'hex'),""" + literal(new_hash) + """);
+"""+normalization_sql()+"""
+ beta_text:=expected::text;beta_h:=encode(sha256(convert_to(beta_text,'UTF8')),'hex');
+ beta_body:=replace(replace(beta_template,"""+literal(EXPECTED_MARKER)+""",beta_h),"""+literal(TEMPLATE_MARKER)+""",beta_th);
+ INSERT INTO beta_time_clock_v1.admission VALUES(1,p_original_hash,beta_text,beta_template,
+ encode(sha256(convert_to(beta_body,'UTF8')),'hex'));
+ EXECUTE """+literal(family['header']+' AS ')+"""||quote_literal(beta_body)||';';
 END $beta_clock_source_admission$;
 CREATE TRIGGER immutable_admission BEFORE INSERT OR UPDATE OR DELETE OR TRUNCATE
 ON beta_time_clock_v1.admission FOR EACH STATEMENT EXECUTE FUNCTION beta_time_clock_v1.immutable_admission();
-"""
-    sql = (preflight + core.decode() + "\n" + successor + "\n" + populate + """
-DO $beta_clock_final_module$ BEGIN
+DO $beta_clock_final_module$BEGIN
  PERFORM controlled_count_entry_v1.require_bound_module();
  PERFORM narcotics_register_v1.require_module();
 END $beta_clock_final_module$;
 SELECT pg_notify('pgrst','reload schema');
-""").encode()
-    proof = dict(kind="finite-beta-time-clock-metadata-successor-source-v1", database_operations=0,
-        original_require_bound_body_sha256=OLD_BODY_SHA, successor_require_bound_body_sha256=new_hash,
-        expected_projection_inline=True, external_expected_accessor=False,
-        admission_root_branches=["functions", "ordinary_relations"],
-        admission_changed_leaf_paths=["functions."+SIGNATURE+".body_sha256",
-            "ordinary_relations.time_entries.acl", "ordinary_relations.time_entries.policies"],
-        complete_canonical_object_equality=True, per_member_comparison=False,
-        descriptor_same_value_materialized_once=True, catalog_snapshot_calls_unchanged=True,
-        descriptor_hash_canonical_bytes_preserved=True, descriptor_hash_wrapper_rebuild_removed=True,
-        immutable_admission_body_sha256=immutable_hash,
-        core_sha256=sha(core), migration_sha256=sha(sql), migration_bytes=len(sql),
-        historical_descriptors_rewritten=False, historical_receipts_rewritten=False,
-        ambient_catalog_used_as_expected=False, whole_comparison_body_inverse=True,
-        changed_properties=["ordinary_relations.time_entries.acl", "ordinary_relations.time_entries.policies",
-                            "functions.controlled_count_entry_v1.require_bound_module().body_sha256"])
-    return sql, proof
+"""
+    sql=(preflight+core.decode()+'\n'+populate).encode()
+    proof=dict(kind='finite-beta-time-clock-metadata-successor-source-v2',database_operations=0,
+        original_require_bound_body_sha256=OLD_BODY_SHA,successor_kind='source-derived-finite-body-family-v1',
+        template_body_sha256=family['template_hash'],template_body_bytes=len(family['template_body'].encode()),
+        expected_projection_inline=False,source_projection_installation_only=True,
+        external_expected_accessor=False,canonical_expectation_hash_embedded=True,
+        template_hash_embedded=True,observed_self_hash_authenticated_before_normalization=True,
+        full_canonical_text_comparison=True,catalog_snapshot_calls_unchanged=True,
+        catalog_snapshot_order_unchanged=True,additional_admission_read_bound_to_later_read=True,
+        descriptor_same_value_materialized_once=True,descriptor_hash_canonical_bytes_preserved=True,
+        immutable_admission_body_sha256=sha(IMMUTABLE_BODY.encode()),core_sha256=sha(core),
+        migration_sha256=sha(sql),migration_bytes=len(sql),historical_descriptors_rewritten=False,
+        historical_receipts_rewritten=False,ambient_catalog_used_as_expected=False,
+        whole_comparison_body_inverse=True,changed_properties=['ordinary_relations.time_entries.acl',
+        'ordinary_relations.time_entries.policies','functions.'+SIGNATURE+'.body_sha256'])
+    return sql,proof
 
 
 def main():

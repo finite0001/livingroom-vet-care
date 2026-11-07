@@ -1,7 +1,7 @@
 """Isolated current211 writer diagnosis; every execution refuses acceptance.
 
-This diagnostic branch retains the exact fd5f6731 product SQL and original
-business protocol bytecode. Only the owned fixed wrapper error fence and its
+This diagnostic branch retains the exact paired candidate product migration
+and template plus the original business protocol bytecode. Only the owned fixed wrapper error fence and its
 source-derived private expectations are instrumented, as in recovery tracing.
 Transaction-local function profiling adds per-call counter deltas; these are
 engineering observations and never candidate or latency acceptance.
