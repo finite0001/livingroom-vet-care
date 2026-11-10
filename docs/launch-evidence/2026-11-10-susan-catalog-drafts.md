@@ -14,7 +14,7 @@ The three new authenticated SECURITY DEFINER RPCs are intentional staff-only int
 
 - All 217 source rows and fields independently compared with the original Excel workbook.
 - Disposable PostgreSQL acceptance: migration install, empty active catalog after seed, several variants per source, exact operation retry, existing-product linking, missing-source rejection, actor mismatch rejection, direct-write denial, anonymous/inactive-staff denial and audit records.
-- Eleven focused Node tests passed (catalog setup, stock policy and Whogot model).
+- All 2,802 Node tests passed, including catalog setup, stock policy, Whogot and the exact current migration-inventory check.
 - TypeScript app checking, targeted ESLint and production build passed with the repository lockfile. The main clone's older installed dependencies were not reused.
 - Ten inventory/Whogot Playwright checks passed, including the new 390px catalog-draft scenario, same-operation recovery after an interrupted response, preserved unknown stock fields, recipient-search links and no stock/treatment writes during catalog setup. The mobile screenshot was visually reviewed.
 
