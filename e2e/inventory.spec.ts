@@ -1,11 +1,117 @@
 import { test, expect, type Page } from "@playwright/test";
 import { unmanagedStockProbe } from "./helpers/unmanaged-stock";
+import { readFileSync } from "node:fs";
 const backend = "http://127.0.0.1:54321";
 const actor = "11111111-1111-4111-8111-111111111111";
 const pet = "22222222-2222-4222-8222-222222222222";
 const client = "33333333-3333-4333-8333-333333333333";
 const lot = "44444444-4444-4444-8444-444444444444";
 const invoice = "55555555-5555-4555-8555-555555555555";
+
+test("Susan catalog drafts retain blanks and recover a product save without duplicate stock or treatment", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(120000);
+  await fixture(page);
+  const raw = JSON.parse(
+    readFileSync(
+      new URL("../docs/inventory/catalog-source.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const sources = raw.map((row) => ({
+    ...row,
+    source_url: "https://docs.google.com/spreadsheets/d/source/edit",
+    captured_on: "2026-11-10",
+    products: [],
+  }));
+  const vaccine = sources.find((row) => row.source_tab === "Vax");
+  const calls: Array<Record<string, unknown>> = [];
+  let stockWrites = 0;
+  await page.route(
+    `${backend}/rest/v1/rpc/search_catalog_source_items`,
+    (route) => {
+      const needle = route.request().postDataJSON().p_search.toLowerCase();
+      return route.fulfill({
+        json: sources.filter((row) =>
+          `${row.name} ${row.source_tab}`.toLowerCase().includes(needle),
+        ),
+      });
+    },
+  );
+  await page.route(
+    `${backend}/rest/v1/rpc/configure_catalog_source_item`,
+    (route) => {
+      const body = route.request().postDataJSON();
+      calls.push(body);
+      if (calls.length === 1) return route.abort("failed");
+      vaccine.products = [{ id: body.p_id, name: body.p_name, active: true }];
+      return route.fulfill({ json: { id: body.p_id, name: body.p_name } });
+    },
+  );
+  await page.route(
+    `${backend}/rest/v1/rpc/{receive_inventory,record_patient_treatment}`,
+    (route) => {
+      stockWrites++;
+      return route.abort();
+    },
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/hub/inventory", { waitUntil: "domcontentloaded" });
+  await expect(
+    page.getByText("217 matching source rows.", { exact: false }),
+  ).toBeVisible({ timeout: 60000 });
+  await page
+    .getByLabel("Search catalog drafts", { exact: true })
+    .fill(vaccine.name);
+  await expect(
+    page.getByRole("button", { name: "Set up variants", exact: true }),
+  ).toHaveCount(1);
+  await page
+    .getByRole("button", { name: "Set up variants", exact: true })
+    .click();
+  await expect(page.locator("#source-product-unit")).toHaveValue("");
+  await expect(page.locator("#source-product-price")).toHaveValue("");
+  await expect(page.getByText("Not recorded", { exact: true })).toBeVisible();
+  await page
+    .locator("#source-product-name")
+    .fill("Synthetic rabies vaccine · single dose");
+  await page.locator("#source-product-unit").fill("dose");
+  await page.locator("#source-product-price").fill("25.00");
+  await page
+    .getByRole("button", { name: "Create exact product", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Retry same product", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("#source-product-unit")).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Close setup", exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Retry same product", exact: true })
+    .click();
+  await expect(
+    page.getByRole("link", {
+      name: "Find patients who received this",
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(calls).toHaveLength(2);
+  expect(calls[1]).toEqual(calls[0]);
+  expect(calls[0].p_actor_id).toBe(actor);
+  expect(calls[0].p_unit_price_cents).toBe(2500);
+  expect(stockWrites).toBe(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: testInfo.outputPath("catalog-drafts-mobile.png"),
+    fullPage: true,
+  });
+});
 async function fixture(
   page: Page,
   firstOutcome: "uncertain" | "stale" = "uncertain",
@@ -62,9 +168,18 @@ async function fixture(
 
   await page.route(`${backend}/**`, async (route) => {
     const path = new URL(route.request().url()).pathname;
-    if (path === "/rest/v1/rpc/probe_controlled_stock_intent_v1") return route.fulfill({ contentType: "application/json", body: unmanagedStockProbe(route.request().postDataJSON(), "77777777-7777-4777-8777-777777777777") });
-    if (path === "/rest/v1/rpc/list_appointment_catalog") return route.fulfill({ json: { items: [], next: null } });
-    if (path === "/rest/v1/rpc/read_appointment_catalog_binding") return route.fulfill({ json: null });
+    if (path === "/rest/v1/rpc/probe_controlled_stock_intent_v1")
+      return route.fulfill({
+        contentType: "application/json",
+        body: unmanagedStockProbe(
+          route.request().postDataJSON(),
+          "77777777-7777-4777-8777-777777777777",
+        ),
+      });
+    if (path === "/rest/v1/rpc/list_appointment_catalog")
+      return route.fulfill({ json: { items: [], next: null } });
+    if (path === "/rest/v1/rpc/read_appointment_catalog_binding")
+      return route.fulfill({ json: null });
     if (path === "/auth/v1/user") return route.fulfill({ json: user });
     if (path === "/auth/v1/token") return route.fulfill({ json: session });
     if (path === "/rest/v1/profiles")

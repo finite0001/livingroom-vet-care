@@ -33,7 +33,7 @@ import beta_recovery_diagnostic
 
 installation = business.installation
 ROOT = installation.ROOT
-MANIFEST = HERE / "beta-candidate-source.json"
+MANIFEST = HERE / "catalog212-candidate-source.json"
 PROFILES = ("commission_all", "count_agreement", "browser_lost_finalize", "ordinary_none", "record_review_signing",
             "independent_witness", "variance_reconciliation", "scalars", "clinical",
             "native_pickup_annotation", "native_return_v1", "native_return_v2_discrepancy")
@@ -47,7 +47,10 @@ def source_files():
             if path.is_file() and "__pycache__" not in path.parts and path != MANIFEST:
                 paths.add(path)
     for name in ("package.json", "package-lock.json", "scripts/owned_canonical_bootstrap.py",
-                 ".github/workflows/beta-candidate.yml"):
+                 ".github/workflows/beta-candidate.yml", "docs/inventory/catalog-source.json",
+                 "docs/inventory/living-room-vet-inventory-2026-11-10.xlsx",
+                 "tests/inventory/catalog-setup-local.py", "tests/inventory/catalog-setup.test.ts",
+                 "e2e/inventory.spec.ts"):
         paths.add(ROOT / name)
     historical = installation.decode(installation.prefix.regular(ROOT / "tests/controlled-drugs/narcotics-finalize-browser-bindings.json"))
     paths.update(ROOT / name for name in historical["files"])
@@ -188,9 +191,10 @@ def current_rest_defaults(runtime):
         return business.modules().rest.effective_defaults(runtime)
     expected = release.expected_ledger(target.operational_prefix_ledger,
         installation.decode(installation.prefix.regular(HERE / "operational-release.json")))
-    if len(actual) not in (209, 210, 211):
+    if len(actual) not in (209, 210, 211, 212):
         raise ValueError("Exact verified current source ledger required before REST validation")
-    for count, read_manifest in ((210, installation.prefix.beta210), (211, installation.prefix.beta211)):
+    for count, read_manifest in ((210, installation.prefix.beta210), (211, installation.prefix.beta211),
+                                 (212, installation.prefix.catalog212)):
         if len(actual) >= count:
             manifest = read_manifest(ROOT)
             expected.append(dict(version=manifest["migration"][:14], name=manifest["migration"][15:-4],
@@ -331,6 +335,46 @@ def install211(runtime):
     target.project_sources()
 
 
+def install212(runtime):
+    """Install the exact source catalog without altering any existing clinical row."""
+    target = runtime.install
+    manifest = installation.prefix.catalog212(ROOT)
+    installation.process.run(["node", str(HERE / "frame-beta-catalog.mjs"), "--check"],
+                             timeout=runtime.remaining(30), cwd=ROOT, check=True)
+    if len(target.operational_ledger) != 211:
+        raise ValueError("Complete independently verified211 source ledger required")
+    expected = [*target.operational_ledger, dict(version=manifest["migration"][:14],
+        name=manifest["migration"][15:-4], **{key: manifest["framing"][key]
+        for key in ("statement_count", "postgres_array_sha256", "postgres_array_bytes")})]
+    before = receiver_rehearsal.observe(runtime, "catalog212-before-complete-data")
+    destination = target.project / "supabase/migrations" / manifest["migration"]
+    with destination.open("xb") as stream:
+        stream.write(installation.prefix.regular(ROOT / "supabase/migrations" / manifest["migration"]))
+    target.project_pins[manifest["migration"]] = manifest["framing"]["sha256"]
+    target.project_sources()
+    previous = target.owner_end
+    target.owner_end = min(target.phase_end, time.monotonic() + installation.OWNER_SECONDS,
+                           previous if previous is not None else target.phase_end)
+    try:
+        runtime.verify()
+        target.boot.command(["supabase", "migration", "up", "--local", "--workdir", str(target.project),
+                             "--experimental=false"], timeout=runtime.remaining(30))
+    finally:
+        target.owner_end = previous
+    release.verify_ledger(runtime, expected, "catalog212-complete-source-ledger")
+    runtime.verify_module("catalog212-retained-controlled-properties")
+    after = receiver_rehearsal.observe(runtime, "catalog212-after-complete-data")
+    installation.preserve(before["relations"], after["relations"],
+        {"supabase_migrations.schema_migrations": 1},
+        {"public.catalog_source_items": 217, "public.catalog_source_products": 0})
+    if before["sequences"] != after["sequences"]:
+        raise ValueError("Catalog212 changed an existing sequence")
+    target.operational_ledger = expected
+    target.result.update(complete_source_derived212_ledger=True,
+        catalog212_controlled_properties_rows_and_sequences_preserved=True)
+    target.project_sources()
+
+
 class BetaBusiness(release.SourceLedger, CurrentBusiness, hosted.HostedHistoryInstallation):
     def __init__(self, *args, profile, current_tail=True):
         self.current_tail = current_tail
@@ -346,7 +390,8 @@ class BetaBusiness(release.SourceLedger, CurrentBusiness, hosted.HostedHistoryIn
         if self.current_tail:
             install210(runtime)
             install211(runtime)
-        self.result["kind"] = "livingroom-beta" + ("211" if self.current_tail else "209") + "-genuine-business-profile-v1"
+            install212(runtime)
+        self.result["kind"] = "livingroom-beta" + ("212" if self.current_tail else "209") + "-genuine-business-profile-v1"
 
     def after_business(self, context, methods, runtime, proof):
         current_policy_controls(runtime, self.profile)
@@ -407,6 +452,7 @@ def install_current_release(runtime):
     release.install(runtime)
     install210(runtime)
     install211(runtime)
+    install212(runtime)
 
 
 class BetaReceiver(receiver_rehearsal.Receiver):
@@ -429,7 +475,10 @@ class BetaRecovery(receiver_rehearsal.PopulatedRecovery, CurrentBusiness, hosted
 
 
 def install_diagnostic_release(runtime):
-    install_current_release(runtime)
+    # Preserve the explicitly historical211 engineering-only diagnostic.
+    release.install(runtime)
+    install210(runtime)
+    install211(runtime)
     beta_recovery_diagnostic.bind(runtime)
     context = runtime.install.source_context
     context["http"] = beta_recovery_diagnostic.TimedHttp(context["http"], runtime)

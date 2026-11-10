@@ -2,6 +2,10 @@
 
 All mutations require an active staff session and derive `created_by` from `auth.uid()`. Authenticated clients have SELECT only on eight new tables; all writes use RPCs. No legacy `pet_vaccinations` rows are changed or copied. Prices and totals are integer USD cents; stock quantities support at most three decimal places. `inventory_lots` represent a product/lot/expiry/location combination; balance is the sum of `inventory_movements.quantity` for its ID.
 
+## Source inventory
+
+[Susan's Living Room Vet inventory](inventory/README.md) includes the live-sheet link, the November 10, 2026 Excel snapshot and readable tables. It is reference material for catalog setup.
+
 ## Catalog and stock
 
 - `save_catalog_product(p_id uuid|null, p_expected_version int|null, p_name text, p_kind medication|vaccine|service, p_manufacturer text, p_unit text, p_unit_price_cents bigint, p_active boolean)` → `catalog_products` row. Null ID creates. Existing ID requires matching version. Kind and stock unit cannot change; deactivate instead.

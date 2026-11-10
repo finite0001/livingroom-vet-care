@@ -32,6 +32,8 @@ BETA_MIGRATION = "20261106170000_atomic_time_clock_corrections.sql"
 BETA_MANIFEST = "scripts/narcotics-log/beta-migration210.json"
 BETA_FOLLOWUP_MIGRATION = "20261106173000_terminal_appointment_clinician.sql"
 BETA_FOLLOWUP_MANIFEST = "scripts/narcotics-log/beta-migration211.json"
+CATALOG_MIGRATION = "20261110181205_susan_inventory_catalog_setup.sql"
+CATALOG_MANIFEST = "scripts/narcotics-log/catalog-migration212.json"
 PROGRAMS = {
     "artifacts": (
         ("release_assembly.py", "--check"),
@@ -78,6 +80,11 @@ def beta210(root):
 def beta211(root):
     return _beta_manifest(root, BETA_FOLLOWUP_MANIFEST, BETA_FOLLOWUP_MIGRATION, 211,
                           "beta-terminal-appointment-cli211-source-v1")
+
+
+def catalog212(root):
+    return _beta_manifest(root, CATALOG_MANIFEST, CATALOG_MIGRATION, 212,
+                          "catalog-drafts-cli212-source-v1")
 
 
 def _beta_manifest(root, manifest_path, migration, count, kind):
@@ -130,11 +137,14 @@ def canonical206(root):
             raise ValueError("Exact operational209 migration required")
         if actual != sorted([*expected, *FORWARD, name]):
             beta_inventory = [*expected, *FORWARD, name, BETA_MIGRATION]
-            if actual not in (sorted(beta_inventory), sorted([*beta_inventory, BETA_FOLLOWUP_MIGRATION])):
-                raise ValueError("Only complete206, named208, pinned209 or exact pinned beta210/211 is admitted")
+            if actual not in (sorted(beta_inventory), sorted([*beta_inventory, BETA_FOLLOWUP_MIGRATION]),
+                              sorted([*beta_inventory, BETA_FOLLOWUP_MIGRATION, CATALOG_MIGRATION])):
+                raise ValueError("Only complete206, named208, pinned209 or exact pinned successors210/211/212 are admitted")
             beta210(root)
             if BETA_FOLLOWUP_MIGRATION in actual:
                 beta211(root)
+            if CATALOG_MIGRATION in actual:
+                catalog212(root)
         body=regular(directory/name);framing=manifest["framing"]
         if framing["bytes"]!=len(body)or framing["sha256"]!=digest(body):
             raise ValueError("Operational209 source differs from its declared framing")
