@@ -35,7 +35,7 @@
     },
     "scripts/narcotics-log/beta-browser-source-proof.json": {
       "bytes": 771,
-      "sha256": "90c236f9104f13a931251b3d2e1faf60325e63463f0a45c682a2e6cf370c4a61"
+      "sha256": "08330f9f8544ffef0aabddc1ed9ef5a6c17298c4b79e9d58f4b43f76f4f2132c"
     },
     "scripts/narcotics-log/beta-candidate-source.json": {
       "bytes": 241691,
@@ -62,8 +62,8 @@
       "sha256": "2387cbcf2c360aea48a3f1f5203d0b86088041dd22380aefc786f379f73fe7a7"
     },
     "scripts/narcotics-log/beta_browser_source.py": {
-      "bytes": 4634,
-      "sha256": "dd0d13bf7df041ac67a90e0a6d67d22359d2069254eda365b306ba7a9514948f"
+      "bytes": 4640,
+      "sha256": "62e6709632e884e8148ef6475cbaf5f4a90802260692133f71350bc371c1c5ee"
     },
     "scripts/narcotics-log/beta_cold_release.py": {
       "bytes": 11535,
@@ -112,6 +112,10 @@
     "scripts/narcotics-log/catalog-migration212.json": {
       "bytes": 1749,
       "sha256": "367d122cce655767393fdbf5a14f1506f2ef31a13823e95f0d70b04259218741"
+    },
+    "scripts/narcotics-log/catalog212-initial-candidate-source.json": {
+      "bytes": 243703,
+      "sha256": "28327860c1a6e7d9bde16e29e662b171dd21d31a5c092d79b0cdcd2fe4bbaeba"
     },
     "scripts/narcotics-log/cli-framing.json": {
       "bytes": 434570,
@@ -398,8 +402,8 @@
       "sha256": "d37fdcecdca16e6344e0df30e6ad2956aab97b0e1c7e315ac2dd148e65ac62f0"
     },
     "scripts/narcotics-log/test_beta_source.py": {
-      "bytes": 4607,
-      "sha256": "26016304b54308be5e20dbed1790ecf8b96dbb848961bef401f936cce2ef5a86"
+      "bytes": 4992,
+      "sha256": "abf308949fd6286de84a95f64697c7a61161ab99193b78de04103a2903b36205"
     },
     "scripts/narcotics-log/test_beta_time_clock_source.py": {
       "bytes": 4130,
@@ -5538,8 +5542,8 @@
       "sha256": "5f7945e4cfd747f395f58908175c7e5f4438ca9306f590c6f0cdc9be3f07da6c"
     },
     "tests/controlled-drugs/run-beta-authenticated-count-finalize.mjs": {
-      "bytes": 24711,
-      "sha256": "7a9b39e186047b79ff022ca02788e5bd2f42d3f1ae51c8b9e75ca9dd6996f511"
+      "bytes": 24717,
+      "sha256": "87133f7991ccd3535973b2a34d9a2548d09e992f020778d60ffeefbe2b7f4e8a"
     },
     "tests/controlled-drugs/run-local-authenticated-clinical-workspace-review.mjs": {
       "bytes": 27220,

@@ -89,6 +89,12 @@ class BetaSourceTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 prefix.catalog212(root)
 
+    def test_browser_driver_uses_the_current_acceptance_manifest(self):
+        import beta_rehearsal as beta
+        source = (prefix.ROOT / 'tests/controlled-drugs/run-beta-authenticated-count-finalize.mjs').read_text()
+        self.assertIn(str(beta.MANIFEST.relative_to(prefix.ROOT)), source)
+        self.assertNotIn("'scripts/narcotics-log/beta-candidate-source.json'", source)
+
 
 if __name__ == "__main__":
     unittest.main()
