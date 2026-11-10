@@ -1,3 +1,4 @@
+import { RestockAlerts } from "@/hub/features/inventory/restocking/RestockAlerts";
 import {DailyTasksPanel} from "@/hub/features/daily-tasks/DailyTasksPanel";
 import {OperationalRecovery} from "@/hub/features/daily-tasks/OperationalRecovery";
 import {useState} from "react";
@@ -922,6 +923,7 @@ export default function HubHomePage() {
         </div>
       </section>
       <OperationalRecovery/>
+      <RestockAlerts compact />
       <DailyTasksPanel day={denverLocal(new Date()).slice(0,10)}/>
       <NextVisitWorkspace context={nextVisit} onContext={setNextVisit}/>
     </PageShell>

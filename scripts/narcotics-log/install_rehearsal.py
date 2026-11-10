@@ -140,6 +140,10 @@ def source_admission():
         prefix.catalog212(ROOT)
         for name in (prefix.CATALOG_MANIFEST, "supabase/migrations/" + prefix.CATALOG_MIGRATION):
             pins[name] = sha(prefix.regular(ROOT / name))
+    if (ROOT / "supabase/migrations" / prefix.APPOINTMENT_RESTOCK_MIGRATION).exists():
+        prefix.appointment_restock213(ROOT)
+        for name in (prefix.APPOINTMENT_RESTOCK_MANIFEST, "supabase/migrations/" + prefix.APPOINTMENT_RESTOCK_MIGRATION):
+            pins[name] = sha(prefix.regular(ROOT / name))
     return candidate, layout, pins
 
 

@@ -260,6 +260,10 @@ async function fixture(
           },
         ],
       });
+    if (path === "/rest/v1/rpc/read_inventory_restock_alerts")
+      return route.fulfill({
+        json: { as_of: "2026-11-10T00:00:00Z", rows: [] },
+      });
     if (path === "/rest/v1/rpc/search_inventory_products")
       return route.fulfill({ json: [] });
     if (path === "/rest/v1/rpc/inventory_lot_balances")
@@ -519,4 +523,183 @@ test("patient edit and refreshed external allergy history each clear the treatme
     page.getByText("Updated external allergy history", { exact: true }),
   ).toBeVisible();
   await expect(checkbox).not.toBeChecked();
+});
+
+test("a product threshold drives the in-app alert and links to patient usage", async ({
+  page,
+}) => {
+  await fixture(page);
+  const product = "77777777-7777-4777-8777-777777777777";
+  let setting: {
+    id: string;
+    name: string;
+    unit: string;
+    threshold: number;
+    version: number;
+    counted: boolean;
+    balance: number;
+  } | null = null;
+  await page.route(
+    `${backend}/rest/v1/rpc/search_inventory_products`,
+    (route) =>
+      route.fulfill({
+        json: [
+          {
+            id: product,
+            name: "Rabies vaccine",
+            kind: "vaccine",
+            unit: "dose",
+            active: true,
+            manufacturer: "",
+            unit_price_cents: 2500,
+            version: 1,
+          },
+        ],
+      }),
+  );
+  await page.route(
+    `${backend}/rest/v1/rpc/read_inventory_restock_alerts`,
+    (route) =>
+      route.fulfill({
+        json: { as_of: "2026-11-10T00:00:00Z", rows: setting ? [setting] : [] },
+      }),
+  );
+  await page.route(
+    `${backend}/rest/v1/rpc/save_inventory_restock_setting`,
+    (route) => {
+      expect(route.request().postDataJSON()).toEqual({
+        p_actor_id: actor,
+        p_product_id: product,
+        p_threshold: 3,
+        p_expected_version: 0,
+      });
+      setting = {
+        id: product,
+        name: "Rabies vaccine",
+        unit: "dose",
+        threshold: 3,
+        version: 1,
+        counted: true,
+        balance: 3,
+      };
+      return route.fulfill({ json: setting });
+    },
+  );
+  await page.goto("/hub/inventory");
+  await page.getByRole("button", { name: "Edit", exact: true }).click();
+  await page.getByLabel("Alert at or below (dose)").fill("3");
+  await page.getByRole("button", { name: "Save restocking threshold" }).click();
+  const alerts = page.getByRole("region", { name: "Restocking alerts" });
+  await expect(alerts.getByText("1 product needs restocking.")).toBeVisible();
+  await expect(
+    alerts.getByText("3 dose remaining", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    alerts.getByRole("link", { name: "View patient usage" }),
+  ).toHaveAttribute("href", `/hub/whogot?product=${product}`);
+});
+
+test("Whogot links a recorded treatment to a visit and retries the same save", async ({
+  page,
+}) => {
+  const stockWrites = await fixture(page);
+  const treatment = "88888888-8888-4888-8888-888888888888";
+  const administeredAt = "2026-11-10T01:42:00Z";
+  const visit = {
+    id: "99999999-9999-4999-8999-999999999998",
+    scheduled_at: "2026-11-10T01:30:00Z",
+    appointment_type: "Wellness",
+    status: "COMPLETED",
+    version: 2,
+  };
+  let current: Record<string, unknown> | null = null;
+  const requests: Array<Record<string, unknown>> = [];
+  await page.route(`${backend}/rest/v1/rpc/read_whogot_source`, (route) =>
+    route.fulfill({
+      json: {
+        event_type: "administered",
+        record: {
+          id: treatment,
+          pet_id: pet,
+          product_name: "Rabies vaccine",
+          historical: false,
+          administered_at: administeredAt,
+          veterinarian: "Test DVM",
+          dose: "1 dose",
+          route: "",
+          site: "",
+          lot_number: "R123",
+          source: "Practice administration",
+        },
+        corrections: [],
+      },
+    }),
+  );
+  await page.route(
+    `${backend}/rest/v1/rpc/read_treatment_appointment`,
+    (route) => {
+      expect(route.request().postDataJSON()).toEqual({
+        p_pet_id: pet,
+        p_treatment_id: treatment,
+        p_day: "2026-11-09",
+      });
+      return route.fulfill({
+        json: {
+          pet_id: pet,
+          treatment_id: treatment,
+          current,
+          appointments: [visit],
+          history: current ? [current] : [],
+        },
+      });
+    },
+  );
+  await page.route(
+    `${backend}/rest/v1/rpc/set_treatment_appointment`,
+    (route) => {
+      const body = route.request().postDataJSON();
+      requests.push(body);
+      current = {
+        id: body.p_id,
+        treatment_id: treatment,
+        appointment_id: visit.id,
+        version: 1,
+        appointment_snapshot: visit,
+        reason: body.p_reason,
+        created_at: administeredAt,
+        context_changed: false,
+      };
+      if (requests.length === 1) return route.abort("failed");
+      return route.fulfill({ json: current });
+    },
+  );
+  await page.goto(
+    `/hub/whogot/source/administered/${treatment}?patient=${pet}`,
+  );
+  await page
+    .getByText("Link a recorded treatment to a visit", { exact: true })
+    .click();
+  await page.getByLabel("Appointment on this date").selectOption(visit.id);
+  await page.getByLabel("Link or change reason").fill("Checked visit chart");
+  await page.getByRole("button", { name: "Save appointment link" }).click();
+  await page
+    .getByRole("button", { name: "Retry same appointment link" })
+    .click();
+  await expect(
+    page.getByRole("link", { name: "Open appointment day" }),
+  ).toHaveAttribute(
+    "href",
+    `/hub/schedule?date=2026-11-09#appointment-${visit.id}`,
+  );
+  expect(requests).toHaveLength(2);
+  expect(requests[1]).toEqual(requests[0]);
+  expect(requests[0]).toMatchObject({
+    p_actor_id: actor,
+    p_pet_id: pet,
+    p_treatment_id: treatment,
+    p_appointment_id: visit.id,
+    p_appointment_version: 2,
+    p_expected_version: 0,
+  });
+  expect(stockWrites).toHaveLength(0);
 });

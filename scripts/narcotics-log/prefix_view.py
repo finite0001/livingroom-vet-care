@@ -34,6 +34,8 @@ BETA_FOLLOWUP_MIGRATION = "20261106173000_terminal_appointment_clinician.sql"
 BETA_FOLLOWUP_MANIFEST = "scripts/narcotics-log/beta-migration211.json"
 CATALOG_MIGRATION = "20261110181205_susan_inventory_catalog_setup.sql"
 CATALOG_MANIFEST = "scripts/narcotics-log/catalog-migration212.json"
+APPOINTMENT_RESTOCK_MIGRATION = "20261110203352_appointment_links_restock_alerts.sql"
+APPOINTMENT_RESTOCK_MANIFEST = "scripts/narcotics-log/appointment-restock-migration213.json"
 PROGRAMS = {
     "artifacts": (
         ("release_assembly.py", "--check"),
@@ -87,6 +89,11 @@ def catalog212(root):
                           "catalog-drafts-cli212-source-v1")
 
 
+def appointment_restock213(root):
+    return _beta_manifest(root, APPOINTMENT_RESTOCK_MANIFEST, APPOINTMENT_RESTOCK_MIGRATION, 213,
+                          "appointment-restock-cli213-source-v1")
+
+
 def _beta_manifest(root, manifest_path, migration, count, kind):
     root = Path(root)
     manifest = json.loads(regular(root / manifest_path))
@@ -138,13 +145,16 @@ def canonical206(root):
         if actual != sorted([*expected, *FORWARD, name]):
             beta_inventory = [*expected, *FORWARD, name, BETA_MIGRATION]
             if actual not in (sorted(beta_inventory), sorted([*beta_inventory, BETA_FOLLOWUP_MIGRATION]),
-                              sorted([*beta_inventory, BETA_FOLLOWUP_MIGRATION, CATALOG_MIGRATION])):
-                raise ValueError("Only complete206, named208, pinned209 or exact pinned successors210/211/212 are admitted")
+                              sorted([*beta_inventory, BETA_FOLLOWUP_MIGRATION, CATALOG_MIGRATION]),
+                              sorted([*beta_inventory, BETA_FOLLOWUP_MIGRATION, CATALOG_MIGRATION, APPOINTMENT_RESTOCK_MIGRATION])):
+                raise ValueError("Only complete206, named208, pinned209 or exact pinned successors210/211/212/213 are admitted")
             beta210(root)
             if BETA_FOLLOWUP_MIGRATION in actual:
                 beta211(root)
             if CATALOG_MIGRATION in actual:
                 catalog212(root)
+            if APPOINTMENT_RESTOCK_MIGRATION in actual:
+                appointment_restock213(root)
         body=regular(directory/name);framing=manifest["framing"]
         if framing["bytes"]!=len(body)or framing["sha256"]!=digest(body):
             raise ValueError("Operational209 source differs from its declared framing")

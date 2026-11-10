@@ -1,8 +1,8 @@
 import { DailyTasksPanel } from "../daily-tasks/DailyTasksPanel";
 import { ResourceUseWorkspace } from "../daily-tasks/ResourceUseWorkspace";
 import { OperationalRecovery } from "../daily-tasks/OperationalRecovery";
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -74,9 +74,10 @@ function AppointmentCard({
 
   return (
     <div
+      id={`appointment-${row.id}`}
       data-appointment-id={row.id}
       className={cn(
-        "grid items-center gap-3 rounded-2xl border bg-card p-4 shadow-card md:grid-cols-[92px_1fr_auto] md:gap-5 md:px-5",
+        "grid scroll-mt-24 items-center gap-3 rounded-2xl target:ring-2 target:ring-ring border bg-card p-4 shadow-card md:grid-cols-[92px_1fr_auto] md:gap-5 md:px-5",
         row.status === "CONFIRMED" && "border-primary/50",
         subdued && "bg-muted/40 opacity-80",
       )}
@@ -146,6 +147,7 @@ function AppointmentCard({
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2 md:justify-end">
+        {row.pet_id && <Button asChild variant="outline" size="sm" className="relative min-h-11"><Link to={`/hub/patient/${row.pet_id}?tab=medical&section=treatments&usage_appointment=${row.id}`}>Visit treatments</Link></Button>}
         {row.pet_id && row.status !== "CANCELLED" && row.status !== "NO_SHOW" && <Button asChild variant="outline" size="sm" className="min-h-11"><Link to={appointmentDictationHref(row.pet_id, row.id)}>Open dictation</Link></Button>}
         {row.status === "SCHEDULED" && (
           <Button
@@ -197,6 +199,7 @@ export default function SchedulePage() {
   // ?book=1&client=<id>&pet=<id> opens the booking form prefilled.
   const [searchParams, setSearchParams] = useSearchParams();
   const linkedDay = searchParams.get("date");
+  const { hash } = useLocation();
   const [booking] = useState(() => {
     const client = searchParams.get("client");
     const pet = searchParams.get("pet");
@@ -239,6 +242,13 @@ export default function SchedulePage() {
   );
   const count = week ? 7 : 1;
   const query = useScheduleDay(day, count);
+  const scheduleLoaded = query.isSuccess;
+  useEffect(() => {
+    const prefix = "#appointment-";
+    if (scheduleLoaded && hash.startsWith(prefix) && UUID.test(hash.slice(prefix.length))) {
+      document.getElementById(hash.slice(1))?.scrollIntoView({ block: "center" });
+    }
+  }, [day, hash, scheduleLoaded, week]);
   const today = denverLocal(new Date()).slice(0, 10);
   return (
     <main className="space-y-5 p-4 md:p-6">
@@ -345,8 +355,9 @@ export default function SchedulePage() {
                       // The whole card opens the editor; the pet and household
                       // names sit above that button as their own links.
                       <div
-                        className="relative w-full rounded-md border bg-card p-3 text-left hover:bg-accent focus-within:ring-2 focus-within:ring-ring"
+                        className="relative w-full scroll-mt-24 rounded-md border bg-card p-3 text-left hover:bg-accent focus-within:ring-2 focus-within:ring-ring target:ring-2 target:ring-ring"
                         key={row.id}
+                        id={`appointment-${row.id}`}
                         data-appointment-id={row.id}
                       >
                         <button
@@ -385,6 +396,7 @@ export default function SchedulePage() {
                               ? `Staff ${row.assigned_dvm_id.slice(0, 8)}`
                               : "Unassigned")}
                         </p>
+                        {row.pet_id && <Button asChild variant="outline" size="sm" className="relative mt-2 min-h-11"><Link to={`/hub/patient/${row.pet_id}?tab=medical&section=treatments&usage_appointment=${row.id}`}>Visit treatments</Link></Button>}
                         {row.pet_id && row.status !== "CANCELLED" && row.status !== "NO_SHOW" && <Button asChild variant="outline" size="sm" className="relative mt-2 min-h-11"><Link to={appointmentDictationHref(row.pet_id, row.id)}>Open dictation</Link></Button>}
                         <div className="pointer-events-none relative mt-1 flex items-center gap-2">
                           <StatusChip status={row.status} />

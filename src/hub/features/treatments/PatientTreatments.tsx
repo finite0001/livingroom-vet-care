@@ -1,3 +1,4 @@
+import { TreatmentAppointment } from "./appointment-links/TreatmentAppointment";
 import { alertAcknowledgmentMatches } from "../clinical/alert-review-policy";
 import { usePatientAlertReview } from "../clinical/alert-review";
 import { useState } from "react";
@@ -602,6 +603,7 @@ export function PatientTreatments({ petId, clientId }: PatientTreatmentsProps) {
                 <p className="text-xs text-muted-foreground">
                   Source: {r.source} · Record ID: {r.id}
                 </p>
+                {!r.historical && <TreatmentAppointment defer petId={petId} treatmentId={r.id} administeredAt={r.administered_at} />}
                 {correction ? (
                   <p className="mt-2 text-sm font-medium text-clinical-alert">
                     Corrected: {correction.reason}

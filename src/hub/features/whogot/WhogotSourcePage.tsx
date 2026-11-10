@@ -1,3 +1,4 @@
+import { TreatmentAppointment } from "../treatments/appointment-links/TreatmentAppointment";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
@@ -216,6 +217,7 @@ export default function WhogotSourcePage() {
                 </div>
               ))}
             </dl>
+            {value.event_type === "administered" && !value.record.historical && <TreatmentAppointment petId={value.record.pet_id} treatmentId={value.record.id} administeredAt={value.record.administered_at} />}
             <h2 className="font-medium">Corrections and annotations</h2>
             {!value.corrections.length && (
               <p className="text-sm">None recorded.</p>
