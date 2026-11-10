@@ -79,7 +79,7 @@ test("current inventory preserves the exact historical releases and names each a
     .filter((name) => /^\d+_.+\.sql$/.test(name)).sort();
   const candidate = JSON.parse(readFileSync(new URL("../../scripts/narcotics-log/release-candidate.json", import.meta.url), "utf8"));
   const operational = JSON.parse(readFileSync(new URL("../../scripts/narcotics-log/operational-release.json", import.meta.url), "utf8"));
-  assert.equal(inventory.length, 212);
+  assert.equal(inventory.length, 213);
   assert.equal(candidate.migration_count, 208);
   assert.equal(candidate.prefix_migration_count, 206);
   assert.equal(inventory[205], "20261022010000_controlled_secondary_review_private.sql");
@@ -90,6 +90,7 @@ test("current inventory preserves the exact historical releases and names each a
     "20261106170000_atomic_time_clock_corrections.sql",
     "20261106173000_terminal_appointment_clinician.sql",
     "20261110181205_susan_inventory_catalog_setup.sql",
+    "20261110203352_appointment_links_restock_alerts.sql",
   ]);
   assert.deepEqual(Object.keys(candidate.migrations).sort(), inventory.slice(206, 208));
   assert.equal(operational.kind, "narcotics-operational-cli209-source-v1");
@@ -117,6 +118,15 @@ test("current inventory preserves the exact historical releases and names each a
     assert.equal(manifest.framing.bytes, betaRaw.length);
     assert.equal(manifest.framing.sha256, createHash("sha256").update(betaRaw).digest("hex"));
   }
+  const successor = JSON.parse(readFileSync(new URL("../../scripts/narcotics-log/appointment-restock-migration213.json", import.meta.url), "utf8"));
+  assert.equal(successor.kind, "appointment-restock-cli213-source-v1");
+  assert.equal(successor.prefix_migration_count, 212);
+  assert.equal(successor.migration_count, 213);
+  assert.equal(successor.migration, inventory[212]);
+  assert.equal(successor.database_operations, 0);
+  const successorRaw = readFileSync(new URL(`../../supabase/migrations/${successor.migration}`, import.meta.url));
+  assert.equal(successor.framing.bytes, successorRaw.length);
+  assert.equal(successor.framing.sha256, createHash("sha256").update(successorRaw).digest("hex"));
   const catalog = JSON.parse(readFileSync(new URL("../../scripts/narcotics-log/catalog-migration212.json", import.meta.url), "utf8"));
   assert.equal(catalog.kind, "catalog-drafts-cli212-source-v1");
   assert.equal(catalog.prefix_migration_count, 211);

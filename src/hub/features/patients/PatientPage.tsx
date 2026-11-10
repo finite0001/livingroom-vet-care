@@ -25,6 +25,7 @@ import { PatientFormDialog } from "./PatientFormDialog";
 import { WeightHistory } from "./WeightHistory";
 import { patientAge } from "./patient-details";
 import { PatientCareCharts } from "@/hub/features/care-charts/PatientCareCharts";
+import { AppointmentTreatmentUsage } from "@/hub/features/treatments/appointment-links/AppointmentTreatmentUsage";
 import { PatientTreatments } from "@/hub/features/treatments/PatientTreatments";
 import { PatientApiAttachments } from "@/hub/features/imports/PatientApiAttachments";
 import { PatientPhoto } from "@/hub/features/patient-photos/PatientPhoto";
@@ -169,7 +170,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
             <Section360 id="soap"><ClinicalWorkspace petId={petId} appointmentId={searchParams.get("dictation_appointment")} disabled={inactive || recapDirty || imagingDirty || nativePrescriptionDirty || importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || carePlanDirty} onDirtyChange={setClinicalDirty} /></Section360>
             <Section360 id="recap"><Suspense fallback={<p role="status">Loading records recap…</p>}><PatientRecap key={`recap-${petId}`} petId={petId} blocked={otherRecapDirty} onDirtyChange={setRecapDirty} /></Suspense></Section360>
             <Section360 id="prescriptions"><PatientPrescriptions petId={petId} clientId={patient.client_id} inactive={inactive} disabled={importedPrescriptionDirty || importedVaccinationDirty || importedHistoryDirty || externalDirty || releaseDirty || clinicalDirty || recapDirty || careDirty || dentalDirty || imagingDirty || labDirty || certificateDirty || anesthesiaDirty || vaccineDueDirty || carePlanDirty} onDirtyChange={setNativePrescriptionDirty} /></Section360>
-            <Section360 id="treatments"><PatientTreatments petId={petId} clientId={patient.client_id} /></Section360>
+            <Section360 id="treatments">{searchParams.get("usage_appointment") && <AppointmentTreatmentUsage petId={petId} appointmentId={searchParams.get("usage_appointment")!} />}<PatientTreatments petId={petId} clientId={patient.client_id} /></Section360>
             <Section360 id="care-plans"><PatientCarePlans petId={petId} inactive={inactive} disabled={dirty && !carePlanDirty} onDirtyChange={setCarePlanDirty} /></Section360>
             <Section360 id="vaccine-plans"><PatientVaccineDuePlans key={`vaccine-due-${petId}`} petId={petId} onDirtyChange={setVaccineDueDirty} /></Section360>
             <Section360 id="labs"><Suspense fallback={<p role="status">Loading lab workspace…</p>}><PatientLabWorkspace key={`lab-${petId}`} petId={petId} disabled={dirty && !labDirty} onDirtyChange={setLabDirty} /></Suspense></Section360>

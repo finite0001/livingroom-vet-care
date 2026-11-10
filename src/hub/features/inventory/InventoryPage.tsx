@@ -1,3 +1,4 @@
+import { RestockAlerts, RestockSettings } from "./restocking/RestockAlerts";
 import { Link } from "react-router-dom";
 import { cloneElement, useId, useState, type ReactElement } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -388,6 +389,7 @@ export function InventoryPage() {
         <Button asChild variant="outline" className="mt-3"><Link to="/hub/whogot">Whogot</Link></Button>
         <Button asChild variant="outline" className="mt-3 ml-2 min-h-11"><Link to="/hub/inventory/narcotics">Narcotics log</Link></Button>
       </header>
+      <RestockAlerts />
       <SupplierIdentityPanel />
       <ControlledDraftPanel />
       <CatalogSetupPanel />
@@ -461,6 +463,14 @@ export function InventoryPage() {
               setFormKey((k) => k + 1);
             }}
           />
+          {editing && editing.active && editing.kind !== "service" && (
+            <RestockSettings
+              key={`restock:${editing.id}`}
+              productId={editing.id}
+              productName={editing.name}
+              unit={editing.unit}
+            />
+          )}
           {editing?.kind === "vaccine" && (
             <VaccineProfileForm
               key={editing.id}

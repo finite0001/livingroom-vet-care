@@ -79,6 +79,8 @@ export function useStockMutation(scope = "inventory") {
       setSuccess("Saved.");
       void queryClient.invalidateQueries({ queryKey: ["inventory"] });
       void queryClient.invalidateQueries({ queryKey: ["treatments"] });
+      if (name === "correct_patient_treatment")
+        void queryClient.invalidateQueries({ queryKey: ["treatment-appointment", user.id] });
       void refreshPatientReleases(queryClient);
       void queryClient.invalidateQueries({ queryKey: ["vaccine-status"] });
       void queryClient.invalidateQueries({ queryKey: ["billing"] });

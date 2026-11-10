@@ -21,3 +21,10 @@ Retry state retains the operation UUID and exact payload across network failures
 Original treatments remain visible after reasoned correction. Corrected records are excluded from the displayed due-date subset. Dates on the currently displayed records are clinician-entered dates, not a complete automated vaccine schedule or a certificate. The full due engine, automatic reminders and reviewed certificates remain separate launch requirements.
 
 Verification: four stock policy tests, two browser workflows for ambiguous catalog/treatment retries, and the existing mobile patient scenario. The read-model migration has 12 SQL assertions and inventory/billing has 58. Mobile flex/grid sizing explicitly allows the form to fit a phone viewport. Clinical workflow acceptance belongs to Dr. Susan Edler.
+
+### Appointment links and restocking alerts
+
+- In a patient's **Medical → Treatments → Recorded history**, open **Appointment link** on a saved practice treatment. Pick the visit and enter why it matches. The date starts on the recorded administration day (Mountain time). Links can be corrected or removed with a reason; this does not re-record treatment, change inventory, or alter an invoice.
+- Search a vaccine or medication in **Whogot**, then open its administration source to see the linked visit. In **Schedule**, **Visit treatments** lists the saved treatments linked to that visit and opens their source records. Corrected records are marked. Imported historical records do not establish appointment usage.
+- In **Inventory → Product catalog**, edit an active medication or vaccine and set **Alert at or below** in its stock unit. Leave it blank to turn off the alert. Zero means alert at zero. **Home** and **Inventory** show the alerts; they refresh as stock changes and periodically while open. No email is sent.
+- Thresholds are per exact product across all locations. Totals use the unexpired inventory ledger, including held or quarantined stock, so they are not dispensing authorization. Products with a threshold but no movement history show **Opening count needed**. Susan's draft rows do not create thresholds, stock balances, or appointment links.
