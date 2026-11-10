@@ -66,6 +66,29 @@ class BetaSourceTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 prefix.canonical206(prefix.ROOT)
 
+    def test_catalog_successor_is_exact_and_does_not_admit_source_edits(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            migration = root / 'supabase/migrations' / prefix.CATALOG_MIGRATION
+            migration.parent.mkdir(parents=True)
+            migration.write_bytes(b'SELECT 1;\n')
+            manifest = root / prefix.CATALOG_MANIFEST
+            manifest.parent.mkdir(parents=True)
+            value = dict(kind='catalog-drafts-cli212-source-v1',cli_version='2.118.0',
+                prefix_migration_count=211,migration_count=212,migration=prefix.CATALOG_MIGRATION,
+                database_operations=0,framing=dict(bytes=10,sha256=prefix.digest(migration.read_bytes()),
+                    statement_count=1,compact_array_sha256='a'*64,postgres_array_sha256='b'*64,
+                    postgres_array_bytes=13,statement_sha256s=['c'*64]))
+            manifest.write_text(json.dumps(value))
+            self.assertEqual(prefix.catalog212(root),value)
+            migration.write_bytes(b'SELECT 2;\n')
+            with self.assertRaises(ValueError):
+                prefix.catalog212(root)
+            migration.write_bytes(b'SELECT 1;\n')
+            manifest.write_text(json.dumps({**value,'migration_count':213}))
+            with self.assertRaises(ValueError):
+                prefix.catalog212(root)
+
 
 if __name__ == "__main__":
     unittest.main()

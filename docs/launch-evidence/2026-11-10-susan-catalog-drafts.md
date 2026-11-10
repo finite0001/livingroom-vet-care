@@ -18,7 +18,9 @@ The three new authenticated SECURITY DEFINER RPCs are intentional staff-only int
 - TypeScript app checking, targeted ESLint and production build passed with the repository lockfile. The main clone's older installed dependencies were not reused.
 - Ten inventory/Whogot Playwright checks passed, including the new 390px catalog-draft scenario, same-operation recovery after an interrupted response, preserved unknown stock fields, recipient-search links and no stock/treatment writes during catalog setup. The mobile screenshot was visually reviewed.
 
-The browser tests use synthetic API fixtures; the SQL acceptance uses disposable PostgreSQL with the real catalog table/creator and focused auth/audit fixtures. These do not claim a genuine hosted create/dispense round trip. Existing frozen canonical restore harnesses still pin 206 migrations and their October 22 head, while main already had 211 before this change; they were not broadened as part of this import.
+The browser tests use synthetic API fixtures; the SQL acceptance uses disposable PostgreSQL with the real catalog table/creator and focused auth/audit fixtures. These do not claim a genuine hosted create/dispense round trip.
+
+CI also required a separately framed successor for migration 212. `catalog-migration212.json` binds its exact authored bytes and official CLI statement vector; `catalog212-candidate-source.json` binds the complete current source closure. The prior beta source manifest and all historical migration bytes remain unchanged. Historical proofs still materialize the exact 206-file prefix. Current beta profiles install the exact catalog successor after 211, verify its complete ledger and unchanged controlled metadata, and require preservation of all existing rows/sequences with exactly 217 new source rows and zero product links. The 142 source/control unit tests and complete current source-admission check passed locally; hosted/CI runtime results are separate evidence.
 
 ## Frontend release and use
 

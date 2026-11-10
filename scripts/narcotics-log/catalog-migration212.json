@@ -1,0 +1,33 @@
+{
+  "kind": "catalog-drafts-cli212-source-v1",
+  "cli_version": "2.118.0",
+  "prefix_migration_count": 211,
+  "migration_count": 212,
+  "migration": "20261110181205_susan_inventory_catalog_setup.sql",
+  "framing": {
+    "bytes": 57706,
+    "sha256": "2139a1b0c0a5385d01f30c7bc4ea36351265f1d12040e6a4366ca3798cd8cf85",
+    "statement_count": 15,
+    "compact_array_sha256": "aac997673535e6f1c41bf456c72955458e829b10618ad34ac26641efc9336248",
+    "postgres_array_sha256": "e65be36916dcc9652a3c25c985d0559e9c98b64885f3539dc2622084642ea084",
+    "postgres_array_bytes": 64677,
+    "statement_sha256s": [
+      "c6ab43cdbce4bc8159f3d0382f526dc15a927673b00be9a6bcb19d230c9e29c0",
+      "bf126ba2afabde58a7cd9f4606bedaf28b1528beb0669149be0a8a605839ab25",
+      "b0d86056124b9214adeecfabbf9175ce2918b4d9dd162c0c777027d99a68e0d4",
+      "d7a1afbafd118fd78f304e5d118f5e63aef123d122186f812099612ce17cab5e",
+      "0d53359b47fb364c66b082103ff054f9584cd5abf97dd4ed3f2a00f771dd2d0e",
+      "6b45a430e8b4bad0672e563faacf795216f09e9992a2ee8e3185ef172d03bde2",
+      "1bf37e9e0ee12e82cfb3f8659a97218566b678d04c59925a5446f7fd330184e3",
+      "22f6d4e8126ca54e7ba870fcb386627e03051900b7ede8358bf366fd234b8265",
+      "50e5c459d5ed335c7616494f8a48da7d80306e937116b7730350f97661cd6830",
+      "476922f7ccfdfa10a7d0c301686f4fc21b9acb053542cf8e4a542a45cd25c641",
+      "fef669220ccd16190b96bb88d1e6edae0d37b09e77ea6a83279e6b6a72527051",
+      "e309611cfdd51b5bada05efc176a6ab9310d6c0583aeb5a8217b8e1a803c18a5",
+      "53d4ac391d0d318efcf05cd0c680e10c5097866ca24ebc485bfadbe40cf17123",
+      "c8dec0d9a2cd21dd1a9d010817b0845e2eac08e6ab7d99df04359e62f4bd3c4d",
+      "7b61e7a8fb34478323f7e23eda56ea562d2c8265788b29927f9fde06bf26589f"
+    ]
+  },
+  "database_operations": 0
+}
