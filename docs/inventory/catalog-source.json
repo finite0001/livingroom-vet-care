@@ -1,0 +1,2592 @@
+[
+  {
+    "id": "505f9293-9510-5524-8bf5-d9f923657a60",
+    "source_tab": "NSAIDs & Chronic PainOA",
+    "source_row": 2,
+    "name": "Carprofen",
+    "source_fields": {
+      "Drug": "Carprofen",
+      "Common forms / strengths": "25, 75, 100 mg tabs/chews; 50 mg/mL inj",
+      "Species": "Dog",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "42eb6b9e-4d22-562d-9f7f-6ea458bcd63f",
+    "source_tab": "NSAIDs & Chronic PainOA",
+    "source_row": 3,
+    "name": "Meloxicam",
+    "source_fields": {
+      "Drug": "Meloxicam",
+      "Common forms / strengths": "1.5 mg/mL & 0.5 mg/mL oral susp; 5 mg/mL inj",
+      "Species": "Dog (cat: label limits apply)",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "08e56d4c-d511-5c09-a857-66b2da43d1c0",
+    "source_tab": "NSAIDs & Chronic PainOA",
+    "source_row": 4,
+    "name": "Robenacoxib (Onsior)",
+    "source_fields": {
+      "Drug": "Robenacoxib (Onsior)",
+      "Common forms / strengths": "6 mg tabs (cat); 10–40 mg tabs (dog); 20 mg/mL inj",
+      "Species": "Dog, cat",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "70840dfb-fc91-56ae-8a8a-ff327ef8910a",
+    "source_tab": "NSAIDs & Chronic PainOA",
+    "source_row": 5,
+    "name": "Grapiprant (Galliprant)",
+    "source_fields": {
+      "Drug": "Grapiprant (Galliprant)",
+      "Common forms / strengths": "20, 60, 100 mg tabs",
+      "Species": "Dog",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "98a818bd-a705-5a06-9b0c-3d66cb8e53c1",
+    "source_tab": "NSAIDs & Chronic PainOA",
+    "source_row": 6,
+    "name": "Deracoxib or firocoxib",
+    "source_fields": {
+      "Drug": "Deracoxib or firocoxib",
+      "Common forms / strengths": "Chewable tabs",
+      "Species": "Dog",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "5a515670-2dc0-5c5e-a7da-df74ea11499c",
+    "source_tab": "NSAIDs & Chronic PainOA",
+    "source_row": 7,
+    "name": "Bedinvetmab (Librela)",
+    "source_fields": {
+      "Drug": "Bedinvetmab (Librela)",
+      "Common forms / strengths": "5–30 mg/mL vials by weight",
+      "Species": "Dog, ❄",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "75c0514b-4aa4-5eb9-a355-d037551416a2",
+    "source_tab": "NSAIDs & Chronic PainOA",
+    "source_row": 8,
+    "name": "Frunevetmab (Solensia)",
+    "source_fields": {
+      "Drug": "Frunevetmab (Solensia)",
+      "Common forms / strengths": "7 mg/mL",
+      "Species": "Cat, ❄",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "7d9c9ffd-ddc6-5911-8479-33326368b1a2",
+    "source_tab": "NSAIDs & Chronic PainOA",
+    "source_row": 9,
+    "name": "Amantadine",
+    "source_fields": {
+      "Drug": "Amantadine",
+      "Common forms / strengths": "100 mg caps",
+      "Species": "Dog, cat",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "d9653098-aacc-5198-be1d-2cc19bdc4459",
+    "source_tab": "NSAIDs & Chronic PainOA",
+    "source_row": 10,
+    "name": "Polysulfated glycosaminoglycan (Adequan)",
+    "source_fields": {
+      "Drug": "Polysulfated glycosaminoglycan (Adequan)",
+      "Common forms / strengths": "100 mg/mL",
+      "Species": "Dog",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "f0a0b309-9eb8-52b0-95da-ac89dc492eb3",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 2,
+    "name": "Amoxicillin/clavulanate (Clavamox)",
+    "source_fields": {
+      "Drug": "Amoxicillin/clavulanate (Clavamox)",
+      "Common forms / strengths": "62.5, 125, 250, 375 mg tabs; 62.5 mg/mL drops ❄",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "2397bd95-99e0-51e5-b966-c2344c79727a",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 3,
+    "name": "Amoxicillin",
+    "source_fields": {
+      "Drug": "Amoxicillin",
+      "Common forms / strengths": "50 mg/mL susp; 250 mg caps",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "891e4373-2c18-5048-a978-09db124ceecf",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 4,
+    "name": "Ampicillin/sulbactam (Unasyn)",
+    "source_fields": {
+      "Drug": "Ampicillin/sulbactam (Unasyn)",
+      "Common forms / strengths": "1.5 g, 3 g vials",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "6fc0b321-95b6-5819-8b08-cc7d956ce961",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 5,
+    "name": "Cefazolin",
+    "source_fields": {
+      "Drug": "Cefazolin",
+      "Common forms / strengths": "1 g vials",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "3fa4f9c1-1c92-5012-9950-f6f030c6e5a8",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 6,
+    "name": "Cephalexin",
+    "source_fields": {
+      "Drug": "Cephalexin",
+      "Common forms / strengths": "250, 500 mg caps; 250 mg/5 mL susp",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "721f5434-7a48-510e-9f50-bb5fcd1880c1",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 7,
+    "name": "Cefpodoxime (Simplicef)",
+    "source_fields": {
+      "Drug": "Cefpodoxime (Simplicef)",
+      "Common forms / strengths": "100, 200 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "f7d3f15a-f37f-59d1-a630-cebb6aad507a",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 8,
+    "name": "Cefovecin (Convenia)",
+    "source_fields": {
+      "Drug": "Cefovecin (Convenia)",
+      "Common forms / strengths": "80 mg/mL reconstituted",
+      "Notes": "❄ after mixing",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "f740072f-d1a5-52f3-a0ca-9cf7cae50e06",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 9,
+    "name": "Enrofloxacin (Baytril)",
+    "source_fields": {
+      "Drug": "Enrofloxacin (Baytril)",
+      "Common forms / strengths": "22.7, 68, 136 mg tabs; 22.7 mg/mL inj",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "2d5183cd-a677-56a9-88b0-e0861ed42f69",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 10,
+    "name": "Marbofloxacin (Zeniquin)",
+    "source_fields": {
+      "Drug": "Marbofloxacin (Zeniquin)",
+      "Common forms / strengths": "25, 50, 100, 200 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "8893adae-0a4e-511a-b954-15716ba4a18f",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 11,
+    "name": "Pradofloxacin (Veraflox)",
+    "source_fields": {
+      "Drug": "Pradofloxacin (Veraflox)",
+      "Common forms / strengths": "25 mg/mL susp (cat); tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "28af678a-6ded-579c-aa25-e91e3c901ec2",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 12,
+    "name": "Doxycycline",
+    "source_fields": {
+      "Drug": "Doxycycline",
+      "Common forms / strengths": "100 mg tabs; compounded susp",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "432983bd-403c-5c5e-ac5a-7e08e084baa9",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 13,
+    "name": "Clindamycin",
+    "source_fields": {
+      "Drug": "Clindamycin",
+      "Common forms / strengths": "25, 75, 150, 300 mg caps; 25 mg/mL drops",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "a8c865f5-aedf-5d85-b76e-276b10fbff91",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 14,
+    "name": "Metronidazole",
+    "source_fields": {
+      "Drug": "Metronidazole",
+      "Common forms / strengths": "250, 500 mg tabs; 5 mg/mL IV",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "ff65fc61-5b63-5c39-bf21-34d2ae81a6be",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 15,
+    "name": "Trimethoprim/sulfamethoxazole",
+    "source_fields": {
+      "Drug": "Trimethoprim/sulfamethoxazole",
+      "Common forms / strengths": "480, 960 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "78530d39-569b-55f7-b0c9-d7bd3198bec6",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 16,
+    "name": "Azithromycin",
+    "source_fields": {
+      "Drug": "Azithromycin",
+      "Common forms / strengths": "250 mg tabs; susp",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "6d89a929-8ccf-52e6-a8ce-1aa3c6016611",
+    "source_tab": "Abx & Antimicrobials",
+    "source_row": 17,
+    "name": "Chloramphenicol (optional)",
+    "source_fields": {
+      "Drug": "Chloramphenicol (optional)",
+      "Common forms / strengths": "250, 500 mg tabs",
+      "Notes": "Handle with gloves",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "41166a39-70af-5d27-a2c7-abbdf134f430",
+    "source_tab": "Ophtho",
+    "source_row": 2,
+    "name": "Fluorescein strips",
+    "source_fields": {
+      "Drug": "Fluorescein strips",
+      "Common forms": "Box",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "f758ed23-ba33-562a-ad88-69d1dc18bcd1",
+    "source_tab": "Ophtho",
+    "source_row": 3,
+    "name": "Schirmer tear test strips",
+    "source_fields": {
+      "Drug": "Schirmer tear test strips",
+      "Common forms": "Box",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "0121f23c-6518-534d-8872-f57fad847c03",
+    "source_tab": "Ophtho",
+    "source_row": 4,
+    "name": "Tropicamide 1%",
+    "source_fields": {
+      "Drug": "Tropicamide 1%",
+      "Common forms": "Drops",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "f6de8713-1d95-57a1-b52b-84c0e5e3c66f",
+    "source_tab": "Ophtho",
+    "source_row": 5,
+    "name": "Atropine 1%",
+    "source_fields": {
+      "Drug": "Atropine 1%",
+      "Common forms": "Drops / ointment",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "5ba4273e-3fe7-54c0-a36b-f6d9e79f29eb",
+    "source_tab": "Ophtho",
+    "source_row": 6,
+    "name": "Neomycin/polymyxin/bacitracin (Triple antibiotic)",
+    "source_fields": {
+      "Drug": "Neomycin/polymyxin/bacitracin (Triple antibiotic)",
+      "Common forms": "Ointment",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "4723eedc-d1d8-50a5-89f5-79fc0ddd9399",
+    "source_tab": "Ophtho",
+    "source_row": 7,
+    "name": "Neo/poly/dexamethasone",
+    "source_fields": {
+      "Drug": "Neo/poly/dexamethasone",
+      "Common forms": "Ointment / drops",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "c701227b-bc58-5d0f-b56a-4cc0a5d60e83",
+    "source_tab": "Ophtho",
+    "source_row": 8,
+    "name": "Ofloxacin 0.3%",
+    "source_fields": {
+      "Drug": "Ofloxacin 0.3%",
+      "Common forms": "Drops",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "56fe5ff7-d00f-57a4-a286-d481142c1da0",
+    "source_tab": "Ophtho",
+    "source_row": 9,
+    "name": "Tobramycin 0.3%",
+    "source_fields": {
+      "Drug": "Tobramycin 0.3%",
+      "Common forms": "Drops",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "d45de1d2-187a-5f9c-aad9-ac3c2d8714c9",
+    "source_tab": "Ophtho",
+    "source_row": 10,
+    "name": "Cyclosporine (Optimmune)",
+    "source_fields": {
+      "Drug": "Cyclosporine (Optimmune)",
+      "Common forms": "0.2% ointment",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "a5918516-83d7-522f-abf5-b62ecb2bfc49",
+    "source_tab": "Ophtho",
+    "source_row": 11,
+    "name": "Tacrolimus (compounded)",
+    "source_fields": {
+      "Drug": "Tacrolimus (compounded)",
+      "Common forms": "Drops",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "e59aff40-42e6-5ccf-a7dd-c871d515a732",
+    "source_tab": "Ophtho",
+    "source_row": 12,
+    "name": "Dorzolamide/timolol",
+    "source_fields": {
+      "Drug": "Dorzolamide/timolol",
+      "Common forms": "Drops",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "17ede561-9fea-5c12-9ebd-22ce86ae45b0",
+    "source_tab": "Ophtho",
+    "source_row": 13,
+    "name": "Latanoprost",
+    "source_fields": {
+      "Drug": "Latanoprost",
+      "Common forms": "Drops",
+      "Notes": "❄",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "27cccb76-f428-57ed-943f-96076fb3f6b3",
+    "source_tab": "Ophtho",
+    "source_row": 14,
+    "name": "Prednisolone acetate 1%",
+    "source_fields": {
+      "Drug": "Prednisolone acetate 1%",
+      "Common forms": "Drops",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "7d2a615c-f924-5432-a73a-24016e46935a",
+    "source_tab": "Ophtho",
+    "source_row": 15,
+    "name": "Diclofenac / flurbiprofen",
+    "source_fields": {
+      "Drug": "Diclofenac / flurbiprofen",
+      "Common forms": "Drops",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "f2ebbfb8-d123-5d5c-83c9-a160bdd45200",
+    "source_tab": "Ophtho",
+    "source_row": 16,
+    "name": "Artificial tears / lubricant",
+    "source_fields": {
+      "Drug": "Artificial tears / lubricant",
+      "Common forms": "Gel, ointment",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "0dfad64a-a165-5894-b11e-770190d58121",
+    "source_tab": "Ophtho",
+    "source_row": 17,
+    "name": "Eye wash",
+    "source_fields": {
+      "Drug": "Eye wash",
+      "Common forms": "Bottle",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "8e9d417b-1aa2-5247-8006-e8998dc834be",
+    "source_tab": "Otic",
+    "source_row": 2,
+    "name": "Ear cleaner (Epi-Otic, TrizEDTA, Douxo)",
+    "source_fields": {
+      "Drug": "Ear cleaner (Epi-Otic, TrizEDTA, Douxo)",
+      "Common forms": "4–8 oz",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "36808235-7ad2-55a9-9525-f4eaa91e14d8",
+    "source_tab": "Otic",
+    "source_row": 3,
+    "name": "Mometasone/posaconazole/orbifloxacin (Posatex)",
+    "source_fields": {
+      "Drug": "Mometasone/posaconazole/orbifloxacin (Posatex)",
+      "Common forms": "Bottle",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "d795d331-f317-5305-bece-5e2bb226f9cd",
+    "source_tab": "Otic",
+    "source_row": 4,
+    "name": "Gentamicin/betamethasone/clotrimazole (Otomax, Mometamax)",
+    "source_fields": {
+      "Drug": "Gentamicin/betamethasone/clotrimazole (Otomax, Mometamax)",
+      "Common forms": "Bottle",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "8055d830-c098-5df3-8e0a-9626a74a0c79",
+    "source_tab": "Otic",
+    "source_row": 5,
+    "name": "Florfenicol/terbinafine/mometasone (Claro, Osurnia)",
+    "source_fields": {
+      "Drug": "Florfenicol/terbinafine/mometasone (Claro, Osurnia)",
+      "Common forms": "Single dose / tube",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "d72caa64-b863-58ad-bdfc-88a76c8e5de0",
+    "source_tab": "Otic",
+    "source_row": 6,
+    "name": "Neomycin/thiostrepton/nystatin/triamcinolone (Animax)",
+    "source_fields": {
+      "Drug": "Neomycin/thiostrepton/nystatin/triamcinolone (Animax)",
+      "Common forms": "Ointment",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "3e7e626a-0ee7-5c47-80fb-262b33bfec61",
+    "source_tab": "Otic",
+    "source_row": 7,
+    "name": "Ivermectin otic or selamectin",
+    "source_fields": {
+      "Drug": "Ivermectin otic or selamectin",
+      "Common forms": "for ear mites",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "c6e7c18c-13ca-5d40-8d65-d48b35016870",
+    "source_tab": "Dental",
+    "source_row": 2,
+    "name": "Chlorhexidine 0.12% oral rinse",
+    "source_fields": {
+      "Item": "Chlorhexidine 0.12% oral rinse",
+      "Common forms": "16 oz",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "b84882f6-a72f-5dbd-b4a7-3a950ce4aec5",
+    "source_tab": "Dental",
+    "source_row": 3,
+    "name": "Clindamycin / amox-clav (perioperative)",
+    "source_fields": {
+      "Item": "Clindamycin / amox-clav (perioperative)",
+      "Common forms": "see Antibiotics",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "1c23005c-f116-51da-b7eb-eea623ee61a1",
+    "source_tab": "Dental",
+    "source_row": 4,
+    "name": "Doxycycline gel (Doxirobe)",
+    "source_fields": {
+      "Item": "Doxycycline gel (Doxirobe)",
+      "Common forms": "Syringe kit",
+      "Notes": "❄",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "9038ee83-a38a-5e47-92a3-e76e79819f6a",
+    "source_tab": "Dental",
+    "source_row": 5,
+    "name": "Bupivacaine / lidocaine (blocks)",
+    "source_fields": {
+      "Item": "Bupivacaine / lidocaine (blocks)",
+      "Common forms": "see Anesthesia",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "442d7313-0d40-5687-a877-592bc13f03b8",
+    "source_tab": "Dental",
+    "source_row": 6,
+    "name": "Prophy paste",
+    "source_fields": {
+      "Item": "Prophy paste",
+      "Common forms": "Cups",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "a79a7591-a17b-5e0a-9125-00d44a14d0ba",
+    "source_tab": "Dental",
+    "source_row": 7,
+    "name": "OraVet barrier sealant",
+    "source_fields": {
+      "Item": "OraVet barrier sealant",
+      "Common forms": "Kit",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "067f2e2b-f2dc-5806-82ae-5611d1bab277",
+    "source_tab": "Dental",
+    "source_row": 8,
+    "name": "Home-care products (enzymatic toothpaste, VOHC chews, rinses)",
+    "source_fields": {
+      "Item": "Home-care products (enzymatic toothpaste, VOHC chews, rinses)",
+      "Common forms": "Retail",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "624d5277-2d23-551d-9a9a-7acc36141bc4",
+    "source_tab": "NeuroBehavior",
+    "source_row": 2,
+    "name": "Levetiracetam",
+    "source_fields": {
+      "Drug": "Levetiracetam",
+      "Common forms / strengths": "250, 500 mg tabs (IR and ER); 100 mg/mL inj",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "a942bea4-b9ed-5852-bf76-75c1de3605cc",
+    "source_tab": "NeuroBehavior",
+    "source_row": 3,
+    "name": "Zonisamide",
+    "source_fields": {
+      "Drug": "Zonisamide",
+      "Common forms / strengths": "25, 50, 100 mg caps",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "09e99647-d637-5f49-b453-efdf75522977",
+    "source_tab": "NeuroBehavior",
+    "source_row": 4,
+    "name": "Potassium bromide",
+    "source_fields": {
+      "Drug": "Potassium bromide",
+      "Common forms / strengths": "250 mg/mL solution",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "0a5515d6-f320-50ef-a57d-7ba0f08cfb8d",
+    "source_tab": "NeuroBehavior",
+    "source_row": 5,
+    "name": "Imepitoin (Pexion, if available)",
+    "source_fields": {
+      "Drug": "Imepitoin (Pexion, if available)",
+      "Common forms / strengths": "Tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "47e421d1-5c63-5f39-915f-b205221bc338",
+    "source_tab": "NeuroBehavior",
+    "source_row": 6,
+    "name": "Fluoxetine",
+    "source_fields": {
+      "Drug": "Fluoxetine",
+      "Common forms / strengths": "10, 20 mg caps/tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "3ef3bba9-778c-5a5a-a7ad-f3b0c5838f90",
+    "source_tab": "NeuroBehavior",
+    "source_row": 7,
+    "name": "Clomipramine (Clomicalm)",
+    "source_fields": {
+      "Drug": "Clomipramine (Clomicalm)",
+      "Common forms / strengths": "5, 20, 40, 80 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "9963bb32-6282-5316-ad2c-54861db419e0",
+    "source_tab": "NeuroBehavior",
+    "source_row": 8,
+    "name": "Selegiline (Anipryl)",
+    "source_fields": {
+      "Drug": "Selegiline (Anipryl)",
+      "Common forms / strengths": "5, 10, 15, 30 mg tabs",
+      "Notes": "Cognitive dysfunction",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "f8f6ef53-a156-584f-ace5-860df2d3ef2d",
+    "source_tab": "NeuroBehavior",
+    "source_row": 9,
+    "name": "Dexmedetomidine oromucosal gel (Sileo)",
+    "source_fields": {
+      "Drug": "Dexmedetomidine oromucosal gel (Sileo)",
+      "Common forms / strengths": "Syringe",
+      "Notes": "Noise aversion",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "4b606010-bdc2-5110-b191-b7d1e2e17513",
+    "source_tab": "NeuroBehavior",
+    "source_row": 10,
+    "name": "Mannitol 20%",
+    "source_fields": {
+      "Drug": "Mannitol 20%",
+      "Common forms / strengths": "250 mL bag",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "7746cd1f-1677-562f-942c-6bf0b7e0c4a9",
+    "source_tab": "NeuroBehavior",
+    "source_row": 11,
+    "name": "Methocarbamol",
+    "source_fields": {
+      "Drug": "Methocarbamol",
+      "Common forms / strengths": "500 mg tabs; inj",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "4029d852-c529-5d9d-8cc0-bb651dd37c1e",
+    "source_tab": "Emergency",
+    "source_row": 2,
+    "name": "Epinephrine",
+    "source_fields": {
+      "Drug": "Epinephrine",
+      "Strength": "1 mg/mL (1:1000)",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "79bfda3d-b1fe-5334-9d58-a3b7f5712e44",
+    "source_tab": "Emergency",
+    "source_row": 3,
+    "name": "Atropine",
+    "source_fields": {
+      "Drug": "Atropine",
+      "Strength": "0.54 mg/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "886d38a5-1247-54e9-8a64-c33bc227e5f0",
+    "source_tab": "Emergency",
+    "source_row": 4,
+    "name": "Vasopressin",
+    "source_fields": {
+      "Drug": "Vasopressin",
+      "Strength": "20 U/mL",
+      "Notes": "❄",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "51cc069f-8249-5464-a413-e04cfd7198f7",
+    "source_tab": "Emergency",
+    "source_row": 5,
+    "name": "Lidocaine 2% (antiarrhythmic)",
+    "source_fields": {
+      "Drug": "Lidocaine 2% (antiarrhythmic)",
+      "Strength": "20 mg/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "2ea87b6a-bb64-5e06-8b47-ed8e8c965e7b",
+    "source_tab": "Emergency",
+    "source_row": 6,
+    "name": "Naloxone / atipamezole / flumazenil",
+    "source_fields": {
+      "Drug": "Naloxone / atipamezole / flumazenil",
+      "Strength": "see above",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "1cc63657-622f-55d3-85e7-d66b36e743a1",
+    "source_tab": "Emergency",
+    "source_row": 7,
+    "name": "Calcium gluconate 10%",
+    "source_fields": {
+      "Drug": "Calcium gluconate 10%",
+      "Strength": "100 mg/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "7202d085-7595-55dd-8c19-4fde164d507c",
+    "source_tab": "Emergency",
+    "source_row": 8,
+    "name": "Sodium bicarbonate 8.4%",
+    "source_fields": {
+      "Drug": "Sodium bicarbonate 8.4%",
+      "Strength": "1 mEq/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "2e7997f4-10d2-5ebd-a558-0d5c153ab654",
+    "source_tab": "Emergency",
+    "source_row": 9,
+    "name": "Dextrose 50%",
+    "source_fields": {
+      "Drug": "Dextrose 50%",
+      "Strength": "500 mg/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "090227e3-d3cc-527b-bfd1-2a7e4bc9dfdf",
+    "source_tab": "Emergency",
+    "source_row": 10,
+    "name": "Dopamine / dobutamine / norepinephrine",
+    "source_fields": {
+      "Drug": "Dopamine / dobutamine / norepinephrine",
+      "Strength": "Vials",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "87a83220-a192-5dcc-9ad9-9aa853c98106",
+    "source_tab": "Emergency",
+    "source_row": 11,
+    "name": "Amiodarone",
+    "source_fields": {
+      "Drug": "Amiodarone",
+      "Strength": "50 mg/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "e464693c-5a03-5aaa-bbf5-a9d17feb5f59",
+    "source_tab": "Emergency",
+    "source_row": 12,
+    "name": "Esmolol",
+    "source_fields": {
+      "Drug": "Esmolol",
+      "Strength": "10 mg/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "e0bdb368-64a4-5de4-a437-b8d10e6fc175",
+    "source_tab": "Emergency",
+    "source_row": 13,
+    "name": "Diazepam / midazolam (seizure)",
+    "source_fields": {
+      "Drug": "Diazepam / midazolam (seizure)",
+      "Strength": "see Controlled",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "2e7512f6-d5c2-54dd-885a-dbcac0df97ca",
+    "source_tab": "Emergency",
+    "source_row": 14,
+    "name": "Mannitol 20%",
+    "source_fields": {
+      "Drug": "Mannitol 20%",
+      "Strength": "Bag",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "a8a69214-ed09-5e13-9aa0-ca7a8864c7e6",
+    "source_tab": "Emergency",
+    "source_row": 15,
+    "name": "Furosemide",
+    "source_fields": {
+      "Drug": "Furosemide",
+      "Strength": "50 mg/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "969fc520-1259-5154-ab1e-e540be8603b2",
+    "source_tab": "Emergency",
+    "source_row": 16,
+    "name": "Diphenhydramine",
+    "source_fields": {
+      "Drug": "Diphenhydramine",
+      "Strength": "50 mg/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "0bb219ff-2e40-5619-a52a-91c8b05f76ef",
+    "source_tab": "Emergency",
+    "source_row": 17,
+    "name": "Dexamethasone SP",
+    "source_fields": {
+      "Drug": "Dexamethasone SP",
+      "Strength": "4 mg/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "6848a4e4-f6a6-5e1b-8283-035a55f18e34",
+    "source_tab": "Emergency",
+    "source_row": 18,
+    "name": "Aminophylline / terbutaline",
+    "source_fields": {
+      "Drug": "Aminophylline / terbutaline",
+      "Strength": "Inj",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "a8146373-9d3c-50de-b515-3c41c7bb5650",
+    "source_tab": "Emergency",
+    "source_row": 19,
+    "name": "Vitamin K1 (phytonadione)",
+    "source_fields": {
+      "Drug": "Vitamin K1 (phytonadione)",
+      "Strength": "10 mg/mL inj; 25 mg caps",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "275fbf31-830c-5d71-bcce-76f683d200d5",
+    "source_tab": "Emergency",
+    "source_row": 20,
+    "name": "Hydrogen peroxide 3%",
+    "source_fields": {
+      "Drug": "Hydrogen peroxide 3%",
+      "Strength": "Bottle",
+      "Notes": "Emesis",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "96223d4f-837f-5188-819f-16afb7fe9421",
+    "source_tab": "Fluids, Electrolytes, Additives",
+    "source_row": 2,
+    "name": "Lactated Ringer's solution",
+    "source_fields": {
+      "Item": "Lactated Ringer's solution",
+      "Size": "1 L",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "32d9b5d2-bfd9-5818-be7b-7bfc2a0ddc87",
+    "source_tab": "Fluids, Electrolytes, Additives",
+    "source_row": 3,
+    "name": "Normosol-R / Plasma-Lyte A",
+    "source_fields": {
+      "Item": "Normosol-R / Plasma-Lyte A",
+      "Size": "1 L",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "27589a15-0151-5498-8935-023a6805c08f",
+    "source_tab": "Fluids, Electrolytes, Additives",
+    "source_row": 4,
+    "name": "0.9% sodium chloride",
+    "source_fields": {
+      "Item": "0.9% sodium chloride",
+      "Size": "250 mL, 1 L; 10 mL flushes",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "4524d37a-b74a-56e1-9964-5314a2e2e874",
+    "source_tab": "Fluids, Electrolytes, Additives",
+    "source_row": 5,
+    "name": "5% dextrose in water",
+    "source_fields": {
+      "Item": "5% dextrose in water",
+      "Size": "250 mL, 1 L",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "f7f24a4f-c661-59d7-af28-0f94e595ec06",
+    "source_tab": "Fluids, Electrolytes, Additives",
+    "source_row": 6,
+    "name": "Hetastarch / synthetic colloid (if used)",
+    "source_fields": {
+      "Item": "Hetastarch / synthetic colloid (if used)",
+      "Size": "500 mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "37e18269-e475-5f88-a0c3-5362fa1f58ba",
+    "source_tab": "Fluids, Electrolytes, Additives",
+    "source_row": 7,
+    "name": "Potassium chloride",
+    "source_fields": {
+      "Item": "Potassium chloride",
+      "Size": "2 mEq/mL",
+      "Notes": "Store separately, label clearly",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "5a19e4da-1650-57ef-8d8a-5581ed18d39f",
+    "source_tab": "Fluids, Electrolytes, Additives",
+    "source_row": 8,
+    "name": "Potassium phosphate",
+    "source_fields": {
+      "Item": "Potassium phosphate",
+      "Size": "Vial",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "a28014d9-fcb9-5b0e-b4a4-f5d86c57dde5",
+    "source_tab": "Fluids, Electrolytes, Additives",
+    "source_row": 9,
+    "name": "Magnesium sulfate",
+    "source_fields": {
+      "Item": "Magnesium sulfate",
+      "Size": "0.5",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "f71e1368-a428-564e-9511-1fd431b95ba8",
+    "source_tab": "Fluids, Electrolytes, Additives",
+    "source_row": 10,
+    "name": "Vitamin B complex",
+    "source_fields": {
+      "Item": "Vitamin B complex",
+      "Size": "Multi-dose",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "a1060512-a93a-59eb-a863-387fbdfb2ca2",
+    "source_tab": "Fluids, Electrolytes, Additives",
+    "source_row": 11,
+    "name": "Cyanocobalamin (B12)",
+    "source_fields": {
+      "Item": "Cyanocobalamin (B12)",
+      "Size": "1000 mcg/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "c746c9b0-4de7-5a40-ab54-9b407cc13233",
+    "source_tab": "Fluids, Electrolytes, Additives",
+    "source_row": 12,
+    "name": "Sterile water for injection",
+    "source_fields": {
+      "Item": "Sterile water for injection",
+      "Size": "10–30 mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "70246b6c-1474-5455-a012-0602cdc54344",
+    "source_tab": "Fluids, Electrolytes, Additives",
+    "source_row": 13,
+    "name": "Heparinized saline / heparin",
+    "source_fields": {
+      "Item": "Heparinized saline / heparin",
+      "Size": "1000 U/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "e66db1de-86f3-52e8-af65-898cbcdc159e",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 2,
+    "name": "Fluconazole",
+    "source_fields": {
+      "Drug": "Fluconazole",
+      "Common forms / strengths": "50, 100, 200 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "ecacb9f0-23b2-55ba-8065-154cdf5f16a1",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 3,
+    "name": "Itraconazole",
+    "source_fields": {
+      "Drug": "Itraconazole",
+      "Common forms / strengths": "100 mg caps; 10 mg/mL solution",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "82ab668e-d1ee-55d8-89e6-82c13375cbf8",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 4,
+    "name": "Terbinafine",
+    "source_fields": {
+      "Drug": "Terbinafine",
+      "Common forms / strengths": "250 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "42494f07-f8ba-5e86-ba85-c0154bd57161",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 5,
+    "name": "Fenbendazole (Panacur)",
+    "source_fields": {
+      "Drug": "Fenbendazole (Panacur)",
+      "Common forms / strengths": "100 mg/mL susp; granules",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "c7479a0b-488b-54be-94ad-50c4765fec7c",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 6,
+    "name": "Pyrantel pamoate",
+    "source_fields": {
+      "Drug": "Pyrantel pamoate",
+      "Common forms / strengths": "50 mg/mL susp",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "9073a650-81e3-5e94-a129-77356d341270",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 7,
+    "name": "Praziquantel (Droncit)",
+    "source_fields": {
+      "Drug": "Praziquantel (Droncit)",
+      "Common forms / strengths": "34 mg tabs; 56.8 mg/mL inj",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "cf90a92d-b61e-5e7d-8c80-cb8c7a5fa4dc",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 8,
+    "name": "Ponazuril (Marquis)",
+    "source_fields": {
+      "Drug": "Ponazuril (Marquis)",
+      "Common forms / strengths": "150 mg/g paste",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "03764303-5c64-535d-a70e-7a9b983ed768",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 9,
+    "name": "Metronidazole / fenbendazole for Giardia",
+    "source_fields": {
+      "Drug": "Metronidazole / fenbendazole for Giardia",
+      "Common forms / strengths": "see above",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "6bbace7c-07a6-5fcd-bb89-73e8f0a872c7",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 10,
+    "name": "Selamectin (Revolution / Revolution Plus)",
+    "source_fields": {
+      "Drug": "Selamectin (Revolution / Revolution Plus)",
+      "Common forms / strengths": "Topical, weight bands",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "58c11c56-1763-539d-be54-6d9b17656736",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 11,
+    "name": "Fluralaner (Bravecto)",
+    "source_fields": {
+      "Drug": "Fluralaner (Bravecto)",
+      "Common forms / strengths": "Chews and topical, weight bands",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "d8da471b-12c7-5692-95b0-a20fe37d756f",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 12,
+    "name": "Sarolaner combos (Simparica Trio)",
+    "source_fields": {
+      "Drug": "Sarolaner combos (Simparica Trio)",
+      "Common forms / strengths": "Chews, weight bands",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "e8533195-0116-57d8-bf34-2aaf3ba41ca3",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 13,
+    "name": "Afoxolaner (NexGard / NexGard PLUS)",
+    "source_fields": {
+      "Drug": "Afoxolaner (NexGard / NexGard PLUS)",
+      "Common forms / strengths": "Chews, weight bands",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "49643bb5-81bc-5744-8326-00d9540a00ed",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 14,
+    "name": "Lotilaner (Credelio / Credelio CAT)",
+    "source_fields": {
+      "Drug": "Lotilaner (Credelio / Credelio CAT)",
+      "Common forms / strengths": "Chews, weight bands",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "bd82daf9-6faa-5ead-8d1f-1299dc0e1afe",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 15,
+    "name": "Heartworm preventive (Heartgard, Interceptor, ProHeart 6/12 ❄)",
+    "source_fields": {
+      "Drug": "Heartworm preventive (Heartgard, Interceptor, ProHeart 6/12 ❄)",
+      "Common forms / strengths": "Weight bands / inj",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "26d9c6ed-b657-5b1f-aed8-f0a2081f7b10",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 16,
+    "name": "Melarsomine (Immiticide/Diroban)",
+    "source_fields": {
+      "Drug": "Melarsomine (Immiticide/Diroban)",
+      "Common forms / strengths": "50 mg vial",
+      "Notes": "Heartworm treatment",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "5d709c36-ca5b-5846-9cb0-c0e203c597bb",
+    "source_tab": "Antifungals, Antiparasitics, & ",
+    "source_row": 17,
+    "name": "Nitenpyram (Capstar)",
+    "source_fields": {
+      "Drug": "Nitenpyram (Capstar)",
+      "Common forms / strengths": "11.4, 57 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "e4827745-e798-5da6-bcd2-ccf56b15f793",
+    "source_tab": "GI Meds",
+    "source_row": 2,
+    "name": "Maropitant (Cerenia)",
+    "source_fields": {
+      "Drug": "Maropitant (Cerenia)",
+      "Common forms / strengths": "16, 24, 60, 160 mg tabs; 10 mg/mL inj ❄ after opening per label",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "bb96b3cd-235f-5056-a92c-165277e25710",
+    "source_tab": "GI Meds",
+    "source_row": 3,
+    "name": "Ondansetron",
+    "source_fields": {
+      "Drug": "Ondansetron",
+      "Common forms / strengths": "2 mg/mL inj; 4, 8 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "60791738-6520-5c54-8227-545c72ff28d5",
+    "source_tab": "GI Meds",
+    "source_row": 4,
+    "name": "Metoclopramide",
+    "source_fields": {
+      "Drug": "Metoclopramide",
+      "Common forms / strengths": "5 mg/mL inj; 10 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "723e2bf2-03c2-5064-8a8d-f4c6a9600fa7",
+    "source_tab": "GI Meds",
+    "source_row": 5,
+    "name": "Famotidine",
+    "source_fields": {
+      "Drug": "Famotidine",
+      "Common forms / strengths": "10 mg/mL inj; 10, 20 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "f628bf79-d3ec-58cf-aa88-208a5e4918a7",
+    "source_tab": "GI Meds",
+    "source_row": 6,
+    "name": "Omeprazole",
+    "source_fields": {
+      "Drug": "Omeprazole",
+      "Common forms / strengths": "10, 20 mg caps",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "939fa3f5-824a-5bdf-a605-1dbe158a3dde",
+    "source_tab": "GI Meds",
+    "source_row": 7,
+    "name": "Pantoprazole",
+    "source_fields": {
+      "Drug": "Pantoprazole",
+      "Common forms / strengths": "40 mg IV vial",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "1ceeca63-2775-5749-8305-4feffa6cbaad",
+    "source_tab": "GI Meds",
+    "source_row": 8,
+    "name": "Sucralfate",
+    "source_fields": {
+      "Drug": "Sucralfate",
+      "Common forms / strengths": "1 g tabs; 100 mg/mL susp",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "24e83727-d751-5bcf-b4df-aa846558553a",
+    "source_tab": "GI Meds",
+    "source_row": 9,
+    "name": "Misoprostol",
+    "source_fields": {
+      "Drug": "Misoprostol",
+      "Common forms / strengths": "100, 200 mcg tabs",
+      "Notes": "Pregnancy hazard",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "9b5b9743-d1c3-5513-aeee-28cc509e3909",
+    "source_tab": "GI Meds",
+    "source_row": 10,
+    "name": "Cisapride (compounded)",
+    "source_fields": {
+      "Drug": "Cisapride (compounded)",
+      "Common forms / strengths": "Caps/susp",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "84334660-c910-53db-9174-013ca5371c25",
+    "source_tab": "GI Meds",
+    "source_row": 11,
+    "name": "Lactulose",
+    "source_fields": {
+      "Drug": "Lactulose",
+      "Common forms / strengths": "10 g/15 mL solution",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "c318c286-cc7f-5976-9e00-fc81dec2b45e",
+    "source_tab": "GI Meds",
+    "source_row": 12,
+    "name": "Probiotics (FortiFlora, Proviable)",
+    "source_fields": {
+      "Drug": "Probiotics (FortiFlora, Proviable)",
+      "Common forms / strengths": "Packets, caps",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "c2a64cbc-07f5-50c6-9a0d-10fb8d8c7df3",
+    "source_tab": "GI Meds",
+    "source_row": 13,
+    "name": "Kaolin/pectin or bismuth",
+    "source_fields": {
+      "Drug": "Kaolin/pectin or bismuth",
+      "Common forms / strengths": "Oral susp",
+      "Notes": "Avoid bismuth salicylate in cats",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "0ab2fa29-be3b-5690-8aeb-66aad20754d1",
+    "source_tab": "GI Meds",
+    "source_row": 14,
+    "name": "Mirtazapine (Mirataz)",
+    "source_fields": {
+      "Drug": "Mirtazapine (Mirataz)",
+      "Common forms / strengths": "2% transdermal ointment; 7.5, 15 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "f80db813-2acf-5688-be27-53683ba18c05",
+    "source_tab": "GI Meds",
+    "source_row": 15,
+    "name": "Capromorelin (Entyce dog / Elura cat)",
+    "source_fields": {
+      "Drug": "Capromorelin (Entyce dog / Elura cat)",
+      "Common forms / strengths": "Oral solution",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "e7fdc415-18b2-5056-82cb-dba3677fc8e8",
+    "source_tab": "GI Meds",
+    "source_row": 16,
+    "name": "Apomorphine",
+    "source_fields": {
+      "Drug": "Apomorphine",
+      "Common forms / strengths": "Inj or compounded",
+      "Notes": "Emesis induction",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "5e624b3d-6ea9-5afc-9fc7-b2b75a9c0137",
+    "source_tab": "GI Meds",
+    "source_row": 17,
+    "name": "Ropinirole (Clevor)",
+    "source_fields": {
+      "Drug": "Ropinirole (Clevor)",
+      "Common forms / strengths": "Eye drops",
+      "Notes": "Emesis induction, dog",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "5edbfaa7-a336-59f3-af63-114a9e3765b1",
+    "source_tab": "GI Meds",
+    "source_row": 18,
+    "name": "Activated charcoal",
+    "source_fields": {
+      "Drug": "Activated charcoal",
+      "Common forms / strengths": "Liquid suspension",
+      "Notes": "Toxin exposure",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "4863e222-7d08-5d2c-9c13-a40494b7563f",
+    "source_tab": "GI Meds",
+    "source_row": 19,
+    "name": "Prescription GI diets",
+    "source_fields": {
+      "Drug": "Prescription GI diets",
+      "Common forms / strengths": "Canned/dry",
+      "Notes": "Retail section",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "855f458f-c406-5a44-9284-b05c0007dc8a",
+    "source_tab": "CV & Renal",
+    "source_row": 2,
+    "name": "Pimobendan (Vetmedin)",
+    "source_fields": {
+      "Drug": "Pimobendan (Vetmedin)",
+      "Common forms / strengths": "1.25, 2.5, 5, 10 mg chews; 0.75 mg/mL inj",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "df1f2079-8fad-55de-a7a4-56c7d5b116bf",
+    "source_tab": "CV & Renal",
+    "source_row": 3,
+    "name": "Furosemide",
+    "source_fields": {
+      "Drug": "Furosemide",
+      "Common forms / strengths": "12.5, 20, 40, 50 mg tabs; 50 mg/mL inj",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "22579a05-6173-5c35-873d-182ad195d632",
+    "source_tab": "CV & Renal",
+    "source_row": 4,
+    "name": "Torsemide",
+    "source_fields": {
+      "Drug": "Torsemide",
+      "Common forms / strengths": "5, 10, 20 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "8444f63f-925c-58f8-914b-933865460a9d",
+    "source_tab": "CV & Renal",
+    "source_row": 5,
+    "name": "Spironolactone",
+    "source_fields": {
+      "Drug": "Spironolactone",
+      "Common forms / strengths": "25, 50 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "63f75c95-b092-59f4-b072-2b7d2c2eced7",
+    "source_tab": "CV & Renal",
+    "source_row": 6,
+    "name": "Enalapril",
+    "source_fields": {
+      "Drug": "Enalapril",
+      "Common forms / strengths": "2.5, 5, 10, 20 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "675b4508-1ba5-5ea0-96d1-40c99e8c96ad",
+    "source_tab": "CV & Renal",
+    "source_row": 7,
+    "name": "Benazepril",
+    "source_fields": {
+      "Drug": "Benazepril",
+      "Common forms / strengths": "5, 10, 20 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "b6808c37-d4b8-5f94-813a-f83f1bf84fbd",
+    "source_tab": "CV & Renal",
+    "source_row": 8,
+    "name": "Amlodipine",
+    "source_fields": {
+      "Drug": "Amlodipine",
+      "Common forms / strengths": "2.5, 5 mg tabs (cat 0.625 mg via split/compound)",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "62a58ae3-2ccd-5b75-b116-e65f06ce27b7",
+    "source_tab": "CV & Renal",
+    "source_row": 9,
+    "name": "Telmisartan (Semintra)",
+    "source_fields": {
+      "Drug": "Telmisartan (Semintra)",
+      "Common forms / strengths": "10 mg/mL oral solution",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "62f8d1b2-021f-5dfc-ac52-b97d725bd137",
+    "source_tab": "CV & Renal",
+    "source_row": 10,
+    "name": "Clopidogrel",
+    "source_fields": {
+      "Drug": "Clopidogrel",
+      "Common forms / strengths": "75 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "d1a4010a-8685-5b0b-aafa-49dc203050ee",
+    "source_tab": "CV & Renal",
+    "source_row": 11,
+    "name": "Diltiazem",
+    "source_fields": {
+      "Drug": "Diltiazem",
+      "Common forms / strengths": "30, 60 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "d07f12ca-c745-5ee2-b498-dee70315c715",
+    "source_tab": "CV & Renal",
+    "source_row": 12,
+    "name": "Atenolol",
+    "source_fields": {
+      "Drug": "Atenolol",
+      "Common forms / strengths": "25, 50 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "72894ef3-1209-5ef2-a88e-c803cca0666f",
+    "source_tab": "CV & Renal",
+    "source_row": 13,
+    "name": "Sildenafil",
+    "source_fields": {
+      "Drug": "Sildenafil",
+      "Common forms / strengths": "20 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "5d2c73a5-8757-5122-8278-64b8e85e2ab3",
+    "source_tab": "CV & Renal",
+    "source_row": 14,
+    "name": "Aluminum hydroxide / phosphate binders",
+    "source_fields": {
+      "Drug": "Aluminum hydroxide / phosphate binders",
+      "Common forms / strengths": "Powder",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "eec10632-4599-5d20-b312-6b815809b0d3",
+    "source_tab": "CV & Renal",
+    "source_row": 15,
+    "name": "Potassium gluconate",
+    "source_fields": {
+      "Drug": "Potassium gluconate",
+      "Common forms / strengths": "Powder, gel",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "d475fce0-5045-5fdb-8ef7-1d1fde07ddd2",
+    "source_tab": "CV & Renal",
+    "source_row": 16,
+    "name": "Calcitriol (compounded)",
+    "source_fields": {
+      "Drug": "Calcitriol (compounded)",
+      "Common forms / strengths": "Oral",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "50a7535f-c4a7-5781-9fc2-72adbff33e32",
+    "source_tab": "CV & Renal",
+    "source_row": 17,
+    "name": "Darbepoetin",
+    "source_fields": {
+      "Drug": "Darbepoetin",
+      "Common forms / strengths": "Inj",
+      "Notes": "❄",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "5433c56e-a482-5793-9981-33b3bcb364c6",
+    "source_tab": "Endocrine",
+    "source_row": 2,
+    "name": "Insulin glargine U-100 (Lantus)",
+    "source_fields": {
+      "Drug": "Insulin glargine U-100 (Lantus)",
+      "Common forms / strengths": "10 mL vial / pen",
+      "Notes": "❄",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "f59dafaa-0032-54fa-b394-2ba04a6d4e99",
+    "source_tab": "Endocrine",
+    "source_row": 3,
+    "name": "Protamine zinc insulin (ProZinc, U-40)",
+    "source_fields": {
+      "Drug": "Protamine zinc insulin (ProZinc, U-40)",
+      "Common forms / strengths": "10 mL vial",
+      "Notes": "❄",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "06cdfe9a-c3a5-5081-bdb8-6cc2746bafcc",
+    "source_tab": "Endocrine",
+    "source_row": 4,
+    "name": "Porcine lente insulin (Vetsulin, U-40)",
+    "source_fields": {
+      "Drug": "Porcine lente insulin (Vetsulin, U-40)",
+      "Common forms / strengths": "10 mL vial",
+      "Notes": "❄",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "36c2abaa-41f0-5bef-8c6f-ed23d5f37efd",
+    "source_tab": "Endocrine",
+    "source_row": 5,
+    "name": "Regular insulin (Humulin R)",
+    "source_fields": {
+      "Drug": "Regular insulin (Humulin R)",
+      "Common forms / strengths": "10 mL vial",
+      "Notes": "❄, DKA",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "04b599e2-5e90-5884-9e4f-29edc98844f4",
+    "source_tab": "Endocrine",
+    "source_row": 6,
+    "name": "Velagliflozin (Senvelgo)",
+    "source_fields": {
+      "Drug": "Velagliflozin (Senvelgo)",
+      "Common forms / strengths": "15 mg/mL oral solution",
+      "Notes": "Cat",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "dae412ed-018c-5be0-9fd3-27ef4d9de782",
+    "source_tab": "Endocrine",
+    "source_row": 7,
+    "name": "Bexagliflozin (Bexacat)",
+    "source_fields": {
+      "Drug": "Bexagliflozin (Bexacat)",
+      "Common forms / strengths": "15 mg tabs",
+      "Notes": "Cat",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "333ca7c7-42db-551e-bf7a-ba7dd073e0fc",
+    "source_tab": "Endocrine",
+    "source_row": 8,
+    "name": "Insulin syringes U-40 and U-100",
+    "source_fields": {
+      "Drug": "Insulin syringes U-40 and U-100",
+      "Common forms / strengths": "Boxes of 100",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "e89992cb-ad0d-5fdb-bdf5-f76d5a0668a5",
+    "source_tab": "Endocrine",
+    "source_row": 9,
+    "name": "Methimazole (Felimazole)",
+    "source_fields": {
+      "Drug": "Methimazole (Felimazole)",
+      "Common forms / strengths": "2.5, 5 mg tabs; transdermal compound",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "a38d0efc-240a-5eb4-90c3-e81bf44f0476",
+    "source_tab": "Endocrine",
+    "source_row": 10,
+    "name": "Levothyroxine",
+    "source_fields": {
+      "Drug": "Levothyroxine",
+      "Common forms / strengths": "0.1–0.8 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "8baaf220-abc7-551b-9313-5a7f5aff1f51",
+    "source_tab": "Endocrine",
+    "source_row": 11,
+    "name": "Trilostane (Vetoryl)",
+    "source_fields": {
+      "Drug": "Trilostane (Vetoryl)",
+      "Common forms / strengths": "5, 10, 30, 60, 120 mg caps",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "f580019a-4da6-58b7-907e-679750945723",
+    "source_tab": "Endocrine",
+    "source_row": 12,
+    "name": "Desoxycorticosterone pivalate (Zycortal)",
+    "source_fields": {
+      "Drug": "Desoxycorticosterone pivalate (Zycortal)",
+      "Common forms / strengths": "25 mg/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "323fc8f4-06a8-50b6-8e43-e14fd649077a",
+    "source_tab": "Endocrine",
+    "source_row": 13,
+    "name": "Fludrocortisone",
+    "source_fields": {
+      "Drug": "Fludrocortisone",
+      "Common forms / strengths": "0.1 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "5cd1e3e9-5e66-5df5-b9cf-d9a543a1514c",
+    "source_tab": "Endocrine",
+    "source_row": 14,
+    "name": "Dextrose 50%",
+    "source_fields": {
+      "Drug": "Dextrose 50%",
+      "Common forms / strengths": "50 mL vial",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "eb03e5ed-b5ff-5d27-a8af-4afb43d12a65",
+    "source_tab": "Endocrine",
+    "source_row": 15,
+    "name": "Estriol (Incurin)",
+    "source_fields": {
+      "Drug": "Estriol (Incurin)",
+      "Common forms / strengths": "1 mg tabs",
+      "Notes": "Incontinence",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "76a08944-f69c-5824-b24f-b48ab25723fd",
+    "source_tab": "Endocrine",
+    "source_row": 16,
+    "name": "Phenylpropanolamine (Proin)",
+    "source_fields": {
+      "Drug": "Phenylpropanolamine (Proin)",
+      "Common forms / strengths": "25, 50, 75 mg chews",
+      "Notes": "Incontinence",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "8428c404-ce68-5154-bacd-2f93b657e08c",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 2,
+    "name": "Prednisone / prednisolone",
+    "source_fields": {
+      "Drug": "Prednisone / prednisolone",
+      "Common forms / strengths": "5, 20 mg tabs; 15 mg/5 mL prednisolone (cat)",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "368c9593-1988-5448-b607-e83b5c4bcea3",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 3,
+    "name": "Dexamethasone sodium phosphate",
+    "source_fields": {
+      "Drug": "Dexamethasone sodium phosphate",
+      "Common forms / strengths": "4 mg/mL inj",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "1f0c40cf-fe85-5ef1-b322-dd6ae58c0b43",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 4,
+    "name": "Dexamethasone (Azium)",
+    "source_fields": {
+      "Drug": "Dexamethasone (Azium)",
+      "Common forms / strengths": "2 mg/mL inj",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "f2a980d7-9ea0-588e-bc48-4b06afae2073",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 5,
+    "name": "Methylprednisolone acetate (Depo-Medrol)",
+    "source_fields": {
+      "Drug": "Methylprednisolone acetate (Depo-Medrol)",
+      "Common forms / strengths": "20, 40 mg/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "4bf64eaa-1d26-537d-ad26-66949db9ac85",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 6,
+    "name": "Triamcinolone (Vetalog)",
+    "source_fields": {
+      "Drug": "Triamcinolone (Vetalog)",
+      "Common forms / strengths": "2 mg/mL inj",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "e47f5c01-ec91-5ff5-96e4-2ea8a44bc99f",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 7,
+    "name": "Budesonide",
+    "source_fields": {
+      "Drug": "Budesonide",
+      "Common forms / strengths": "3 mg caps",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "83e2305a-d75c-56ea-b91d-543d5c849a36",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 8,
+    "name": "Oclacitinib (Apoquel / Apoquel Chewable)",
+    "source_fields": {
+      "Drug": "Oclacitinib (Apoquel / Apoquel Chewable)",
+      "Common forms / strengths": "3.6, 5.4, 16 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "ca094c01-89c1-502e-88d2-cbc1421d2a8d",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 9,
+    "name": "Ilunocitinib (Zenrelia)",
+    "source_fields": {
+      "Drug": "Ilunocitinib (Zenrelia)",
+      "Common forms / strengths": "Tabs, weight bands",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "8052ffc7-e7ff-528f-8d28-a3ea3748c6b7",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 10,
+    "name": "Lokivetmab (Cytopoint)",
+    "source_fields": {
+      "Drug": "Lokivetmab (Cytopoint)",
+      "Common forms / strengths": "10, 20, 30, 40 mg vials",
+      "Notes": "❄",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "0b17a4b3-41f0-5aa8-a796-6b26b68ef26a",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 11,
+    "name": "Cyclosporine (Atopica)",
+    "source_fields": {
+      "Drug": "Cyclosporine (Atopica)",
+      "Common forms / strengths": "10, 25, 50, 100 mg caps; 100 mg/mL cat solution",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "465732c8-0a5a-5cf8-956c-0b178990c7d9",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 12,
+    "name": "Diphenhydramine",
+    "source_fields": {
+      "Drug": "Diphenhydramine",
+      "Common forms / strengths": "50 mg/mL inj; 25 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "29712daa-6fed-5345-9d58-d2182c771a2b",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 13,
+    "name": "Cetirizine",
+    "source_fields": {
+      "Drug": "Cetirizine",
+      "Common forms / strengths": "10 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "3a21b0aa-514e-5d59-82b0-eb4ad68df3cb",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 14,
+    "name": "Hydroxyzine",
+    "source_fields": {
+      "Drug": "Hydroxyzine",
+      "Common forms / strengths": "10, 25 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "7981fb41-991a-5692-bef1-32bf6a829777",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 15,
+    "name": "Medicated shampoos (chlorhexidine, miconazole, benzoyl peroxide)",
+    "source_fields": {
+      "Drug": "Medicated shampoos (chlorhexidine, miconazole, benzoyl peroxide)",
+      "Common forms / strengths": "8–16 oz",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "03d3d0c4-15ea-507f-b417-712fbcaf2e21",
+    "source_tab": "Steroids, Allergy, & Derm",
+    "source_row": 16,
+    "name": "Topical sprays/wipes (chlorhexidine, hydrocortisone)",
+    "source_fields": {
+      "Drug": "Topical sprays/wipes (chlorhexidine, hydrocortisone)",
+      "Common forms / strengths": "Various",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "969a7639-d8c1-5740-aeaf-d170cbf528c6",
+    "source_tab": "CS",
+    "source_row": 2,
+    "name": "Hydromorphone",
+    "source_fields": {
+      "Drug": "Hydromorphone",
+      "Common forms / strengths": "2 mg/mL inj",
+      "Schedule": "C-II",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "49925ac4-a886-59de-a350-288c58be662b",
+    "source_tab": "CS",
+    "source_row": 3,
+    "name": "Methadone",
+    "source_fields": {
+      "Drug": "Methadone",
+      "Common forms / strengths": "10 mg/mL inj",
+      "Schedule": "C-II",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "ea7e9c74-f14b-5fc2-87ec-9b2925dade3e",
+    "source_tab": "CS",
+    "source_row": 4,
+    "name": "Fentanyl",
+    "source_fields": {
+      "Drug": "Fentanyl",
+      "Common forms / strengths": "50 mcg/mL inj",
+      "Schedule": "C-II",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "dc9a03dd-628e-5684-818a-9d253d6a2529",
+    "source_tab": "CS",
+    "source_row": 5,
+    "name": "Morphine (optional)",
+    "source_fields": {
+      "Drug": "Morphine (optional)",
+      "Common forms / strengths": "15 mg/mL inj",
+      "Schedule": "C-II",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "41da3215-aef8-5ea6-a241-378bda81a276",
+    "source_tab": "CS",
+    "source_row": 6,
+    "name": "Pentobarbital euthanasia solution (e.g., Fatal-Plus)",
+    "source_fields": {
+      "Drug": "Pentobarbital euthanasia solution (e.g., Fatal-Plus)",
+      "Common forms / strengths": "390 mg/mL",
+      "Schedule": "C-II",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "c7f923ef-ec52-53de-a141-80c4b9fb8377",
+    "source_tab": "CS",
+    "source_row": 7,
+    "name": "Pentobarbital/phenytoin (e.g., Euthasol)",
+    "source_fields": {
+      "Drug": "Pentobarbital/phenytoin (e.g., Euthasol)",
+      "Common forms / strengths": "390 mg/mL",
+      "Schedule": "C-III",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "e09cf427-c119-507e-9034-503ddb1b63e9",
+    "source_tab": "CS",
+    "source_row": 8,
+    "name": "Ketamine",
+    "source_fields": {
+      "Drug": "Ketamine",
+      "Common forms / strengths": "100 mg/mL inj",
+      "Schedule": "C-III",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "491cb84b-a555-58a3-a27f-afeb5ea93e55",
+    "source_tab": "CS",
+    "source_row": 9,
+    "name": "Tiletamine/zolazepam (Telazol)",
+    "source_fields": {
+      "Drug": "Tiletamine/zolazepam (Telazol)",
+      "Common forms / strengths": "100 mg/mL reconstituted",
+      "Schedule": "C-III",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "1a769f98-c17a-5e00-b31f-a6b769c0eee0",
+    "source_tab": "CS",
+    "source_row": 10,
+    "name": "Buprenorphine",
+    "source_fields": {
+      "Drug": "Buprenorphine",
+      "Common forms / strengths": "0.3 mg/mL inj; Simbadol 1.8 mg/mL",
+      "Schedule": "C-III",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "2ff5c0dd-8231-5e71-998f-271a1c10031c",
+    "source_tab": "CS",
+    "source_row": 11,
+    "name": "Buprenorphine transdermal for cats (Zorbium)",
+    "source_fields": {
+      "Drug": "Buprenorphine transdermal for cats (Zorbium)",
+      "Common forms / strengths": "20 mg, 50 mg",
+      "Schedule": "C-III",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "97cfd22a-3969-528b-88c2-d9a2d8442a06",
+    "source_tab": "CS",
+    "source_row": 12,
+    "name": "Butorphanol",
+    "source_fields": {
+      "Drug": "Butorphanol",
+      "Common forms / strengths": "10 mg/mL inj; 1, 5, 10 mg tabs",
+      "Schedule": "C-IV",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "fe2e5b6e-de74-5050-940a-e8000ec6faf3",
+    "source_tab": "CS",
+    "source_row": 13,
+    "name": "Midazolam",
+    "source_fields": {
+      "Drug": "Midazolam",
+      "Common forms / strengths": "1 mg/mL, 5 mg/mL inj",
+      "Schedule": "C-IV",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "c4260e3c-8846-50f9-982a-39f95ed1d7ce",
+    "source_tab": "CS",
+    "source_row": 14,
+    "name": "Diazepam",
+    "source_fields": {
+      "Drug": "Diazepam",
+      "Common forms / strengths": "5 mg/mL inj; 2, 5, 10 mg tabs",
+      "Schedule": "C-IV",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "6dc8379a-446a-5fb3-8cd5-21a6a8955fa6",
+    "source_tab": "CS",
+    "source_row": 15,
+    "name": "Alfaxalone (Alfaxan Multidose)",
+    "source_fields": {
+      "Drug": "Alfaxalone (Alfaxan Multidose)",
+      "Common forms / strengths": "10 mg/mL inj",
+      "Schedule": "C-IV",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "cf67e072-c0e1-523c-9223-9f6343418240",
+    "source_tab": "CS",
+    "source_row": 16,
+    "name": "Phenobarbital",
+    "source_fields": {
+      "Drug": "Phenobarbital",
+      "Common forms / strengths": "16.2, 32.4, 64.8, 97.2 mg tabs; 65 mg/mL inj",
+      "Schedule": "C-IV",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "4daf7c73-9f5a-57ca-b824-73d1ecdeabc9",
+    "source_tab": "CS",
+    "source_row": 17,
+    "name": "Tramadol",
+    "source_fields": {
+      "Drug": "Tramadol",
+      "Common forms / strengths": "50 mg tabs",
+      "Schedule": "C-IV",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "945b2131-0d92-5783-b114-e758145b0092",
+    "source_tab": "CS",
+    "source_row": 18,
+    "name": "Alprazolam",
+    "source_fields": {
+      "Drug": "Alprazolam",
+      "Common forms / strengths": "0.25, 0.5, 1 mg tabs",
+      "Schedule": "C-IV",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "7766129f-4e06-5a6d-916b-335bedd4766c",
+    "source_tab": "CS",
+    "source_row": 19,
+    "name": "Pregabalin for cats (Bonqat)",
+    "source_fields": {
+      "Drug": "Pregabalin for cats (Bonqat)",
+      "Common forms / strengths": "50 mg/mL oral solution",
+      "Schedule": "C-V",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "de68d8c7-fbe3-5527-bcc9-1732df06afd4",
+    "source_tab": "CS",
+    "source_row": 20,
+    "name": "Gabapentin*",
+    "source_fields": {
+      "Drug": "Gabapentin*",
+      "Common forms / strengths": "100, 300 mg caps; 600 mg tabs; 50 mg/mL compounded",
+      "Schedule": "Varies by state",
+      "Current Inventory": ""
+    }
+  },
+  {
+    "id": "5fbc16c7-171d-5567-befe-2f6106004f47",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 2,
+    "name": "Propofol",
+    "source_fields": {
+      "Drug": "Propofol",
+      "Common forms / strengths": "10 mg/mL emulsion",
+      "Notes": "Use within 28 days if PropoFlo 28",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "7722b539-bbf0-53d4-a8d8-1bb1bc416d5b",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 3,
+    "name": "Dexmedetomidine (Dexdomitor)",
+    "source_fields": {
+      "Drug": "Dexmedetomidine (Dexdomitor)",
+      "Common forms / strengths": "0.5 mg/mL, 0.1 mg/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "eb8e5b72-b7a2-5288-b6d5-4b21ebcd2c57",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 4,
+    "name": "Atipamezole (Antisedan)",
+    "source_fields": {
+      "Drug": "Atipamezole (Antisedan)",
+      "Common forms / strengths": "5 mg/mL",
+      "Notes": "Dexmedetomidine reversal",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "e6712822-e58b-51a2-91e3-9c0b671f8102",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 5,
+    "name": "Acepromazine",
+    "source_fields": {
+      "Drug": "Acepromazine",
+      "Common forms / strengths": "10 mg/mL inj; 10, 25 mg tabs",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "aa61eb26-1bb7-58b1-bac5-e7644a10896b",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 6,
+    "name": "Isoflurane",
+    "source_fields": {
+      "Drug": "Isoflurane",
+      "Common forms / strengths": "250 mL bottle",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "584edc29-8ee7-5009-a845-2cca683d3622",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 7,
+    "name": "Sevoflurane",
+    "source_fields": {
+      "Drug": "Sevoflurane",
+      "Common forms / strengths": "250 mL bottle",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "dc7fc4fa-bb7d-55eb-a73a-ecc03e6b5495",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 8,
+    "name": "Lidocaine 2%",
+    "source_fields": {
+      "Drug": "Lidocaine 2%",
+      "Common forms / strengths": "20 mg/mL, with and without epinephrine",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "e1903b18-d054-5544-b26e-791d62a907de",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 9,
+    "name": "Bupivacaine 0.5%",
+    "source_fields": {
+      "Drug": "Bupivacaine 0.5%",
+      "Common forms / strengths": "5 mg/mL",
+      "Notes": "Dental and local blocks",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "15f5274b-c104-51ce-aec3-2b2ba7f1772c",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 10,
+    "name": "Liposomal bupivacaine (Nocita)",
+    "source_fields": {
+      "Drug": "Liposomal bupivacaine (Nocita)",
+      "Common forms / strengths": "13.3 mg/mL",
+      "Notes": "❄",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "97b15ff5-63b2-5918-af5f-b36ad04ca747",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 11,
+    "name": "Naloxone",
+    "source_fields": {
+      "Drug": "Naloxone",
+      "Common forms / strengths": "0.4 mg/mL",
+      "Notes": "Opioid reversal",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "c1ecb97b-c1d5-554f-a3fc-df1576d2ebba",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 12,
+    "name": "Flumazenil",
+    "source_fields": {
+      "Drug": "Flumazenil",
+      "Common forms / strengths": "0.1 mg/mL",
+      "Notes": "Benzodiazepine reversal",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "b349d03f-bb09-518c-afec-ab01ca8a5901",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 13,
+    "name": "Glycopyrrolate",
+    "source_fields": {
+      "Drug": "Glycopyrrolate",
+      "Common forms / strengths": "0.2 mg/mL",
+      "Notes": "",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "90389bed-5329-5f3e-8707-066f4b6e3bad",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 14,
+    "name": "Maropitant (Cerenia)",
+    "source_fields": {
+      "Drug": "Maropitant (Cerenia)",
+      "Common forms / strengths": "10 mg/mL inj",
+      "Notes": "Pre-op antiemetic",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "91e4eff1-235e-52e1-8bdc-a9e878058400",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 15,
+    "name": "Trazodone",
+    "source_fields": {
+      "Drug": "Trazodone",
+      "Common forms / strengths": "50, 100 mg tabs",
+      "Notes": "Pre-visit sedation",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "971be6e8-d47a-5941-85d1-ef8abac2a202",
+    "source_tab": "Ax, Sedation, & Analgesia non-C",
+    "source_row": 16,
+    "name": "Proparacaine 0.5%",
+    "source_fields": {
+      "Drug": "Proparacaine 0.5%",
+      "Common forms / strengths": "Ophthalmic drops",
+      "Notes": "❄",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "fefc2468-d348-51ef-8fe1-d812d8bac62f",
+    "source_tab": "Vax",
+    "source_row": 2,
+    "name": "Rabies (1- and 3-yr)",
+    "source_fields": {
+      "Vaccine": "Rabies (1- and 3-yr)",
+      "Species": "Dog, cat",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "14354172-5e06-5f9f-bce9-f6f1ce66c2f0",
+    "source_tab": "Vax",
+    "source_row": 3,
+    "name": "DAPP / DHPP (± leptospirosis)",
+    "source_fields": {
+      "Vaccine": "DAPP / DHPP (± leptospirosis)",
+      "Species": "Dog",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "503f97b0-8eef-547c-8d67-55b48a410ab9",
+    "source_tab": "Vax",
+    "source_row": 4,
+    "name": "Leptospirosis 4-way",
+    "source_fields": {
+      "Vaccine": "Leptospirosis 4-way",
+      "Species": "Dog",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "0dc804a8-a322-5125-9fd4-0b4859fb60fe",
+    "source_tab": "Vax",
+    "source_row": 5,
+    "name": "Bordetella (intranasal / oral / injectable)",
+    "source_fields": {
+      "Vaccine": "Bordetella (intranasal / oral / injectable)",
+      "Species": "Dog",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "7bd66fe0-4da0-5917-9780-620b16ae0c75",
+    "source_tab": "Vax",
+    "source_row": 6,
+    "name": "Canine influenza H3N2/H3N8",
+    "source_fields": {
+      "Vaccine": "Canine influenza H3N2/H3N8",
+      "Species": "Dog",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "2d017ebd-0602-5ef5-8657-9ff72ed52e3e",
+    "source_tab": "Vax",
+    "source_row": 7,
+    "name": "Lyme",
+    "source_fields": {
+      "Vaccine": "Lyme",
+      "Species": "Dog",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "1d939251-084f-5253-81c9-01e6ea6cd31e",
+    "source_tab": "Vax",
+    "source_row": 8,
+    "name": "FVRCP",
+    "source_fields": {
+      "Vaccine": "FVRCP",
+      "Species": "Cat",
+      "On hand": ""
+    }
+  },
+  {
+    "id": "be6398a0-b713-5172-97d7-51c536293a2d",
+    "source_tab": "Vax",
+    "source_row": 9,
+    "name": "FeLV",
+    "source_fields": {
+      "Vaccine": "FeLV",
+      "Species": "Cat",
+      "On hand": ""
+    }
+  }
+]

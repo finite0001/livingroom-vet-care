@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { products, lots, type Product, type LotBalance } from "./api";
 import { ControlledDraftPanel } from "../controlled-drugs/ControlledDraftPanel";
 import { SupplierIdentityPanel } from "./supplier-imports/SupplierIdentityPanel";
+import { CatalogSetupPanel } from "./catalog-setup/catalog-setup-panel";
 import { useStockMutation } from "./useStockMutation";
 import { readVaccineProfiles } from "../vaccines/api";
 import { VaccineProfileForm } from "../vaccines/VaccineProfileForm";
@@ -389,6 +390,7 @@ export function InventoryPage() {
       </header>
       <SupplierIdentityPanel />
       <ControlledDraftPanel />
+      <CatalogSetupPanel />
       <Card>
         <CardHeader>
           <CardTitle>Product catalog</CardTitle>

@@ -6,7 +6,7 @@
 
 This snapshot contains 217 listed rows across 18 tabs. Tab names, item wording, strengths, notes and blank inventory fields are preserved as supplied. Procedures and Services have no populated cells. Blank on-hand fields mean no quantity was recorded, not zero stock.
 
-The Excel file is an unchanged Google Drive export. The tables below reproduce its populated cells for GitHub review. This is a repository reference snapshot; it does not populate the application's product catalog or stock ledger. Refresh both copies from the live sheet when the source changes.
+The Excel file is an unchanged Google Drive export. The tables below reproduce its populated cells for GitHub review. [Catalog setup](../stock-workspace.md#susans-catalog-drafts) imports these rows as searchable drafts, preserving missing quantities and requiring explicit unit and price choices before creating exact products. The [structured source manifest](catalog-source.json) preserves each populated row for that import. Refresh the export, readable tables, manifest and database source rows together when the source changes.
 
 Export SHA-256: `c5f5824abbc18fe247adb978c1d22bebdc87d1f03ee0802fd8ccf2553aaadc27`.
 
