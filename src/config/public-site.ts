@@ -1,4 +1,4 @@
-import { practice } from "@/config/practice";
+import { getPracticeLaunchSummary, practice } from "./practice.ts";
 
 export interface JsonLdObject {
   [key: string]: unknown;
@@ -33,7 +33,7 @@ export const publicRoutes = [
     path: "/",
     title: "Housecall & Clinic Veterinary Care Coming to Boulder",
     description:
-      "Comfort-focused veterinary care preparing for Boulder, with housecalls targeted for late 2027 and a future clinic home base on Spruce Street.",
+      `Comfort-focused veterinary care for ${practice.address.city} pets and families. ${getPracticeLaunchSummary()}. Contact the practice for availability.`,
     changeFrequency: "weekly",
     priority: 1,
   },

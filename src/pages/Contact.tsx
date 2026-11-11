@@ -5,7 +5,7 @@ import {
   practiceLaunchSummary,
 } from "@/config/practice";
 import { useEffect, useState } from "react";
-import { usePageTitle } from "@/hooks/use-page-title";
+import { usePublicRouteMetadata } from "@/hooks/use-page-title";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { TurnstileChallenge } from "@/features/contact/TurnstileChallenge";
@@ -86,7 +86,7 @@ const emptyForm: ContactFormData = {
 };
 
 const Contact = () => {
-  usePageTitle("Contact Us", "Get in touch with The Living Room Vet in Boulder, Colorado about housecalls, appointments, and our clinic at 2619 Spruce Street.");
+  usePublicRouteMetadata("/contact");
   const { toast } = useToast();
   const [formData, setFormData] = useState<ContactFormData>(emptyForm);
   const [errors, setErrors] = useState<

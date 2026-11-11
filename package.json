@@ -29,8 +29,7 @@
     "check": "npm run lint && npm run typecheck && npm test && npm run build",
     "test": "node --experimental-strip-types --test tests/**/*.test.ts",
     "test:e2e": "playwright test",
-    "predev": "node --experimental-strip-types scripts/generate-sitemap.ts",
-    "prebuild": "node --experimental-strip-types scripts/generate-sitemap.ts"
+    "generate:discovery": "node --experimental-strip-types scripts/generate-sitemap.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

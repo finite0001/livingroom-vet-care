@@ -1,0 +1,31 @@
+# The Living Room Vet
+
+Website: https://thelivingroom.vet
+Location: 2619 Spruce Street, Boulder, CO, 80302
+Service status: Housecalls: targeting late 2027 · Clinic: targeting early 2027. Target dates are estimates; contact the practice for current availability.
+Phone: (720) 764-6677
+Email: admin@thelivingroom.vet
+Planned hours (America/Denver): Monday–Saturday, 9 am–5 pm Mountain Time
+Contact: https://thelivingroom.vet/contact#contact-form
+
+Emergency guidance: If you can’t reach us, contact your nearest local 24-hour emergency veterinary service.
+Website inquiries request follow-up and are not confirmed appointments. The contact form is not monitored for emergencies.
+
+## Public pages
+- [Housecall & Clinic Veterinary Care Coming to Boulder](https://thelivingroom.vet/)
+- [The Experience](https://thelivingroom.vet/experience)
+- [Planned Veterinary Services](https://thelivingroom.vet/services)
+- [Wellness Care](https://thelivingroom.vet/services/wellness)
+- [Senior Pet Care](https://thelivingroom.vet/services/senior-care)
+- [Illness Care](https://thelivingroom.vet/services/illness-care)
+- [Diagnostics](https://thelivingroom.vet/services/diagnostics)
+- [Surgery](https://thelivingroom.vet/services/surgery)
+- [Laser Therapy](https://thelivingroom.vet/services/laser-therapy)
+- [Vaccinations](https://thelivingroom.vet/services/vaccinations)
+- [About Us](https://thelivingroom.vet/about)
+- [Contact](https://thelivingroom.vet/contact)
+- [Payment Options](https://thelivingroom.vet/payment-options)
+- [Privacy Policy](https://thelivingroom.vet/privacy)
+- [Terms](https://thelivingroom.vet/terms)
+
+Full public reference: https://thelivingroom.vet/llms-full.txt
