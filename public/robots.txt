@@ -1,6 +1,13 @@
 User-agent: *
+User-agent: OAI-SearchBot
+User-agent: GPTBot
 Allow: /
 Disallow: /hub
-Disallow: /hub/
+Disallow: /shared/
+Disallow: /pay$
+Disallow: /pay/
+Disallow: /payment/
 
 Sitemap: https://thelivingroom.vet/sitemap.xml
+
+# Public AI summaries: /llms.txt and /llms-full.txt

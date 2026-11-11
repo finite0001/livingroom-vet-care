@@ -49,7 +49,7 @@ function verifySources(){
  const frozenRaw=regular(resolve(root,'tests/controlled-drugs/narcotics-finalize-browser-bindings.json'),65536);
  assert.equal(sha(frozenRaw),'fa3282a22c9864a979b778979d975ae1cb037d9930fedf55cd19dadeb4992d92');
  const frozen=JSON.parse(frozenRaw);assert.equal(Object.keys(frozen.files).length,146);
- const raw=regular(resolve(root,'scripts/narcotics-log/appointment-restock213-candidate-source.json'),2097152);
+ const raw=regular(resolve(root,'scripts/narcotics-log/public-discovery-candidate-source.json'),2097152);
  const binding=JSON.parse(raw);assert.equal(binding.kind,'livingroom-beta-current-source-v1');
  assert.equal(binding.database_operations,0);assert.equal(binding.runtime_acceptance,false);
  for(const name of Object.keys(frozen.files))assert(Object.hasOwn(binding.files,name));

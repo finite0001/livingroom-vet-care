@@ -33,7 +33,7 @@ import beta_recovery_diagnostic
 
 installation = business.installation
 ROOT = installation.ROOT
-MANIFEST = HERE / "appointment-restock213-candidate-source.json"
+MANIFEST = HERE / "public-discovery-candidate-source.json"
 PROFILES = ("commission_all", "count_agreement", "browser_lost_finalize", "ordinary_none", "record_review_signing",
             "independent_witness", "variance_reconciliation", "scalars", "clinical",
             "native_pickup_annotation", "native_return_v1", "native_return_v2_discrepancy")
@@ -47,6 +47,8 @@ def source_files():
             if path.is_file() and "__pycache__" not in path.parts and path != MANIFEST:
                 paths.add(path)
     for name in ("package.json", "package-lock.json", "scripts/owned_canonical_bootstrap.py",
+                 "scripts/public-discovery.ts", "scripts/generate-sitemap.ts",
+                 "tests/public-discovery/public-discovery.test.ts",
                  ".github/workflows/beta-candidate.yml", "docs/inventory/catalog-source.json",
                  "docs/inventory/living-room-vet-inventory-2026-11-10.xlsx",
                  "tests/inventory/catalog-setup-local.py", "tests/inventory/catalog-setup.test.ts",

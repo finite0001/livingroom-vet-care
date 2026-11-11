@@ -40,6 +40,10 @@ export const practice: PracticeSettings = {
 
 export const practiceAddress = `${practice.address.street}, ${practice.address.city}, ${practice.address.state}`;
 export const practiceMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(practiceAddress)}`;
-export const practiceLaunchSummary = practice.launchStages
-  .map((stage) => `${stage.label}: ${stage.status === "open" ? "open" : `targeting ${stage.targetWindow.toLowerCase()}`}`)
-  .join(" · ");
+export function getPracticeLaunchSummary(settings: PracticeSettings = practice) {
+  return settings.launchStages
+    .map((stage) => `${stage.label}: ${stage.status === "open" ? "open" : `targeting ${stage.targetWindow.toLowerCase()}`}`)
+    .join(" · ");
+}
+
+export const practiceLaunchSummary = getPracticeLaunchSummary();

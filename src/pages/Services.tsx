@@ -1,5 +1,5 @@
 import { practice, practiceLaunchSummary } from "@/config/practice";
-import { usePageTitle } from "@/hooks/use-page-title";
+import { usePublicRouteMetadata } from "@/hooks/use-page-title";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -71,7 +71,7 @@ const additionalServices = [
 ];
 
 const Services = () => {
-  usePageTitle("Our Services", "Wellness care, senior care, illness care, diagnostics, surgery, and laser therapy for dogs and cats in Boulder, Colorado.");
+  usePublicRouteMetadata("/services");
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

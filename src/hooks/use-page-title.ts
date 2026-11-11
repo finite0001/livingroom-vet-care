@@ -3,13 +3,15 @@ import {
   defaultOgImageUrl,
   getPublicRouteMetadata,
   publicSiteOrigin,
+  publicRoutes,
   type PageSeoMetadata,
   type PublicRoutePath,
 } from "@/config/public-site";
 
-const BASE_TITLE = "The Living Room Vet";
-const DEFAULT_DESCRIPTION =
-  "Comfort-focused veterinary care preparing to serve Boulder pets and families through planned housecalls and a future clinic home base.";
+import { practice } from "@/config/practice";
+
+const BASE_TITLE = practice.name;
+const DEFAULT_DESCRIPTION = publicRoutes[0].description;
 
 function formatTitle(title?: string) {
   return title ? `${title} | ${BASE_TITLE}` : BASE_TITLE;
