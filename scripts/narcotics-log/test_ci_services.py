@@ -32,8 +32,8 @@ class CacheTests(unittest.TestCase):
     def test_existing_content_starts_nothing(self):
         runner, calls = self.runner()
         result = cache.prepare({'GITHUB_ACTIONS': 'true', 'DOCKER_HOST': 'unix:///var/run/docker.sock'}, runner)
-        self.assertEqual(len(result['images']), 4)
-        self.assertEqual(len(calls), 8)
+        self.assertEqual(len(result['images']), 5)
+        self.assertEqual(len(calls), 10)
         self.assertFalse(result['native_runtime_deadlines_changed'])
         self.assertEqual(result['containers_started'], 0)
 
@@ -41,6 +41,20 @@ class CacheTests(unittest.TestCase):
         runner, calls = self.runner(absent=True)
         cache.prepare({'GITHUB_ACTIONS': 'true', 'DOCKER_HOST': 'unix:///var/run/docker.sock'}, runner)
         self.assertEqual([x[1] for x in calls].count('pull'), 1)
+
+    def test_transient_pull_failure_is_retried_within_original_setup_budget(self):
+        runner, calls = self.runner(absent=True)
+        attempts = []
+        def flaky(args, **kwargs):
+            if args[1] == 'pull':
+                attempts.append(args)
+                if len(attempts) == 1:
+                    return SimpleNamespace(returncode=1, stdout='', stderr='429 rate limit')
+            return runner(args, **kwargs)
+        with patch.object(cache.time, 'sleep') as sleep:
+            cache.prepare({'GITHUB_ACTIONS':'true','DOCKER_HOST':'unix:///var/run/docker.sock'},flaky)
+        self.assertEqual(len(attempts),2)
+        sleep.assert_called_once_with(.5)
 
     def test_mismatched_cached_content_is_refused_without_retag_or_pull(self):
         runner, calls = self.runner(corrupt=True)

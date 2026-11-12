@@ -14,8 +14,10 @@ import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bounded_process
+from prepare_ci_postgres import failure_class
 
 IMAGES = {
+    'public.ecr.aws/supabase/mailpit:v1.30.2': 'sha256:37a38e48e9338cd7e89dfeb487f37b02ebfcd9cb23111bed2d345e79d37d6dd6',
     'public.ecr.aws/supabase/gotrue:v2.197.0': 'sha256:1736a63078f5922b198c4cbe50f80ab9a2d3b54fe8b7b6cfb2e9dc5dbbc12c6b',
     'public.ecr.aws/supabase/postgrest:v16.3': 'sha256:ec0e25a4e24b0a3bc5e4f011369bfc736bd1b19f513bd01079b86329a7636962',
     'public.ecr.aws/supabase/storage-api:v1.77.0': 'sha256:3999cfa4f3286f945fa68069fc9b8b6bf3929a6bd53916dcf2e8c209801173c0',
@@ -69,9 +71,19 @@ def prepare(environment=None, runner=bounded_process.run):
         if result.returncode:
             if result.returncode != 1 or 'no such image' not in result.stderr.lower():
                 raise ValueError('Cannot inspect service image')
-            pulled = call(['pull', reference], 60)
-            if pulled.returncode:
-                raise ValueError('Pinned service image pull failed')
+            for attempt in range(3):
+                pulled = call(['pull', reference], 60)
+                if not pulled.returncode:
+                    break
+                classification = failure_class(pulled.stderr)
+                print(json.dumps({'reference': reference, 'attempt': attempt + 1,
+                                  'failure': classification}), flush=True)
+                if classification in ('registry_authorization', 'manifest_unavailable') or attempt == 2:
+                    raise ValueError('Pinned service image pull failed: ' + classification)
+                pause = .5 * (attempt + 1)
+                if end - time.monotonic() <= pause:
+                    raise TimeoutError('Registry retry would exceed service cache setup deadline')
+                time.sleep(pause)
             result = call(['image', 'inspect', reference])
         if result.returncode:
             raise ValueError('Pulled service image cannot be inspected')

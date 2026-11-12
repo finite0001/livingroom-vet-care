@@ -9,3 +9,9 @@ The prior current candidate and browser proof remain unchanged. The successor is
 Validation: five new cache-control tests cover cached content, pull-then-immutable verification, mismatched content, environment/endpoint refusal and total setup timeout. Actual locally cached image digests also match all four registry pins. The local complete recovery attempt was not acceptance: it stopped at an existing commissioning RPC400 after193 seconds and cleaned up normally. That local outcome is recorded separately from the two CI deadline failures.
 
 This change does not merge, install migration214, promote a frontend or activate clinical/provider/payment behavior. Those require the exact successor CI and staging acceptance, followed by the authorized rollout sequence.
+
+## Bounded recovery-only follow-up
+
+The first cache candidate (`560ef5fe`) admitted the exact service digests, but five otherwise unaffected runtime profiles failed a registry pull during cache setup. The recovery profile's cache setup succeeded. The follow-up limits pre-caching to populated recovery and the explicitly requested recovery diagnostic; the other fourteen profiles retain their original startup path. Transient registry failures receive at most three attempts inside the same 120-second setup budget, with only a fixed failure category and public image reference logged. Authentication/manifest errors and mismatched cached content fail immediately. The same pinned Mailpit image used by the original bootstrap is also cached, completing its five service images.
+
+The successor closure is `picture-security-recovery-cache-candidate-source.json` and its separate browser proof; both prior security candidate closures remain immutable. Six cache controls now include a transient-registry retry case. No native assertion or runtime deadline changes.

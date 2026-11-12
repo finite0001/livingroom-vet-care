@@ -33,7 +33,7 @@ import beta_recovery_diagnostic
 
 installation = business.installation
 ROOT = installation.ROOT
-MANIFEST = HERE / "picture-security-cache-candidate-source.json"
+MANIFEST = HERE / "picture-security-recovery-cache-candidate-source.json"
 PROFILES = ("commission_all", "count_agreement", "browser_lost_finalize", "ordinary_none", "record_review_signing",
             "independent_witness", "variance_reconciliation", "scalars", "clinical",
             "native_pickup_annotation", "native_return_v1", "native_return_v2_discrepancy")

@@ -110,6 +110,7 @@ jobs:
       - name: Cache the unchanged approved PostgreSQL image
         run: python3 -I -B scripts/narcotics-log/prepare_ci_postgres.py --prepare-ci-cache
       - name: Cache the unchanged CLI service images
+        if: matrix.profile == 'populated-recovery'
         timeout-minutes: 3
         run: python3 -I -B scripts/narcotics-log/prepare_ci_services.py --prepare-ci-cache
       - run: npm ci --ignore-scripts
@@ -139,7 +140,7 @@ jobs:
             /tmp/lrv-narcotics-install-*/receiver/rpc-failure.json
             /tmp/lrv-narcotics-install-*/beta-current-tamper-rollback.json
             /tmp/lrv-narcotics-install-*/operational-browser-failure.json
-            scripts/narcotics-log/picture-security-cache-candidate-source.json
+            scripts/narcotics-log/picture-security-recovery-cache-candidate-source.json
 
   recovery-diagnostic:
     if: github.event_name == 'workflow_dispatch' && inputs.recovery_diagnostic
