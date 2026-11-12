@@ -1,0 +1,14 @@
+{
+  "current_driver_sha256": "dfea3c7a8e9ab3165c187b2453d8808cc86a4f5402a7eb804591eb9de041183c",
+  "current_source_closure": "all src plus original146 minimum",
+  "current_supervisor_sha256": "2387cbcf2c360aea48a3f1f5203d0b86088041dd22380aefc786f379f73fe7a7",
+  "database_operations": 0,
+  "historical_binding_unchanged": true,
+  "historical_driver_sha256": "51a58ac68db8a89bc1f0480c7fac9950f817d964b1ae239fe5811892748ff181",
+  "historical_supervisor_sha256": "4c716861d298460e905dfe1a5e43ae4c8da168436e897924810abc982e18bb4e",
+  "kind": "current-beta-finalize-browser-source-v1",
+  "original120second_deadline_unchanged": true,
+  "original_network_Auth_business_and_cleanup_protocol_unchanged": true,
+  "whole_driver_inverse": true,
+  "whole_supervisor_inverse": true
+}

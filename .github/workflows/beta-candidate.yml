@@ -53,6 +53,7 @@ jobs:
           node scripts/narcotics-log/frame-beta-appointment.mjs --check
           node scripts/narcotics-log/frame-beta-catalog.mjs --check
           node scripts/narcotics-log/frame-appointment-restock.mjs --check
+          node scripts/narcotics-log/frame-nonretryable-conflicts.mjs --check
       - name: Verify finite successor, browser inverses and source controls
         run: |
           python3 -I -B scripts/narcotics-log/beta_time_clock_source.py --check-source
@@ -135,7 +136,7 @@ jobs:
             /tmp/lrv-narcotics-install-*/receiver/rpc-failure.json
             /tmp/lrv-narcotics-install-*/beta-current-tamper-rollback.json
             /tmp/lrv-narcotics-install-*/operational-browser-failure.json
-            scripts/narcotics-log/public-discovery-candidate-source.json
+            scripts/narcotics-log/picture-security-candidate-source.json
 
   recovery-diagnostic:
     if: github.event_name == 'workflow_dispatch' && inputs.recovery_diagnostic

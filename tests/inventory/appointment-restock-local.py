@@ -6,6 +6,8 @@ import subprocess
 import time
 import uuid
 
+from appointment_restock_http import verify_conflict_http
+
 ROOT = Path(__file__).resolve().parents[2]
 NAME = 'lrv-appointment-restock-' + uuid.uuid4().hex[:10]
 
@@ -16,7 +18,7 @@ def run(*args, body=None):
     return result.stdout.strip()
 
 def sql(body):
-    return run('docker', 'exec', '-i', NAME, 'psql', '-U', 'postgres', '-XqAt', '-v', 'ON_ERROR_STOP=1', body=body)
+    return run('docker', 'exec', '-i', NAME, 'psql', '-U', 'postgres', '-XqAt', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose', body=body)
 
 def ident(number):
     return str(uuid.UUID(int=number))
@@ -32,6 +34,8 @@ def rejected(query, expected):
         sql(query)
     except RuntimeError as exc:
         assert expected in str(exc), str(exc)
+        if expected in ('Visit details changed', 'Appointment link changed', 'Restocking setting changed'):
+            assert 'PT409' in str(exc) and '40001' not in str(exc), 'Permanent conflicts must not request a transaction retry'
     else:
         raise AssertionError('Expected rejection: ' + expected)
 
@@ -72,7 +76,7 @@ try:
     sql(f"""
     create role anon;create role authenticated;create role service_role;
     create schema auth;create table auth.users(id uuid primary key);
-    create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+    create function auth.uid() returns uuid language sql as $$select coalesce(nullif(current_setting('request.jwt.claim.sub',true),''),nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid$$;
     create function public.is_active_staff(actor uuid) returns boolean language sql as $$select actor='{actor}'::uuid$$;
     create function public.clinical_require_staff() returns uuid language plpgsql as $$begin if not coalesce(public.is_active_staff(auth.uid()),false) then raise exception 'Staff required' using errcode='42501';end if;return auth.uid();end$$;
     grant usage on schema auth to authenticated;grant execute on function auth.uid() to authenticated;
@@ -96,6 +100,16 @@ try:
     """ + tables + audit)
     migration = next((ROOT / 'supabase/migrations').glob('*_appointment_links_restock_alerts.sql'))
     sql(migration.read_text())
+    # Prove the additive replacement changes only the error classifications,
+    # preserving function bodies, signatures, owners and execute privileges.
+    definitions = "select jsonb_object_agg(proname,jsonb_build_object('definition',pg_get_functiondef(oid),'owner',proowner,'acl',proacl)) from pg_proc where pronamespace='public'::regnamespace and proname in ('set_treatment_appointment','save_inventory_restock_setting');"
+    original = json.loads(sql(definitions))
+    sql((ROOT / 'supabase/migrations/20261112210000_nonretryable_visit_restock_conflicts.sql').read_text())
+    updated = json.loads(sql(definitions))
+    assert set(original) == set(updated) == {'set_treatment_appointment','save_inventory_restock_setting'}
+    for name in original:
+        assert updated[name] == {**original[name], 'definition': original[name]['definition'].replace("errcode='40001'", "errcode='PT409'")}
+
     sql(f"""insert into public.catalog_products(id,name,kind,unit,unit_price_cents,created_by) values
     ('{vaccine}','Synthetic vaccine','vaccine','dose',2500,'{actor}'),('{service}','Exam','service','visit',7000,'{actor}');
     insert into public.inventory_lots(id,product_id,lot_number,expires_on,location,created_by) values
@@ -147,6 +161,11 @@ try:
     rejected(prefix+"update public.treatment_appointment_events set reason='tampered';",'permission denied')
     rejected(prefix+'delete from public.inventory_restock_settings;', 'permission denied')
     assert sql(f"set role authenticated;set request.jwt.claim.sub='{outsider}';select count(*) from public.treatment_appointment_events;") == '0'
+    verify_conflict_http(NAME, actor, [
+        ('set_treatment_appointment',dict(p_actor_id=actor,p_id=ident(101),p_pet_id=pet,p_treatment_id=treatment,p_appointment_id=visit,p_appointment_version=2,p_expected_version=0,p_reason='Synthetic stale link')),
+        ('set_treatment_appointment',dict(p_actor_id=actor,p_id=ident(102),p_pet_id=pet,p_treatment_id=treatment,p_appointment_id=visit,p_appointment_version=1,p_expected_version=3,p_reason='Synthetic stale appointment')),
+        ('save_inventory_restock_setting',dict(p_actor_id=actor,p_product_id=vaccine,p_threshold=3,p_expected_version=0)),
+    ])
     print('Appointment ownership, replay, relinking, audit, stock balances and staff boundaries passed.')
 finally:
     subprocess.run(['docker','rm','-f',NAME],capture_output=True)
