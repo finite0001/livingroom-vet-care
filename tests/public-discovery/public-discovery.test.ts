@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, readFile, realpath, rm, writeFile } from "node:fs/promi
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { build } from "vite";
+import { build, createServer } from "vite";
 import { practice } from "../../src/config/practice.ts";
 import { publicRoutes } from "../../src/config/public-site.ts";
 import { renderDiscoveryFiles, renderPublicHead, withPublicHead } from "../../src/config/public-discovery.ts";
@@ -78,4 +78,44 @@ test("a programmatic Vite build generates every public route and an unindexed pr
     assert.match(fallback, /noindex, nofollow/);
     assert.doesNotMatch(fallback, /rel="canonical"|application\/ld\+json/);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("the dev server transforms app routes but preserves standalone HTML and rejects a broken app template", async () => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), "lrv-public-discovery-dev-")));
+  await mkdir(join(root, "public"));
+  const server = await createServer({ root, configFile: false, logLevel: "silent",
+    server: { host: "127.0.0.1", port: 0 }, plugins: [publicDiscoveryPlugin()] });
+  try {
+    await mkdir(join(root, "tests"));
+    await writeFile(join(root, "index.html"), '<html><head><!-- public-seo:start --><!-- public-seo:end --></head><body>App entry</body></html>');
+    await writeFile(join(root, "tests/fixture.html"), '<html><head><title>Standalone fixture</title></head><body>Fixture entry</body></html>');
+    await server.listen();
+    const address = server.httpServer!.address();
+    assert.ok(address && typeof address !== "string");
+    const origin = `http://127.0.0.1:${address.port}`;
+    for (const path of ["/", "/index.html", "/services/wellness?source=test", "/hub/private"]) {
+      const response = await fetch(origin + path, { headers: { accept: "text/html" } });
+      assert.equal(response.status, 200, path);
+      const html = await response.text();
+      if (path.startsWith("/hub")) {
+        assert.match(html, /noindex, nofollow/);
+        assert.doesNotMatch(html, /rel="canonical"/);
+      } else {
+        assert.match(html, /rel="canonical"/);
+        if (path.startsWith("/services")) assert.match(html, /https:\/\/thelivingroom.vet\/services\/wellness/);
+      }
+    }
+    const fixture = await fetch(origin + "/tests/fixture.html");
+    assert.equal(fixture.status, 200);
+    const html = await fixture.text();
+    assert.match(html, /<title>Standalone fixture<\/title>/);
+    assert.doesNotMatch(html, /canonical|public-seo|application\/ld\+json/);
+    await writeFile(join(root, "index.html"), '<html><head></head><body>Broken app entry</body></html>');
+    const broken = await fetch(origin + "/hub/private", { headers: { accept: "text/html" } });
+    assert.equal(broken.status, 500);
+    assert.match(await broken.text(), /Missing public SEO template markers/);
+  } finally {
+    await server.close();
+    await rm(root, { recursive: true, force: true });
+  }
 });

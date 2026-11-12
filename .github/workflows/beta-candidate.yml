@@ -140,7 +140,7 @@ jobs:
             /tmp/lrv-narcotics-install-*/receiver/rpc-failure.json
             /tmp/lrv-narcotics-install-*/beta-current-tamper-rollback.json
             /tmp/lrv-narcotics-install-*/operational-browser-failure.json
-            scripts/narcotics-log/picture-security-recovery-cache-candidate-source.json
+            scripts/narcotics-log/picture-security-html-entry-candidate-source.json
 
   recovery-diagnostic:
     if: github.event_name == 'workflow_dispatch' && inputs.recovery_diagnostic
