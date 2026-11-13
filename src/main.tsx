@@ -1,3 +1,4 @@
+import { capturePasswordSetupLink } from "./hub/lib/password-setup-link";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { paymentRoute, validPaymentAccess } from "./shared/payment-client";
@@ -82,6 +83,7 @@ if (estimateAccess) {
     },
   );
 } else {
+  capturePasswordSetupLink(window);
   void import("./App.tsx").then(({ default: App }) => {
     createRoot(document.getElementById("root")!).render(<App />);
   });

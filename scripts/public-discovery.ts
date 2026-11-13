@@ -12,12 +12,19 @@ export function generatePublicDiscovery(root: string) {
 
 /** Runs for CLI builds AND the programmatic production deployment build. */
 export function publicDiscoveryPlugin(): Plugin {
+  let appEntry: string;
   return {
     name: "public-discovery",
-    configResolved(config) { generatePublicDiscovery(config.root); },
+    configResolved(config) {
+      appEntry = resolve(config.root, "index.html");
+      generatePublicDiscovery(config.root);
+    },
     transformIndexHtml: {
       order: "pre",
       handler(html, context) {
+        // Vite also transforms independent HTML entries, including browser fixtures.
+        // Only the app entry owns the SEO template; SPA fallbacks retain this filename.
+        if (resolve(context.filename) !== appEntry) return html;
         const requestedPath = (context.originalUrl ?? context.path).split("?")[0];
         const path = requestedPath.replace(/\/+$/, "") || "/";
         const route = publicRoutes.find(route => route.path === path);

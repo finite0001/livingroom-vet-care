@@ -95,6 +95,32 @@ class BetaSourceTests(unittest.TestCase):
         self.assertIn(str(beta.MANIFEST.relative_to(prefix.ROOT)), source)
         self.assertNotIn("'scripts/narcotics-log/beta-candidate-source.json'", source)
 
+    def test_nonretryable_successor_is_exact_without_rewriting_prior_admission(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            migration = root / 'supabase/migrations' / prefix.NONRETRYABLE_CONFLICTS_MIGRATION
+            migration.parent.mkdir(parents=True)
+            migration.write_bytes(b'SELECT 1;\n')
+            manifest = root / prefix.NONRETRYABLE_CONFLICTS_MANIFEST
+            manifest.parent.mkdir(parents=True)
+            original = dict(kind='nonretryable-conflicts-cli214-source-v1', cli_version='2.118.0',
+                prefix_migration_count=213, migration_count=214, migration=prefix.NONRETRYABLE_CONFLICTS_MIGRATION,
+                database_operations=0, framing=dict(bytes=10, sha256=prefix.digest(migration.read_bytes()),
+                    statement_count=1, compact_array_sha256='a'*64, postgres_array_sha256='b'*64,
+                    postgres_array_bytes=13, statement_sha256s=['c'*64]))
+            manifest.write_text(json.dumps(original))
+            self.assertEqual(prefix.nonretryable_conflicts214(root), original)
+            migration.write_bytes(b'SELECT 2;\n')
+            with self.assertRaises(ValueError):
+                prefix.nonretryable_conflicts214(root)
+            migration.write_bytes(b'SELECT 1;\n')
+            for change in (dict(prefix_migration_count=212), dict(migration_count=215),
+                           dict(migration=prefix.APPOINTMENT_RESTOCK_MIGRATION), dict(database_operations=1)):
+                with self.subTest(change=change):
+                    manifest.write_text(json.dumps({**original, **change}))
+                    with self.assertRaises(ValueError):
+                        prefix.nonretryable_conflicts214(root)
+
 
 if __name__ == "__main__":
     unittest.main()

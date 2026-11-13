@@ -1,0 +1,22 @@
+{
+  "kind": "nonretryable-conflicts-cli214-source-v1",
+  "cli_version": "2.118.0",
+  "prefix_migration_count": 213,
+  "migration_count": 214,
+  "migration": "20261112210000_nonretryable_visit_restock_conflicts.sql",
+  "framing": {
+    "bytes": 5267,
+    "sha256": "9d751bae35a17f26a6f93f88154fab00688c8f61e43ca9ced1d84d2ce55dd950",
+    "statement_count": 4,
+    "compact_array_sha256": "4f0d738ff28014533bb2cb5b84c37129802ecc1ae9efe4c86ab5fe582f9d1aaa",
+    "postgres_array_sha256": "7d6bb6f63288eb5ca4bc7cc82b6a45b0cbf3aff7b8869e51c80f350cb70c5cd9",
+    "postgres_array_bytes": 5317,
+    "statement_sha256s": [
+      "29ad599db829bc5a0fc268ac69679071e531e8e00921c1df61d123a159428230",
+      "5b196dea7343bf04f4c2018525838ed7ace59a6aacb8cfdeb8f1024da07a0432",
+      "9787e88e61241450beca4f0083deb1b63aacb0c1c722eb8cd764b265e2a9b980",
+      "79663c1d3b43ceaf9ee728e501c64b57ae2e4d6cb36ff5c65eddcda1de27342f"
+    ]
+  },
+  "database_operations": 0
+}

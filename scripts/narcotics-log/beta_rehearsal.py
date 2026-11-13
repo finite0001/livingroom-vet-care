@@ -33,7 +33,7 @@ import beta_recovery_diagnostic
 
 installation = business.installation
 ROOT = installation.ROOT
-MANIFEST = HERE / "public-discovery-candidate-source.json"
+MANIFEST = HERE / "picture-security-html-entry-candidate-source.json"
 PROFILES = ("commission_all", "count_agreement", "browser_lost_finalize", "ordinary_none", "record_review_signing",
             "independent_witness", "variance_reconciliation", "scalars", "clinical",
             "native_pickup_annotation", "native_return_v1", "native_return_v2_discrepancy")
@@ -53,7 +53,7 @@ def source_files():
                  "docs/inventory/living-room-vet-inventory-2026-11-10.xlsx",
                  "tests/inventory/catalog-setup-local.py", "tests/inventory/catalog-setup.test.ts",
                  "e2e/inventory.spec.ts", "tests/inventory/appointment-restock-local.py",
-                 "tests/inventory/appointment-restock.test.ts", "tests/restore/current-migration-guards.test.ts"):
+                 "tests/inventory/appointment-restock.test.ts", "tests/inventory/appointment_restock_http.py", "tests/restore/current-migration-guards.test.ts"):
         paths.add(ROOT / name)
     historical = installation.decode(installation.prefix.regular(ROOT / "tests/controlled-drugs/narcotics-finalize-browser-bindings.json"))
     paths.update(ROOT / name for name in historical["files"])
@@ -194,10 +194,11 @@ def current_rest_defaults(runtime):
         return business.modules().rest.effective_defaults(runtime)
     expected = release.expected_ledger(target.operational_prefix_ledger,
         installation.decode(installation.prefix.regular(HERE / "operational-release.json")))
-    if len(actual) not in (209, 210, 211, 212, 213):
+    if len(actual) not in (209, 210, 211, 212, 213, 214):
         raise ValueError("Exact verified current source ledger required before REST validation")
     for count, read_manifest in ((210, installation.prefix.beta210), (211, installation.prefix.beta211),
-                                 (212, installation.prefix.catalog212), (213, installation.prefix.appointment_restock213)):
+                                 (212, installation.prefix.catalog212), (213, installation.prefix.appointment_restock213),
+                                 (214, installation.prefix.nonretryable_conflicts214)):
         if len(actual) >= count:
             manifest = read_manifest(ROOT)
             expected.append(dict(version=manifest["migration"][:14], name=manifest["migration"][15:-4],
@@ -387,6 +388,11 @@ def install213(runtime):
         "frame-appointment-restock.mjs", {"public.treatment_appointment_events": 0, "public.inventory_restock_settings": 0})
 
 
+def install214(runtime):
+    install_additive_tail(runtime, 214, "nonretryable_conflicts214", installation.prefix.nonretryable_conflicts214(ROOT),
+        "frame-nonretryable-conflicts.mjs", {})
+
+
 class BetaBusiness(release.SourceLedger, CurrentBusiness, hosted.HostedHistoryInstallation):
     def __init__(self, *args, profile, current_tail=True):
         self.current_tail = current_tail
@@ -404,7 +410,8 @@ class BetaBusiness(release.SourceLedger, CurrentBusiness, hosted.HostedHistoryIn
             install211(runtime)
             install212(runtime)
             install213(runtime)
-        self.result["kind"] = "livingroom-beta" + ("213" if self.current_tail else "209") + "-genuine-business-profile-v1"
+            install214(runtime)
+        self.result["kind"] = "livingroom-beta" + ("214" if self.current_tail else "209") + "-genuine-business-profile-v1"
 
     def after_business(self, context, methods, runtime, proof):
         current_policy_controls(runtime, self.profile)
@@ -467,6 +474,7 @@ def install_current_release(runtime):
     install211(runtime)
     install212(runtime)
     install213(runtime)
+    install214(runtime)
 
 
 class BetaReceiver(receiver_rehearsal.Receiver):
