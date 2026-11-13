@@ -70,7 +70,7 @@ jobs:
         run: python3 -B scripts/narcotics-log/verify_beta_metadata.py --run-synthetic-local > /tmp/beta-metadata-component.json
       - name: Retain metadata component result
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: beta-metadata-component
           path: /tmp/beta-metadata-component.json
@@ -125,7 +125,7 @@ jobs:
         run: python3 -I -B scripts/narcotics-log/beta_rehearsal.py --run-synthetic-local --profile ${{ matrix.profile }}
       - name: Retain nonsecret result and timing evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: beta-candidate-${{ matrix.profile }}
           retention-days: 14
@@ -171,7 +171,7 @@ jobs:
         run: python3 -I -B scripts/narcotics-log/beta_rehearsal.py --run-synthetic-local --profile recovery-diagnostic
       - name: Retain bounded synthetic native error and non-admitting result
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: beta-recovery-engineering-trace
           retention-days: 14
