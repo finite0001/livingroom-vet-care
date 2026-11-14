@@ -1,0 +1,29 @@
+{
+  "kind": "staff-features-cli219-source-v1",
+  "cli_version": "2.118.0",
+  "prefix_migration_count": 218,
+  "migration_count": 219,
+  "migration": "20261114222530_staff_backup_health.sql",
+  "framing": {
+    "bytes": 1790,
+    "sha256": "275e625976c330891d948e56e712dbec6d0ffb60f4d864caea92494b0bad4687",
+    "statement_count": 11,
+    "compact_array_sha256": "d0c5d4d5b5dec2e6880891747341186017f056bd162abf6d45a1c37a30ba900f",
+    "postgres_array_sha256": "40844fd639bc0b8b14c52260a168d39e7160567a271c3e02f606484f0ecb32aa",
+    "postgres_array_bytes": 1816,
+    "statement_sha256s": [
+      "e6f07d43b5c21db0fbb9a31feac2dc599787763393dd5acbfad80e247eb02ad5",
+      "ae9112ec3529c4db2840f08efe662f39ca6ef35b78a33ac92be3855e91d2dc12",
+      "b17d077d2cf5ff3f2c02ba5eec506c5726b35ae20b63e69dce25cddeb64bc23f",
+      "366456656c970b7164fb5b5bf60645b015a9c135a796109281960d2d02165612",
+      "9cb00d6bad779ff7d594e3ad6d6f6ddb9b04dda4f9dee1a06ba2a1614fc7c84b",
+      "8b62889412294b370aa8da1281d93ce4321309899461e99030fb17ef029f361b",
+      "4224ff338928cff27713b9f1c0cf76c97173fb8bc303f165f0883da54b8102a9",
+      "8eb0a9be3128db82ee17d79158e5953b88377f10fae541e5e81ed2e0fb216cf2",
+      "2f047f5b3b92ced86459bc252421454f4b74df164e22a26874d91d8f6a193771",
+      "395e10637ec5670234cc52736cb884a703eb996db7bcd181f8486352b6afe0ba",
+      "9505cacb7c710ed17125fcc6cb3669e8ddca6c8cd8af6a31f6b3cd64604c3098"
+    ]
+  },
+  "database_operations": 0
+}

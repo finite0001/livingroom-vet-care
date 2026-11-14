@@ -79,7 +79,7 @@ test("current inventory preserves the exact historical releases and names each a
     .filter((name) => /^\d+_.+\.sql$/.test(name)).sort();
   const candidate = JSON.parse(readFileSync(new URL("../../scripts/narcotics-log/release-candidate.json", import.meta.url), "utf8"));
   const operational = JSON.parse(readFileSync(new URL("../../scripts/narcotics-log/operational-release.json", import.meta.url), "utf8"));
-  assert.equal(inventory.length, 214);
+  assert.equal(inventory.length, 219);
   assert.equal(candidate.migration_count, 208);
   assert.equal(candidate.prefix_migration_count, 206);
   assert.equal(inventory[205], "20261022010000_controlled_secondary_review_private.sql");
@@ -92,6 +92,11 @@ test("current inventory preserves the exact historical releases and names each a
     "20261110181205_susan_inventory_catalog_setup.sql",
     "20261110203352_appointment_links_restock_alerts.sql",
     "20261112210000_nonretryable_visit_restock_conflicts.sql",
+    "20261114215340_workforce_time_and_leave.sql",
+    "20261114220407_workforce_team.sql",
+    "20261114220830_workforce_people.sql",
+    "20261114221516_staff_clinical_tools.sql",
+    "20261114222530_staff_backup_health.sql",
   ]);
   assert.deepEqual(Object.keys(candidate.migrations).sort(), inventory.slice(206, 208));
   assert.equal(operational.kind, "narcotics-operational-cli209-source-v1");

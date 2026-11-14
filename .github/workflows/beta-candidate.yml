@@ -61,6 +61,7 @@ jobs:
           python3 -I -B scripts/narcotics-log/beta_release_source.py --check-source
           python3 -B -m unittest discover -s scripts/narcotics-log -p 'test_*.py'
           node --test scripts/narcotics-log/frame-cli.test.mjs
+          node scripts/workforce/frame-migrations.mjs --check
           python3 -I -B scripts/narcotics-log/beta_rehearsal.py --check-source
       - name: Verify catalog draft source import and staff boundaries
         run: python3 -B tests/inventory/catalog-setup-local.py
@@ -140,7 +141,7 @@ jobs:
             /tmp/lrv-narcotics-install-*/receiver/rpc-failure.json
             /tmp/lrv-narcotics-install-*/beta-current-tamper-rollback.json
             /tmp/lrv-narcotics-install-*/operational-browser-failure.json
-            scripts/narcotics-log/picture-security-html-entry-candidate-source.json
+            scripts/narcotics-log/staff-features-candidate-source.json
 
   recovery-diagnostic:
     if: github.event_name == 'workflow_dispatch' && inputs.recovery_diagnostic

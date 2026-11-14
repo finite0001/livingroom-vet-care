@@ -70,6 +70,10 @@ const ClientProfilePage = lazy(() => import("@/hub/pages/ClientProfilePage"));
 const AdminStaffPage = lazy(() => import("@/hub/pages/AdminStaffPage"));
 const AdminDashboardPage = lazy(() => import("@/hub/pages/AdminDashboardPage"));
 const SettingsPage = lazy(() => import("@/hub/pages/SettingsPage"));
+const ClinicalToolsPage = lazy(() => import("@/hub/features/clinical-tools/ClinicalToolsPage"));
+const PeoplePage = lazy(() => import("@/hub/features/workforce/PeoplePage"));
+const TeamPage = lazy(() => import("@/hub/features/workforce/TeamPage"));
+const WorkforcePage = lazy(() => import("@/hub/features/workforce/WorkforcePage"));
 const TimeClockPage = lazy(() => import("@/hub/pages/TimeClockPage"));
 const TemplatesPage = lazy(() => import("@/hub/pages/TemplatesPage"));
 const MyTimePage = lazy(() => import("@/hub/pages/MyTimePage"));
@@ -161,6 +165,10 @@ const router = createBrowserRouter(createRoutesFromElements(
                   <Route path="/hub/voicemails" element={cloudtalkEnabled ? <CloudTalkActivityPage voicemailOnly /> : <UnavailableToolPage />} />
                   <Route path="/hub/settings" element={<SettingsPage />} />
                   <Route path="/hub/time" element={<TimeClockPage />} />
+                  <Route path="/hub/tools/clinical" element={<ClinicalToolsPage />} />
+                  <Route path="/hub/team" element={<TeamPage />} />
+                  <Route path="/hub/team/people" element={<PeoplePage />} />
+                  <Route path="/hub/team/time-off" element={<WorkforcePage />} />
                   <Route path="/hub/timesheet" element={<MyTimePage />} />
                   <Route path="/hub/tools/record-requests" element={<RecordsRequestsPage />} />
                   <Route path="/hub/tools/record-requests/:id" element={<RecordsRequestsPage />} />

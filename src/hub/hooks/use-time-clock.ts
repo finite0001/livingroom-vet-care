@@ -36,6 +36,7 @@ export function useCurrentShift() {
   const { profile } = useAuth();
   return useQuery<TimeEntry | null>({
     queryKey: ["time-clock", "current", profile?.id],
+    refetchInterval: 60000,
     enabled: !!profile?.id,
     queryFn: async () => {
       const { data, error } = await supabase

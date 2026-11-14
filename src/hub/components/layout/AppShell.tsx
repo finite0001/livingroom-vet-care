@@ -1,3 +1,4 @@
+import { MilestoneNotice } from "@/hub/features/workforce/MilestoneNotice";
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { DesktopSidebar } from "./DesktopSidebar";
@@ -30,6 +31,7 @@ export function AppShell() {
           >
             <ErrorBoundary>
               <WitnessRecoveryNotice />
+              <MilestoneNotice />
               <Outlet />
             </ErrorBoundary>
           </main>
