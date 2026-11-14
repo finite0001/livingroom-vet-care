@@ -148,6 +148,11 @@ def source_admission():
         prefix.nonretryable_conflicts214(ROOT)
         for name in (prefix.NONRETRYABLE_CONFLICTS_MANIFEST, "supabase/migrations/" + prefix.NONRETRYABLE_CONFLICTS_MIGRATION):
             pins[name] = sha(prefix.regular(ROOT / name))
+    if (ROOT / "supabase/migrations" / prefix.STAFF_SUCCESSORS[0][0]).exists():
+        prefix.staff_successors(ROOT)
+        for migration, manifest, _ in prefix.STAFF_SUCCESSORS:
+            for name in (manifest, "supabase/migrations/" + migration):
+                pins[name] = sha(prefix.regular(ROOT / name))
     return candidate, layout, pins
 
 

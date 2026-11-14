@@ -1,3 +1,4 @@
+import { QuickTasksPanel } from "../workforce/QuickTasksPanel";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -364,6 +365,7 @@ export default function DailyTasksPage() {
           }}
         />
       </div>
+      <QuickTasksPanel />
       <OperationalRecovery />
       <DailyTasksPanel day={day} full />
     </main>

@@ -1,3 +1,4 @@
+import { PatientToolRecords } from "../clinical-tools/PatientToolRecords";
 import {NextVisitWorkspace} from "../scheduling/NextVisitWorkspace";
 import type {NextVisitContext} from "../scheduling/next-visit-model";
 import { PatientImportedPrescriptions } from "@/hub/features/imports/PatientImportedPrescriptions";
@@ -176,6 +177,7 @@ function PatientWorkspace({ petId }: { petId: string }) {
             <Section360 id="labs"><Suspense fallback={<p role="status">Loading lab workspace…</p>}><PatientLabWorkspace key={`lab-${petId}`} petId={petId} disabled={dirty && !labDirty} onDirtyChange={setLabDirty} /></Suspense></Section360>
             <Section360 id="imaging"><Suspense fallback={<p role="status">Loading imaging workspace…</p>}><PatientImaging key={`imaging-${petId}`} petId={petId} patientName={patient.name} species={patient.species} inactive={inactive} disabled={dirty && !imagingDirty} onDirtyChange={setImagingDirty} /></Suspense></Section360>
             <Section360 id="care-charts"><PatientCareCharts petId={petId} onDirtyChange={setCareDirty} /></Section360>
+            <Section360 id="clinical-tools"><PatientToolRecords petId={petId} /></Section360>
             <Section360 id="dental"><PatientDentalChart key={`dental-${petId}`} petId={petId} species={patient.species} onDirtyChange={setDentalDirty} /></Section360>
             <Section360 id="anesthesia"><PatientAnesthesiaRecords key={`anesthesia-${petId}`} petId={petId} clientId={patient.client_id} onDirtyChange={setAnesthesiaDirty} /></Section360>
             <Section360 id="imported" className="space-y-5">

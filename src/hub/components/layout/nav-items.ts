@@ -1,5 +1,9 @@
 import {
   Activity,
+  Calculator,
+  Banknote,
+  UsersRound,
+  CalendarCheck2,
   BellRing,
   CalendarDays,
   CalendarRange,
@@ -65,9 +69,13 @@ export const navItems: NavItem[] = [
   { path: "/hub/clients", label: "Clients", icon: Users, section: "workspace", activePrefixes: ["/hub/client/"] },
   { path: "/hub/patients", label: "Patients", icon: PawPrint, section: "workspace", activePrefixes: ["/hub/patient/", "/hub/whogot"] },
   { path: "/hub/time", label: "Time Clock", icon: Clock, section: "workspace" },
+  { path: "/hub/team", label: "Our team", icon: UsersRound, section: "workspace", exact: true },
+  { path: "/hub/team/people", label: "Pay & benefits", icon: Banknote, section: "workspace" },
+  { path: "/hub/team/time-off", label: "Time & leave", icon: CalendarCheck2, section: "workspace" },
   { path: "/hub/timesheet", label: "Timesheet", icon: History, section: "workspace" },
 
   // Tools
+  { path: "/hub/tools/clinical", label: "Clinical tools", icon: Calculator, section: "tools" },
   { path: "/hub/tools/task-templates", label: "Operational templates", icon: ClipboardList, section: "tools" },
   { path: "/hub/tools/appointment-catalog", label: "Appointment catalog", icon: CalendarRange, section: "tools" },
   { path: "/hub/tools/record-requests", label: "Records requests", icon: FolderOpen, section: "tools" },

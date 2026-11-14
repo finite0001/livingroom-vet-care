@@ -1,0 +1,34 @@
+{
+  "kind": "staff-features-cli216-source-v1",
+  "cli_version": "2.118.0",
+  "prefix_migration_count": 215,
+  "migration_count": 216,
+  "migration": "20261114220407_workforce_team.sql",
+  "framing": {
+    "bytes": 13892,
+    "sha256": "38518c1e035bff8ef6c59bdccc5dfe47251a0c795fac26752f3f046046b6be13",
+    "statement_count": 16,
+    "compact_array_sha256": "06c30385d23bc8f681dd17e4edf5414bad379a3212713b9229cc3a0c6ef6f936",
+    "postgres_array_sha256": "fdc84f1bba7e8c6f0fe3993107608d18056c3120450a147ff91a71c6032ced68",
+    "postgres_array_bytes": 14016,
+    "statement_sha256s": [
+      "e6f07d43b5c21db0fbb9a31feac2dc599787763393dd5acbfad80e247eb02ad5",
+      "fc1437a636506251123ff1018c946a2a68b6d6acc1aadbe809c6fabcec579ddf",
+      "e7c24aa1d6721ac357b20b33fc138fffc020fd7d5d0a4d6aa363a704193fba18",
+      "733016964d35d5817589efba657133079e001d1f45a057501a59957a8210aa26",
+      "c05b694d5554452443befe4232f42b141888581ae3bc080b9abaa07df81633a1",
+      "55009448aa88c05572e9139a80a9ffe4d7aea0af51f13dece847e81d35c7cc52",
+      "ea8d1323c9f16b42e44581531d8c4af046cad1ac733ef1022a99939c4832bde2",
+      "6b1b85c9c84f0c178d223bfd268113d61c1c0c87f7ea4e04cf19a7e8296afe10",
+      "a27a1ab36eb46980ab78f94e34080041da6f0f8eab5232d519d6d02bf6344d67",
+      "2c802221c121ec9ed877665c15166169f957a1a3b7f88da3fa7706262ec38b6a",
+      "3e02adf68a0611032b9c69a900f81848f017d1eab098258b72047178d3576cc5",
+      "3cccab67b4f680df5432e6676104f2602bd6d92627d11b93dab8daf58f8f1d6d",
+      "3be960fb9434a263881e9d3e487292ec20f66f17d2de0d324b64c043dc2840e3",
+      "804a7918fe01d4fe3b39a474d49ec337b95b920b7e653b399e0116641ced861a",
+      "8610e90055b5e4ccc83ea4dd4fdcaa6867ced150f877e0cd11dec5b23a703dd3",
+      "9505cacb7c710ed17125fcc6cb3669e8ddca6c8cd8af6a31f6b3cd64604c3098"
+    ]
+  },
+  "database_operations": 0
+}

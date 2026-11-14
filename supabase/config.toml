@@ -175,3 +175,6 @@ verify_jwt = true
 # Private administrator call drafts require their own default-off processing scope.
 [functions.clinical-call-note-process]
 verify_jwt = true
+
+[functions.clinical-helper]
+verify_jwt = true

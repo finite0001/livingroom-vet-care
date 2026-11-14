@@ -38,6 +38,13 @@ APPOINTMENT_RESTOCK_MIGRATION = "20261110203352_appointment_links_restock_alerts
 APPOINTMENT_RESTOCK_MANIFEST = "scripts/narcotics-log/appointment-restock-migration213.json"
 NONRETRYABLE_CONFLICTS_MIGRATION = "20261112210000_nonretryable_visit_restock_conflicts.sql"
 NONRETRYABLE_CONFLICTS_MANIFEST = "scripts/narcotics-log/nonretryable-conflicts-migration214.json"
+STAFF_SUCCESSORS = (
+    ("20261114215340_workforce_time_and_leave.sql", "scripts/workforce/migration215.json", 215),
+    ("20261114220407_workforce_team.sql", "scripts/workforce/migration216.json", 216),
+    ("20261114220830_workforce_people.sql", "scripts/workforce/migration217.json", 217),
+    ("20261114221516_staff_clinical_tools.sql", "scripts/workforce/migration218.json", 218),
+    ("20261114222530_staff_backup_health.sql", "scripts/workforce/migration219.json", 219),
+)
 PROGRAMS = {
     "artifacts": (
         ("release_assembly.py", "--check"),
@@ -101,6 +108,11 @@ def nonretryable_conflicts214(root):
                           "nonretryable-conflicts-cli214-source-v1")
 
 
+def staff_successors(root):
+    return [_beta_manifest(root, manifest, migration, count, f"staff-features-cli{count}-source-v1")
+            for migration, manifest, count in STAFF_SUCCESSORS]
+
+
 def _beta_manifest(root, manifest_path, migration, count, kind):
     root = Path(root)
     manifest = json.loads(regular(root / manifest_path))
@@ -154,8 +166,9 @@ def canonical206(root):
             if actual not in (sorted(beta_inventory), sorted([*beta_inventory, BETA_FOLLOWUP_MIGRATION]),
                               sorted([*beta_inventory, BETA_FOLLOWUP_MIGRATION, CATALOG_MIGRATION]),
                               sorted([*beta_inventory, BETA_FOLLOWUP_MIGRATION, CATALOG_MIGRATION, APPOINTMENT_RESTOCK_MIGRATION]),
-                              sorted([*beta_inventory, BETA_FOLLOWUP_MIGRATION, CATALOG_MIGRATION, APPOINTMENT_RESTOCK_MIGRATION, NONRETRYABLE_CONFLICTS_MIGRATION])):
-                raise ValueError("Only complete206, named208, pinned209 or exact pinned successors210/211/212/213/214 are admitted")
+                              sorted([*beta_inventory, BETA_FOLLOWUP_MIGRATION, CATALOG_MIGRATION, APPOINTMENT_RESTOCK_MIGRATION, NONRETRYABLE_CONFLICTS_MIGRATION]),
+                              sorted([*beta_inventory, BETA_FOLLOWUP_MIGRATION, CATALOG_MIGRATION, APPOINTMENT_RESTOCK_MIGRATION, NONRETRYABLE_CONFLICTS_MIGRATION, *[n for n, _, _ in STAFF_SUCCESSORS]])):
+                raise ValueError("Only complete206, named208, pinned209 or exact pinned successors210–219 are admitted")
             beta210(root)
             if BETA_FOLLOWUP_MIGRATION in actual:
                 beta211(root)
@@ -165,6 +178,8 @@ def canonical206(root):
                 appointment_restock213(root)
             if NONRETRYABLE_CONFLICTS_MIGRATION in actual:
                 nonretryable_conflicts214(root)
+            if STAFF_SUCCESSORS[0][0] in actual:
+                staff_successors(root)
         body=regular(directory/name);framing=manifest["framing"]
         if framing["bytes"]!=len(body)or framing["sha256"]!=digest(body):
             raise ValueError("Operational209 source differs from its declared framing")
