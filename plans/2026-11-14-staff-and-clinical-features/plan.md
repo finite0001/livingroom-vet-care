@@ -50,3 +50,5 @@ a release receipt and an operational owner. A source file, passing local test or
 
 Implementation details and activation gates: [rollout runbook](../../docs/staff-feature-rollout-2026-11.md).
 Payroll/leave policies are deferred by Dave; the source must retain Needs setup until supplied.
+
+Resume work from [FOLLOW-UP.md](FOLLOW-UP.md).
