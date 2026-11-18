@@ -7,12 +7,12 @@ interface LogoProps {
   className?: string;
 }
 
-/** Live wordmark text stays readable independently of the raster review mark. */
+/** The symbol and live wordmark stay readable in compact navigation. */
 export function Logo({ stacked = false, inverse = false, className }: LogoProps) {
   return (
     <Link
       to="/"
-      aria-label="The Living Room Veterinary Care — home"
+      aria-label="Living Room Vet — home"
       className={cn(
         "inline-flex max-w-full gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         stacked ? "flex-col items-start" : "items-center",
@@ -21,7 +21,7 @@ export function Logo({ stacked = false, inverse = false, className }: LogoProps)
       )}
     >
       <img
-        src="/brand/living-room-stethoscope-mark-v2.png"
+        src="/brand/living-room-vet-mark.svg"
         alt=""
         aria-hidden="true"
         width={56}
@@ -33,11 +33,13 @@ export function Logo({ stacked = false, inverse = false, className }: LogoProps)
       />
       <span className="flex min-w-0 flex-col">
         <span className="font-heading text-lg font-bold leading-tight tracking-tight md:text-xl">
-          The Living Room
+          Living Room Vet
         </span>
-        <span className="text-xs font-medium leading-relaxed tracking-wide">
-          Veterinary Care
-        </span>
+        {stacked && (
+          <span className="text-xs font-medium leading-relaxed tracking-wide">
+            Where wellness feels at home
+          </span>
+        )}
       </span>
     </Link>
   );

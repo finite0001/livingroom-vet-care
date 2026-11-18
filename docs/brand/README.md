@@ -1,5 +1,9 @@
 # Living Room Vet brand direction
 
+The current [Living Room Vet logo kit](living-room-vet/README.md) contains the approved house, pets, and stethoscope artwork and the web and social variants.
+
+## Design explorations
+
 The practice owner approved developing the armchair with a dog and cat. Keep the welcoming, relaxed animals, rounded chair, terracotta, forest green and ivory direction.
 
 ![Logo development board](living-room-logo-development-v2.png)
