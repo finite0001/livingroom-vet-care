@@ -91,7 +91,7 @@ jobs:
         run: python3 -I -B scripts/narcotics-log/install_rehearsal.py --run-synthetic-local
       - name: Retain scoped installation diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: narcotics-installation-evidence
           retention-days: 7
@@ -135,7 +135,7 @@ jobs:
         run: python3 -I -B scripts/narcotics-log/hosted_rehearsal.py --run-synthetic-local
       - name: Retain scoped installation diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: narcotics-authored-history-installation
           retention-days: 7
@@ -188,7 +188,7 @@ jobs:
         run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local --target count-finalize
       - name: Retain only the synthetic native error before normal acceptance
         if: always() && (matrix.profile == 'clinical' || matrix.profile == 'count_agreement')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: narcotics-engineering-native-error-${{ matrix.profile }}
           retention-days: 7
@@ -202,7 +202,7 @@ jobs:
         run: python3 -I -B scripts/narcotics-log/diagnose_commissioning.py --run-synthetic-local --target variance-execute
       - name: Retain bounded variance native error and timing
         if: always() && matrix.profile == 'variance_reconciliation'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: narcotics-engineering-variance-execute
           retention-days: 7
@@ -216,7 +216,7 @@ jobs:
         run: python3 -I -B scripts/narcotics-log/business_rehearsal.py --run-synthetic-local --profile ${{ matrix.profile }}
       - name: Retain scoped diagnostics without local passwords or session tokens
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: narcotics-business-${{ matrix.profile }}
           retention-days: 7
@@ -260,7 +260,7 @@ jobs:
         run: python3 -I -B scripts/narcotics-log/diagnose_register.py --run-synthetic-local
       - name: Retain bounded source and API diagnostics, never release acceptance
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: narcotics-register-engineering
           retention-days: 7
@@ -308,7 +308,7 @@ jobs:
         run: python3 -I -B scripts/narcotics-log/operational_browser.py --run-synthetic-local
       - name: Retain bounded results without credentials or session tokens
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: narcotics-operational-staff-browser
           retention-days: 7
@@ -348,7 +348,7 @@ jobs:
         run: python3 -I -B scripts/narcotics-log/pending_fault_rehearsal.py --run-synthetic-local
       - name: Retain engineering negative proof separately from acceptance
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: narcotics-pending-validation-rollback
           retention-days: 7
@@ -386,7 +386,7 @@ jobs:
         run: python3 -I -B scripts/narcotics-log/receiver_rehearsal.py --run-synthetic-local
       - name: Retain bounded synthetic result diagnostics only
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: narcotics-populated-recovery
           retention-days: 7
